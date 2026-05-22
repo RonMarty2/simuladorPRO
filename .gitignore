@@ -3,6 +3,10 @@
 Thumbs.db
 desktop.ini
 
+# Claude Code local
+.claude/
+*.tsbuildinfo
+
 # Editores / IDEs
 .vscode/
 .idea/
