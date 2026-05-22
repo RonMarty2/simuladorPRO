@@ -1,0 +1,41 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Variables de entorno / secretos
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Dependencias (se añadirán más según el stack)
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+
+# Build outputs
+dist/
+build/
+out/
+*.egg-info/
+
+# Temporales
+tmp/
+temp/
+*.tmp
