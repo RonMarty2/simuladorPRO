@@ -68,6 +68,12 @@ export type CategoriaCostoDirecto =
 
 export interface CostoDirecto {
   id: string;
+  /**
+   * Producto al que pertenece este costo directo (cantidadPorUnidad se aplica
+   * por cada unidad DE ESTE PRODUCTO producida). Si es null/undefined, el
+   * costo es legado y aplica genéricamente a la suma de unidades.
+   */
+  productoId?: string | null;
   categoria: CategoriaCostoDirecto;
   descripcion: string;
   unidadMedida: string;
