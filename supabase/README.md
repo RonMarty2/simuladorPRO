@@ -7,6 +7,8 @@ Esta carpeta contiene las migraciones SQL que hay que correr en el proyecto Supa
 | Archivo | Fase | Qué crea |
 |---|---|---|
 | `migrations/001_fase1_auth.sql` | FASE 1 | Tablas `perfiles`, `cursos`, `inscripciones` + trigger de auto-perfil + RLS |
+| `migrations/002_fase3_proyectos.sql` | FASE 3 | Tabla `proyectos` con JSONB + RLS + trigger de timestamp |
+| `migrations/003_fix_rls_recursion.sql` | FIX | Helper functions `SECURITY DEFINER` para evitar recursión infinita en RLS |
 
 ## Cómo correr una migración
 
