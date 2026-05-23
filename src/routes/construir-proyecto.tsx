@@ -30,20 +30,55 @@ const titulosPasos: Record<number, string> = {
   9: "Resumen y flujo de caja",
 };
 
+const LS_KEY_PASO = "simulador.pasoActual";
+
+function leerPasoGuardado(proyectoId: string | undefined): number {
+  if (typeof window === "undefined" || !proyectoId) return 1;
+  try {
+    const raw = localStorage.getItem(`${LS_KEY_PASO}.${proyectoId}`);
+    const n = raw ? parseInt(raw, 10) : 1;
+    return n >= 1 && n <= 9 ? n : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function guardarPaso(proyectoId: string | undefined, paso: number) {
+  if (typeof window === "undefined" || !proyectoId) return;
+  try {
+    localStorage.setItem(`${LS_KEY_PASO}.${proyectoId}`, String(paso));
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function ConstruirProyecto() {
   const user = useAuthStore((s) => s.user);
   const proyecto = useProyectoStore((s) => s.proyecto);
   const cargar = useProyectoStore((s) => s.cargar);
   const limpiar = useProyectoStore((s) => s.limpiar);
-  const [pasoActual, setPasoActual] = useState(1);
+  const [pasoActual, setPasoActualState] = useState(1);
   const [iniciando, setIniciando] = useState(true);
   const estadoGuardado = useAutoGuardado(proyecto);
+
+  // Setter que también persiste en localStorage
+  const setPasoActual = (paso: number | ((prev: number) => number)) => {
+    setPasoActualState((prev) => {
+      const nuevo = typeof paso === "function" ? paso(prev) : paso;
+      guardarPaso(proyecto?.id, nuevo);
+      return nuevo;
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
     listarMisProyectos(user.id)
       .then((proyectos) => {
-        if (proyectos.length > 0) cargar(proyectos[0]);
+        if (proyectos.length > 0) {
+          cargar(proyectos[0]);
+          // Restaurar paso guardado para este proyecto
+          setPasoActualState(leerPasoGuardado(proyectos[0].id));
+        }
       })
       .finally(() => setIniciando(false));
   }, [user, cargar]);
