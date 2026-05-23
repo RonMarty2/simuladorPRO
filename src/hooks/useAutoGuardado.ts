@@ -9,44 +9,79 @@ export type EstadoGuardado =
   | { tipo: "error"; mensaje: string };
 
 /**
- * Auto-guardado del proyecto con debounce.
- *
- * Cada vez que `proyecto.actualizado_en` cambia, espera `delayMs` ms y
- * persiste en Supabase. Si llegan más cambios dentro del delay, los anteriores
- * se descartan (debounce clásico). Indica el estado del guardado para UI.
+ * Auto-guardado del proyecto con debounce corto + guardado de emergencia
+ * cuando la pestaña pierde foco o el usuario cierra/refresca.
  */
-export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 1000) {
+export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
   const [estado, setEstado] = useState<EstadoGuardado>({ tipo: "idle" });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ultimoTimestampRef = useRef<string | null>(null);
+  const ultimoGuardadoTimestampRef = useRef<string | null>(null);
+  const proyectoRef = useRef<Proyecto | null>(null);
 
+  // Mantenemos un ref actualizado al último proyecto para acceder desde handlers
   useEffect(() => {
-    if (!proyecto) {
-      ultimoTimestampRef.current = null;
-      setEstado({ tipo: "idle" });
-      return;
-    }
+    proyectoRef.current = proyecto;
+  }, [proyecto]);
 
-    // Si no cambió el timestamp, no hacemos nada
-    if (ultimoTimestampRef.current === proyecto.actualizado_en) return;
-    ultimoTimestampRef.current = proyecto.actualizado_en;
+  // Función helper que guarda si hay cambios pendientes
+  const guardarSiHayPendientes = async () => {
+    const p = proyectoRef.current;
+    if (!p) return;
+    if (ultimoGuardadoTimestampRef.current === p.actualizado_en) return;
+    setEstado({ tipo: "guardando" });
+    try {
+      await guardarProyecto(p);
+      ultimoGuardadoTimestampRef.current = p.actualizado_en;
+      setEstado({ tipo: "guardado", en: new Date() });
+    } catch (e) {
+      const mensaje = e instanceof Error ? e.message : "Error al guardar";
+      setEstado({ tipo: "error", mensaje });
+    }
+  };
+
+  // Debounce: guardar después de delayMs ms de inactividad
+  useEffect(() => {
+    if (!proyecto) return;
+    if (ultimoGuardadoTimestampRef.current === proyecto.actualizado_en) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      setEstado({ tipo: "guardando" });
-      try {
-        await guardarProyecto(proyecto);
-        setEstado({ tipo: "guardado", en: new Date() });
-      } catch (e) {
-        const mensaje = e instanceof Error ? e.message : "Error al guardar";
-        setEstado({ tipo: "error", mensaje });
-      }
+    timerRef.current = setTimeout(() => {
+      guardarSiHayPendientes();
     }, delayMs);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proyecto, delayMs]);
+
+  // Guardado de emergencia cuando la pestaña se oculta o el usuario va a cerrar
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // Forzar guardado antes de que la pestaña se pause
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        guardarSiHayPendientes();
+      }
+    };
+    const onBeforeUnload = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      guardarSiHayPendientes();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return estado;
 }

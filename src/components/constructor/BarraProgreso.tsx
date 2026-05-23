@@ -61,23 +61,31 @@ export default function BarraProgreso({
 
 function EstadoGuardadoChip({ estado }: { estado: EstadoGuardado }) {
   if (estado.tipo === "idle") {
-    return <span className="text-xs text-muted-foreground">Sin cambios</span>;
+    return (
+      <span className="rounded-md bg-secondary px-2 py-1 text-xs text-muted-foreground">
+        Sin cambios
+      </span>
+    );
   }
   if (estado.tipo === "guardando") {
     return (
-      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span className="flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
         <Save className="h-3 w-3 animate-pulse" />
-        Guardando…
+        Guardando… (no refresques)
       </span>
     );
   }
   if (estado.tipo === "guardado") {
     return (
-      <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
+      <span className="flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
         <Check className="h-3 w-3" />
-        Guardado
+        Guardado ✓
       </span>
     );
   }
-  return <span className="text-xs text-destructive">Error: {estado.mensaje}</span>;
+  return (
+    <span className="rounded-md bg-destructive/15 px-2 py-1 text-xs font-semibold text-destructive">
+      Error: {estado.mensaje}
+    </span>
+  );
 }
