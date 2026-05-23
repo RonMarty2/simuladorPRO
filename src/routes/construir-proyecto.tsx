@@ -10,6 +10,11 @@ import Paso1Datos from "@/components/constructor/pasos/Paso1Datos";
 import Paso2Inversiones from "@/components/constructor/pasos/Paso2Inversiones";
 import Paso3Capital from "@/components/constructor/pasos/Paso3Capital";
 import Paso4Personal from "@/components/constructor/pasos/Paso4Personal";
+import Paso5CostosDirectos from "@/components/constructor/pasos/Paso5CostosDirectos";
+import Paso6CostosAdmin from "@/components/constructor/pasos/Paso6CostosAdmin";
+import Paso7CostosComerc from "@/components/constructor/pasos/Paso7CostosComerc";
+import Paso8Productos from "@/components/constructor/pasos/Paso8Productos";
+import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamiento";
 import Paso10Resumen from "@/components/constructor/pasos/Paso10Resumen";
 import PasoPlaceholder from "@/components/constructor/pasos/PasoPlaceholder";
 
@@ -118,6 +123,16 @@ function ContenidoPaso({ paso }: { paso: number }) {
       return <Paso3Capital />;
     case 4:
       return <Paso4Personal />;
+    case 5:
+      return <Paso5CostosDirectos />;
+    case 6:
+      return <Paso6CostosAdmin />;
+    case 7:
+      return <Paso7CostosComerc />;
+    case 8:
+      return <Paso8Productos />;
+    case 9:
+      return <Paso9Financiamiento />;
     case 10:
       return <Paso10Resumen />;
     default:
