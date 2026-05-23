@@ -4,6 +4,7 @@ import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
+import CantidadFraccionInput from "../CantidadFraccionInput";
 import type { CategoriaCostoDirecto, CostoDirecto, Sector } from "@/types/proyecto";
 
 interface ConfigSubcat {
@@ -418,7 +419,12 @@ function BloqueProducto({
                       <tr className="border-b border-border">
                         <th className="p-1.5 text-left">Descripción</th>
                         <th className="p-1.5 text-left">Unidad</th>
-                        <th className="p-1.5 text-right">Cant./u producto</th>
+                        <th
+                          className="p-1.5 text-right"
+                          title="Puedes escribir un decimal (0.25) o una fracción (3/12). Útil cuando compras por lote pero usas por unidad."
+                        >
+                          Cant./u producto ⓘ
+                        </th>
                         <th className="p-1.5 text-right">Costo unit. (Bs)</th>
                         <th className="p-1.5 text-right">Subtotal/u</th>
                         <th
@@ -466,16 +472,11 @@ function BloqueProducto({
                             />
                           </td>
                           <td className="p-1">
-                            <input
-                              type="number"
-                              step="0.001"
-                              value={it.cantidadPorUnidad}
-                              onChange={(e) =>
-                                onEditar(it.id, {
-                                  cantidadPorUnidad: Number(e.target.value) || 0,
-                                })
+                            <CantidadFraccionInput
+                              valorInicial={it.cantidadPorUnidad}
+                              onChange={(n) =>
+                                onEditar(it.id, { cantidadPorUnidad: n })
                               }
-                              onFocus={selectOnFocus}
                               className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           </td>
