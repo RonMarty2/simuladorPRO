@@ -253,20 +253,38 @@ function SeccionCategoria({
                 it.vidaUtilAnios < ANIOS_PROYECTO
             );
             if (itemsCortos.length === 0) return null;
-            const ejemplo = itemsCortos[0];
-            const vida = ejemplo.vidaUtilAnios ?? 0;
             return (
               <div className="flex items-start gap-2 rounded-md border-2 border-amber-400 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
                 <div className="space-y-2 leading-relaxed">
                   <div className="text-sm font-semibold">
-                    Activo dura menos que el proyecto (5 años)
+                    {itemsCortos.length === 1
+                      ? "1 activo dura menos que el proyecto (5 años)"
+                      : `${itemsCortos.length} activos duran menos que el proyecto (5 años)`}
                   </div>
 
                   <div>
-                    <strong>{ejemplo.descripcion || "Tu activo"}</strong> tiene vida útil
-                    de <strong>{vida} años</strong>. En el año {vida + 1} ya está
-                    totalmente depreciado y vale <strong>Bs 0</strong>.
+                    {itemsCortos.length === 1 ? (
+                      <>
+                        <strong>{itemsCortos[0].descripcion || "Tu activo"}</strong> tiene
+                        vida útil de <strong>{itemsCortos[0].vidaUtilAnios} años</strong>.
+                        En el año {(itemsCortos[0].vidaUtilAnios ?? 0) + 1} ya está
+                        totalmente depreciado y vale <strong>Bs 0</strong>.
+                      </>
+                    ) : (
+                      <>
+                        Estos activos quedarán en valor 0 antes del año 5:
+                        <ul className="ml-4 mt-1 list-disc">
+                          {itemsCortos.map((it) => (
+                            <li key={it.id}>
+                              <strong>{it.descripcion || "(sin nombre)"}</strong>: dura{" "}
+                              <strong>{it.vidaUtilAnios} años</strong> → vale Bs 0 desde
+                              el año {(it.vidaUtilAnios ?? 0) + 1}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
                   </div>
 
                   <div className="rounded bg-amber-100/60 p-2 dark:bg-amber-900/30">
