@@ -46,10 +46,25 @@ export interface PuestoTrabajo {
 }
 
 export type CategoriaCostoDirecto =
+  // Legacy / Producción
   | "insumo"
   | "suministro"
   | "empaque"
-  | "mano_obra";
+  | "mano_obra"
+  // Producción adicional
+  | "materia_prima"
+  // Comercio
+  | "mercaderia"
+  | "comision_venta"
+  // Servicios
+  | "insumo_directo"
+  // Agricultura
+  | "semilla"
+  | "fertilizante"
+  | "riego_combustible"
+  | "mano_obra_agricola"
+  // Catch-all
+  | "otro";
 
 export interface CostoDirecto {
   id: string;
