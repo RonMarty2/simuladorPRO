@@ -76,6 +76,10 @@ interface ProyectoState {
   setCrecimientoIngresos: (g: number) => void;
   setCrecimientoCostos: (g: number) => void;
 
+  // Tasas de crecimiento globales que aplican a TODOS los productos
+  setTasaCrecCantidad: (indice: number, valorPct: number) => void;
+  setTasaCrecPrecio: (indice: number, valorPct: number) => void;
+
   // Estado
   setEstado: (estado: EstadoProyecto) => void;
 }
@@ -368,6 +372,41 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     const p = get().proyecto;
     if (!p) return;
     set({ proyecto: conTimestamp({ ...p, crecimientoCostosAnual: g }) });
+  },
+
+  setTasaCrecCantidad: (indice, valorPct) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const tasas: [number, number, number, number] = [...((p.tasasCrecCantidad ?? [0, 0, 0, 0]) as [number, number, number, number])];
+    tasas[indice] = valorPct;
+    // Recalcular cantidades de TODOS los productos a partir de año 1
+    const productos = p.productos.map((prod: any) => {
+      const c0 = (prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0);
+      const cantidades: [number, number, number, number, number] = [c0, c0, c0, c0, c0];
+      for (let i = 1; i < 5; i++) {
+        cantidades[i] = Math.round(cantidades[i - 1] * (1 + tasas[i - 1] / 100));
+      }
+      return { ...prod, cantidades };
+    });
+    set({ proyecto: conTimestamp({ ...p, productos, tasasCrecCantidad: tasas }) });
+  },
+
+  setTasaCrecPrecio: (indice, valorPct) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const tasas: [number, number, number, number] = [...((p.tasasCrecPrecio ?? [0, 0, 0, 0]) as [number, number, number, number])];
+    tasas[indice] = valorPct;
+    const productos = p.productos.map((prod: any) => {
+      const pr0 = (prod.precios?.[0] ?? prod.precioVenta ?? 0);
+      const precios: [number, number, number, number, number] = [pr0, pr0, pr0, pr0, pr0];
+      for (let i = 1; i < 5; i++) {
+        const sinRedondear = precios[i - 1] * (1 + tasas[i - 1] / 100);
+        // Para precios mantengo 2 decimales (centavos)
+        precios[i] = Math.round(sinRedondear * 100) / 100;
+      }
+      return { ...prod, precios };
+    });
+    set({ proyecto: conTimestamp({ ...p, productos, tasasCrecPrecio: tasas }) });
   },
 
   setEstado: (estado) => {

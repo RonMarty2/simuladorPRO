@@ -83,6 +83,8 @@ export function crearProyectoVacio(params: {
     },
     crecimientoIngresosAnual: 0.05,
     crecimientoCostosAnual: 0.03,
+    tasasCrecCantidad: [0, 0, 0, 0],
+    tasasCrecPrecio: [0, 0, 0, 0],
     estado: "construyendo",
     creado_en: ahora,
     actualizado_en: ahora,

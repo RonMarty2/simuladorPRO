@@ -118,9 +118,14 @@ export interface Proyecto {
   // Financiamiento
   financiamiento: Financiamiento;
 
-  // Crecimiento proyectado
+  // Crecimiento proyectado (legacy — tasa global única)
   crecimientoIngresosAnual: number; // 0..1
   crecimientoCostosAnual: number; // 0..1
+
+  // Tasas de crecimiento por año (aplican a TODOS los productos por igual)
+  // 4 valores en % — del año 1 al 2, 2 al 3, 3 al 4, 4 al 5
+  tasasCrecCantidad?: [number, number, number, number];
+  tasasCrecPrecio?: [number, number, number, number];
 
   // Metadatos
   estado: EstadoProyecto;
