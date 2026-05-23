@@ -12,6 +12,40 @@ import { formatearBolivianos, cn } from "@/lib/utils";
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
   e.currentTarget.select();
 
+// Paleta cíclica de colores por puesto / aporte
+const COLORES = [
+  {
+    borde: "border-l-blue-500",
+    bgFila: "bg-blue-50 dark:bg-blue-950/20",
+    chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+  },
+  {
+    borde: "border-l-emerald-500",
+    bgFila: "bg-emerald-50 dark:bg-emerald-950/20",
+    chip: "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
+  },
+  {
+    borde: "border-l-amber-500",
+    bgFila: "bg-amber-50 dark:bg-amber-950/20",
+    chip: "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100",
+  },
+  {
+    borde: "border-l-purple-500",
+    bgFila: "bg-purple-50 dark:bg-purple-950/20",
+    chip: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
+  },
+  {
+    borde: "border-l-pink-500",
+    bgFila: "bg-pink-50 dark:bg-pink-950/20",
+    chip: "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100",
+  },
+  {
+    borde: "border-l-cyan-500",
+    bgFila: "bg-cyan-50 dark:bg-cyan-950/20",
+    chip: "bg-cyan-200 text-cyan-900 dark:bg-cyan-900/60 dark:text-cyan-100",
+  },
+];
+
 interface ConfigAporte {
   campo:
     | "riesgoProfesional"
@@ -79,11 +113,12 @@ export default function Paso4Personal() {
           </div>
         </div>
 
-        {/* Tabla principal de personal */}
+        {/* Tabla de puestos con color por fila */}
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
             <thead className="bg-secondary text-[10px] uppercase tracking-wide text-muted-foreground">
               <tr className="border-b border-border">
+                <th className="p-2 text-left w-[28%]"></th>
                 <th className="p-2 text-left">Puesto</th>
                 <th className="p-2 text-right">Cantidad</th>
                 <th className="p-2 text-right">Sueldo mensual</th>
@@ -95,15 +130,33 @@ export default function Paso4Personal() {
             <tbody>
               {proyecto.personal.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
                     Aún no agregaste puestos.
                   </td>
                 </tr>
               )}
-              {proyecto.personal.map((p) => {
+              {proyecto.personal.map((p, idx) => {
                 const aportes = calcularAportesPatronales(p.sueldoMensual, tasas);
+                const color = COLORES[idx % COLORES.length];
                 return (
-                  <tr key={p.id} className="border-b border-border/40 last:border-0">
+                  <tr
+                    key={p.id}
+                    className={cn(
+                      "border-b border-border/40 last:border-0 border-l-4",
+                      color.borde,
+                      color.bgFila
+                    )}
+                  >
+                    <td className="p-1.5">
+                      <span
+                        className={cn(
+                          "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          color.chip
+                        )}
+                      >
+                        Puesto {idx + 1}
+                      </span>
+                    </td>
                     <td className="p-1.5">
                       <input
                         type="text"
@@ -163,7 +216,7 @@ export default function Paso4Personal() {
           Agregar puesto
         </button>
 
-        {/* Panel colapsable de aportes patronales */}
+        {/* Panel colapsable de aportes patronales con color por fila */}
         <div
           className={cn(
             "rounded-md border bg-secondary/20",
@@ -204,6 +257,7 @@ export default function Paso4Personal() {
                 <table className="w-full text-xs">
                   <thead className="bg-secondary text-[10px] uppercase tracking-wide text-muted-foreground">
                     <tr>
+                      <th className="p-1.5 text-left w-[22%]"></th>
                       <th className="p-1.5 text-left">Aporte</th>
                       <th className="p-1.5 text-left">Descripción</th>
                       <th className="p-1.5 text-right">Tasa actual (%)</th>
@@ -211,13 +265,30 @@ export default function Paso4Personal() {
                     </tr>
                   </thead>
                   <tbody>
-                    {aportesConfig.map((cfg) => {
+                    {aportesConfig.map((cfg, idx) => {
                       const tasaActual = tasas[cfg.campo];
                       const tasaDefault = APORTES_PATRONALES_BOLIVIA[cfg.campo];
-                      const modificado =
-                        Math.abs(tasaActual - tasaDefault) > 0.0001;
+                      const modificado = Math.abs(tasaActual - tasaDefault) > 0.0001;
+                      const color = COLORES[idx % COLORES.length];
                       return (
-                        <tr key={cfg.campo} className="border-t border-border/40">
+                        <tr
+                          key={cfg.campo}
+                          className={cn(
+                            "border-t border-border/40 border-l-4",
+                            color.borde,
+                            color.bgFila
+                          )}
+                        >
+                          <td className="p-1.5">
+                            <span
+                              className={cn(
+                                "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                                color.chip
+                              )}
+                            >
+                              Aporte {idx + 1}
+                            </span>
+                          </td>
                           <td className="p-1.5 font-medium">{cfg.label}</td>
                           <td className="p-1.5 text-muted-foreground">{cfg.ayuda}</td>
                           <td className="p-1.5">
@@ -232,7 +303,7 @@ export default function Paso4Personal() {
                               className={cn(
                                 "w-24 rounded-md border bg-background px-2 py-1 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring",
                                 modificado
-                                  ? "border-amber-400 bg-amber-50/50 dark:bg-amber-950/30"
+                                  ? "border-amber-500 ring-1 ring-amber-300"
                                   : "border-input"
                               )}
                             />
@@ -243,7 +314,8 @@ export default function Paso4Personal() {
                         </tr>
                       );
                     })}
-                    <tr className="border-t-2 border-border bg-secondary/30">
+                    <tr className="border-t-2 border-border bg-secondary/50">
+                      <td className="p-1.5"></td>
                       <td className="p-1.5 font-bold" colSpan={2}>
                         TOTAL
                       </td>
