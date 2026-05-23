@@ -69,7 +69,7 @@ export default function SimularProyecto() {
     );
   }
 
-  if (!sim || cargando) {
+  if (!sim) {
     return (
       <div className="text-sm text-muted-foreground">
         {error ? `Error: ${error}` : "Preparando simulación…"}

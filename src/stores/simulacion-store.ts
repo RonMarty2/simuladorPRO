@@ -48,6 +48,10 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
   error: null,
 
   inicializar: async (proyecto, frecuencia = "mensual") => {
+    // Guard contra doble inicialización (React StrictMode dispara useEffect 2 veces en dev)
+    const actual = get();
+    if (actual.cargando) return;
+    if (actual.simulacion && actual.simulacion.proyecto_id === proyecto.id) return;
     set({ cargando: true, error: null });
     try {
       let sim = await obtenerSimulacionActiva(proyecto.id);
