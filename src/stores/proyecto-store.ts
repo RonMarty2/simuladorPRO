@@ -21,7 +21,7 @@ interface ProyectoState {
   proyecto: Proyecto | null;
 
   // Ciclo de vida
-  inicializar: (estudiante_id: string, curso_id: string, nombre: string) => void;
+  inicializar: (estudiante_id: string, nombre: string, curso_id?: string | null) => void;
   cargar: (proyecto: Proyecto) => void;
   limpiar: () => void;
 
@@ -103,8 +103,8 @@ function conTimestamp(p: Proyecto): Proyecto {
 export const useProyectoStore = create<ProyectoState>((set, get) => ({
   proyecto: null,
 
-  inicializar: (estudiante_id, curso_id, nombre) => {
-    set({ proyecto: crearProyectoVacio({ estudiante_id, curso_id, nombre }) });
+  inicializar: (estudiante_id, nombre, curso_id) => {
+    set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id }) });
   },
 
   cargar: (proyecto) => set({ proyecto }),

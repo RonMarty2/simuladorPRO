@@ -19,6 +19,7 @@ const enlacesEstudiante = [
 
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
+  { to: "/construir", label: "Construir proyecto", icon: Hammer },
 ];
 
 export default function RootLayout() {

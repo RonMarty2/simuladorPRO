@@ -9,7 +9,7 @@ describe("proyecto-store", () => {
 
   describe("inicializar", () => {
     it("crea un proyecto vacío con valores por defecto bolivianos", () => {
-      get().inicializar("est-1", "curso-1", "Proyecto Café Boliviano");
+      get().inicializar("est-1", "Proyecto Café Boliviano", "curso-1");
       const p = get().proyecto!;
       expect(p.nombre).toBe("Proyecto Café Boliviano");
       expect(p.estudiante_id).toBe("est-1");
@@ -21,7 +21,7 @@ describe("proyecto-store", () => {
     });
 
     it("crea las 5 categorías de inversión vacías", () => {
-      get().inicializar("est", "curso", "x");
+      get().inicializar("est", "x", "curso");
       const inv = get().proyecto!.inversiones;
       expect(inv.terreno).toEqual([]);
       expect(inv.obrasCiviles).toEqual([]);
@@ -32,7 +32,7 @@ describe("proyecto-store", () => {
   });
 
   describe("inversiones", () => {
-    beforeEach(() => get().inicializar("est", "curso", "x"));
+    beforeEach(() => get().inicializar("est", "x", "curso"));
 
     it("agregar maquinaria calcula costoTotal y depreciación automáticamente", () => {
       get().agregarInversion("maquinaria", {
@@ -94,7 +94,7 @@ describe("proyecto-store", () => {
   });
 
   describe("personal", () => {
-    beforeEach(() => get().inicializar("est", "curso", "x"));
+    beforeEach(() => get().inicializar("est", "x", "curso"));
 
     it("agregar puesto asigna id único", () => {
       get().agregarPuesto({ puesto: "Operario", cantidad: 2, sueldoMensual: 2500 });
@@ -106,7 +106,7 @@ describe("proyecto-store", () => {
   });
 
   describe("financiamiento", () => {
-    beforeEach(() => get().inicializar("est", "curso", "x"));
+    beforeEach(() => get().inicializar("est", "x", "curso"));
 
     it("setFinanciamiento mergea cambios parciales", () => {
       get().setFinanciamiento({ porcentajePrestamo: 0.4, porcentajePropio: 0.6 });
@@ -120,7 +120,7 @@ describe("proyecto-store", () => {
   });
 
   describe("estado y timestamps", () => {
-    beforeEach(() => get().inicializar("est", "curso", "x"));
+    beforeEach(() => get().inicializar("est", "x", "curso"));
 
     it("cualquier modificación actualiza actualizado_en", async () => {
       const ts0 = get().proyecto!.actualizado_en;
@@ -138,7 +138,7 @@ describe("proyecto-store", () => {
 
   describe("limpiar", () => {
     it("limpiar deja proyecto en null", () => {
-      get().inicializar("est", "curso", "x");
+      get().inicializar("est", "x", "curso");
       expect(get().proyecto).not.toBeNull();
       get().limpiar();
       expect(get().proyecto).toBeNull();

@@ -87,7 +87,7 @@ export interface Financiamiento {
 export interface Proyecto {
   id: string;
   estudiante_id: string;
-  curso_id: string;
+  curso_id: string | null;
 
   // Datos generales
   nombre: string;

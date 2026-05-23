@@ -18,14 +18,14 @@ export function nuevoId(): string {
 export function crearProyectoVacio(params: {
   id?: string;
   estudiante_id: string;
-  curso_id: string;
+  curso_id?: string | null;
   nombre: string;
 }): Proyecto {
   const ahora = new Date().toISOString();
   return {
     id: params.id ?? nuevoId(),
     estudiante_id: params.estudiante_id,
-    curso_id: params.curso_id,
+    curso_id: params.curso_id ?? null,
     nombre: params.nombre,
     ubicacion: "",
     descripcion: "",
