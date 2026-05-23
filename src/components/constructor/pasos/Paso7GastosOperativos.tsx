@@ -7,6 +7,7 @@ import type { CostoGeneral } from "@/types/proyecto";
 interface ConfigSubcat {
   label: string;
   sugerencia: string;
+  placeholderDescripcion: string;
   borde: string;
   bgFila: string;
   bgHeader: string;
@@ -15,7 +16,8 @@ interface ConfigSubcat {
 
 const CONFIG_ADMIN: ConfigSubcat = {
   label: "Gastos administrativos",
-  sugerencia: "Alquiler, servicios básicos, honorarios contables, papelería…",
+  sugerencia: "Alquiler oficina, servicios básicos, contador, papelería…",
+  placeholderDescripcion: "Ej: Alquiler oficina, contador, luz, internet…",
   borde: "border-l-blue-500",
   bgFila: "bg-blue-50 dark:bg-blue-950/20",
   bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
@@ -24,7 +26,8 @@ const CONFIG_ADMIN: ConfigSubcat = {
 
 const CONFIG_COMERC: ConfigSubcat = {
   label: "Gastos de comercialización",
-  sugerencia: "Publicidad, distribución, comisiones, marketing digital…",
+  sugerencia: "Publicidad, comisiones de venta, transporte de despacho, marketing…",
+  placeholderDescripcion: "Ej: Publicidad, comisiones venta, transporte despacho…",
   borde: "border-l-emerald-500",
   bgFila: "bg-emerald-50 dark:bg-emerald-950/20",
   bgHeader: "bg-emerald-100/70 dark:bg-emerald-950/40",
@@ -70,6 +73,24 @@ export default function Paso7GastosOperativos() {
           <p className="mt-0.5 text-sm text-muted-foreground">
             Gastos fijos del proyecto que no escalan con cada unidad producida.
           </p>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="rounded-md border border-blue-500/40 bg-blue-50 px-2.5 py-1.5 text-[11px] dark:bg-blue-950/20">
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                Administrativos →
+              </span>{" "}
+              <span className="text-blue-900/80 dark:text-blue-100/80">
+                hacen que la empresa <em>funcione</em> (oficina, contador, luz, agua, sueldos no productivos).
+              </span>
+            </div>
+            <div className="rounded-md border border-emerald-500/40 bg-emerald-50 px-2.5 py-1.5 text-[11px] dark:bg-emerald-950/20">
+              <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+                Comercialización →
+              </span>{" "}
+              <span className="text-emerald-900/80 dark:text-emerald-100/80">
+                sirven para <em>vender</em> el producto (publicidad, comisiones, transporte de despacho).
+              </span>
+            </div>
+          </div>
         </div>
 
         <SeccionGastos
@@ -237,7 +258,7 @@ function SeccionGastos({
                           value={c.descripcion}
                           onChange={(e) => onEditar(c.id, { descripcion: e.target.value })}
                           onFocus={selectOnFocus}
-                          placeholder="Alquiler, publicidad…"
+                          placeholder={config.placeholderDescripcion}
                           className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
