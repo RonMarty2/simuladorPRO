@@ -413,15 +413,30 @@ function BloqueProducto({
 
               {items.length > 0 && (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                  <table className="w-full min-w-[900px] text-xs">
                     <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       <tr className="border-b border-border">
-                        <th className="p-1.5 text-left w-[34%]">Descripción</th>
-                        <th className="p-1.5 text-left w-[10%]">Unidad</th>
-                        <th className="p-1.5 text-right w-[14%]">Cant./u producto</th>
-                        <th className="p-1.5 text-right w-[14%]">Costo unit. (Bs)</th>
-                        <th className="p-1.5 text-right w-[15%]">Subtotal/u</th>
+                        <th className="p-1.5 text-left">Descripción</th>
+                        <th className="p-1.5 text-left">Unidad</th>
+                        <th className="p-1.5 text-right">Cant./u producto</th>
+                        <th className="p-1.5 text-right">Costo unit. (Bs)</th>
+                        <th className="p-1.5 text-right">Subtotal/u</th>
+                        <th
+                          className="p-1.5 text-center text-[9px] font-bold uppercase tracking-wide text-foreground/60"
+                          colSpan={5}
+                        >
+                          Total necesario para la demanda
+                        </th>
                         <th className="w-8 p-1.5"></th>
+                      </tr>
+                      <tr className="border-b border-border text-[9px]">
+                        <th colSpan={5}></th>
+                        {[1, 2, 3, 4, 5].map((a) => (
+                          <th key={a} className="bg-secondary/40 p-1 text-right">
+                            Año {a}
+                          </th>
+                        ))}
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -447,7 +462,7 @@ function BloqueProducto({
                               }
                               onFocus={selectOnFocus}
                               placeholder="Lts, kg"
-                              className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                              className="w-20 rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           </td>
                           <td className="p-1">
@@ -481,6 +496,26 @@ function BloqueProducto({
                           <td className="p-1 text-right font-semibold">
                             {formatearBolivianos(it.cantidadPorUnidad * it.costoUnitario)}
                           </td>
+                          {[0, 1, 2, 3, 4].map((i) => {
+                            const totalUnidades =
+                              it.cantidadPorUnidad * producto.cantidades[i];
+                            return (
+                              <td
+                                key={i}
+                                className="bg-secondary/20 p-1 text-right text-[11px]"
+                                title={`${totalUnidades.toLocaleString()} ${it.unidadMedida} = ${it.cantidadPorUnidad} × ${producto.cantidades[i].toLocaleString()} ${producto.unidadMedida}`}
+                              >
+                                <span className="font-medium">
+                                  {totalUnidades.toLocaleString(undefined, {
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </span>
+                                <span className="ml-0.5 text-[9px] text-muted-foreground">
+                                  {it.unidadMedida}
+                                </span>
+                              </td>
+                            );
+                          })}
                           <td className="p-1 text-right">
                             <button
                               onClick={() => onEliminar(it.id)}
