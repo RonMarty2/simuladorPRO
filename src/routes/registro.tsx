@@ -1,26 +1,29 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/stores/auth-store";
 
 const esquema = z.object({
+  nombre: z.string().min(1, "Requerido"),
+  apellido: z.string().min(1, "Requerido"),
   email: z.string().email("Email no válido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
+  rol: z.enum(["estudiante", "docente"]),
+  universidad: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof esquema>;
 
-export default function Login() {
+export default function Registro() {
   const inicializar = useAuthStore((s) => s.inicializar);
   const inicializado = useAuthStore((s) => s.inicializado);
   const user = useAuthStore((s) => s.user);
   const perfil = useAuthStore((s) => s.perfil);
-  const login = useAuthStore((s) => s.login);
+  const registrar = useAuthStore((s) => s.registrar);
   const cargando = useAuthStore((s) => s.cargando);
   const navigate = useNavigate();
-  const location = useLocation();
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,34 +34,33 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(esquema) });
-
-  const destinoPostLogin = (rol: "docente" | "estudiante") =>
-    rol === "docente" ? "/docente" : "/estudiante";
+  } = useForm<FormValues>({
+    resolver: zodResolver(esquema),
+    defaultValues: { rol: "estudiante" },
+  });
 
   if (inicializado && user && perfil) {
-    const desde = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
-    return <Navigate to={desde ?? destinoPostLogin(perfil.rol)} replace />;
+    return <Navigate to={perfil.rol === "docente" ? "/docente" : "/estudiante"} replace />;
   }
 
   const onSubmit = async (datos: FormValues) => {
     setErrorServidor(null);
     try {
-      await login(datos.email, datos.password);
+      await registrar(datos);
       navigate("/", { replace: true });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error al iniciar sesión";
+      const msg = err instanceof Error ? err.message : "Error al registrarse";
       setErrorServidor(traducir(msg));
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary" />
           <h1 className="text-lg font-semibold tracking-tight text-card-foreground">
-            Iniciar sesión
+            Crear cuenta
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Simulador de Proyectos de Inversión · Bolivia
@@ -66,6 +68,35 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="nombre" className="text-sm font-medium">
+                Nombre
+              </label>
+              <input
+                id="nombre"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                {...register("nombre")}
+              />
+              {errors.nombre && (
+                <p className="text-xs text-destructive">{errors.nombre.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="apellido" className="text-sm font-medium">
+                Apellido
+              </label>
+              <input
+                id="apellido"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                {...register("apellido")}
+              />
+              {errors.apellido && (
+                <p className="text-xs text-destructive">{errors.apellido.message}</p>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="email" className="text-sm font-medium">
               Email
@@ -89,13 +120,39 @@ export default function Login() {
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               {...register("password")}
             />
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="rol" className="text-sm font-medium">
+              Rol
+            </label>
+            <select
+              id="rol"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              {...register("rol")}
+            >
+              <option value="estudiante">Estudiante</option>
+              <option value="docente">Docente</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="universidad" className="text-sm font-medium">
+              Universidad <span className="text-xs text-muted-foreground">(opcional)</span>
+            </label>
+            <input
+              id="universidad"
+              placeholder="UMSS, UPB, UCB, USFX, etc."
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              {...register("universidad")}
+            />
           </div>
 
           {errorServidor && (
@@ -109,14 +166,14 @@ export default function Login() {
             disabled={cargando}
             className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           >
-            {cargando ? "Ingresando…" : "Ingresar"}
+            {cargando ? "Creando cuenta…" : "Crear cuenta"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          ¿No tienes cuenta?{" "}
-          <Link to="/registro" className="font-medium text-foreground underline">
-            Regístrate
+          ¿Ya tienes cuenta?{" "}
+          <Link to="/login" className="font-medium text-foreground underline">
+            Inicia sesión
           </Link>
         </p>
       </div>
@@ -126,9 +183,12 @@ export default function Login() {
 
 function traducir(mensaje: string): string {
   const m = mensaje.toLowerCase();
-  if (m.includes("invalid login credentials")) return "Email o contraseña incorrectos";
-  if (m.includes("email not confirmed"))
-    return "Email aún no confirmado. Revisa tu bandeja o desactiva la confirmación en Supabase para pruebas.";
+  if (m.includes("user already registered")) return "Este email ya está registrado";
+  if (m.includes("password should be at least"))
+    return "La contraseña debe tener al menos 6 caracteres";
+  if (m.includes("invalid email")) return "Email no válido";
   if (m.includes("network")) return "Error de red — ¿estás conectado?";
+  if (m.includes("database error"))
+    return "Error en la base de datos. ¿Corriste la migración SQL de FASE 1?";
   return mensaje;
 }

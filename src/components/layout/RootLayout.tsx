@@ -1,16 +1,38 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Hammer, PlayCircle, BookOpenCheck, GraduationCap } from "lucide-react";
+import {
+  BookOpenCheck,
+  GraduationCap,
+  Hammer,
+  LayoutDashboard,
+  LogOut,
+  PlayCircle,
+} from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
 
-const enlaces = [
+const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
+];
+
+const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
 ];
 
 export default function RootLayout() {
+  const perfil = useAuthStore((s) => s.perfil);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+
+  const enlaces = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
+
+  const cerrar = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
       <header className="flex h-14 items-center justify-between border-b border-border px-6">
@@ -23,7 +45,23 @@ export default function RootLayout() {
             Bolivia
           </span>
         </div>
-        <div className="text-xs text-muted-foreground">FASE 0 · Setup inicial</div>
+        <div className="flex items-center gap-4">
+          {perfil && (
+            <div className="text-right text-xs">
+              <div className="font-medium text-foreground">
+                {perfil.nombre} {perfil.apellido}
+              </div>
+              <div className="text-muted-foreground capitalize">{perfil.rol}</div>
+            </div>
+          )}
+          <button
+            onClick={cerrar}
+            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition hover:bg-accent"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Salir
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
