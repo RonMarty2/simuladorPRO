@@ -1,4 +1,5 @@
-import { AlertCircle, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
@@ -312,14 +313,28 @@ function BloqueProducto({
   onEditar: (id: string, cambios: Partial<CostoDirecto>) => void;
   onEliminar: (id: string) => void;
 }) {
+  // Primer producto abierto por default, los demás colapsados
+  const [abierto, setAbierto] = useState(productoIndex === 0);
   const margen = producto.precios[0] - costoUnit;
   const margenPct = producto.precios[0] > 0 ? (margen / producto.precios[0]) * 100 : 0;
+  const totalItems = costos.length;
 
   return (
     <div className={cn("overflow-hidden rounded-md border-l-4", color.borde, color.bgFila)}>
-      {/* Header del producto */}
-      <div className={cn("flex flex-wrap items-center justify-between gap-2 px-3 py-2", color.bgHeader)}>
+      {/* Header del producto — clickable para colapsar */}
+      <button
+        onClick={() => setAbierto((v) => !v)}
+        className={cn(
+          "flex w-full flex-wrap items-center justify-between gap-2 px-3 py-2 text-left transition hover:brightness-95",
+          color.bgHeader
+        )}
+      >
         <div className="flex items-center gap-2">
+          {abierto ? (
+            <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+          )}
           <span
             className={cn(
               "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
@@ -329,8 +344,13 @@ function BloqueProducto({
             Producto {productoIndex + 1}: {producto.nombre || "(sin nombre)"}
           </span>
           <span className="text-[10px] text-foreground/70">
-            {producto.unidadMedida} · {formatearBolivianos(producto.precios[0])}/u (precio venta)
+            {producto.unidadMedida} · {formatearBolivianos(producto.precios[0])}/u
           </span>
+          {totalItems > 0 && (
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">
+              {totalItems} {totalItems === 1 ? "item" : "items"}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4 text-right text-[11px]">
           <div>
@@ -354,11 +374,13 @@ function BloqueProducto({
             </div>
           </div>
         </div>
-      </div>
+      </button>
 
+      {!abierto ? null : (
+      <>
       {/* Demanda año por año del producto */}
       <div className="border-b border-border/60 bg-card/50 px-3 py-1.5">
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="flex flex-wrap items-center gap-2 text-[10px]">
           <span className="font-semibold uppercase tracking-wide text-muted-foreground">
             Demanda proyectada:
           </span>
@@ -487,6 +509,8 @@ function BloqueProducto({
           );
         })}
       </div>
+      </>
+      )}
     </div>
   );
 }

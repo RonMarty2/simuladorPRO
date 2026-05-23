@@ -30,6 +30,18 @@ const titulosPasos: Record<number, string> = {
   9: "Resumen y flujo de caja",
 };
 
+const titulosCortos: Record<number, string> = {
+  1: "Datos",
+  2: "Demanda",
+  3: "Inversiones",
+  4: "Personal",
+  5: "Costos directos",
+  6: "Gastos op.",
+  7: "Capital",
+  8: "Financiam.",
+  9: "Resumen",
+};
+
 const LS_KEY_PASO = "simulador.pasoActual";
 
 function leerPasoGuardado(proyectoId: string | undefined): number {
@@ -110,6 +122,8 @@ export default function ConstruirProyecto() {
         nombreProyecto={proyecto.nombre}
         estadoGuardado={estadoGuardado}
         onCambiarPaso={setPasoActual}
+        titulos={titulosPasos}
+        titulosCortos={titulosCortos}
       />
 
       <ContenidoPaso paso={pasoActual} />
