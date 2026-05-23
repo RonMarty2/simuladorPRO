@@ -1,4 +1,22 @@
-import type { Proyecto } from "@/types/proyecto";
+import type { Producto, Proyecto } from "@/types/proyecto";
+
+/**
+ * Migra un producto antiguo (con cantidadAnio1) al nuevo shape (cantidades[5]).
+ * Sirve para datos legados guardados antes del refactor.
+ */
+export function migrarProducto(prod: any): Producto {
+  if (prod.cantidades && Array.isArray(prod.cantidades) && prod.cantidades.length === 5) {
+    return prod as Producto;
+  }
+  const base = Number(prod.cantidadAnio1 ?? 0);
+  return {
+    id: prod.id,
+    nombre: prod.nombre,
+    unidadMedida: prod.unidadMedida,
+    cantidades: [base, base, base, base, base],
+    precioVenta: prod.precioVenta,
+  };
+}
 
 /**
  * Genera un ID único. Usa crypto.randomUUID si está disponible (browsers

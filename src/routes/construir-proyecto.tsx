@@ -7,30 +7,27 @@ import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
 import BarraProgreso from "@/components/constructor/BarraProgreso";
 import Paso1Datos from "@/components/constructor/pasos/Paso1Datos";
+import Paso2Proyeccion from "@/components/constructor/pasos/Paso2Proyeccion";
 import Paso2Inversiones from "@/components/constructor/pasos/Paso2Inversiones";
 import Paso3Capital from "@/components/constructor/pasos/Paso3Capital";
 import Paso4Personal from "@/components/constructor/pasos/Paso4Personal";
-import Paso5CostosDirectos from "@/components/constructor/pasos/Paso5CostosDirectos";
-import Paso6CostosAdmin from "@/components/constructor/pasos/Paso6CostosAdmin";
-import Paso7CostosComerc from "@/components/constructor/pasos/Paso7CostosComerc";
-import Paso8Productos from "@/components/constructor/pasos/Paso8Productos";
+import Paso6CostosProduccion from "@/components/constructor/pasos/Paso6CostosProduccion";
+import Paso7GastosOperativos from "@/components/constructor/pasos/Paso7GastosOperativos";
 import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamiento";
-import Paso10Resumen from "@/components/constructor/pasos/Paso10Resumen";
-import PasoPlaceholder from "@/components/constructor/pasos/PasoPlaceholder";
+import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
 
-const TOTAL_PASOS = 10;
+const TOTAL_PASOS = 9;
 
 const titulosPasos: Record<number, string> = {
   1: "Datos generales",
-  2: "Inversiones",
-  3: "Capital de trabajo",
-  4: "Personal",
-  5: "Costos directos",
-  6: "Costos administrativos",
-  7: "Costos de comercialización",
-  8: "Productos e ingresos",
-  9: "Financiamiento",
-  10: "Resumen y proyección",
+  2: "Proyección de demanda",
+  3: "Inversiones en activo fijo",
+  4: "Capital de trabajo",
+  5: "Personal + aportes patronales",
+  6: "Costos directos de producción",
+  7: "Gastos administrativos y comercialización",
+  8: "Financiamiento + WACC",
+  9: "Resumen y flujo de caja",
 };
 
 export default function ConstruirProyecto() {
@@ -92,13 +89,18 @@ export default function ConstruirProyecto() {
           Anterior
         </button>
 
-        <button
-          onClick={abandonarProyecto}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-destructive"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Borrar este proyecto
-        </button>
+        <div className="flex flex-col items-center text-center">
+          <span className="text-xs text-muted-foreground">
+            {titulosPasos[pasoActual]}
+          </span>
+          <button
+            onClick={abandonarProyecto}
+            className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
+          >
+            <Trash2 className="h-3 w-3" />
+            Borrar este proyecto
+          </button>
+        </div>
 
         <button
           onClick={() => setPasoActual((p) => Math.min(TOTAL_PASOS, p + 1))}
@@ -118,30 +120,22 @@ function ContenidoPaso({ paso }: { paso: number }) {
     case 1:
       return <Paso1Datos />;
     case 2:
-      return <Paso2Inversiones />;
+      return <Paso2Proyeccion />;
     case 3:
-      return <Paso3Capital />;
+      return <Paso2Inversiones />;
     case 4:
-      return <Paso4Personal />;
+      return <Paso3Capital />;
     case 5:
-      return <Paso5CostosDirectos />;
+      return <Paso4Personal />;
     case 6:
-      return <Paso6CostosAdmin />;
+      return <Paso6CostosProduccion />;
     case 7:
-      return <Paso7CostosComerc />;
+      return <Paso7GastosOperativos />;
     case 8:
-      return <Paso8Productos />;
-    case 9:
       return <Paso9Financiamiento />;
-    case 10:
-      return <Paso10Resumen />;
+    case 9:
+      return <Paso9Resumen />;
     default:
-      return (
-        <PasoPlaceholder
-          numero={paso}
-          titulo={titulosPasos[paso] ?? "Próximamente"}
-          descripcion="Esta pantalla aún no está implementada pero los datos que ingreses en los otros pasos ya funcionan."
-        />
-      );
+      return null;
   }
 }

@@ -58,7 +58,7 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
   );
 
   const ingresoAnual = (p.productos ?? []).reduce(
-    (acc: number, prod: any) => acc + prod.cantidadAnio1 * prod.precioVenta,
+    (acc: number, prod: any) => acc + (prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0) * prod.precioVenta,
     0
   );
 
@@ -130,7 +130,7 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
                 <li key={prod.id} className="flex justify-between">
                   <span>{prod.nombre}</span>
                   <span className="text-muted-foreground">
-                    {prod.cantidadAnio1.toLocaleString()} × Bs {prod.precioVenta}
+                    {(prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0).toLocaleString()} × Bs {prod.precioVenta}
                   </span>
                 </li>
               ))}

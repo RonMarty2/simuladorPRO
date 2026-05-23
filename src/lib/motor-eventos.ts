@@ -261,10 +261,13 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     0
   );
   const ingresosAnuales = p.productos.reduce(
-    (acc, prod) => acc + prod.cantidadAnio1 * prod.precioVenta,
+    (acc, prod) => acc + (prod.cantidades?.[0] ?? 0) * prod.precioVenta,
     0
   );
-  const cantidadAnualUnidades = p.productos.reduce((acc, prod) => acc + prod.cantidadAnio1, 0);
+  const cantidadAnualUnidades = p.productos.reduce(
+    (acc, prod) => acc + (prod.cantidades?.[0] ?? 0),
+    0
+  );
   const costoInsumosPorUnidad = p.costosDirectos.reduce(
     (acc, c) => acc + c.cantidadPorUnidad * c.costoUnitario,
     0

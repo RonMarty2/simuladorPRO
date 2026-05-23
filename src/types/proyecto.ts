@@ -72,7 +72,8 @@ export interface Producto {
   id: string;
   nombre: string;
   unidadMedida: string;
-  cantidadAnio1: number;
+  /** Cantidad proyectada para cada uno de los 5 años. cantidades[0] = año 1. */
+  cantidades: [number, number, number, number, number];
   precioVenta: number;
 }
 
