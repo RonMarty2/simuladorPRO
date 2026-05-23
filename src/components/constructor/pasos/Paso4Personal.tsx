@@ -95,13 +95,129 @@ export default function Paso4Personal() {
           </div>
         </div>
 
-        {/* BLOQUE 1: PERSONAL (azul) */}
+        {/* BLOQUE 1: APORTES PATRONALES (ámbar) — marco legal, va PRIMERO */}
+        <div
+          className={cn(
+            "overflow-hidden rounded-md border-l-4",
+            BLOQUE_APORTES.borde,
+            BLOQUE_APORTES.bgFila
+          )}
+        >
+          <button
+            onClick={() => setMostrarConfig((v) => !v)}
+            className={cn(
+              "flex w-full items-center justify-between px-3 py-2 text-left",
+              BLOQUE_APORTES.bgHeader
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <Receipt className="h-3.5 w-3.5" />
+              <span
+                className={cn(
+                  "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  BLOQUE_APORTES.chip
+                )}
+              >
+                1. Aportes patronales (LGT Bolivia)
+              </span>
+              <span className="text-xs font-medium text-foreground/70">
+                — total {(totalTasa * 100).toFixed(2)}%
+              </span>
+              {tasasModificadas && (
+                <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-700 dark:text-amber-100">
+                  Modificadas
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {mostrarConfig ? "▾ Ocultar" : "▸ Mostrar / Editar"}
+            </span>
+          </button>
+
+          {mostrarConfig && (
+            <div className="space-y-3 p-3">
+              <p className="text-[11px] text-muted-foreground">
+                Estas son las tasas vigentes de la Ley General del Trabajo de Bolivia
+                (2025). Se aplican automáticamente a cada sueldo en la tabla de
+                Personal abajo. <strong>Solo modifica si la ley cambió</strong> o si
+                quieres hacer un escenario hipotético.
+              </p>
+
+              <div className="overflow-x-auto rounded border border-border bg-card">
+                <table className="w-full text-xs">
+                  <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <tr className="border-b border-border">
+                      <th className="p-1.5 text-left w-[30%]">Aporte</th>
+                      <th className="p-1.5 text-left w-[35%]">Descripción</th>
+                      <th className="p-1.5 text-right w-[17%]">Tasa actual (%)</th>
+                      <th className="p-1.5 text-right w-[18%]">Default LGT 2025 (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {aportesConfig.map((cfg) => {
+                      const tasaActual = tasas[cfg.campo];
+                      const tasaDefault = APORTES_PATRONALES_BOLIVIA[cfg.campo];
+                      const modificado = Math.abs(tasaActual - tasaDefault) > 0.0001;
+                      return (
+                        <tr key={cfg.campo} className="border-b border-border/40 last:border-0">
+                          <td className="p-1.5 font-medium">{cfg.label}</td>
+                          <td className="p-1.5 text-muted-foreground">{cfg.ayuda}</td>
+                          <td className="p-1.5">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={Number((tasaActual * 100).toFixed(2))}
+                              onChange={(e) =>
+                                setAporte(cfg.campo, (Number(e.target.value) || 0) / 100)
+                              }
+                              onFocus={selectOnFocus}
+                              className={cn(
+                                "w-full rounded-md border bg-background px-2 py-1 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring",
+                                modificado
+                                  ? "border-amber-500 ring-1 ring-amber-300"
+                                  : "border-input"
+                              )}
+                            />
+                          </td>
+                          <td className="p-1.5 text-right text-muted-foreground">
+                            {(tasaDefault * 100).toFixed(2)}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="border-t-2 border-border bg-secondary/40">
+                      <td className="p-1.5 font-bold" colSpan={2}>
+                        TOTAL
+                      </td>
+                      <td className="p-1.5 text-right font-bold">
+                        {(totalTasa * 100).toFixed(2)}%
+                      </td>
+                      <td className="p-1.5 text-right text-muted-foreground">30.37%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {tasasModificadas && (
+                <button
+                  onClick={restaurarDefault}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Restaurar valores por defecto (LGT 2025)
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* BLOQUE 2: PERSONAL (azul) */}
         <div className={cn("overflow-hidden rounded-md border-l-4", BLOQUE_PERSONAL.borde, BLOQUE_PERSONAL.bgFila)}>
           <div className={cn("flex items-center justify-between px-3 py-2", BLOQUE_PERSONAL.bgHeader)}>
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5" />
               <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", BLOQUE_PERSONAL.chip)}>
-                Personal
+                2. Personal
               </span>
               <span className="text-xs font-medium text-foreground/70">
                 ({proyecto.personal.length} {proyecto.personal.length === 1 ? "puesto" : "puestos"})
@@ -196,117 +312,6 @@ export default function Paso4Personal() {
           </div>
         </div>
 
-        {/* BLOQUE 2: APORTES PATRONALES (ámbar) */}
-        <div
-          className={cn(
-            "overflow-hidden rounded-md border-l-4",
-            BLOQUE_APORTES.borde,
-            BLOQUE_APORTES.bgFila
-          )}
-        >
-          <button
-            onClick={() => setMostrarConfig((v) => !v)}
-            className={cn("flex w-full items-center justify-between px-3 py-2 text-left", BLOQUE_APORTES.bgHeader)}
-          >
-            <div className="flex items-center gap-2">
-              <Receipt className="h-3.5 w-3.5" />
-              <span
-                className={cn(
-                  "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  BLOQUE_APORTES.chip
-                )}
-              >
-                Aportes patronales (LGT Bolivia)
-              </span>
-              <span className="text-xs font-medium text-foreground/70">
-                — total {(totalTasa * 100).toFixed(2)}%
-              </span>
-              {tasasModificadas && (
-                <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-700 dark:text-amber-100">
-                  Modificadas
-                </span>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {mostrarConfig ? "▾ Ocultar" : "▸ Mostrar / Editar"}
-            </span>
-          </button>
-
-          {mostrarConfig && (
-            <div className="space-y-3 p-3">
-              <p className="text-[11px] text-muted-foreground">
-                Las tasas vigentes corresponden a la Ley General del Trabajo de Bolivia
-                (2025). <strong>Solo modifica si la ley cambió</strong> o si quieres
-                hacer un escenario hipotético.
-              </p>
-
-              <div className="overflow-x-auto rounded border border-border bg-card">
-                <table className="w-full text-xs">
-                  <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    <tr className="border-b border-border">
-                      <th className="p-1.5 text-left w-[30%]">Aporte</th>
-                      <th className="p-1.5 text-left w-[35%]">Descripción</th>
-                      <th className="p-1.5 text-right w-[17%]">Tasa actual (%)</th>
-                      <th className="p-1.5 text-right w-[18%]">Default LGT 2025 (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {aportesConfig.map((cfg) => {
-                      const tasaActual = tasas[cfg.campo];
-                      const tasaDefault = APORTES_PATRONALES_BOLIVIA[cfg.campo];
-                      const modificado = Math.abs(tasaActual - tasaDefault) > 0.0001;
-                      return (
-                        <tr key={cfg.campo} className="border-b border-border/40 last:border-0">
-                          <td className="p-1.5 font-medium">{cfg.label}</td>
-                          <td className="p-1.5 text-muted-foreground">{cfg.ayuda}</td>
-                          <td className="p-1.5">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={Number((tasaActual * 100).toFixed(2))}
-                              onChange={(e) =>
-                                setAporte(cfg.campo, (Number(e.target.value) || 0) / 100)
-                              }
-                              onFocus={selectOnFocus}
-                              className={cn(
-                                "w-full rounded-md border bg-background px-2 py-1 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring",
-                                modificado
-                                  ? "border-amber-500 ring-1 ring-amber-300"
-                                  : "border-input"
-                              )}
-                            />
-                          </td>
-                          <td className="p-1.5 text-right text-muted-foreground">
-                            {(tasaDefault * 100).toFixed(2)}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    <tr className="border-t-2 border-border bg-secondary/40">
-                      <td className="p-1.5 font-bold" colSpan={2}>
-                        TOTAL
-                      </td>
-                      <td className="p-1.5 text-right font-bold">
-                        {(totalTasa * 100).toFixed(2)}%
-                      </td>
-                      <td className="p-1.5 text-right text-muted-foreground">30.37%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {tasasModificadas && (
-                <button
-                  onClick={restaurarDefault}
-                  className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Restaurar valores por defecto (LGT 2025)
-                </button>
-              )}
-            </div>
-          )}
-        </div>
       </div>
 
       <FichaPedagogica
