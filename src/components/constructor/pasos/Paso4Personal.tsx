@@ -59,7 +59,7 @@ export default function Paso4Personal() {
                         type="text"
                         value={p.puesto}
                         onChange={(e) => editar(p.id, { puesto: e.target.value })}
-                        className="w-full rounded border-0 bg-transparent px-1 py-0.5 hover:bg-accent focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="w-full rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </td>
                     <td className="p-1 text-right">

@@ -62,7 +62,7 @@ export default function TablaCostosGenerales({
                       type="text"
                       value={c.descripcion}
                       onChange={(e) => editar(c.id, { descripcion: e.target.value })}
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 hover:bg-accent focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </td>
                   <td className="p-1 text-center">
@@ -71,7 +71,7 @@ export default function TablaCostosGenerales({
                       onChange={(e) =>
                         editar(c.id, { unidadMedida: e.target.value as "mes" | "año" })
                       }
-                      className="rounded border-0 bg-transparent px-1 py-0.5 hover:bg-accent focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="mes">Mes</option>
                       <option value="año">Año</option>
