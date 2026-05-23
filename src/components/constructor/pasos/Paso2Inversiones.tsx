@@ -69,17 +69,28 @@ const categorias: ConfigCategoria[] = [
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
   e.currentTarget.select();
 
+// Horizonte del proyecto para calcular el valor residual al final
+const ANIOS_PROYECTO = 5;
+
 // Anchos consistentes de columnas para que se alineen entre categorías
 const COLS_ANCHO = {
-  descripcion: "w-[28%]",
-  unidad: "w-[10%]",
-  cantidad: "w-[10%]",
-  costo: "w-[12%]",
-  total: "w-[14%]",
-  vidaUtil: "w-[9%]",
-  depAnio: "w-[12%]",
+  descripcion: "w-[22%]",
+  unidad: "w-[8%]",
+  cantidad: "w-[8%]",
+  costo: "w-[11%]",
+  total: "w-[12%]",
+  vidaUtil: "w-[7%]",
+  depAnio: "w-[10%]",
+  valorResidual: "w-[12%]",
   acciones: "w-[5%]",
 };
+
+function calcularValorResidualHorizonte(costoTotal: number, vidaUtil: number | null): number {
+  if (!vidaUtil || vidaUtil <= 0) return costoTotal; // terreno o sin depreciación
+  const depAnual = costoTotal / vidaUtil;
+  const depAcum = depAnual * Math.min(ANIOS_PROYECTO, vidaUtil);
+  return Math.max(0, costoTotal - depAcum);
+}
 
 export default function Paso2Inversiones() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
@@ -257,6 +268,9 @@ function SeccionCategoria({
                     <th className={cn("p-1.5 text-right", COLS_ANCHO.depAnio)}>
                       Dep./año
                     </th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.valorResidual)}>
+                      Valor residual
+                    </th>
                     <th className={cn("p-1.5", COLS_ANCHO.acciones)}></th>
                   </tr>
                 </thead>
@@ -334,6 +348,11 @@ function SeccionCategoria({
                       </td>
                       <td className="p-1 text-right text-xs text-muted-foreground">
                         {sinDepreciacion ? "—" : formatearBolivianos(it.depreciacionAnual)}
+                      </td>
+                      <td className="p-1 text-right text-xs font-medium text-foreground/80">
+                        {formatearBolivianos(
+                          calcularValorResidualHorizonte(it.costoTotal, it.vidaUtilAnios)
+                        )}
                       </td>
                       <td className="p-1 text-right">
                         <button
