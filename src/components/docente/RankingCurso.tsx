@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Award, Download, Medal, RefreshCw, Trophy } from "lucide-react";
+import { Award, Download, Eye, Medal, RefreshCw, Trophy } from "lucide-react";
 import {
   descargarCSV,
   obtenerRankingCurso,
@@ -8,6 +8,7 @@ import {
   type FilaRanking,
 } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
+import DetalleEstudiante from "./DetalleEstudiante";
 
 interface Props {
   cursoId: string;
@@ -22,6 +23,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
   const [orden, setOrden] = useState<ColumnaOrden>("utilidad_acumulada");
   const [error, setError] = useState<string | null>(null);
   const [actualizandoEn, setActualizandoEn] = useState<Date>(new Date());
+  const [expandido, setExpandido] = useState<string | null>(null);
 
   const cargar = async () => {
     setCargando(true);
@@ -145,11 +147,19 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                 />
               </th>
               <th className="p-2 text-center">Estado</th>
+              <th className="p-2"></th>
             </tr>
           </thead>
           <tbody>
             {ordenado.map((f, idx) => (
-              <tr key={f.estudiante_id} className="border-t border-border">
+              <>
+              <tr
+                key={f.estudiante_id}
+                className={cn(
+                  "border-t border-border transition",
+                  expandido === f.estudiante_id ? "bg-secondary/40" : "hover:bg-secondary/20"
+                )}
+              >
                 <td className="p-2">
                   <PuestoChip puesto={idx + 1} />
                 </td>
@@ -213,7 +223,33 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                     estado={f.estado_simulacion}
                   />
                 </td>
+                <td className="p-2 text-right">
+                  {f.tiene_proyecto && (
+                    <button
+                      onClick={() =>
+                        setExpandido(expandido === f.estudiante_id ? null : f.estudiante_id)
+                      }
+                      className="flex items-center gap-1 text-muted-foreground transition hover:text-foreground"
+                      title="Ver detalle del proyecto"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      {expandido === f.estudiante_id ? "Ocultar" : "Ver"}
+                    </button>
+                  )}
+                </td>
               </tr>
+              {expandido === f.estudiante_id && (
+                <tr className="border-t border-border bg-secondary/10">
+                  <td colSpan={9} className="p-3">
+                    <DetalleEstudiante
+                      cursoId={cursoId}
+                      estudianteId={f.estudiante_id}
+                      nombreEstudiante={f.nombre_completo}
+                    />
+                  </td>
+                </tr>
+              )}
+              </>
             ))}
           </tbody>
         </table>

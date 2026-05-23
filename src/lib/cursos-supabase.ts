@@ -265,6 +265,55 @@ export function rankingACSV(
   return bom + lineas.join("\n");
 }
 
+// ============================================================================
+// DETALLE DE PROYECTO DE UN ESTUDIANTE (para vista del docente)
+// ============================================================================
+export interface DetalleProyectoEstudiante {
+  proyecto: {
+    id: string;
+    nombre: string;
+    datos: any; // Proyecto JSONB completo
+  };
+  simulacion: any | null;
+  historial: any[];
+}
+
+export async function obtenerDetalleProyectoEstudiante(
+  cursoId: string,
+  estudianteId: string
+): Promise<DetalleProyectoEstudiante | null> {
+  // 1. Proyecto del estudiante en este curso
+  const { data: proyecto, error: e1 } = await supabase
+    .from("proyectos")
+    .select("id, nombre, datos")
+    .eq("estudiante_id", estudianteId)
+    .eq("curso_id", cursoId)
+    .maybeSingle();
+  if (e1 || !proyecto) return null;
+
+  // 2. Simulación activa o última
+  const { data: simulacion } = await supabase
+    .from("simulaciones")
+    .select("*")
+    .eq("proyecto_id", proyecto.id)
+    .order("iniciada_en", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // 3. Historial de decisiones (si hay simulación)
+  let historial: any[] = [];
+  if (simulacion) {
+    const { data } = await supabase
+      .from("turnos_historial")
+      .select("numero_turno, eventos_aplicados, decision_tomada, estado_despues")
+      .eq("simulacion_id", simulacion.id)
+      .order("numero_turno");
+    historial = data ?? [];
+  }
+
+  return { proyecto, simulacion, historial };
+}
+
 export function descargarCSV(contenido: string, nombreArchivo: string) {
   const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
