@@ -245,42 +245,59 @@ function SeccionCategoria({
           )}
 
           {/* Alerta de items que se deprecian antes del horizonte del proyecto */}
-          {items.some(
-            (it) =>
-              it.vidaUtilAnios !== null &&
-              it.vidaUtilAnios > 0 &&
-              it.vidaUtilAnios < ANIOS_PROYECTO
-          ) && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-400/60 bg-amber-50 p-2.5 text-[11px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-              <div>
-                <strong>Atención:</strong> hay items en esta categoría con{" "}
-                <strong>vida útil menor a {ANIOS_PROYECTO} años</strong>. Eso significa
-                que el activo se deprecia totalmente <em>antes</em> de que termine el
-                proyecto y su valor residual será <strong>Bs 0</strong>.
-                <br />
-                <strong>¿Qué hacer?</strong> Tienes 3 opciones — decídelo tú:
-                <ul className="ml-4 mt-1 list-disc">
-                  <li>
-                    <strong>Reemplazar (recompra):</strong> agrega un nuevo item idéntico
-                    en otra línea (representa la compra del activo de repuesto).
-                  </li>
-                  <li>
-                    <strong>No reemplazar:</strong> al agotarse, deja de operar (la
-                    proyección de demanda debería bajar a partir de ahí).
-                  </li>
-                  <li>
-                    <strong>Ajustar vida útil:</strong> si en la práctica dura más, sube
-                    el número de años.
-                  </li>
-                </ul>
-                <span className="text-amber-800/80 dark:text-amber-200/80">
-                  El simulador NO decide por ti. En el flujo de caja final aparecerá
-                  como lo modeles aquí.
-                </span>
+          {(() => {
+            const itemsCortos = items.filter(
+              (it) =>
+                it.vidaUtilAnios !== null &&
+                it.vidaUtilAnios > 0 &&
+                it.vidaUtilAnios < ANIOS_PROYECTO
+            );
+            if (itemsCortos.length === 0) return null;
+            const ejemplo = itemsCortos[0];
+            const vida = ejemplo.vidaUtilAnios ?? 0;
+            return (
+              <div className="flex items-start gap-2 rounded-md border-2 border-amber-400 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                <div className="space-y-2 leading-relaxed">
+                  <div className="text-sm font-semibold">
+                    Activo dura menos que el proyecto (5 años)
+                  </div>
+
+                  <div>
+                    <strong>{ejemplo.descripcion || "Tu activo"}</strong> tiene vida útil
+                    de <strong>{vida} años</strong>. En el año {vida + 1} ya está
+                    totalmente depreciado y vale <strong>Bs 0</strong>.
+                  </div>
+
+                  <div className="rounded bg-amber-100/60 p-2 dark:bg-amber-900/30">
+                    <div className="font-semibold">¿Qué decisión vas a tomar?</div>
+                    <ol className="ml-4 mt-1 list-decimal space-y-1">
+                      <li>
+                        <strong>Comprar uno nuevo cuando se acabe.</strong> Agrega otra
+                        línea idéntica abajo — representa la compra del repuesto. En el
+                        flujo de caja se verá como una segunda inversión.
+                      </li>
+                      <li>
+                        <strong>Aumentar la vida útil.</strong> Si en la realidad el
+                        activo dura más (mantenimiento, uso liviano), sube el número de
+                        años para que llegue al 5.
+                      </li>
+                      <li>
+                        <strong>Operar sin él al final.</strong> Si va a dejar de
+                        funcionar y no lo reemplazas, ajusta la cantidad proyectada de
+                        producto (Paso 2) a la baja en los años que ya no lo tengas.
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="italic">
+                    Tú decides cómo lo modelas. El simulador respeta tu elección y la
+                    refleja en el flujo de caja del Paso 9.
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {items.length > 0 && (
             <div className="overflow-x-auto rounded-md border border-border bg-card">
