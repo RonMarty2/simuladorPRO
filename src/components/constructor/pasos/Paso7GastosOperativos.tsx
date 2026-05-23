@@ -1,8 +1,38 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
-import { formatearBolivianos } from "@/lib/utils";
+import { formatearBolivianos, cn } from "@/lib/utils";
 import type { CostoGeneral } from "@/types/proyecto";
+
+interface ConfigSubcat {
+  label: string;
+  sugerencia: string;
+  borde: string;
+  bgFila: string;
+  bgHeader: string;
+  chip: string;
+}
+
+const CONFIG_ADMIN: ConfigSubcat = {
+  label: "Gastos administrativos",
+  sugerencia: "Alquiler, servicios básicos, honorarios contables, papelería…",
+  borde: "border-l-blue-500",
+  bgFila: "bg-blue-50 dark:bg-blue-950/20",
+  bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
+  chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+};
+
+const CONFIG_COMERC: ConfigSubcat = {
+  label: "Gastos de comercialización",
+  sugerencia: "Publicidad, distribución, comisiones, marketing digital…",
+  borde: "border-l-emerald-500",
+  bgFila: "bg-emerald-50 dark:bg-emerald-950/20",
+  bgHeader: "bg-emerald-100/70 dark:bg-emerald-950/40",
+  chip: "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
+};
+
+const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
+  e.currentTarget.select();
 
 export default function Paso7GastosOperativos() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
@@ -16,7 +46,6 @@ export default function Paso7GastosOperativos() {
   const edComerc = useProyectoStore((s) => s.editarCostoComercializacion);
   const elComerc = useProyectoStore((s) => s.eliminarCostoComercializacion);
 
-  // Totales año 1 de cada grupo
   const t1 = (items: CostoGeneral[]) =>
     items.reduce(
       (acc, c) => acc + c.cantidad * c.costoUnitario * (c.unidadMedida === "mes" ? 12 : 1),
@@ -25,7 +54,6 @@ export default function Paso7GastosOperativos() {
   const adminAnio1 = t1(proyecto.costosAdministracion);
   const comercAnio1 = t1(proyecto.costosComercializacion);
 
-  // Proyección a 5 años aplicando crecimientoCostosAnual
   const g = proyecto.crecimientoCostosAnual;
   const proyectarAnios = (base: number) =>
     [0, 1, 2, 3, 4].map((i) => base * Math.pow(1 + g, i));
@@ -33,20 +61,19 @@ export default function Paso7GastosOperativos() {
   const comercPorAnio = proyectarAnios(comercAnio1);
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-      <div className="space-y-4 rounded-lg border border-border bg-card p-6">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">
             Paso 7 · Gastos administrativos y comercialización
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Gastos fijos del proyecto que no escalan con cada unidad producida.
           </p>
         </div>
 
         <SeccionGastos
-          titulo="Gastos administrativos"
-          subtitulo="Alquiler, servicios básicos, honorarios contables, papelería…"
+          config={CONFIG_ADMIN}
           items={proyecto.costosAdministracion}
           totalAnio1={adminAnio1}
           onAgregar={agAdmin}
@@ -55,8 +82,7 @@ export default function Paso7GastosOperativos() {
         />
 
         <SeccionGastos
-          titulo="Gastos de comercialización"
-          subtitulo="Publicidad, distribución, comisiones, marketing digital…"
+          config={CONFIG_COMERC}
           items={proyecto.costosComercializacion}
           totalAnio1={comercAnio1}
           onAgregar={agComerc}
@@ -64,7 +90,7 @@ export default function Paso7GastosOperativos() {
           onEliminar={elComerc}
         />
 
-        {/* Crecimiento anual aplicable a ambos grupos */}
+        {/* Tasa de crecimiento aplicable a ambos grupos */}
         <div className="rounded-md border border-border bg-secondary/20 p-3">
           <label htmlFor="p7-crec" className="text-xs font-medium">
             Crecimiento anual de costos (inflación, ajustes):{" "}
@@ -88,15 +114,19 @@ export default function Paso7GastosOperativos() {
           </div>
         </div>
 
-        {/* Proyección 5 años */}
-        <div className="rounded-md border border-border bg-secondary/20 p-3">
-          <div className="mb-2 text-xs font-semibold">Proyección 5 años</div>
+        {/* Totales año a año */}
+        <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide">
+            Proyección 5 años
+          </div>
           <table className="w-full text-xs">
             <thead className="text-muted-foreground">
               <tr>
                 <th className="p-1 text-left">Concepto</th>
                 {[1, 2, 3, 4, 5].map((a) => (
-                  <th key={a} className="p-1 text-right">Año {a}</th>
+                  <th key={a} className="p-1 text-right">
+                    Año {a}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -104,19 +134,23 @@ export default function Paso7GastosOperativos() {
               <tr>
                 <td className="p-1">Administrativos</td>
                 {adminPorAnio.map((v, i) => (
-                  <td key={i} className="p-1 text-right">{formatearBolivianos(v)}</td>
+                  <td key={i} className="p-1 text-right">
+                    {formatearBolivianos(v)}
+                  </td>
                 ))}
               </tr>
               <tr>
                 <td className="p-1">Comercialización</td>
                 {comercPorAnio.map((v, i) => (
-                  <td key={i} className="p-1 text-right">{formatearBolivianos(v)}</td>
+                  <td key={i} className="p-1 text-right">
+                    {formatearBolivianos(v)}
+                  </td>
                 ))}
               </tr>
               <tr className="border-t border-border">
-                <td className="p-1 font-semibold">Total operativos</td>
+                <td className="p-1 font-bold">Total operativos</td>
                 {adminPorAnio.map((v, i) => (
-                  <td key={i} className="p-1 text-right font-semibold">
+                  <td key={i} className="p-1 text-right font-bold">
                     {formatearBolivianos(v + comercPorAnio[i])}
                   </td>
                 ))}
@@ -142,16 +176,14 @@ export default function Paso7GastosOperativos() {
 }
 
 function SeccionGastos({
-  titulo,
-  subtitulo,
+  config,
   items,
   totalAnio1,
   onAgregar,
   onEditar,
   onEliminar,
 }: {
-  titulo: string;
-  subtitulo: string;
+  config: ConfigSubcat;
   items: CostoGeneral[];
   totalAnio1: number;
   onAgregar: (c: Omit<CostoGeneral, "id">) => void;
@@ -159,98 +191,117 @@ function SeccionGastos({
   onEliminar: (id: string) => void;
 }) {
   return (
-    <div className="rounded-md border border-border">
-      <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-3 py-2">
-        <div>
-          <div className="text-sm font-medium">{titulo}</div>
-          <div className="text-[10px] text-muted-foreground">{subtitulo}</div>
+    <div className={cn("overflow-hidden rounded-md border-l-4", config.borde, config.bgFila)}>
+      <div
+        className={cn("flex items-center justify-between px-3 py-2", config.bgHeader)}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              config.chip
+            )}
+          >
+            {config.label}
+          </span>
+          <span className="text-[10px] text-foreground/70">{config.sugerencia}</span>
         </div>
         <div className="text-right">
           <div className="text-[10px] text-muted-foreground">Total año 1</div>
-          <div className="text-sm font-semibold">{formatearBolivianos(totalAnio1)}</div>
+          <div className="text-sm font-bold">{formatearBolivianos(totalAnio1)}</div>
         </div>
       </div>
 
-      {items.length > 0 && (
-        <table className="w-full text-xs">
-          <thead className="text-muted-foreground">
-            <tr className="border-b border-border">
-              <th className="p-1.5 text-left">Descripción</th>
-              <th className="p-1.5 text-center">Unidad</th>
-              <th className="p-1.5 text-right">Cantidad</th>
-              <th className="p-1.5 text-right">Costo unit.</th>
-              <th className="p-1.5 text-right">Total anual</th>
-              <th className="w-7"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((c) => {
-              const factor = c.unidadMedida === "mes" ? 12 : 1;
-              return (
-                <tr key={c.id} className="border-b border-border/50">
-                  <td className="p-1">
-                    <input
-                      type="text"
-                      value={c.descripcion}
-                      onChange={(e) => onEditar(c.id, { descripcion: e.target.value })}
-                      className="w-full rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </td>
-                  <td className="p-1 text-center">
-                    <select
-                      value={c.unidadMedida}
-                      onChange={(e) =>
-                        onEditar(c.id, { unidadMedida: e.target.value as "mes" | "año" })
-                      }
-                      className="rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="mes">Mes</option>
-                      <option value="año">Año</option>
-                    </select>
-                  </td>
-                  <td className="p-1 text-right">
-                    <input
-                      type="number"
-                      value={c.cantidad}
-                      onChange={(e) => onEditar(c.id, { cantidad: Number(e.target.value) || 0 })}
-                      className="w-16 rounded border-0 bg-transparent px-1 py-0.5 text-right hover:bg-accent focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                  </td>
-                  <td className="p-1 text-right">
-                    <input
-                      type="number"
-                      value={c.costoUnitario}
-                      onChange={(e) => onEditar(c.id, { costoUnitario: Number(e.target.value) || 0 })}
-                      className="w-24 rounded border-0 bg-transparent px-1 py-0.5 text-right hover:bg-accent focus:bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                  </td>
-                  <td className="p-1 text-right font-medium">
-                    {formatearBolivianos(c.cantidad * c.costoUnitario * factor)}
-                  </td>
-                  <td className="p-1">
-                    <button
-                      onClick={() => onEliminar(c.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
+      <div className="space-y-2 p-3">
+        {items.length > 0 && (
+          <div className="overflow-x-auto rounded-md border border-border bg-card">
+            <table className="w-full text-xs">
+              <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="p-1.5 text-left w-[35%]">Descripción</th>
+                  <th className="p-1.5 text-center w-[12%]">Unidad</th>
+                  <th className="p-1.5 text-right w-[12%]">Cantidad</th>
+                  <th className="p-1.5 text-right w-[16%]">Costo unit.</th>
+                  <th className="p-1.5 text-right w-[18%]">Total anual</th>
+                  <th className="w-8"></th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              </thead>
+              <tbody>
+                {items.map((c) => {
+                  const factor = c.unidadMedida === "mes" ? 12 : 1;
+                  return (
+                    <tr key={c.id} className="border-b border-border/40 last:border-0">
+                      <td className="p-1">
+                        <input
+                          type="text"
+                          value={c.descripcion}
+                          onChange={(e) => onEditar(c.id, { descripcion: e.target.value })}
+                          onFocus={selectOnFocus}
+                          placeholder="Alquiler, publicidad…"
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </td>
+                      <td className="p-1 text-center">
+                        <select
+                          value={c.unidadMedida}
+                          onChange={(e) =>
+                            onEditar(c.id, { unidadMedida: e.target.value as "mes" | "año" })
+                          }
+                          className="rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="mes">Mes</option>
+                          <option value="año">Año</option>
+                        </select>
+                      </td>
+                      <td className="p-1">
+                        <input
+                          type="number"
+                          value={c.cantidad}
+                          onChange={(e) =>
+                            onEditar(c.id, { cantidad: Number(e.target.value) || 0 })
+                          }
+                          onFocus={selectOnFocus}
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </td>
+                      <td className="p-1">
+                        <input
+                          type="number"
+                          value={c.costoUnitario}
+                          onChange={(e) =>
+                            onEditar(c.id, { costoUnitario: Number(e.target.value) || 0 })
+                          }
+                          onFocus={selectOnFocus}
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </td>
+                      <td className="p-1 text-right font-semibold">
+                        {formatearBolivianos(c.cantidad * c.costoUnitario * factor)}
+                      </td>
+                      <td className="p-1">
+                        <button
+                          onClick={() => onEliminar(c.id)}
+                          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      <div className="p-2">
         <button
           onClick={() =>
             onAgregar({ descripcion: "", unidadMedida: "mes", cantidad: 1, costoUnitario: 0 })
           }
-          className="flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 rounded-md border border-dashed border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:border-foreground hover:text-foreground"
         >
-          <Plus className="h-3 w-3" />
-          Agregar a {titulo.toLowerCase()}
+          <Plus className="h-3.5 w-3.5" />
+          Agregar a {config.label.toLowerCase()}
         </button>
       </div>
     </div>
