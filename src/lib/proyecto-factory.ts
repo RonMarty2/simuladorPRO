@@ -1,19 +1,31 @@
 import type { Producto, Proyecto } from "@/types/proyecto";
 
 /**
- * Migra un producto antiguo (con cantidadAnio1) al nuevo shape (cantidades[5]).
- * Sirve para datos legados guardados antes del refactor.
+ * Migra un producto antiguo al shape actual.
+ * - cantidadAnio1 → cantidades[5]
+ * - precioVenta único → precios[5]
  */
 export function migrarProducto(prod: any): Producto {
-  if (prod.cantidades && Array.isArray(prod.cantidades) && prod.cantidades.length === 5) {
-    return prod as Producto;
-  }
-  const base = Number(prod.cantidadAnio1 ?? 0);
+  const cantidades: [number, number, number, number, number] =
+    Array.isArray(prod.cantidades) && prod.cantidades.length === 5
+      ? prod.cantidades
+      : (() => {
+          const base = Number(prod.cantidadAnio1 ?? 0);
+          return [base, base, base, base, base];
+        })();
+  const precios: [number, number, number, number, number] =
+    Array.isArray(prod.precios) && prod.precios.length === 5
+      ? prod.precios
+      : (() => {
+          const base = Number(prod.precioVenta ?? 0);
+          return [base, base, base, base, base];
+        })();
   return {
     id: prod.id,
     nombre: prod.nombre,
     unidadMedida: prod.unidadMedida,
-    cantidades: [base, base, base, base, base],
+    cantidades,
+    precios,
     precioVenta: prod.precioVenta,
   };
 }

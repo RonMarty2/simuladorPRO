@@ -261,11 +261,15 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     0
   );
   const ingresosAnuales = p.productos.reduce(
-    (acc, prod) => acc + (prod.cantidades?.[0] ?? 0) * prod.precioVenta,
+    (acc, prod: any) => {
+      const cant = prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0;
+      const precio = prod.precios?.[0] ?? prod.precioVenta ?? 0;
+      return acc + cant * precio;
+    },
     0
   );
   const cantidadAnualUnidades = p.productos.reduce(
-    (acc, prod) => acc + (prod.cantidades?.[0] ?? 0),
+    (acc, prod: any) => acc + (prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0),
     0
   );
   const costoInsumosPorUnidad = p.costosDirectos.reduce(

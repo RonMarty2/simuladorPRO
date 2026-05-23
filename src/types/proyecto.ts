@@ -74,7 +74,10 @@ export interface Producto {
   unidadMedida: string;
   /** Cantidad proyectada para cada uno de los 5 años. cantidades[0] = año 1. */
   cantidades: [number, number, number, number, number];
-  precioVenta: number;
+  /** Precio de venta para cada año. precios[0] = año 1. */
+  precios: [number, number, number, number, number];
+  /** @deprecated reemplazado por `precios` (un valor por año). Se mantiene solo para datos legados. */
+  precioVenta?: number;
 }
 
 export interface Financiamiento {

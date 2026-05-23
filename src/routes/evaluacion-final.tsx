@@ -300,13 +300,17 @@ function calcularComparativo(
     0
   );
   const ingresoBase = proyecto.productos.reduce(
-    (acc, p) => acc + (p.cantidades?.[0] ?? 0) * p.precioVenta,
+    (acc, p: any) => {
+      const cant = p.cantidades?.[0] ?? p.cantidadAnio1 ?? 0;
+      const precio = p.precios?.[0] ?? p.precioVenta ?? 0;
+      return acc + cant * precio;
+    },
     0
   );
   const insumosAnio = proyecto.productos.reduce(
-    (acc, p) =>
+    (acc, p: any) =>
       acc +
-      (p.cantidades?.[0] ?? 0) *
+      (p.cantidades?.[0] ?? p.cantidadAnio1 ?? 0) *
         proyecto.costosDirectos.reduce(
           (s, c) => s + c.cantidadPorUnidad * c.costoUnitario,
           0

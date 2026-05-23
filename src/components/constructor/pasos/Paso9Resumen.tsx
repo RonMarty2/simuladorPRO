@@ -310,12 +310,15 @@ function FilaFlujo({
 // Construcción del flujo de caja a partir del proyecto
 // ============================================================================
 function construirFlujoCaja(proyecto: any) {
-  const productos = proyecto.productos.map((p: any) => ({
-    ...p,
-    cantidades: Array.isArray(p.cantidades) && p.cantidades.length === 5
+  const productos = proyecto.productos.map((p: any) => {
+    const cantidades = Array.isArray(p.cantidades) && p.cantidades.length === 5
       ? p.cantidades
-      : [p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0],
-  }));
+      : [p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0, p.cantidadAnio1 ?? 0];
+    const precios = Array.isArray(p.precios) && p.precios.length === 5
+      ? p.precios
+      : [p.precioVenta ?? 0, p.precioVenta ?? 0, p.precioVenta ?? 0, p.precioVenta ?? 0, p.precioVenta ?? 0];
+    return { ...p, cantidades, precios };
+  });
 
   // Inversión y depreciación
   const inversionItems = Object.values(proyecto.inversiones).flat() as any[];
@@ -373,7 +376,7 @@ function construirFlujoCaja(proyecto: any) {
 
   // Productos: ingresos y unidades por año
   const ingresos = [0, 1, 2, 3, 4].map((i) =>
-    productos.reduce((acc: number, p: any) => acc + p.cantidades[i] * p.precioVenta, 0)
+    productos.reduce((acc: number, p: any) => acc + p.cantidades[i] * p.precios[i], 0)
   );
   const unidades = [0, 1, 2, 3, 4].map((i) =>
     productos.reduce((acc: number, p: any) => acc + p.cantidades[i], 0)
