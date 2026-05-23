@@ -10,7 +10,11 @@ interface ConfigCategoria {
   label: string;
   sinDepreciacion?: boolean;
   vidaDefault: number;
-  color: { borde: string; chip: string };
+  // Clases para el color de la categoría
+  borde: string; // border-l-{color}
+  chip: string; // bg+text para el chip
+  bgFila: string; // fondo claro para todas las filas
+  bgHeader: string; // fondo del header de categoría
 }
 
 const categorias: ConfigCategoria[] = [
@@ -19,51 +23,63 @@ const categorias: ConfigCategoria[] = [
     label: "Terreno",
     sinDepreciacion: true,
     vidaDefault: 0,
-    color: {
-      borde: "border-l-amber-500",
-      chip: "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200",
-    },
+    borde: "border-l-amber-500",
+    chip: "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100",
+    bgFila: "bg-amber-50 dark:bg-amber-950/20",
+    bgHeader: "bg-amber-100/70 dark:bg-amber-950/40",
   },
   {
     valor: "obrasCiviles",
     label: "Obras civiles",
     vidaDefault: 20,
-    color: {
-      borde: "border-l-blue-500",
-      chip: "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200",
-    },
+    borde: "border-l-blue-500",
+    chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+    bgFila: "bg-blue-50 dark:bg-blue-950/20",
+    bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
   },
   {
     valor: "maquinaria",
     label: "Maquinaria y equipos",
     vidaDefault: 10,
-    color: {
-      borde: "border-l-emerald-500",
-      chip: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200",
-    },
+    borde: "border-l-emerald-500",
+    chip: "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
+    bgFila: "bg-emerald-50 dark:bg-emerald-950/20",
+    bgHeader: "bg-emerald-100/70 dark:bg-emerald-950/40",
   },
   {
     valor: "mobiliario",
     label: "Mobiliario",
     vidaDefault: 7,
-    color: {
-      borde: "border-l-purple-500",
-      chip: "bg-purple-100 text-purple-900 dark:bg-purple-900/40 dark:text-purple-200",
-    },
+    borde: "border-l-purple-500",
+    chip: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
+    bgFila: "bg-purple-50 dark:bg-purple-950/20",
+    bgHeader: "bg-purple-100/70 dark:bg-purple-950/40",
   },
   {
     valor: "activoDiferido",
     label: "Activo diferido (intangibles)",
     vidaDefault: 5,
-    color: {
-      borde: "border-l-pink-500",
-      chip: "bg-pink-100 text-pink-900 dark:bg-pink-900/40 dark:text-pink-200",
-    },
+    borde: "border-l-pink-500",
+    chip: "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100",
+    bgFila: "bg-pink-50 dark:bg-pink-950/20",
+    bgHeader: "bg-pink-100/70 dark:bg-pink-950/40",
   },
 ];
 
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
   e.currentTarget.select();
+
+// Anchos consistentes de columnas para que se alineen entre categorías
+const COLS_ANCHO = {
+  descripcion: "w-[28%]",
+  unidad: "w-[10%]",
+  cantidad: "w-[10%]",
+  costo: "w-[12%]",
+  total: "w-[14%]",
+  vidaUtil: "w-[9%]",
+  depAnio: "w-[12%]",
+  acciones: "w-[5%]",
+};
 
 export default function Paso2Inversiones() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
@@ -105,8 +121,8 @@ export default function Paso2Inversiones() {
               Paso 3 · Inversiones en activo fijo
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Bienes que tu proyecto necesita comprar al inicio. Cada categoría
-              calcula su depreciación automáticamente.
+              Bienes que tu proyecto necesita comprar al inicio. Cada categoría calcula
+              su depreciación automáticamente.
             </p>
           </div>
           <div className="text-right">
@@ -135,7 +151,7 @@ export default function Paso2Inversiones() {
         contenido={
           <>
             El <strong>activo fijo</strong> son bienes durables del proyecto. Excepto
-            el terreno, todos se deprecian (pierden valor por uso). La{" "}
+            el <strong>terreno</strong>, todos se deprecian (pierden valor por uso). La{" "}
             <strong>depreciación lineal</strong> = costo / vida útil. El{" "}
             <strong>valor residual</strong> al final del proyecto es lo que queda
             tras restar la depreciación acumulada.
@@ -178,65 +194,75 @@ function SeccionCategoria({
 }) {
   const [abierto, setAbierto] = useState(true);
   const subtotal = items.reduce((acc, it) => acc + it.costoTotal, 0);
-  const { color, label, sinDepreciacion } = config;
+  const { borde, chip, bgFila, bgHeader, label, sinDepreciacion } = config;
 
   return (
-    <div
-      className={cn(
-        "rounded-md border-l-4 border-border bg-secondary/20",
-        color.borde
-      )}
-    >
-      {/* Header */}
+    <div className={cn("overflow-hidden rounded-md border-l-4", borde, bgFila)}>
+      {/* Header de categoría */}
       <button
         onClick={() => setAbierto((v) => !v)}
-        className="flex w-full items-center justify-between px-3 py-2 text-left"
+        className={cn(
+          "flex w-full items-center justify-between px-3 py-2 text-left",
+          bgHeader
+        )}
       >
         <div className="flex items-center gap-2">
           <span
             className={cn(
               "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-              color.chip
+              chip
             )}
           >
             {label}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs font-medium text-foreground/70">
             ({items.length} {items.length === 1 ? "item" : "items"})
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{formatearBolivianos(subtotal)}</span>
-          <span className="text-xs text-muted-foreground">{abierto ? "▾" : "▸"}</span>
+          <span className="text-sm font-bold">{formatearBolivianos(subtotal)}</span>
+          <span className="text-xs">{abierto ? "▾" : "▸"}</span>
         </div>
       </button>
 
       {abierto && (
-        <div className="space-y-2 border-t border-border bg-card p-3">
+        <div className="space-y-2 p-3">
           {items.length === 0 && (
-            <div className="rounded border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+            <div className="rounded border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
               Aún no hay items en {label.toLowerCase()}.
             </div>
           )}
 
           {items.length > 0 && (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-md border border-border bg-card">
               <table className="w-full text-xs">
                 <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th className="p-1.5 text-left">Descripción</th>
-                    <th className="p-1.5 text-left">Unidad</th>
-                    <th className="p-1.5 text-right">Cantidad</th>
-                    <th className="p-1.5 text-right">Costo unit. (Bs)</th>
-                    <th className="p-1.5 text-right">Total (Bs)</th>
-                    {!sinDepreciacion && <th className="p-1.5 text-right">Vida útil</th>}
-                    {!sinDepreciacion && <th className="p-1.5 text-right">Dep./año</th>}
-                    <th className="w-8 p-1.5"></th>
+                    <th className={cn("p-1.5 text-left", COLS_ANCHO.descripcion)}>
+                      Descripción
+                    </th>
+                    <th className={cn("p-1.5 text-left", COLS_ANCHO.unidad)}>Unidad</th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.cantidad)}>
+                      Cantidad
+                    </th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.costo)}>
+                      Costo unit. (Bs)
+                    </th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.total)}>
+                      Total (Bs)
+                    </th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.vidaUtil)}>
+                      Vida útil
+                    </th>
+                    <th className={cn("p-1.5 text-right", COLS_ANCHO.depAnio)}>
+                      Dep./año
+                    </th>
+                    <th className={cn("p-1.5", COLS_ANCHO.acciones)}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((it) => (
-                    <tr key={it.id} className="border-b border-border/50 last:border-0">
+                    <tr key={it.id} className="border-b border-border/40 last:border-0">
                       <td className="p-1">
                         <input
                           type="text"
@@ -254,7 +280,7 @@ function SeccionCategoria({
                           onChange={(e) => onEditar(it.id, { unidadMedida: e.target.value })}
                           onFocus={selectOnFocus}
                           placeholder="m², und"
-                          className="w-20 rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
                       <td className="p-1">
@@ -267,7 +293,7 @@ function SeccionCategoria({
                           onFocus={selectOnFocus}
                           onKeyDown={onKeyEnter}
                           data-col={`${config.valor}-cant`}
-                          className="w-20 rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
                       <td className="p-1">
@@ -281,14 +307,16 @@ function SeccionCategoria({
                           onFocus={selectOnFocus}
                           onKeyDown={onKeyEnter}
                           data-col={`${config.valor}-costo`}
-                          className="w-24 rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
                       <td className="p-1 text-right text-xs font-semibold">
                         {formatearBolivianos(it.costoTotal)}
                       </td>
-                      {!sinDepreciacion && (
-                        <td className="p-1">
+                      <td className="p-1">
+                        {sinDepreciacion ? (
+                          <div className="text-center text-xs text-muted-foreground">—</div>
+                        ) : (
                           <input
                             type="number"
                             value={it.vidaUtilAnios ?? 0}
@@ -300,15 +328,13 @@ function SeccionCategoria({
                             onFocus={selectOnFocus}
                             onKeyDown={onKeyEnter}
                             data-col={`${config.valor}-vida`}
-                            className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                           />
-                        </td>
-                      )}
-                      {!sinDepreciacion && (
-                        <td className="p-1 text-right text-xs text-muted-foreground">
-                          {formatearBolivianos(it.depreciacionAnual)}
-                        </td>
-                      )}
+                        )}
+                      </td>
+                      <td className="p-1 text-right text-xs text-muted-foreground">
+                        {sinDepreciacion ? "—" : formatearBolivianos(it.depreciacionAnual)}
+                      </td>
                       <td className="p-1 text-right">
                         <button
                           onClick={() => onEliminar(it.id)}
@@ -335,7 +361,7 @@ function SeccionCategoria({
                 vidaUtilAnios: sinDepreciacion ? null : config.vidaDefault,
               })
             }
-            className="flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs text-muted-foreground transition hover:border-foreground hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-md border border-dashed border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground transition hover:border-foreground hover:text-foreground"
           >
             <Plus className="h-3.5 w-3.5" />
             Agregar a {label.toLowerCase()}
