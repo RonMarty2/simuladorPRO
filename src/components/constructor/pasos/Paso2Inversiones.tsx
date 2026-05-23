@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
@@ -244,6 +244,44 @@ function SeccionCategoria({
             </div>
           )}
 
+          {/* Alerta de items que se deprecian antes del horizonte del proyecto */}
+          {items.some(
+            (it) =>
+              it.vidaUtilAnios !== null &&
+              it.vidaUtilAnios > 0 &&
+              it.vidaUtilAnios < ANIOS_PROYECTO
+          ) && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-400/60 bg-amber-50 p-2.5 text-[11px] text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              <div>
+                <strong>Atención:</strong> hay items en esta categoría con{" "}
+                <strong>vida útil menor a {ANIOS_PROYECTO} años</strong>. Eso significa
+                que el activo se deprecia totalmente <em>antes</em> de que termine el
+                proyecto y su valor residual será <strong>Bs 0</strong>.
+                <br />
+                <strong>¿Qué hacer?</strong> Tienes 3 opciones — decídelo tú:
+                <ul className="ml-4 mt-1 list-disc">
+                  <li>
+                    <strong>Reemplazar (recompra):</strong> agrega un nuevo item idéntico
+                    en otra línea (representa la compra del activo de repuesto).
+                  </li>
+                  <li>
+                    <strong>No reemplazar:</strong> al agotarse, deja de operar (la
+                    proyección de demanda debería bajar a partir de ahí).
+                  </li>
+                  <li>
+                    <strong>Ajustar vida útil:</strong> si en la práctica dura más, sube
+                    el número de años.
+                  </li>
+                </ul>
+                <span className="text-amber-800/80 dark:text-amber-200/80">
+                  El simulador NO decide por ti. En el flujo de caja final aparecerá
+                  como lo modeles aquí.
+                </span>
+              </div>
+            </div>
+          )}
+
           {items.length > 0 && (
             <div className="overflow-x-auto rounded-md border border-border bg-card">
               <table className="w-full text-xs">
@@ -331,28 +369,73 @@ function SeccionCategoria({
                         {sinDepreciacion ? (
                           <div className="text-center text-xs text-muted-foreground">—</div>
                         ) : (
-                          <input
-                            type="number"
-                            value={it.vidaUtilAnios ?? 0}
-                            onChange={(e) =>
-                              onEditar(it.id, {
-                                vidaUtilAnios: Number(e.target.value) || 0,
-                              })
-                            }
-                            onFocus={selectOnFocus}
-                            onKeyDown={onKeyEnter}
-                            data-col={`${config.valor}-vida`}
-                            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={it.vidaUtilAnios ?? 0}
+                              onChange={(e) =>
+                                onEditar(it.id, {
+                                  vidaUtilAnios: Number(e.target.value) || 0,
+                                })
+                              }
+                              onFocus={selectOnFocus}
+                              onKeyDown={onKeyEnter}
+                              data-col={`${config.valor}-vida`}
+                              className={cn(
+                                "w-full rounded-md border bg-background px-2 py-1.5 pr-6 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring",
+                                it.vidaUtilAnios !== null &&
+                                  it.vidaUtilAnios > 0 &&
+                                  it.vidaUtilAnios < ANIOS_PROYECTO
+                                  ? "border-amber-400 bg-amber-50/50 dark:bg-amber-950/30"
+                                  : "border-input"
+                              )}
+                            />
+                            {it.vidaUtilAnios !== null &&
+                              it.vidaUtilAnios > 0 &&
+                              it.vidaUtilAnios < ANIOS_PROYECTO && (
+                                <AlertTriangle
+                                  className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-amber-600 dark:text-amber-400"
+                                  aria-label={`Vida útil menor a ${ANIOS_PROYECTO} años — se depreciará completo antes del fin del proyecto`}
+                                />
+                              )}
+                          </div>
                         )}
                       </td>
                       <td className="p-1 text-right text-xs text-muted-foreground">
                         {sinDepreciacion ? "—" : formatearBolivianos(it.depreciacionAnual)}
                       </td>
-                      <td className="p-1 text-right text-xs font-medium text-foreground/80">
-                        {formatearBolivianos(
-                          calcularValorResidualHorizonte(it.costoTotal, it.vidaUtilAnios)
-                        )}
+                      <td className="p-1 text-right text-xs">
+                        {(() => {
+                          const vr = calcularValorResidualHorizonte(
+                            it.costoTotal,
+                            it.vidaUtilAnios
+                          );
+                          const totalmenteDepreciado =
+                            it.vidaUtilAnios !== null &&
+                            it.vidaUtilAnios > 0 &&
+                            it.vidaUtilAnios <= ANIOS_PROYECTO &&
+                            vr === 0;
+                          return (
+                            <span
+                              className={cn(
+                                "font-medium",
+                                totalmenteDepreciado
+                                  ? "text-amber-700 dark:text-amber-400"
+                                  : "text-foreground/80"
+                              )}
+                              title={
+                                totalmenteDepreciado
+                                  ? "Totalmente depreciado al fin del proyecto"
+                                  : undefined
+                              }
+                            >
+                              {formatearBolivianos(vr)}
+                              {totalmenteDepreciado && (
+                                <span className="ml-1 text-[10px]">⚠</span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="p-1 text-right">
                         <button
