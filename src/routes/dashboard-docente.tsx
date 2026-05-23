@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Copy, GraduationCap, Plus, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Copy, GraduationCap, Plus, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   crearCurso,
@@ -10,6 +11,7 @@ import {
   type FrecuenciaCurso,
   type InscripcionConPerfil,
 } from "@/lib/cursos-supabase";
+import RankingCurso from "@/components/docente/RankingCurso";
 
 export default function DashboardDocente() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -216,6 +218,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [vista, setVista] = useState<"inscritos" | "ranking">("ranking");
 
   useEffect(() => {
     if (expandido && !inscritos) {
@@ -262,33 +265,69 @@ function CursoCard({
         className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
       >
         <Users className="h-3.5 w-3.5" />
-        {expandido ? "Ocultar" : "Ver"} estudiantes inscritos
+        {expandido ? "Ocultar" : "Ver"} estudiantes
         {inscritos && ` (${inscritos.length})`}
       </button>
 
       {expandido && (
-        <div className="mt-3 border-t border-border pt-3">
-          {!inscritos ? (
-            <div className="text-xs text-muted-foreground">Cargando…</div>
-          ) : inscritos.length === 0 ? (
-            <div className="text-xs text-muted-foreground">
-              Aún no hay inscritos. Comparte el código <strong>{curso.codigo}</strong> con tus
-              estudiantes.
-            </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {inscritos.map((i) => (
-                <li key={i.id} className="flex items-center justify-between text-xs">
-                  <span>
-                    {i.nombre} {i.apellido}
-                    {i.universidad && (
-                      <span className="ml-2 text-muted-foreground">· {i.universidad}</span>
-                    )}
-                  </span>
-                  <span className="text-muted-foreground">{i.email}</span>
-                </li>
-              ))}
-            </ul>
+        <div className="mt-3 space-y-3 border-t border-border pt-3">
+          <div className="flex gap-1.5 text-xs">
+            <button
+              onClick={() => setVista("ranking")}
+              className={cn(
+                "rounded px-2.5 py-1 transition",
+                vista === "ranking"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/70"
+              )}
+            >
+              <Trophy className="mr-1 inline h-3 w-3" />
+              Ranking en vivo
+            </button>
+            <button
+              onClick={() => setVista("inscritos")}
+              className={cn(
+                "rounded px-2.5 py-1 transition",
+                vista === "inscritos"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/70"
+              )}
+            >
+              <Users className="mr-1 inline h-3 w-3" />
+              Lista inscritos
+            </button>
+          </div>
+
+          {vista === "ranking" && (
+            <RankingCurso
+              cursoId={curso.id}
+              curso={{ nombre: curso.nombre, codigo: curso.codigo, materia: curso.materia }}
+            />
+          )}
+
+          {vista === "inscritos" && (
+            !inscritos ? (
+              <div className="text-xs text-muted-foreground">Cargando…</div>
+            ) : inscritos.length === 0 ? (
+              <div className="text-xs text-muted-foreground">
+                Aún no hay inscritos. Comparte el código <strong>{curso.codigo}</strong> con tus
+                estudiantes.
+              </div>
+            ) : (
+              <ul className="space-y-1.5">
+                {inscritos.map((i) => (
+                  <li key={i.id} className="flex items-center justify-between text-xs">
+                    <span>
+                      {i.nombre} {i.apellido}
+                      {i.universidad && (
+                        <span className="ml-2 text-muted-foreground">· {i.universidad}</span>
+                      )}
+                    </span>
+                    <span className="text-muted-foreground">{i.email}</span>
+                  </li>
+                ))}
+              </ul>
+            )
           )}
         </div>
       )}

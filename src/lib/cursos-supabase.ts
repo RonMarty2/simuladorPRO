@@ -135,3 +135,144 @@ export async function listarInscritosDeCurso(cursoId: string): Promise<Inscripci
     universidad: row.perfiles?.universidad ?? null,
   }));
 }
+
+// ============================================================================
+// RANKING DEL CURSO (FASE 8 — completa)
+// ============================================================================
+export interface FilaRanking {
+  estudiante_id: string;
+  nombre_completo: string;
+  universidad: string | null;
+  tiene_proyecto: boolean;
+  nombre_proyecto: string | null;
+  estado_proyecto: string | null;
+  // Simulación
+  tiene_simulacion: boolean;
+  turno_actual: number;
+  turnos_totales: number;
+  estado_simulacion: "activa" | "finalizada" | "quebrada" | null;
+  caja: number;
+  utilidad_acumulada: number;
+  ingresos_acumulados: number;
+  reputacion: number;
+}
+
+/**
+ * Devuelve el ranking de estudiantes de un curso, con su proyecto y simulación
+ * actual. Por defecto ordenado por utilidad acumulada (desc).
+ */
+export async function obtenerRankingCurso(cursoId: string): Promise<FilaRanking[]> {
+  // 1. Inscritos
+  const inscritos = await listarInscritosDeCurso(cursoId);
+  if (inscritos.length === 0) return [];
+
+  const estudianteIds = inscritos.map((i) => i.estudiante_id);
+
+  // 2. Proyectos de esos estudiantes para este curso (o sin curso)
+  const { data: proyectos, error: errProyectos } = await supabase
+    .from("proyectos")
+    .select("id, estudiante_id, nombre, estado")
+    .in("estudiante_id", estudianteIds);
+  if (errProyectos) throw errProyectos;
+
+  // 3. Simulaciones (la más reciente por estudiante)
+  const proyectoIds = (proyectos ?? []).map((p: any) => p.id);
+  let simulaciones: any[] = [];
+  if (proyectoIds.length > 0) {
+    const { data, error } = await supabase
+      .from("simulaciones")
+      .select("proyecto_id, turno_actual, turnos_totales, estado, estado_actual, iniciada_en")
+      .in("proyecto_id", proyectoIds)
+      .order("iniciada_en", { ascending: false });
+    if (error) throw error;
+    simulaciones = data ?? [];
+  }
+
+  // 4. Armar el ranking
+  const ranking: FilaRanking[] = inscritos.map((insc) => {
+    const proyecto = (proyectos ?? []).find((p: any) => p.estudiante_id === insc.estudiante_id);
+    const simulacion = proyecto
+      ? simulaciones.find((s: any) => s.proyecto_id === proyecto.id)
+      : null;
+    const estado = simulacion?.estado_actual ?? {};
+    return {
+      estudiante_id: insc.estudiante_id,
+      nombre_completo: `${insc.nombre} ${insc.apellido}`.trim(),
+      universidad: insc.universidad,
+      tiene_proyecto: !!proyecto,
+      nombre_proyecto: proyecto?.nombre ?? null,
+      estado_proyecto: proyecto?.estado ?? null,
+      tiene_simulacion: !!simulacion,
+      turno_actual: simulacion?.turno_actual ?? 0,
+      turnos_totales: simulacion?.turnos_totales ?? 0,
+      estado_simulacion: simulacion?.estado ?? null,
+      caja: estado.caja ?? 0,
+      utilidad_acumulada: estado.utilidad_acumulada ?? 0,
+      ingresos_acumulados: estado.ingresos_acumulados ?? 0,
+      reputacion: estado.reputacion ?? 0,
+    };
+  });
+
+  // Ordenar: primero los que tienen simulación, después por utilidad acumulada
+  ranking.sort((a, b) => {
+    if (a.tiene_simulacion !== b.tiene_simulacion) {
+      return a.tiene_simulacion ? -1 : 1;
+    }
+    return b.utilidad_acumulada - a.utilidad_acumulada;
+  });
+
+  return ranking;
+}
+
+// ============================================================================
+// EXPORTAR RANKING A CSV (compatible con Excel)
+// ============================================================================
+export function rankingACSV(
+  curso: Pick<Curso, "nombre" | "codigo" | "materia">,
+  ranking: FilaRanking[]
+): string {
+  // BOM para que Excel reconozca UTF-8
+  const bom = "﻿";
+  const cabecera = [
+    "Puesto",
+    "Estudiante",
+    "Universidad",
+    "Proyecto",
+    "Turno",
+    "Turnos totales",
+    "Estado simulación",
+    "Caja (Bs)",
+    "Ingresos acum. (Bs)",
+    "Utilidad acum. (Bs)",
+    "Reputación (%)",
+  ];
+  const filas = ranking.map((f, idx) => [
+    idx + 1,
+    `"${f.nombre_completo}"`,
+    `"${f.universidad ?? ""}"`,
+    `"${f.nombre_proyecto ?? ""}"`,
+    f.turno_actual,
+    f.turnos_totales,
+    f.estado_simulacion ?? "sin iniciar",
+    f.caja.toFixed(2),
+    f.ingresos_acumulados.toFixed(2),
+    f.utilidad_acumulada.toFixed(2),
+    (f.reputacion * 100).toFixed(0),
+  ]);
+  const titulo = `"${curso.nombre} - ${curso.materia} (cód. ${curso.codigo})"`;
+  const fecha = `"Exportado: ${new Date().toLocaleString("es-BO")}"`;
+  const lineas = [titulo, fecha, "", cabecera.join(","), ...filas.map((r) => r.join(","))];
+  return bom + lineas.join("\n");
+}
+
+export function descargarCSV(contenido: string, nombreArchivo: string) {
+  const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
