@@ -80,6 +80,13 @@ interface ProyectoState {
   setTasaCrecCantidad: (indice: number, valorPct: number) => void;
   setTasaCrecPrecio: (indice: number, valorPct: number) => void;
 
+  // Override de aportes patronales (si la LGT cambia)
+  setAportePatronal: (
+    campo: "riesgoProfesional" | "seguroSalud" | "provisionVivienda" | "previsionAguinaldo" | "previsionIndemnizacion",
+    valorDecimal: number
+  ) => void;
+  restaurarAportesPatronalesDefault: () => void;
+
   // Estado
   setEstado: (estado: EstadoProyecto) => void;
 }
@@ -407,6 +414,19 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
       return { ...prod, precios };
     });
     set({ proyecto: conTimestamp({ ...p, productos, tasasCrecPrecio: tasas }) });
+  },
+
+  setAportePatronal: (campo, valorDecimal) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const override = { ...(p.aportesPatronalesOverride ?? {}), [campo]: valorDecimal };
+    set({ proyecto: conTimestamp({ ...p, aportesPatronalesOverride: override }) });
+  },
+
+  restaurarAportesPatronalesDefault: () => {
+    const p = get().proyecto;
+    if (!p) return;
+    set({ proyecto: conTimestamp({ ...p, aportesPatronalesOverride: undefined }) });
   },
 
   setEstado: (estado) => {

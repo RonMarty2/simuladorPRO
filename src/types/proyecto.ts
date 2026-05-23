@@ -127,6 +127,22 @@ export interface Proyecto {
   tasasCrecCantidad?: [number, number, number, number];
   tasasCrecPrecio?: [number, number, number, number];
 
+  /**
+   * Override opcional de las tasas de aportes patronales (Bolivia).
+   * Si se deja vacío, se usan las tasas vigentes de la Ley General del
+   * Trabajo 2025 (riesgo prof 1.71%, salud 10%, vivienda 2%,
+   * aguinaldo 8.33%, indemnización 8.33% → total 30.37%).
+   *
+   * Valores en proporción decimal (0.1071 = 10.71%).
+   */
+  aportesPatronalesOverride?: {
+    riesgoProfesional?: number;
+    seguroSalud?: number;
+    provisionVivienda?: number;
+    previsionAguinaldo?: number;
+    previsionIndemnizacion?: number;
+  };
+
   // Metadatos
   estado: EstadoProyecto;
   creado_en: string;

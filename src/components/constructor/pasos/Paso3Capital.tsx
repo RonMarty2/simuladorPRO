@@ -1,7 +1,7 @@
 import { Calculator, Info } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
-import { calcularAportesPatronales } from "@/lib/calculo-financiero";
+import { calcularAportesPatronales, obtenerTasasAportes } from "@/lib/calculo-financiero";
 import { formatearBolivianos } from "@/lib/utils";
 
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
@@ -11,9 +11,11 @@ export default function Paso3Capital() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
   const setCapital = useProyectoStore((s) => s.setCapitalTrabajo);
 
+  const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
+
   // Cálculos automáticos basados en los pasos anteriores
   const personalAnual = proyecto.personal.reduce((acc, p) => {
-    const ap = calcularAportesPatronales(p.sueldoMensual);
+    const ap = calcularAportesPatronales(p.sueldoMensual, tasasAportes);
     return acc + ap.costoTotalAnual * p.cantidad;
   }, 0);
 

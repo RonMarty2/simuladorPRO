@@ -13,7 +13,7 @@ import {
   obtenerDetalleProyectoEstudiante,
   type DetalleProyectoEstudiante as Detalle,
 } from "@/lib/cursos-supabase";
-import { calcularAportesPatronales, calcularWACC } from "@/lib/calculo-financiero";
+import { calcularAportesPatronales, calcularWACC, obtenerTasasAportes } from "@/lib/calculo-financiero";
 import { formatearBolivianos } from "@/lib/utils";
 
 interface Props {
@@ -51,9 +51,10 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
       .flat()
       .reduce((acc: number, it: any) => acc + (it.costoTotal ?? 0), 0) + (p.capitalTrabajo ?? 0);
 
+  const tasasAportes = obtenerTasasAportes(p.aportesPatronalesOverride);
   const costoPersonalAnual = (p.personal ?? []).reduce(
     (acc: number, pers: any) =>
-      acc + calcularAportesPatronales(pers.sueldoMensual).costoTotalAnual * pers.cantidad,
+      acc + calcularAportesPatronales(pers.sueldoMensual, tasasAportes).costoTotalAnual * pers.cantidad,
     0
   );
 

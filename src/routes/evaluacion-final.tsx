@@ -24,6 +24,7 @@ import {
   calcularTIR,
   calcularVAN,
   calcularWACC,
+  obtenerTasasAportes,
 } from "@/lib/calculo-financiero";
 import { formatearBolivianos } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
@@ -287,8 +288,9 @@ function calcularComparativo(
       .flat()
       .reduce((acc, it) => acc + it.costoTotal, 0) + proyecto.capitalTrabajo;
 
+  const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const personalAnual = proyecto.personal.reduce(
-    (acc, p) => acc + calcularAportesPatronales(p.sueldoMensual).costoTotalAnual * p.cantidad,
+    (acc, p) => acc + calcularAportesPatronales(p.sueldoMensual, tasasAportes).costoTotalAnual * p.cantidad,
     0
   );
   const adminAnual = proyecto.costosAdministracion.reduce(

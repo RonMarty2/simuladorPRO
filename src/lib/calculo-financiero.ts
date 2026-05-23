@@ -12,13 +12,21 @@
 // CONSTANTES BOLIVIA (2025)
 // ============================================================================
 
-export const APORTES_PATRONALES_BOLIVIA = {
+export interface TasasAportesPatronales {
+  riesgoProfesional: number;
+  seguroSalud: number;
+  provisionVivienda: number;
+  previsionAguinaldo: number;
+  previsionIndemnizacion: number;
+}
+
+export const APORTES_PATRONALES_BOLIVIA: TasasAportesPatronales = {
   riesgoProfesional: 0.0171, // 1.71%
   seguroSalud: 0.10, // 10%
   provisionVivienda: 0.02, // 2%
   previsionAguinaldo: 0.0833, // 8.33%
   previsionIndemnizacion: 0.0833, // 8.33%
-} as const;
+};
 
 export const TASA_IUE = 0.25; // Impuesto a las Utilidades de Empresas
 export const TASA_IT = 0.03; // Impuesto a las Transacciones
@@ -74,7 +82,7 @@ export interface AportesPatronales {
 /**
  * Calcula los aportes patronales mensuales y el costo laboral total anual.
  *
- * Total mensual de aportes = 30.37% del sueldo bruto:
+ * Total mensual de aportes = 30.37% del sueldo bruto (por defecto):
  *   - Riesgo profesional: 1.71%
  *   - Seguro de salud: 10%
  *   - Provisión vivienda: 2%
@@ -82,14 +90,19 @@ export interface AportesPatronales {
  *   - Previsión indemnización: 8.33%
  *
  * Costo total anual = (sueldo mensual × 12) + (aportes mensuales × 12)
+ *
+ * Se pueden pasar tasas personalizadas (útil si cambia la Ley General del
+ * Trabajo). Si no se pasan, usa las vigentes 2025.
  */
-export function calcularAportesPatronales(sueldoMensual: number): AportesPatronales {
-  const riesgoProfesional = sueldoMensual * APORTES_PATRONALES_BOLIVIA.riesgoProfesional;
-  const seguroSalud = sueldoMensual * APORTES_PATRONALES_BOLIVIA.seguroSalud;
-  const provisionVivienda = sueldoMensual * APORTES_PATRONALES_BOLIVIA.provisionVivienda;
-  const previsionAguinaldo = sueldoMensual * APORTES_PATRONALES_BOLIVIA.previsionAguinaldo;
-  const previsionIndemnizacion =
-    sueldoMensual * APORTES_PATRONALES_BOLIVIA.previsionIndemnizacion;
+export function calcularAportesPatronales(
+  sueldoMensual: number,
+  tasas: TasasAportesPatronales = APORTES_PATRONALES_BOLIVIA
+): AportesPatronales {
+  const riesgoProfesional = sueldoMensual * tasas.riesgoProfesional;
+  const seguroSalud = sueldoMensual * tasas.seguroSalud;
+  const provisionVivienda = sueldoMensual * tasas.provisionVivienda;
+  const previsionAguinaldo = sueldoMensual * tasas.previsionAguinaldo;
+  const previsionIndemnizacion = sueldoMensual * tasas.previsionIndemnizacion;
   const totalAportes =
     riesgoProfesional +
     seguroSalud +
@@ -105,6 +118,29 @@ export function calcularAportesPatronales(sueldoMensual: number): AportesPatrona
     previsionIndemnizacion,
     totalAportes,
     costoTotalAnual,
+  };
+}
+
+/**
+ * Devuelve las tasas efectivas de aportes patronales para un proyecto.
+ * Combina los defaults bolivianos con cualquier override que tenga el proyecto.
+ */
+export function obtenerTasasAportes(
+  override?: {
+    riesgoProfesional?: number;
+    seguroSalud?: number;
+    provisionVivienda?: number;
+    previsionAguinaldo?: number;
+    previsionIndemnizacion?: number;
+  } | null
+): TasasAportesPatronales {
+  if (!override) return APORTES_PATRONALES_BOLIVIA;
+  return {
+    riesgoProfesional: override.riesgoProfesional ?? APORTES_PATRONALES_BOLIVIA.riesgoProfesional,
+    seguroSalud: override.seguroSalud ?? APORTES_PATRONALES_BOLIVIA.seguroSalud,
+    provisionVivienda: override.provisionVivienda ?? APORTES_PATRONALES_BOLIVIA.provisionVivienda,
+    previsionAguinaldo: override.previsionAguinaldo ?? APORTES_PATRONALES_BOLIVIA.previsionAguinaldo,
+    previsionIndemnizacion: override.previsionIndemnizacion ?? APORTES_PATRONALES_BOLIVIA.previsionIndemnizacion,
   };
 }
 

@@ -21,6 +21,7 @@ import {
   calcularTIR,
   calcularVAN,
   calcularWACC,
+  obtenerTasasAportes,
 } from "@/lib/calculo-financiero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 
@@ -367,10 +368,11 @@ function construirFlujoCaja(proyecto: any) {
     tasaImpuesto: 0.25,
   });
 
-  // Personal anual con aportes patronales 30.37%
+  // Personal anual con aportes patronales (default 30.37% o tasas custom)
+  const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const personalAnual = proyecto.personal.reduce(
     (acc: number, p: any) =>
-      acc + calcularAportesPatronales(p.sueldoMensual).costoTotalAnual * p.cantidad,
+      acc + calcularAportesPatronales(p.sueldoMensual, tasasAportes).costoTotalAnual * p.cantidad,
     0
   );
 

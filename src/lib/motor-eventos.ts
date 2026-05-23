@@ -22,6 +22,7 @@ import type { Proyecto } from "@/types/proyecto";
 import {
   calcularAportesPatronales,
   calcularCuotaPrestamoFrancesa,
+  obtenerTasasAportes,
 } from "./calculo-financiero";
 
 // ============================================================================
@@ -248,8 +249,9 @@ export interface MetricasProyectoBase {
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
+  const tasasAportes = obtenerTasasAportes(p.aportesPatronalesOverride);
   const personal = p.personal.reduce(
-    (acc, x) => acc + calcularAportesPatronales(x.sueldoMensual).costoTotalAnual * x.cantidad,
+    (acc, x) => acc + calcularAportesPatronales(x.sueldoMensual, tasasAportes).costoTotalAnual * x.cantidad,
     0
   );
   const admin = p.costosAdministracion.reduce(
