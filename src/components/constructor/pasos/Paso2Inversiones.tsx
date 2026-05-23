@@ -254,63 +254,69 @@ function SeccionCategoria({
             );
             if (itemsCortos.length === 0) return null;
             return (
-              <div className="flex items-start gap-2 rounded-md border-2 border-amber-400 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-                <div className="space-y-2 leading-relaxed">
-                  <div className="text-sm font-semibold">
-                    {itemsCortos.length === 1
-                      ? "1 activo dura menos que el proyecto (5 años)"
-                      : `${itemsCortos.length} activos duran menos que el proyecto (5 años)`}
-                  </div>
+              <div className="rounded-md border-2 border-amber-400 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <div className="space-y-2 leading-relaxed">
+                    <div className="text-sm font-semibold">
+                      {itemsCortos.length === 1
+                        ? "Tienes 1 activo que no dura los 5 años del proyecto"
+                        : `Tienes ${itemsCortos.length} activos que no duran los 5 años del proyecto`}
+                    </div>
 
-                  <div>
-                    {itemsCortos.length === 1 ? (
-                      <>
-                        <strong>{itemsCortos[0].descripcion || "Tu activo"}</strong> tiene
-                        vida útil de <strong>{itemsCortos[0].vidaUtilAnios} años</strong>.
-                        En el año {(itemsCortos[0].vidaUtilAnios ?? 0) + 1} ya está
-                        totalmente depreciado y vale <strong>Bs 0</strong>.
-                      </>
-                    ) : (
-                      <>
-                        Estos activos quedarán en valor 0 antes del año 5:
-                        <ul className="ml-4 mt-1 list-disc">
-                          {itemsCortos.map((it) => (
-                            <li key={it.id}>
-                              <strong>{it.descripcion || "(sin nombre)"}</strong>: dura{" "}
-                              <strong>{it.vidaUtilAnios} años</strong> → vale Bs 0 desde
-                              el año {(it.vidaUtilAnios ?? 0) + 1}
+                    <div className="rounded bg-amber-100/70 p-2.5 dark:bg-amber-900/30">
+                      <div className="mb-1.5 font-semibold">
+                        Si planeas comprar repuestos cuando se acaben:
+                      </div>
+                      <ul className="ml-3 space-y-1.5">
+                        {itemsCortos.map((it) => {
+                          const vida = it.vidaUtilAnios ?? 1;
+                          const cantSugerida = Math.ceil(ANIOS_PROYECTO / vida);
+                          const cantActual = it.cantidad;
+                          const yaEsSuficiente = cantActual >= cantSugerida;
+                          return (
+                            <li key={it.id} className="flex flex-wrap items-center gap-2">
+                              <span>
+                                <strong>{it.descripcion || "(sin nombre)"}</strong> dura{" "}
+                                {vida} años → necesitas <strong>{cantSugerida}{" "}
+                                unidades</strong> para cubrir los 5 años (1 original +{" "}
+                                {cantSugerida - 1} {cantSugerida - 1 === 1 ? "repuesto" : "repuestos"})
+                              </span>
+                              {!yaEsSuficiente && (
+                                <button
+                                  onClick={() =>
+                                    onEditar(it.id, { cantidad: cantSugerida })
+                                  }
+                                  className="rounded-md border border-amber-500 bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-800/40 dark:text-amber-100 dark:hover:bg-amber-700/50"
+                                >
+                                  ✓ Cambiar cantidad a {cantSugerida}
+                                </button>
+                              )}
+                              {yaEsSuficiente && (
+                                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                  Ya tienes suficiente (cantidad = {cantActual})
+                                </span>
+                              )}
                             </li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </div>
+                          );
+                        })}
+                      </ul>
+                    </div>
 
-                  <div className="rounded bg-amber-100/60 p-2 dark:bg-amber-900/30">
-                    <div className="font-semibold">¿Qué decisión vas a tomar?</div>
-                    <ol className="ml-4 mt-1 list-decimal space-y-1">
-                      <li>
-                        <strong>Comprar uno nuevo cuando se acabe.</strong> Agrega otra
-                        línea idéntica abajo — representa la compra del repuesto. En el
-                        flujo de caja se verá como una segunda inversión.
-                      </li>
-                      <li>
-                        <strong>Aumentar la vida útil.</strong> Si en la realidad el
-                        activo dura más (mantenimiento, uso liviano), sube el número de
-                        años para que llegue al 5.
-                      </li>
-                      <li>
-                        <strong>Operar sin él al final.</strong> Si va a dejar de
-                        funcionar y no lo reemplazas, ajusta la cantidad proyectada de
-                        producto (Paso 2) a la baja en los años que ya no lo tengas.
-                      </li>
-                    </ol>
-                  </div>
-
-                  <div className="italic">
-                    Tú decides cómo lo modelas. El simulador respeta tu elección y la
-                    refleja en el flujo de caja del Paso 9.
+                    <div className="text-[11px]">
+                      <strong>Otras opciones</strong> si no vas a comprar repuestos:
+                      <ul className="ml-3 mt-1 list-disc space-y-0.5">
+                        <li>
+                          <strong>Aumentar la vida útil</strong> a {ANIOS_PROYECTO} años
+                          si crees que en la práctica te durará todo el proyecto
+                          (mantenimiento, uso liviano).
+                        </li>
+                        <li>
+                          <strong>Operar sin él al final:</strong> ajusta tu proyección
+                          de demanda (Paso 2) a la baja en los años que ya no funcione.
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
