@@ -6,6 +6,7 @@ import {
   Hammer,
   LayoutDashboard,
   LogOut,
+  Newspaper,
   PlayCircle,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -15,11 +16,13 @@ const enlacesEstudiante = [
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
+  { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];
 
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
+  { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];
 
 export default function RootLayout() {
