@@ -129,7 +129,7 @@ export default function Paso2Proyeccion() {
                       onChange={(e) => setTasaCant(i, Number(e.target.value) || 0)}
                       onKeyDown={onKeyEnter}
                       onFocus={selectOnFocus}
-                      data-col={`tasaC-${i + 1}`}
+                      data-col={`anio-${i + 2}`}
                       className={inputClase}
                     />
                   </td>
@@ -150,7 +150,7 @@ export default function Paso2Proyeccion() {
                       onChange={(e) => setTasaPrec(i, Number(e.target.value) || 0)}
                       onKeyDown={onKeyEnter}
                       onFocus={selectOnFocus}
-                      data-col={`tasaP-${i + 1}`}
+                      data-col={`anio-${i + 2}`}
                       className={inputClase}
                     />
                   </td>
@@ -338,7 +338,7 @@ function ProductoFilas({
               onChange={(e) => onChangeCantidad(i, Number(e.target.value) || 0)}
               onKeyDown={onKeyEnter}
               onFocus={(e) => e.currentTarget.select()}
-              data-col={`cant-${i + 1}`}
+              data-col={`anio-${i + 1}`}
               className={inputClase}
             />
           </td>
@@ -359,7 +359,7 @@ function ProductoFilas({
               onChange={(e) => onChangePrecio(i, Number(e.target.value) || 0)}
               onKeyDown={onKeyEnter}
               onFocus={(e) => e.currentTarget.select()}
-              data-col={`prec-${i + 1}`}
+              data-col={`anio-${i + 1}`}
               className={inputClase}
             />
           </td>
