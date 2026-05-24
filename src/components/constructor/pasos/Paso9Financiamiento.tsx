@@ -763,48 +763,48 @@ function BloqueWACC({
         </div>
       </details>
 
-      {/* Los 4 ingredientes — ahora con nombre en español como protagonista */}
+      {/* Los 4 ingredientes — siglas como protagonistas, descripción debajo */}
       <div className="rounded-md bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Los 4 ingredientes del WACC en TU proyecto
         </div>
         <div className="grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-2 lg:grid-cols-4">
           <IngredienteWACC
-            nombre="% que pones de DEUDA"
             sigla="D/V"
+            nombre="% que financias con DEUDA"
             valor={`${(porcDeudaTotal * 100).toFixed(2)}%`}
             detalle={`${formatearBolivianos(deudaTotal)} prestado de Bs ${totalProyecto.toLocaleString("es-BO")} totales`}
             color="amber"
-            tooltip={`Cuántos bolivianos pides al banco sobre el total del proyecto.\n\nDeuda total = préstamo activo (${formatearBolivianos(montoActivo)}) + préstamo capital operativo (${formatearBolivianos(montoCapital)}) = ${formatearBolivianos(deudaTotal)}.\nProyecto total = inversiones fijas (${formatearBolivianos(inversionesFijas)}) + capital de trabajo (${formatearBolivianos(capitalOperativo)}) = ${formatearBolivianos(totalProyecto)}.\n\nDivisión: ${formatearBolivianos(deudaTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcDeudaTotal * 100).toFixed(2)}%`}
+            tooltip={`D/V = Deuda ÷ Valor total del proyecto.\n\nDeuda total = préstamo activo (${formatearBolivianos(montoActivo)}) + préstamo capital operativo (${formatearBolivianos(montoCapital)}) = ${formatearBolivianos(deudaTotal)}.\nProyecto total (V) = inversiones fijas (${formatearBolivianos(inversionesFijas)}) + capital de trabajo (${formatearBolivianos(capitalOperativo)}) = ${formatearBolivianos(totalProyecto)}.\n\nDivisión: ${formatearBolivianos(deudaTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcDeudaTotal * 100).toFixed(2)}%`}
           />
           <IngredienteWACC
-            nombre="TASA promedio del banco"
             sigla="Kd"
+            nombre="TASA promedio del banco"
             valor={`${(tasaPromedioDeuda * 100).toFixed(2)}%`}
-            detalle={`mezcla ${(tasaActivo * 100).toFixed(1)}% activo + ${(tasaCapital * 100).toFixed(1)}% capital operativo`}
+            detalle={`mezcla de ${(tasaActivo * 100).toFixed(1)}% (activo) y ${(tasaCapital * 100).toFixed(1)}% (capital operativo)`}
             color="amber"
-            tooltip={`Tasa de interés promedio que pagas al banco. Como tienes DOS préstamos a tasas distintas, se promedia ponderado por el monto de cada uno.\n\nKd = (${formatearBolivianos(montoActivo)} × ${(tasaActivo * 100).toFixed(2)}% + ${formatearBolivianos(montoCapital)} × ${(tasaCapital * 100).toFixed(2)}%) ÷ ${formatearBolivianos(deudaTotal)} = ${(tasaPromedioDeuda * 100).toFixed(2)}%`}
+            tooltip={`Kd = costo de la deuda. Promedio ponderado por monto de las dos deudas.\n\nKd = (${formatearBolivianos(montoActivo)} × ${(tasaActivo * 100).toFixed(2)}% + ${formatearBolivianos(montoCapital)} × ${(tasaCapital * 100).toFixed(2)}%) ÷ ${formatearBolivianos(deudaTotal)} = ${(tasaPromedioDeuda * 100).toFixed(2)}%`}
           />
           <IngredienteWACC
-            nombre="% que pones de tu BOLSILLO"
             sigla="E/V"
+            nombre="% que pones de tu BOLSILLO"
             valor={`${(porcCapitalTotal * 100).toFixed(2)}%`}
             detalle={`${formatearBolivianos(capitalPropioTotal)} propio de Bs ${totalProyecto.toLocaleString("es-BO")} totales`}
             color="emerald"
-            tooltip={`Cuántos bolivianos pones tú mismo sobre el total del proyecto.\n\nCapital propio = aporte del activo (${formatearBolivianos(aporteActivo)}) + aporte del capital operativo (${formatearBolivianos(aporteCapital)}) = ${formatearBolivianos(capitalPropioTotal)}.\n\nDivisión: ${formatearBolivianos(capitalPropioTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcCapitalTotal * 100).toFixed(2)}%`}
+            tooltip={`E/V = Equity (capital propio) ÷ Valor total.\n\nCapital propio (E) = aporte del activo (${formatearBolivianos(aporteActivo)}) + aporte del capital operativo (${formatearBolivianos(aporteCapital)}) = ${formatearBolivianos(capitalPropioTotal)}.\n\nDivisión: ${formatearBolivianos(capitalPropioTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcCapitalTotal * 100).toFixed(2)}%`}
           />
           <IngredienteWACC
-            nombre="LO QUE TE EXIGES a ti mismo"
             sigla="Ke"
+            nombre="LO QUE TE EXIGES a ti mismo"
             valor={`${(koa * 100).toFixed(2)}%`}
-            detalle="lo que pusiste arriba (Koa)"
+            detalle="costo de oportunidad (Koa) — editable arriba"
             color="emerald"
-            tooltip="Cuánto rendimiento le exiges a tu propia plata. Si pones Bs 100.000 y exiges 15% anual, esperás Bs 15.000 al año. Lo decides arriba editando el Koa (costo de oportunidad)."
+            tooltip="Ke = costo del Equity = costo de oportunidad del accionista. Cuánto rendimiento le exiges a tu propia plata. Si pones Bs 100.000 y exiges 15% anual, esperás Bs 15.000 al año. Lo decides editando el Koa arriba."
           />
         </div>
       </div>
 
-      {/* Cálculo paso a paso — palabras antes que símbolos */}
+      {/* Cálculo paso a paso — fórmula con siglas arriba, traducción abajo */}
       <div className="rounded-md bg-card p-3">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Cómo se calcula el WACC paso a paso
@@ -813,42 +813,50 @@ function BloqueWACC({
           {/* Línea 1: aporte de la deuda */}
           <div
             className="rounded bg-amber-50 px-2 py-2 dark:bg-amber-950/30"
-            title={`Aporte de la deuda al WACC:\n(% deuda) × (tasa del banco) × (1 - tasa de impuestos)\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(tasaPromedioDeuda * 100).toFixed(2)}% × ${(escudoFiscal * 100).toFixed(0)}%\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(kdNeto * 100).toFixed(2)}% (tasa neta después del escudo)\n= ${(contribDeuda * 100).toFixed(2)}%\n\n¿Por qué se multiplica por (1-T)? Los intereses que pagas al banco son deducibles del IUE (25%). Por cada Bs 100 que pagas en intereses, ahorras Bs 25 de impuesto. Por eso el costo "real" de la deuda baja del ${(tasaPromedioDeuda * 100).toFixed(2)}% al ${(kdNeto * 100).toFixed(2)}%.`}
+            title={`Aporte de la deuda al WACC:\n(D/V) × Kd × (1 - T)\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(tasaPromedioDeuda * 100).toFixed(2)}% × ${(escudoFiscal * 100).toFixed(0)}%\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(kdNeto * 100).toFixed(2)}% (tasa neta después del escudo)\n= ${(contribDeuda * 100).toFixed(2)}%\n\n¿Por qué (1-T)? Los intereses que pagas al banco son deducibles del IUE (25%). Por cada Bs 100 que pagas en intereses, ahorras Bs 25 de impuesto. Por eso el costo "real" de la deuda baja del ${(tasaPromedioDeuda * 100).toFixed(2)}% al ${(kdNeto * 100).toFixed(2)}%.`}
           >
             <div className="font-semibold text-amber-900 dark:text-amber-100">
-              1) Aporte de la deuda (con descuento por impuestos)
+              1) Aporte de la deuda al WACC (con escudo fiscal)
             </div>
-            <div className="mt-1 leading-relaxed text-amber-900 dark:text-amber-100">
-              <strong>{(porcDeudaTotal * 100).toFixed(2)}%</strong> que financias con préstamo
+            {/* FÓRMULA con siglas — protagonista */}
+            <div className="mt-1.5 font-mono text-sm text-amber-900 dark:text-amber-100">
+              <strong>D/V × Kd × (1−T)</strong>
+              {"  =  "}
+              <strong>{(porcDeudaTotal * 100).toFixed(2)}%</strong>
               {" × "}
-              <strong>{(tasaPromedioDeuda * 100).toFixed(2)}%</strong> tasa del banco
+              <strong>{(tasaPromedioDeuda * 100).toFixed(2)}%</strong>
               {" × "}
-              <strong>{(escudoFiscal * 100).toFixed(0)}%</strong> (1 menos el IUE 25%)
-              {" = "}
+              <strong>{(escudoFiscal * 100).toFixed(0)}%</strong>
+              {"  =  "}
               <strong className="text-base">{(contribDeuda * 100).toFixed(2)}%</strong>
             </div>
-            <div className="mt-1 font-mono text-[10px] text-amber-900/70 dark:text-amber-100/70">
-              fórmula: D/V × Kd × (1−T)
+            {/* TRADUCCIÓN en palabras — refuerzo */}
+            <div className="mt-1 text-[10px] italic text-amber-900/70 dark:text-amber-100/70">
+              en palabras: (% financiado con préstamo) × (tasa del banco) × (1 menos el IUE 25%)
             </div>
           </div>
 
           {/* Línea 2: aporte del capital propio */}
           <div
             className="rounded bg-emerald-50 px-2 py-2 dark:bg-emerald-950/30"
-            title={`Aporte del capital propio al WACC:\n(% capital propio) × (lo que te exiges a ti mismo)\n= ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n= ${(contribCapital * 100).toFixed(2)}%\n\nAcá NO hay escudo fiscal porque los dividendos al dueño NO bajan el IUE (a diferencia de los intereses).`}
+            title={`Aporte del capital propio al WACC:\n(E/V) × Ke\n= ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n= ${(contribCapital * 100).toFixed(2)}%\n\nAcá NO hay escudo fiscal porque los dividendos al dueño NO bajan el IUE (a diferencia de los intereses).`}
           >
             <div className="font-semibold text-emerald-900 dark:text-emerald-100">
-              2) Aporte de tu capital propio (sin descuento)
+              2) Aporte del capital propio al WACC (sin escudo fiscal)
             </div>
-            <div className="mt-1 leading-relaxed text-emerald-900 dark:text-emerald-100">
-              <strong>{(porcCapitalTotal * 100).toFixed(2)}%</strong> que pones tú
+            {/* FÓRMULA con siglas */}
+            <div className="mt-1.5 font-mono text-sm text-emerald-900 dark:text-emerald-100">
+              <strong>E/V × Ke</strong>
+              {"  =  "}
+              <strong>{(porcCapitalTotal * 100).toFixed(2)}%</strong>
               {" × "}
-              <strong>{(koa * 100).toFixed(2)}%</strong> que te exiges
-              {" = "}
+              <strong>{(koa * 100).toFixed(2)}%</strong>
+              {"  =  "}
               <strong className="text-base">{(contribCapital * 100).toFixed(2)}%</strong>
             </div>
-            <div className="mt-1 font-mono text-[10px] text-emerald-900/70 dark:text-emerald-100/70">
-              fórmula: E/V × Ke
+            {/* TRADUCCIÓN */}
+            <div className="mt-1 text-[10px] italic text-emerald-900/70 dark:text-emerald-100/70">
+              en palabras: (% que pones tú) × (rendimiento que te exiges)
             </div>
           </div>
 
@@ -857,12 +865,17 @@ function BloqueWACC({
             <div className="font-bold text-primary">
               3) WACC = paso (1) + paso (2)
             </div>
-            <div className="mt-1 leading-relaxed">
-              <strong>{(contribDeuda * 100).toFixed(2)}%</strong> (deuda)
+            <div className="mt-1.5 font-mono text-sm">
+              <strong>WACC</strong>
+              {"  =  "}
+              <strong>{(contribDeuda * 100).toFixed(2)}%</strong>
               {" + "}
-              <strong>{(contribCapital * 100).toFixed(2)}%</strong> (capital propio)
-              {" = "}
+              <strong>{(contribCapital * 100).toFixed(2)}%</strong>
+              {"  =  "}
               <strong className="text-lg text-primary">{(wacc * 100).toFixed(2)}%</strong>
+            </div>
+            <div className="mt-1 text-[10px] italic text-muted-foreground">
+              en palabras: lo que aporta la deuda + lo que aporta el capital propio
             </div>
           </div>
         </div>
@@ -880,15 +893,15 @@ function BloqueWACC({
 }
 
 function IngredienteWACC({
-  nombre,
   sigla,
+  nombre,
   valor,
   detalle,
   color,
   tooltip,
 }: {
-  nombre: string;
   sigla: string;
+  nombre: string;
   valor: string;
   detalle: string;
   color: "amber" | "emerald";
@@ -906,18 +919,18 @@ function IngredienteWACC({
       className={cn("rounded-md border px-2 py-2 cursor-help", claseFondo)}
       title={tooltip}
     >
-      {/* Nombre en español como protagonista */}
-      <div className={cn("text-[11px] font-semibold leading-tight", claseTexto)}>
+      {/* SIGLA en grande como protagonista */}
+      <div className={cn("font-mono text-2xl font-bold leading-none", claseTexto)}>
+        {sigla}
+      </div>
+      {/* Nombre en español como descripción debajo */}
+      <div className={cn("mt-0.5 text-[10px] font-medium leading-tight opacity-90", claseTexto)}>
         {nombre}
       </div>
-      {/* Sigla técnica como referencia secundaria */}
-      <div className={cn("font-mono text-[9px] opacity-60", claseTexto)}>
-        (en libros: {sigla})
-      </div>
-      {/* Valor numérico grande */}
-      <div className={cn("mt-1.5 text-xl font-bold", claseTexto)}>{valor}</div>
+      {/* Valor numérico destacado */}
+      <div className={cn("mt-2 text-xl font-bold", claseTexto)}>{valor}</div>
       {/* Detalle de cómo se obtiene */}
-      <div className={cn("mt-0.5 text-[10px] opacity-80 leading-snug", claseTexto)}>{detalle}</div>
+      <div className={cn("mt-0.5 text-[10px] opacity-75 leading-snug", claseTexto)}>{detalle}</div>
     </div>
   );
 }
