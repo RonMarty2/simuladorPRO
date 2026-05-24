@@ -132,10 +132,34 @@ export interface Financiamiento {
   prestamoCapitalTrabajo?: PrestamoConfig;
 }
 
+export type TipoProyecto = "libre" | "caso_curso" | "entrega_estudiante";
+
 export interface Proyecto {
   id: string;
   estudiante_id: string;
   curso_id: string | null;
+
+  /**
+   * Tipo del proyecto:
+   *  - 'libre'              proyecto creado libremente por un estudiante
+   *  - 'caso_curso'         plantilla creada por el docente (no se simula)
+   *  - 'entrega_estudiante' copia de un caso_curso que un estudiante trabaja
+   */
+  tipo?: TipoProyecto;
+
+  /**
+   * Si tipo='entrega_estudiante', apunta al proyecto 'caso_curso' del docente.
+   * Si tipo='caso_curso' o 'libre', es null.
+   */
+  caso_origen_id?: string | null;
+
+  /**
+   * Desde qué paso (1..9) debe empezar a completar el estudiante.
+   * Pasos anteriores llegan con los datos del docente; pasos >= a este número
+   * llegan vacíos.
+   * Solo aplica si tipo='caso_curso' (se hereda al clonar a 'entrega_estudiante').
+   */
+  paso_inicio_estudiante?: number | null;
 
   // Datos generales
   nombre: string;
@@ -198,4 +222,52 @@ export interface Proyecto {
   estado: EstadoProyecto;
   creado_en: string;
   actualizado_en: string;
+}
+
+// ============================================================================
+// ENTREGAS (revisiones del docente sobre el trabajo de los estudiantes)
+// ============================================================================
+
+export type EstadoEntrega = "pendiente" | "aprobada" | "reprobada";
+export type SugerenciaAutomatica = "aprobar" | "reprobar" | "duda";
+
+export interface Entrega {
+  id: string;
+  proyecto_id: string;
+  estudiante_id: string;
+  curso_id: string;
+  numero_intento: number;
+  estado: EstadoEntrega;
+
+  /** Snapshot completo del proyecto al momento de entregar */
+  snapshot_datos: Proyecto;
+
+  /** Indicadores calculados al momento de entregar (cache para listas) */
+  van: number | null;
+  tir: number | null;
+  wacc: number | null;
+  payback: number | null;
+
+  /** Sugerencia automática del sistema (basada en VAN, TIR, etc) */
+  sugerencia_automatica: SugerenciaAutomatica | null;
+  sugerencia_nota: number | null; // 0..100
+  sugerencia_razones: string[] | null;
+
+  /** Decisión del docente (null hasta que revisa) */
+  nota: number | null;
+  comentario_docente: string | null;
+
+  entregado_en: string;
+  revisado_en: string | null;
+}
+
+export interface PromedioEstudiante {
+  estudiante_id: string;
+  curso_id: string;
+  entregas_revisadas: number;
+  entregas_pendientes: number;
+  promedio_nota: number | null;
+  mejor_nota: number | null;
+  peor_nota: number | null;
+  ultima_entrega_en: string | null;
 }
