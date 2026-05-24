@@ -10,6 +10,7 @@ import ConstruirProyecto from "@/routes/construir-proyecto";
 import SimularProyecto from "@/routes/simular-proyecto";
 import EvaluacionFinal from "@/routes/evaluacion-final";
 import CatalogoEventos from "@/routes/catalogo-eventos";
+import MisEntregas from "@/routes/mis-entregas";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/simular" element={<SimularProyecto />} />
           <Route path="/evaluacion" element={<EvaluacionFinal />} />
           <Route path="/eventos" element={<CatalogoEventos />} />
+          <Route path="/mis-entregas" element={<MisEntregas />} />
         </Route>
       </Route>
       <Route path="*" element={<Hub />} />

@@ -12,6 +12,7 @@ import {
   type InscripcionConPerfil,
 } from "@/lib/cursos-supabase";
 import RankingCurso from "@/components/docente/RankingCurso";
+import EntregasCurso from "@/components/docente/EntregasCurso";
 
 export default function DashboardDocente() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -218,7 +219,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking">("ranking");
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas">("ranking");
 
   useEffect(() => {
     if (expandido && !inscritos) {
@@ -296,7 +297,20 @@ function CursoCard({
               <Users className="mr-1 inline h-3 w-3" />
               Lista inscritos
             </button>
+            <button
+              onClick={() => setVista("entregas")}
+              className={cn(
+                "rounded px-2.5 py-1 transition",
+                vista === "entregas"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/70"
+              )}
+            >
+              📥 Entregas
+            </button>
           </div>
+
+          {vista === "entregas" && <EntregasCurso cursoId={curso.id} />}
 
           {vista === "ranking" && (
             <RankingCurso

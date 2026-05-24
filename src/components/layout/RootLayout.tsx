@@ -15,6 +15,7 @@ const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
   { to: "/simular", label: "Simular", icon: PlayCircle },
+  { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
   { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];
