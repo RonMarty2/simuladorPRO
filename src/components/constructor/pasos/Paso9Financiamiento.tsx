@@ -102,41 +102,24 @@ export default function Paso9Financiamiento() {
           msgVacio="Todavía no calculaste el capital de trabajo en el Paso 8. Volvé y elegí los meses de buffer."
         />
 
-        {/* WACC y costo oportunidad */}
-        <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3 space-y-3">
-          <div className="text-sm font-semibold">Costo promedio ponderado de capital (WACC)</div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <CampoNumero
-              id="p7-koa"
-              label="Costo oportunidad del accionista (Koa)"
-              sufijo="%"
-              valor={Math.round(f.costoOportunidadAccionista * 1000) / 10}
-              onChange={(v) => setFin({ costoOportunidadAccionista: v / 100 })}
-              min={0}
-              max={50}
-              step={0.5}
-            />
-            <div className="rounded-md bg-card p-3">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                WACC del proyecto
-              </div>
-              <div className="text-2xl font-bold text-primary">{(wacc * 100).toFixed(2)}%</div>
-              <div className="text-[10px] text-muted-foreground">
-                Tasa de descuento para VAN/TIR
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-md bg-secondary/30 p-2 text-[11px] text-muted-foreground">
-            <strong className="text-foreground">Cálculo:</strong> deuda total{" "}
-            {formatearBolivianos(deudaTotal)} ({(porcDeudaTotal * 100).toFixed(1)}%) ×{" "}
-            {(tasaPromedioDeuda * 100).toFixed(2)}% × (1−25% IUE) + capital propio{" "}
-            {formatearBolivianos(capitalPropioTotal)} ({(porcCapitalTotal * 100).toFixed(1)}%)
-            × {(f.costoOportunidadAccionista * 100).toFixed(2)}% ={" "}
-            <strong className="text-foreground">{(wacc * 100).toFixed(2)}%</strong>
-          </div>
-        </div>
+        {/* WACC — explicación visual + cálculo paso a paso */}
+        <BloqueWACC
+          inversionesFijas={inversionesFijas}
+          capitalOperativo={capitalOperativo}
+          montoActivo={montoActivo}
+          montoCapital={montoCapital}
+          tasaActivo={activo.tasaInteresAnual}
+          tasaCapital={capital.tasaInteresAnual}
+          deudaTotal={deudaTotal}
+          capitalPropioTotal={capitalPropioTotal}
+          porcDeudaTotal={porcDeudaTotal}
+          porcCapitalTotal={porcCapitalTotal}
+          tasaPromedioDeuda={tasaPromedioDeuda}
+          koa={f.costoOportunidadAccionista}
+          tasaImpuesto={TASA_IUE}
+          wacc={wacc}
+          onChangeKoa={(v) => setFin({ costoOportunidadAccionista: v / 100 })}
+        />
 
         {/* Resumen rápido */}
         <div className="rounded-md border border-border bg-secondary/20 p-3">
@@ -302,7 +285,12 @@ function BloquePrestamo({
               Estructura del financiamiento
             </div>
 
-            <FilaLinea label="Total monto necesario" valor={formatearBolivianos(totalNecesario)} negrita />
+            <FilaLinea
+              label="Total monto necesario"
+              valor={formatearBolivianos(totalNecesario)}
+              negrita
+              tooltip="Es la base sobre la que se reparte la mezcla deuda/capital propio. Para activo fijo viene del Paso 3 (inversiones). Para capital operativo viene del Paso 8."
+            />
 
             <FilaLineaInput
               label="% Financiamiento (préstamo)"
@@ -314,11 +302,13 @@ function BloquePrestamo({
               step={0.5}
               onChange={(v) => cambiarMezcla(Math.min(100, Math.max(0, v)) / 100)}
               valorDerecho={formatearBolivianos(montoFinanciar)}
+              tooltip={`Monto financiado = total necesario × % préstamo = ${formatearBolivianos(totalNecesario)} × ${(cfg.porcentajePrestamo * 100).toFixed(2)}% = ${formatearBolivianos(montoFinanciar)}`}
             />
 
             <FilaLinea
               label={`Aporte propio (${(cfg.porcentajePropio * 100).toFixed(1)}%)`}
               valor={formatearBolivianos(aportePropio)}
+              tooltip={`Aporte propio = total necesario × % propio = ${formatearBolivianos(totalNecesario)} × ${(cfg.porcentajePropio * 100).toFixed(2)}% = ${formatearBolivianos(aportePropio)}`}
             />
           </div>
 
@@ -328,7 +318,12 @@ function BloquePrestamo({
               Condiciones del préstamo
             </div>
 
-            <FilaLinea label="Monto a financiar" valor={formatearBolivianos(montoFinanciar)} negrita />
+            <FilaLinea
+              label="Monto a financiar"
+              valor={formatearBolivianos(montoFinanciar)}
+              negrita
+              tooltip={`Mismo número que en la izquierda: total necesario × % préstamo = ${formatearBolivianos(montoFinanciar)}. Es el capital sobre el que el banco calcula la cuota.`}
+            />
 
             <FilaLineaInput
               label="Plazo del préstamo (meses)"
@@ -340,6 +335,7 @@ function BloquePrestamo({
               onChange={(v) => onChange({ plazoMeses: Math.max(1, Math.round(v)) })}
               valorDerecho={`${(cfg.plazoMeses / 12).toFixed(1)} años`}
               valorDerechoMuted
+              tooltip="Plazo total para devolver el préstamo. En Bolivia: activo fijo 5-10 años, capital operativo 3-5 años."
             />
 
             <FilaLineaInput
@@ -351,6 +347,7 @@ function BloquePrestamo({
               max={50}
               step={0.25}
               onChange={(v) => onChange({ tasaInteresAnual: Math.max(0, v) / 100 })}
+              tooltip="Tasa nominal anual cobrada por el banco. En Bolivia para PYMES: 8-14% típico."
             />
 
             <FilaLinea
@@ -358,6 +355,7 @@ function BloquePrestamo({
               valor={formatearBolivianos(cuotaMensual)}
               negrita
               destacado={colorBase}
+              tooltip={`Fórmula sistema francés: C = P × i / (1 - (1+i)^-n)\nP (capital) = ${formatearBolivianos(montoFinanciar)}\ni (tasa mensual) = ${(cfg.tasaInteresAnual * 100).toFixed(2)}% ÷ 12 = ${((cfg.tasaInteresAnual / 12) * 100).toFixed(4)}%\nn (meses) = ${cfg.plazoMeses}\n→ Cuota mensual = ${formatearBolivianos(cuotaMensual)}`}
             />
           </div>
 
@@ -427,18 +425,22 @@ function FilaLinea({
   valor,
   negrita,
   destacado,
+  tooltip,
 }: {
   label: string;
   valor: string;
   negrita?: boolean;
   destacado?: "orange" | "red";
+  tooltip?: string;
 }) {
   return (
     <div
       className={cn(
         "flex items-center justify-between gap-2 rounded px-1 py-1 text-xs",
-        destacado && DESTACADO_COLOR[destacado]
+        destacado && DESTACADO_COLOR[destacado],
+        tooltip && "cursor-help"
       )}
+      title={tooltip}
     >
       <span className={cn(negrita && "font-semibold")}>{label}</span>
       <span className={cn("tabular-nums", negrita && "font-bold")}>{valor}</span>
@@ -457,6 +459,7 @@ function FilaLineaInput({
   onChange,
   valorDerecho,
   valorDerechoMuted,
+  tooltip,
 }: {
   label: string;
   valor: number;
@@ -468,9 +471,16 @@ function FilaLineaInput({
   onChange: (v: number) => void;
   valorDerecho?: string;
   valorDerechoMuted?: boolean;
+  tooltip?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded px-1 py-1 text-xs">
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 rounded px-1 py-1 text-xs",
+        tooltip && "cursor-help"
+      )}
+      title={tooltip}
+    >
       <span className="flex-1">{label}</span>
       <div className="flex items-center gap-1">
         <input
@@ -511,6 +521,17 @@ type FilaAnio = {
   pagado: boolean;
 };
 
+const TOOLTIPS_AMORT: Record<string, string> = {
+  cuotaAnual:
+    "Cuota anual = cuota mensual × 12 meses. Como el sistema francés tiene cuota fija, este valor es igual todos los años mientras el préstamo esté vigente.",
+  interesAnual:
+    "Interés del año = saldo pendiente × tasa mensual, sumado mes a mes. Es alto al principio (debes más) y baja con el tiempo.",
+  amortizacionAnual:
+    "Amortización de capital = cuota − interés. Empieza baja y crece año a año porque cada vez queda menos saldo que genera intereses.",
+  saldoFinal:
+    "Saldo al cierre = saldo del año anterior − amortización del año. En el último año del plazo llega a Bs 0 (préstamo pagado).",
+};
+
 function FilaAmortAnio({
   label,
   filas,
@@ -522,6 +543,7 @@ function FilaAmortAnio({
   campo: keyof Omit<FilaAnio, "anio" | "pagado">;
   resaltar?: boolean;
 }) {
+  const tooltipBase = TOOLTIPS_AMORT[campo] ?? "";
   return (
     <tr
       className={cn(
@@ -529,14 +551,21 @@ function FilaAmortAnio({
         resaltar && "bg-secondary/30 font-semibold"
       )}
     >
-      <td className="p-1.5 font-medium">{label}</td>
+      <td className="p-1.5 font-medium" title={tooltipBase}>
+        {label} <span className="text-[9px] text-muted-foreground">ⓘ</span>
+      </td>
       {filas.map((f) => (
         <td
           key={f.anio}
           className={cn(
-            "p-1.5 text-right tabular-nums",
+            "p-1.5 text-right tabular-nums cursor-help",
             f.pagado && "text-muted-foreground/60"
           )}
+          title={
+            f.pagado
+              ? `Año ${f.anio}: el préstamo ya está pagado. Por eso ${label.toLowerCase()} = Bs 0.`
+              : `Año ${f.anio} — ${label}\n\n${tooltipBase}`
+          }
         >
           {formatearBolivianos(f[campo])}
         </td>
@@ -561,15 +590,36 @@ function FilaResumen({
   return (
     <tr className="border-b border-border/40">
       <td className="p-1">{concepto}</td>
-      <td className="p-1 text-right">{formatearBolivianos(total)}</td>
-      <td className="p-1 text-right text-emerald-700 dark:text-emerald-400">
+      <td
+        className="p-1 text-right cursor-help"
+        title={`${concepto} — Monto necesario total. Para activo fijo viene del Paso 3. Para capital operativo viene del Paso 8.`}
+      >
+        {formatearBolivianos(total)}
+      </td>
+      <td
+        className="p-1 text-right text-emerald-700 dark:text-emerald-400 cursor-help"
+        title={`Aporte propio = ${formatearBolivianos(total)} − ${formatearBolivianos(prestamo)} = ${formatearBolivianos(propio)} (${total > 0 ? ((propio / total) * 100).toFixed(1) : "0"}%)`}
+      >
         {formatearBolivianos(propio)}
       </td>
-      <td className="p-1 text-right text-amber-700 dark:text-amber-400">
+      <td
+        className="p-1 text-right text-amber-700 dark:text-amber-400 cursor-help"
+        title={`Préstamo = ${formatearBolivianos(total)} × % financiado = ${formatearBolivianos(prestamo)} (${total > 0 ? ((prestamo / total) * 100).toFixed(1) : "0"}%)`}
+      >
         {formatearBolivianos(prestamo)}
       </td>
-      <td className="p-1 text-right">{formatearBolivianos(cuotaMensual)}</td>
-      <td className="p-1 text-right">{formatearBolivianos(cuotaMensual * 12)}</td>
+      <td
+        className="p-1 text-right cursor-help"
+        title="Cuota mensual del sistema francés. Es lo que pagarás cada mes al banco mientras dure el plazo."
+      >
+        {formatearBolivianos(cuotaMensual)}
+      </td>
+      <td
+        className="p-1 text-right cursor-help"
+        title={`Cuota anual = cuota mensual × 12 = ${formatearBolivianos(cuotaMensual)} × 12 = ${formatearBolivianos(cuotaMensual * 12)}. Este valor se suma al Capital de trabajo del Paso 8.`}
+      >
+        {formatearBolivianos(cuotaMensual * 12)}
+      </td>
     </tr>
   );
 }
@@ -611,6 +661,234 @@ function CampoNumero({
         />
         {sufijo && <span className="text-sm text-muted-foreground">{sufijo}</span>}
       </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BloqueWACC — explicación didáctica del WACC paso a paso
+// ════════════════════════════════════════════════════════════════════════════
+
+function BloqueWACC({
+  inversionesFijas,
+  capitalOperativo,
+  montoActivo,
+  montoCapital,
+  tasaActivo,
+  tasaCapital,
+  deudaTotal,
+  capitalPropioTotal,
+  porcDeudaTotal,
+  porcCapitalTotal,
+  tasaPromedioDeuda,
+  koa,
+  tasaImpuesto,
+  wacc,
+  onChangeKoa,
+}: {
+  inversionesFijas: number;
+  capitalOperativo: number;
+  montoActivo: number;
+  montoCapital: number;
+  tasaActivo: number;
+  tasaCapital: number;
+  deudaTotal: number;
+  capitalPropioTotal: number;
+  porcDeudaTotal: number;
+  porcCapitalTotal: number;
+  tasaPromedioDeuda: number;
+  koa: number;
+  tasaImpuesto: number;
+  wacc: number;
+  onChangeKoa: (v: number) => void;
+}) {
+  const totalProyecto = inversionesFijas + capitalOperativo;
+  const aporteActivo = inversionesFijas - montoActivo;
+  const aporteCapital = capitalOperativo - montoCapital;
+  const escudoFiscal = 1 - tasaImpuesto;
+  const kdNeto = tasaPromedioDeuda * escudoFiscal;
+  const contribDeuda = porcDeudaTotal * kdNeto;
+  const contribCapital = porcCapitalTotal * koa;
+
+  return (
+    <div className="space-y-3 rounded-md border-2 border-primary/40 bg-primary/5 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-sm font-bold uppercase tracking-wide">
+            WACC — Costo promedio ponderado de capital
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            Es la <strong>tasa mínima</strong> que tu proyecto tiene que rendir para que valga la pena.
+            Se usa como tasa de descuento del VAN y se compara con la TIR.
+          </div>
+        </div>
+        <div
+          className="rounded-md bg-card px-3 py-2 text-right shadow-sm"
+          title={`WACC = (D/V × Kd × (1-T)) + (E/V × Ke)\n     = ${(porcDeudaTotal * 100).toFixed(2)}% × ${(tasaPromedioDeuda * 100).toFixed(2)}% × ${(escudoFiscal * 100).toFixed(0)}% + ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n     = ${(contribDeuda * 100).toFixed(2)}% + ${(contribCapital * 100).toFixed(2)}%\n     = ${(wacc * 100).toFixed(2)}%`}
+        >
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            WACC del proyecto
+          </div>
+          <div className="text-3xl font-bold text-primary">{(wacc * 100).toFixed(2)}%</div>
+          <div className="text-[10px] text-muted-foreground">Tasa de descuento</div>
+        </div>
+      </div>
+
+      {/* Koa editable */}
+      <div className="flex items-center gap-2 rounded-md bg-card p-2">
+        <label htmlFor="p7-koa" className="text-xs font-medium">
+          Costo de oportunidad del accionista (Ke):
+        </label>
+        <input
+          id="p7-koa"
+          type="number"
+          value={Math.round(koa * 1000) / 10}
+          onChange={(e) => onChangeKoa(Number(e.target.value) || 0)}
+          onFocus={(e) => e.currentTarget.select()}
+          min={0}
+          max={50}
+          step={0.5}
+          className="w-20 rounded border border-input bg-background px-2 py-1 text-right text-xs"
+        />
+        <span className="text-xs text-muted-foreground">%</span>
+        <span
+          className="ml-2 text-[10px] text-muted-foreground"
+          title="Es lo mínimo que ganarías si invirtieras esa plata en otra alternativa similar (DPF, bolsa, otro negocio). En Bolivia las PYMES usan 13-20% típico."
+        >
+          ⓘ ¿qué es esto?
+        </span>
+      </div>
+
+      {/* Diagrama de los 4 ingredientes */}
+      <div className="rounded-md bg-card p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Los 4 ingredientes del WACC
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
+          <IngredienteWACC
+            etiqueta="D/V"
+            nombre="% Deuda"
+            valor={`${(porcDeudaTotal * 100).toFixed(2)}%`}
+            detalle={`${formatearBolivianos(deudaTotal)} / ${formatearBolivianos(totalProyecto)}`}
+            color="amber"
+            tooltip={`Deuda total = préstamo activo (${formatearBolivianos(montoActivo)}) + préstamo capital operativo (${formatearBolivianos(montoCapital)}) = ${formatearBolivianos(deudaTotal)}.\nProyecto total = inversiones fijas (${formatearBolivianos(inversionesFijas)}) + capital de trabajo (${formatearBolivianos(capitalOperativo)}) = ${formatearBolivianos(totalProyecto)}.\nD/V = ${formatearBolivianos(deudaTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcDeudaTotal * 100).toFixed(2)}%`}
+          />
+          <IngredienteWACC
+            etiqueta="Kd"
+            nombre="Tasa promedio de la deuda"
+            valor={`${(tasaPromedioDeuda * 100).toFixed(2)}%`}
+            detalle={`(${(tasaActivo * 100).toFixed(1)}% activo + ${(tasaCapital * 100).toFixed(1)}% capital) ponderado`}
+            color="amber"
+            tooltip={`Promedio ponderado por monto de las dos deudas:\nKd = (${formatearBolivianos(montoActivo)} × ${(tasaActivo * 100).toFixed(2)}% + ${formatearBolivianos(montoCapital)} × ${(tasaCapital * 100).toFixed(2)}%) ÷ ${formatearBolivianos(deudaTotal)} = ${(tasaPromedioDeuda * 100).toFixed(2)}%`}
+          />
+          <IngredienteWACC
+            etiqueta="E/V"
+            nombre="% Capital propio"
+            valor={`${(porcCapitalTotal * 100).toFixed(2)}%`}
+            detalle={`${formatearBolivianos(capitalPropioTotal)} / ${formatearBolivianos(totalProyecto)}`}
+            color="emerald"
+            tooltip={`Capital propio = aporte propio del activo (${formatearBolivianos(aporteActivo)}) + aporte propio del capital operativo (${formatearBolivianos(aporteCapital)}) = ${formatearBolivianos(capitalPropioTotal)}.\nE/V = ${formatearBolivianos(capitalPropioTotal)} ÷ ${formatearBolivianos(totalProyecto)} = ${(porcCapitalTotal * 100).toFixed(2)}%`}
+          />
+          <IngredienteWACC
+            etiqueta="Ke"
+            nombre="Costo del accionista"
+            valor={`${(koa * 100).toFixed(2)}%`}
+            detalle="lo que tú definiste arriba"
+            color="emerald"
+            tooltip="Ke = costo de oportunidad del accionista. Editable arriba. Representa el rendimiento mínimo que el dueño esperaría de invertir su plata en este proyecto en lugar de en otra alternativa."
+          />
+        </div>
+      </div>
+
+      {/* Cálculo paso a paso */}
+      <div className="rounded-md bg-card p-3">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Cálculo paso a paso
+        </div>
+        <div className="space-y-1.5 text-xs">
+          {/* Línea 1: aporte de la deuda */}
+          <div
+            className="rounded bg-amber-50 px-2 py-1.5 dark:bg-amber-950/30"
+            title={`Aporte de la deuda al WACC:\nD/V × Kd × (1 - T)\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(tasaPromedioDeuda * 100).toFixed(2)}% × (1 - ${(tasaImpuesto * 100).toFixed(0)}%)\n= ${(porcDeudaTotal * 100).toFixed(2)}% × ${(kdNeto * 100).toFixed(2)}%\n= ${(contribDeuda * 100).toFixed(2)}%\n\n¿Por qué (1-T)? Los intereses son deducibles del IUE. Cada Bs de interés que pagas te ahorra 0,25 Bs de impuesto, así que el costo "real" de la deuda baja.`}
+          >
+            <div className="font-medium text-amber-900 dark:text-amber-100">
+              1. Aporte de la deuda (con escudo fiscal)
+            </div>
+            <div className="ml-3 mt-0.5 font-mono text-[11px] text-amber-900/80 dark:text-amber-100/80">
+              D/V × Kd × (1−T) = {(porcDeudaTotal * 100).toFixed(2)}% × {(tasaPromedioDeuda * 100).toFixed(2)}% × {(escudoFiscal * 100).toFixed(0)}% ={" "}
+              <strong>{(contribDeuda * 100).toFixed(2)}%</strong>
+            </div>
+          </div>
+
+          {/* Línea 2: aporte del capital propio */}
+          <div
+            className="rounded bg-emerald-50 px-2 py-1.5 dark:bg-emerald-950/30"
+            title={`Aporte del capital propio al WACC:\nE/V × Ke\n= ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n= ${(contribCapital * 100).toFixed(2)}%\n\nNo lleva escudo fiscal porque los dividendos NO son deducibles del IUE.`}
+          >
+            <div className="font-medium text-emerald-900 dark:text-emerald-100">
+              2. Aporte del capital propio (sin escudo fiscal)
+            </div>
+            <div className="ml-3 mt-0.5 font-mono text-[11px] text-emerald-900/80 dark:text-emerald-100/80">
+              E/V × Ke = {(porcCapitalTotal * 100).toFixed(2)}% × {(koa * 100).toFixed(2)}% ={" "}
+              <strong>{(contribCapital * 100).toFixed(2)}%</strong>
+            </div>
+          </div>
+
+          {/* Línea 3: suma */}
+          <div className="rounded border-2 border-primary bg-primary/10 px-2 py-1.5">
+            <div className="font-bold text-primary">3. WACC = (1) + (2)</div>
+            <div className="ml-3 mt-0.5 font-mono text-[11px]">
+              {(contribDeuda * 100).toFixed(2)}% + {(contribCapital * 100).toFixed(2)}% ={" "}
+              <strong className="text-base">{(wacc * 100).toFixed(2)}%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lectura del WACC */}
+      <div className="rounded-md bg-secondary/40 p-2 text-[11px] text-muted-foreground">
+        <strong className="text-foreground">📖 Cómo se lee:</strong> tu proyecto debe rendir
+        al menos <strong className="text-foreground">{(wacc * 100).toFixed(2)}%</strong> anual
+        para no destruir valor. Si la TIR queda por encima → el VAN es positivo y el proyecto
+        crea valor. Si queda por debajo → estás perdiendo plata aunque el negocio dé utilidad.
+      </div>
+    </div>
+  );
+}
+
+function IngredienteWACC({
+  etiqueta,
+  nombre,
+  valor,
+  detalle,
+  color,
+  tooltip,
+}: {
+  etiqueta: string;
+  nombre: string;
+  valor: string;
+  detalle: string;
+  color: "amber" | "emerald";
+  tooltip: string;
+}) {
+  const claseFondo =
+    color === "amber"
+      ? "bg-amber-50 border-amber-300 dark:bg-amber-950/30 dark:border-amber-700"
+      : "bg-emerald-50 border-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-700";
+  const claseTexto =
+    color === "amber" ? "text-amber-900 dark:text-amber-100" : "text-emerald-900 dark:text-emerald-100";
+
+  return (
+    <div
+      className={cn("rounded-md border px-2 py-1.5 cursor-help", claseFondo)}
+      title={tooltip}
+    >
+      <div className={cn("font-mono text-[10px] font-bold uppercase", claseTexto)}>
+        {etiqueta}
+      </div>
+      <div className={cn("text-[10px]", claseTexto)}>{nombre}</div>
+      <div className={cn("mt-0.5 text-base font-bold", claseTexto)}>{valor}</div>
+      <div className={cn("text-[9px] opacity-75", claseTexto)}>{detalle}</div>
     </div>
   );
 }
