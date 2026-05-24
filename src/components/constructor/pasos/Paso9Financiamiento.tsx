@@ -624,47 +624,6 @@ function FilaResumen({
   );
 }
 
-function CampoNumero({
-  id,
-  label,
-  valor,
-  onChange,
-  sufijo,
-  min,
-  max,
-  step,
-}: {
-  id: string;
-  label: string;
-  valor: number;
-  onChange: (v: number) => void;
-  sufijo?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-}) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
-        {label}
-      </label>
-      <div className="flex items-center gap-1">
-        <input
-          id={id}
-          type="number"
-          value={valor}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
-          min={min}
-          max={max}
-          step={step}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        {sufijo && <span className="text-sm text-muted-foreground">{sufijo}</span>}
-      </div>
-    </div>
-  );
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // BloqueWACC — explicación didáctica del WACC paso a paso
 // ════════════════════════════════════════════════════════════════════════════
