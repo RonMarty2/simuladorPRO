@@ -25,6 +25,7 @@ import {
   calcularVAN,
   calcularWACC,
   obtenerTasasAportes,
+  TASA_IUE,
 } from "@/lib/calculo-financiero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 
@@ -565,54 +566,103 @@ function construirFlujoCaja(proyecto: any) {
     return { ...p, cantidades, precios };
   });
 
-  // Inversión y depreciación
+  // ── Inversión y depreciación ──────────────────────────────────────────────
   const inversionItems = Object.values(proyecto.inversiones).flat() as any[];
   const inversionInicial = inversionItems.reduce((a, it) => a + it.costoTotal, 0);
   const depreciacionAnual = inversionItems.reduce((a, it) => a + (it.depreciacionAnual ?? 0), 0);
   const valorResidual = inversionItems.reduce((a, it) => a + (it.valorResidual ?? 0), 0);
 
-  // Financiamiento
+  // ── Financiamiento: DOS préstamos separados (activo fijo + capital op) ────
   const f = proyecto.financiamiento;
-  const totalInversion = inversionInicial + proyecto.capitalTrabajo;
-  const montoPrestamo = totalInversion * f.porcentajePrestamo;
-  const cuotaMensual = calcularCuotaPrestamoFrancesa(
-    montoPrestamo,
-    f.tasaInteresAnual,
-    f.plazoMeses
+  const TASA_IMP = TASA_IUE;
+
+  // Préstamo 1 — Activo fijo
+  const montoPrestActivo = inversionInicial * (f?.porcentajePrestamo ?? 0);
+  const cuotaMensualActivo =
+    montoPrestActivo > 0 && f?.plazoMeses
+      ? calcularCuotaPrestamoFrancesa(montoPrestActivo, f.tasaInteresAnual ?? 0, f.plazoMeses)
+      : 0;
+
+  // Préstamo 2 — Capital operativo
+  const cwCfg = f?.prestamoCapitalTrabajo;
+  const montoPrestCapital = proyecto.capitalTrabajo * (cwCfg?.porcentajePrestamo ?? 0);
+  const cuotaMensualCapital =
+    montoPrestCapital > 0 && cwCfg?.plazoMeses
+      ? calcularCuotaPrestamoFrancesa(montoPrestCapital, cwCfg.tasaInteresAnual ?? 0, cwCfg.plazoMeses)
+      : 0;
+
+  const montoPrestamo = montoPrestActivo + montoPrestCapital;
+
+  // Tabla de amortización por separado para cada préstamo, luego sumamos
+  const amortizarPrestamo = (
+    montoInicial: number,
+    tasaAnual: number,
+    plazoMeses: number,
+    cuotaMensual: number
+  ) => {
+    const intereses: number[] = [];
+    const amortizacion: number[] = [];
+    let saldo = montoInicial;
+    const iMes = tasaAnual / 12;
+    const mesesPagados = Math.min(60, plazoMeses);
+    for (let anio = 0; anio < 5; anio++) {
+      let int = 0;
+      let amort = 0;
+      for (let mes = 0; mes < 12; mes++) {
+        const mesGlobal = anio * 12 + mes + 1;
+        if (mesGlobal > mesesPagados || saldo <= 0) break;
+        const intMes = saldo * iMes;
+        const amortMes = cuotaMensual - intMes;
+        int += intMes;
+        amort += amortMes;
+        saldo -= amortMes;
+      }
+      intereses.push(int);
+      amortizacion.push(amort);
+    }
+    return { intereses, amortizacion };
+  };
+
+  const amortActivo = amortizarPrestamo(
+    montoPrestActivo,
+    f?.tasaInteresAnual ?? 0,
+    f?.plazoMeses ?? 0,
+    cuotaMensualActivo
+  );
+  const amortCapital = amortizarPrestamo(
+    montoPrestCapital,
+    cwCfg?.tasaInteresAnual ?? 0,
+    cwCfg?.plazoMeses ?? 0,
+    cuotaMensualCapital
   );
 
-  // Tabla amortización año por año (intereses y amortización capital por año)
-  let saldo = montoPrestamo;
-  const i_mes = f.tasaInteresAnual / 12;
-  const intereses: number[] = [];
-  const amortizacion: number[] = [];
-  const mesesPagados = Math.min(60, f.plazoMeses);
-  for (let anio = 0; anio < 5; anio++) {
-    let int = 0,
-      amort = 0;
-    for (let mes = 0; mes < 12; mes++) {
-      const mesGlobal = anio * 12 + mes + 1;
-      if (mesGlobal > mesesPagados || saldo <= 0) break;
-      const intMes = saldo * i_mes;
-      const amortMes = cuotaMensual - intMes;
-      int += intMes;
-      amort += amortMes;
-      saldo -= amortMes;
-    }
-    intereses.push(int);
-    amortizacion.push(amort);
-  }
+  // Sumar año por año los dos préstamos
+  const intereses = [0, 1, 2, 3, 4].map((i) => amortActivo.intereses[i] + amortCapital.intereses[i]);
+  const amortizacion = [0, 1, 2, 3, 4].map(
+    (i) => amortActivo.amortizacion[i] + amortCapital.amortizacion[i]
+  );
 
-  // WACC
+  // ── WACC ponderado por monto de los dos préstamos ─────────────────────────
+  const totalProyecto = inversionInicial + proyecto.capitalTrabajo;
+  const deudaTotal = montoPrestActivo + montoPrestCapital;
+  const capitalPropioTotal = totalProyecto - deudaTotal;
+  const porcDeudaTotal = totalProyecto > 0 ? deudaTotal / totalProyecto : 0;
+  const porcCapitalTotal = totalProyecto > 0 ? capitalPropioTotal / totalProyecto : 1;
+  const tasaPromedioDeuda =
+    deudaTotal > 0
+      ? (montoPrestActivo * (f?.tasaInteresAnual ?? 0) +
+          montoPrestCapital * (cwCfg?.tasaInteresAnual ?? 0)) /
+        deudaTotal
+      : 0;
   const wacc = calcularWACC({
-    porcentajeDeuda: f.porcentajePrestamo,
-    porcentajeCapital: f.porcentajePropio,
-    tasaInteresDeuda: f.tasaInteresAnual,
+    porcentajeDeuda: porcDeudaTotal,
+    porcentajeCapital: porcCapitalTotal,
+    tasaInteresDeuda: tasaPromedioDeuda,
     costoOportunidadAccionista: f.costoOportunidadAccionista,
-    tasaImpuesto: 0.25,
+    tasaImpuesto: TASA_IMP,
   });
 
-  // Personal anual con aportes patronales (default 30.37% o tasas custom)
+  // ── Personal con aportes patronales (crece con inflación de costos) ──────
   const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const personalAnual = proyecto.personal.reduce(
     (acc: number, p: any) =>
@@ -620,23 +670,36 @@ function construirFlujoCaja(proyecto: any) {
     0
   );
 
-  // Productos: ingresos y unidades por año
+  // ── Productos: ingresos por año (cantidades[i] × precios[i]) ─────────────
   const ingresos = [0, 1, 2, 3, 4].map((i) =>
     productos.reduce((acc: number, p: any) => acc + p.cantidades[i] * p.precios[i], 0)
   );
-  const unidades = [0, 1, 2, 3, 4].map((i) =>
-    productos.reduce((acc: number, p: any) => acc + p.cantidades[i], 0)
-  );
 
-  // Costos directos = costo unitario × unidades de año
-  const costoUnitDirectos = proyecto.costosDirectos.reduce(
-    (acc: number, c: any) => acc + c.cantidadPorUnidad * c.costoUnitario,
-    0
-  );
-  const costosProduccion = unidades.map((u) => u * costoUnitDirectos);
-
-  // Gastos administrativos y comerc — crecimiento aplicado año a año
+  // ── Costos directos POR PRODUCTO (fix del bug de mezcla) ─────────────────
+  // El costo unitario también crece año a año por inflación de insumos.
   const g = proyecto.crecimientoCostosAnual;
+  const costosProduccion = [0, 1, 2, 3, 4].map((i) => {
+    const inflacion = Math.pow(1 + g, i);
+    // Por cada producto: unidades_año_i × Σ (cantPorUnidad × costoUnit) de ESE producto
+    const costoPorProducto = productos.reduce((acc: number, p: any) => {
+      const unidadesProd = p.cantidades[i] ?? 0;
+      const costoUnit = proyecto.costosDirectos
+        .filter((c: any) => c.productoId === p.id)
+        .reduce((a: number, c: any) => a + c.cantidadPorUnidad * c.costoUnitario, 0);
+      return acc + unidadesProd * costoUnit * inflacion;
+    }, 0);
+    // Items huérfanos (sin productoId): prorratear contra todas las unidades
+    const unidadesTotales = productos.reduce(
+      (a: number, p: any) => a + (p.cantidades[i] ?? 0),
+      0
+    );
+    const costoUnitHuerfanos = proyecto.costosDirectos
+      .filter((c: any) => c.productoId == null)
+      .reduce((a: number, c: any) => a + c.cantidadPorUnidad * c.costoUnitario, 0);
+    return costoPorProducto + unidadesTotales * costoUnitHuerfanos * inflacion;
+  });
+
+  // ── Admin y Comerc — crecimiento aplicado año a año ──────────────────────
   const gAdminBase = proyecto.costosAdministracion.reduce(
     (acc: number, c: any) => acc + c.cantidad * c.costoUnitario * (c.unidadMedida === "mes" ? 12 : 1),
     0
@@ -648,8 +711,8 @@ function construirFlujoCaja(proyecto: any) {
   const gastosAdmin = [0, 1, 2, 3, 4].map((i) => gAdminBase * Math.pow(1 + g, i));
   const gastosComerc = [0, 1, 2, 3, 4].map((i) => gComercBase * Math.pow(1 + g, i));
 
-  // Personal proyectado (mismo todos los años por simplicidad)
-  const personal = [personalAnual, personalAnual, personalAnual, personalAnual, personalAnual];
+  // ── Personal proyectado: ahora crece también con la inflación de costos ──
+  const personal = [0, 1, 2, 3, 4].map((i) => personalAnual * Math.pow(1 + g, i));
   const depreciacion = [
     depreciacionAnual,
     depreciacionAnual,
@@ -677,12 +740,12 @@ function construirFlujoCaja(proyecto: any) {
       imprevistos[i];
     const aai = uOp - intereses[i];
     utilidadAAI.push(aai);
-    const imp = Math.max(0, aai) * 0.25;
+    const imp = Math.max(0, aai) * TASA_IMP;
     impuestos.push(imp);
     utilidadNeta.push(aai - imp);
   }
 
-  const flujoCaja: number[] = [-(totalInversion - montoPrestamo)];
+  const flujoCaja: number[] = [-(totalProyecto - montoPrestamo)];
   for (let i = 0; i < 5; i++) {
     let fc = utilidadNeta[i] + depreciacion[i] - amortizacion[i];
     if (i === 4) fc += valorResidual + proyecto.capitalTrabajo;
@@ -713,7 +776,7 @@ function construirFlujoCaja(proyecto: any) {
   // RBC = VP(ingresos) / VP(costos+impuestos+deuda)
   const flujoIngresos: number[] = [0, ...ingresos];
   const flujoCostosTotal: number[] = [
-    totalInversion - montoPrestamo, // inversión inicial = costo año 0
+    totalProyecto - montoPrestamo, // inversión inicial = costo año 0
   ];
   for (let i = 0; i < 5; i++) {
     flujoCostosTotal.push(
