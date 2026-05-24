@@ -68,6 +68,7 @@ export function crearProyectoVacio(params: {
       activoDiferido: [],
     },
     capitalTrabajo: 0,
+    mesesBufferCapitalTrabajo: 3,
     personal: [],
     costosDirectos: [],
     costosAdministracion: [],

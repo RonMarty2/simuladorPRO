@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calculator, ChevronDown, ChevronRight, Info } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
@@ -15,7 +15,11 @@ const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
 export default function Paso3Capital() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
   const setCapital = useProyectoStore((s) => s.setCapitalTrabajo);
+  const setMesesBuffer = useProyectoStore((s) => s.setMesesBufferCapitalTrabajo);
   const setImprevistos = useProyectoStore((s) => s.setImprevistosPorcentaje);
+
+  // Meses de buffer = ÚNICO input editable. Capital de trabajo se DERIVA de esto.
+  const mesesBuffer = proyecto.mesesBufferCapitalTrabajo ?? 3;
 
   const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const totalTasaAportes =
@@ -103,12 +107,12 @@ export default function Paso3Capital() {
   const imprevistosAnual = subtotalOperativo * porcImprevistos;
 
   // ── Cuotas anuales de los préstamos (Paso 7) ─────────────────────────────
-  // 1) Préstamo de ACTIVO FIJO: base = suma de inversiones fijas (Paso 3).
-  // 2) Préstamo de CAPITAL OPERATIVO: base = el subtotal operativo
-  //    (personal + producción + admin + comerc), porque ese es el "monto
-  //    necesario" del Paso 8 antes del propio capital de trabajo.
-  //    OJO: para evitar circularidad usamos el subtotal operativo, no el
-  //    capitalTrabajo guardado.
+  // FIX dependencia circular:
+  // - Préstamo de ACTIVO FIJO: base = inversiones fijas (no depende de nada
+  //   calculado en este paso, no hay bucle).
+  // - Préstamo de CAPITAL OPERATIVO: la base es el "capital de trabajo
+  //   OPERATIVO" = (operativos + imprevistos) × meses/12. Esta base NO
+  //   depende de la cuota → ROMPE el bucle.
   const inversionesFijas = (Object.values(proyecto.inversiones ?? {}) as any[][])
     .flat()
     .reduce((acc: number, it: any) => acc + (it?.costoTotal ?? 0), 0);
@@ -122,10 +126,13 @@ export default function Paso3Capital() {
       : 0;
   const cuotaAnualActivo = cuotaMensualActivo * 12;
 
-  // Préstamo de capital de trabajo (basado en lo que ya guardó el proyecto)
+  // BASE del capital de trabajo (solo operativos + imprevistos, sin cuotas)
+  const totalOperativoAnual = subtotalOperativo + imprevistosAnual;
+  const capitalTrabajoBase = (totalOperativoAnual * mesesBuffer) / 12;
+
+  // Préstamo de capital operativo se calcula sobre la BASE (no sobre el final)
   const cwCfg = fin?.prestamoCapitalTrabajo;
-  const baseCapitalOperativo = proyecto.capitalTrabajo;
-  const montoPrestCapital = baseCapitalOperativo * (cwCfg?.porcentajePrestamo ?? 0);
+  const montoPrestCapital = capitalTrabajoBase * (cwCfg?.porcentajePrestamo ?? 0);
   const cuotaMensualCapital =
     montoPrestCapital > 0 && cwCfg?.plazoMeses
       ? calcularCuotaPrestamoFrancesa(
@@ -139,24 +146,27 @@ export default function Paso3Capital() {
   const cuotaAnualPrestamo = cuotaAnualActivo + cuotaAnualCapital;
   const financiamientoConfigurado =
     (inversionesFijas > 0 && (fin?.porcentajePrestamo ?? 0) > 0) ||
-    (baseCapitalOperativo > 0 && (cwCfg?.porcentajePrestamo ?? 0) > 0);
+    (capitalTrabajoBase > 0 && (cwCfg?.porcentajePrestamo ?? 0) > 0);
 
-  const totalAnual = subtotalOperativo + imprevistosAnual + cuotaAnualPrestamo;
+  // TOTAL anual = operativos + imprevistos + cuotas (deuda activo + deuda capital)
+  const totalAnual = totalOperativoAnual + cuotaAnualPrestamo;
   const totalMensual = totalAnual / 12;
 
-  // El usuario decide cuántos meses necesita de buffer
-  // Por default: si el capitalTrabajo del proyecto es 0, sugerir 3 meses;
-  // si no, derivar los meses inversamente del monto actual
-  const mesesGuardados =
-    totalMensual > 0 && proyecto.capitalTrabajo > 0
-      ? Math.round((proyecto.capitalTrabajo / totalMensual) * 10) / 10
-      : 3;
+  // Capital de trabajo FINAL = total × meses/12. Se sincroniza con el store.
+  const capitalTrabajoCalculado = Math.round((totalAnual * mesesBuffer) / 12);
 
-  const aplicarMeses = (meses: number) => {
-    const monto = Math.round(totalMensual * meses);
-    setCapital(monto);
-  };
+  // Sincroniza el valor derivado con el store si cambió
+  useEffect(() => {
+    if (proyecto.capitalTrabajo !== capitalTrabajoCalculado) {
+      setCapital(capitalTrabajoCalculado);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capitalTrabajoCalculado]);
 
+  // baseCapitalOperativo expuesto para el detalle de la fila 6
+  const baseCapitalOperativo = capitalTrabajoBase;
+
+  const aplicarMeses = (meses: number) => setMesesBuffer(meses);
   const aplicarSugerido = (meses: number) => aplicarMeses(meses);
 
   const faltanDatos =
@@ -480,10 +490,10 @@ export default function Paso3Capital() {
                 Capital de trabajo requerido
               </div>
               <div className="text-base font-bold text-primary">
-                {formatearBolivianos(proyecto.capitalTrabajo)}
+                {formatearBolivianos(capitalTrabajoCalculado)}
               </div>
               <div className="text-[10px] text-muted-foreground">
-                = Costo mensual × {mesesGuardados.toFixed(1)} meses
+                = Costo mensual × {mesesBuffer} {mesesBuffer === 1 ? "mes" : "meses"}
               </div>
             </div>
           </div>
@@ -495,26 +505,41 @@ export default function Paso3Capital() {
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {[1, 2, 3, 4, 5, 6].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => aplicarSugerido(m)}
-                  className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary"
-                >
-                  {m} {m === 1 ? "mes" : "meses"}
-                </button>
-              ))}
+              {[1, 2, 3, 4, 5, 6].map((m) => {
+                const activo = m === mesesBuffer;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => aplicarSugerido(m)}
+                    className={
+                      activo
+                        ? "rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-sm"
+                        : "rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+                    }
+                  >
+                    {m} {m === 1 ? "mes" : "meses"}
+                    {activo && <span className="ml-1">✓</span>}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="flex items-center gap-2 text-xs">
-              <span>O escribe directamente el monto (Bs):</span>
+              <span>O escribe los meses (admite decimales):</span>
               <input
                 type="number"
-                value={proyecto.capitalTrabajo}
-                onChange={(e) => setCapital(Number(e.target.value) || 0)}
+                value={mesesBuffer}
+                onChange={(e) => setMesesBuffer(Number(e.target.value) || 0)}
                 onFocus={selectOnFocus}
-                className="w-40 rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                min={0.5}
+                max={24}
+                step={0.5}
+                className="w-24 rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <span className="text-muted-foreground">meses</span>
+              <span className="ml-2 text-muted-foreground">
+                → Capital trabajo = <strong>{formatearBolivianos(capitalTrabajoCalculado)}</strong>
+              </span>
             </div>
           </div>
         </div>

@@ -44,6 +44,7 @@ interface ProyectoState {
 
   // Capital de trabajo
   setCapitalTrabajo: (monto: number) => void;
+  setMesesBufferCapitalTrabajo: (meses: number) => void;
 
   // Personal
   agregarPuesto: (puesto: Omit<PuestoTrabajo, "id">) => void;
@@ -186,6 +187,16 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     const p = get().proyecto;
     if (!p) return;
     set({ proyecto: conTimestamp({ ...p, capitalTrabajo: monto }) });
+  },
+  setMesesBufferCapitalTrabajo: (meses) => {
+    const p = get().proyecto;
+    if (!p) return;
+    set({
+      proyecto: conTimestamp({
+        ...p,
+        mesesBufferCapitalTrabajo: Math.max(1, Math.round(meses * 10) / 10),
+      }),
+    });
   },
 
   // -- Personal --

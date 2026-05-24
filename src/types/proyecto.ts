@@ -145,7 +145,14 @@ export interface Proyecto {
 
   // Inversiones (cada categoría es una lista)
   inversiones: Record<CategoriaInversion, ItemInversion[]>;
-  capitalTrabajo: number;
+  capitalTrabajo: number; // valor derivado (se persiste para uso del Paso 7 y del flujo de caja)
+
+  /**
+   * Meses de buffer del capital de trabajo (cuánto tiempo el negocio puede
+   * operar sin generar ingresos). Default 3 meses. Este es el ÚNICO input
+   * editable del Paso 8; `capitalTrabajo` se deriva de aquí.
+   */
+  mesesBufferCapitalTrabajo?: number;
 
   // Personal
   personal: PuestoTrabajo[];
