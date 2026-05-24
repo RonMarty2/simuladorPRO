@@ -129,16 +129,25 @@ export async function crearCurso(params: {
 }
 
 export async function buscarCursoPorCodigo(codigo: string): Promise<Curso | null> {
-  const { data, error } = await conTimeout(
+  const hacerQuery = () =>
     supabase
       .from("cursos")
       .select("*")
       .eq("codigo", codigo.toUpperCase())
       .eq("estado", "activo")
-      .maybeSingle(),
-    10000,
-    "buscando curso por código"
-  );
+      .maybeSingle();
+
+  let resp;
+  try {
+    resp = await conTimeout(hacerQuery(), 5000, "buscando curso por código");
+  } catch (primerError) {
+    try {
+      resp = await conTimeout(hacerQuery(), 10000, "buscando curso por código (reintento)");
+    } catch {
+      throw primerError;
+    }
+  }
+  const { data, error } = resp;
   if (error) throw error;
   return (data as Curso | null) ?? null;
 }
