@@ -18,7 +18,8 @@ const enlacesEstudiante = [
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
-  { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
+  // El catálogo de eventos NO se muestra a estudiantes — son spoilers de la
+  // simulación. Solo docentes y admin lo ven.
 ];
 
 const enlacesDocente = [

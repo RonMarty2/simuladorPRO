@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Filter, Newspaper } from "lucide-react";
 import { listarEventos } from "@/lib/eventos-supabase";
 import type { CategoriaEvento, Evento } from "@/types/evento";
+import { useAuthStore } from "@/stores/auth-store";
 
 const etiquetasCategoria: Record<CategoriaEvento, string> = {
   macroeconomico: "Macroeconómico",
@@ -34,10 +36,17 @@ const coloresCategoria: Record<CategoriaEvento, string> = {
 };
 
 export default function CatalogoEventos() {
+  const perfil = useAuthStore((s) => s.perfil);
   const [eventos, setEventos] = useState<Evento[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<CategoriaEvento | "todos">("todos");
   const [expandido, setExpandido] = useState<string | null>(null);
+
+  // Defensa contra estudiantes que intenten entrar por URL directa.
+  // El catálogo son spoilers de la simulación — solo docentes y admin.
+  if (perfil && perfil.rol === "estudiante" && !perfil.es_admin) {
+    return <Navigate to="/estudiante" replace />;
+  }
 
   useEffect(() => {
     listarEventos()
