@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Calculator, ChevronDown, ChevronRight, Info } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
-import { calcularAportesPatronales, obtenerTasasAportes } from "@/lib/calculo-financiero";
+import {
+  calcularAportesPatronales,
+  calcularCuotaPrestamoFrancesa,
+  obtenerTasasAportes,
+} from "@/lib/calculo-financiero";
 import { formatearBolivianos } from "@/lib/utils";
 
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
@@ -11,6 +15,7 @@ const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
 export default function Paso3Capital() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
   const setCapital = useProyectoStore((s) => s.setCapitalTrabajo);
+  const setImprevistos = useProyectoStore((s) => s.setImprevistosPorcentaje);
 
   const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const totalTasaAportes =
@@ -92,7 +97,29 @@ export default function Paso3Capital() {
   }));
   const comercAnual = desgloseComerc.reduce((a, d) => a + d.total, 0);
 
-  const totalAnual = personalAnual + costosProduccionAnual + adminAnual + comercAnual;
+  // ── Imprevistos (% sobre los 4 costos base) ──────────────────────────────
+  const subtotalOperativo = personalAnual + costosProduccionAnual + adminAnual + comercAnual;
+  const porcImprevistos = proyecto.imprevistosPorcentaje ?? 0;
+  const imprevistosAnual = subtotalOperativo * porcImprevistos;
+
+  // ── Cuota anual del préstamo (Paso 8) ────────────────────────────────────
+  // Monto del préstamo = inversiones fijas × % préstamo.
+  // (No incluimos el capital de trabajo en la base del préstamo para evitar
+  // dependencia circular; típicamente el banco financia solo activo fijo.)
+  const inversionesFijas = (Object.values(proyecto.inversiones ?? {}) as any[][])
+    .flat()
+    .reduce((acc: number, it: any) => acc + (it?.costoTotal ?? 0), 0);
+  const fin = proyecto.financiamiento;
+  const montoPrestamo = inversionesFijas * (fin?.porcentajePrestamo ?? 0);
+  const cuotaMensualPrestamo =
+    montoPrestamo > 0 && fin?.plazoMeses
+      ? calcularCuotaPrestamoFrancesa(montoPrestamo, fin.tasaInteresAnual ?? 0, fin.plazoMeses)
+      : 0;
+  const cuotaAnualPrestamo = cuotaMensualPrestamo * 12;
+  const financiamientoConfigurado =
+    fin && fin.porcentajePrestamo > 0 && fin.plazoMeses > 0 && inversionesFijas > 0;
+
+  const totalAnual = subtotalOperativo + imprevistosAnual + cuotaAnualPrestamo;
   const totalMensual = totalAnual / 12;
 
   // El usuario decide cuántos meses necesita de buffer
@@ -300,9 +327,109 @@ export default function Paso3Capital() {
             }
           />
 
+          <FilaGastoDetalle
+            n={5}
+            label={`Imprevistos (${(porcImprevistos * 100).toFixed(1)}% sobre operativos)`}
+            origen="Editable acá abajo · se aplica al subtotal operativo (filas 1-4)"
+            valor={imprevistosAnual}
+            formula="(personal + producción + admin + comerc) × % imprevistos"
+            color="amber"
+            vacioMsg="Define un % de imprevistos abajo (típico 3-5%)."
+            detalle={
+              porcImprevistos > 0 && (
+                <table className="w-full text-[11px]">
+                  <tbody>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">Subtotal operativo (filas 1+2+3+4)</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(subtotalOperativo)}</td>
+                    </tr>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">× % imprevistos</td>
+                      <td className="px-2 py-1 text-right">{(porcImprevistos * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                      <td className="px-2 py-1 font-semibold">= Imprevistos anuales</td>
+                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(imprevistosAnual)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              )
+            }
+          />
+
+          <FilaGastoDetalle
+            n={6}
+            label="Cuota anual del préstamo (capital + interés)"
+            origen="Paso 3 — Inversiones · Paso 8 — Financiamiento"
+            valor={cuotaAnualPrestamo}
+            formula="cuota_francesa(monto, tasa_anual, plazo_meses) × 12"
+            color="violet"
+            vacioMsg="Define tu financiamiento en el Paso 8 (préstamo, tasa, plazo) para que se sume aquí."
+            detalle={
+              financiamientoConfigurado && (
+                <table className="w-full text-[11px]">
+                  <tbody>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">Inversiones fijas totales (Paso 3)</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(inversionesFijas)}</td>
+                    </tr>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">× % financiado con préstamo</td>
+                      <td className="px-2 py-1 text-right">{(fin!.porcentajePrestamo * 100).toFixed(1)}%</td>
+                    </tr>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1 font-semibold">= Monto del préstamo</td>
+                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(montoPrestamo)}</td>
+                    </tr>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">Tasa anual · plazo</td>
+                      <td className="px-2 py-1 text-right">
+                        {(fin!.tasaInteresAnual * 100).toFixed(2)}% · {fin!.plazoMeses} meses
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border/30">
+                      <td className="px-2 py-1">Cuota mensual (sistema francés)</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualPrestamo)}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-2 py-1 font-semibold">× 12 = Cuota anual</td>
+                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualPrestamo)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              )
+            }
+          />
+
           <div className="flex items-center justify-between border-t-2 border-border bg-secondary/50 px-3 py-2">
             <span className="text-xs font-bold uppercase tracking-wide">TOTAL ANUAL</span>
             <span className="text-sm font-bold">{formatearBolivianos(totalAnual)}</span>
+          </div>
+        </div>
+
+        {/* Editor de % imprevistos */}
+        <div className="rounded-md border border-amber-400/60 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/20">
+          <label htmlFor="p7-imp" className="block text-xs font-medium">
+            % de imprevistos (colchón sobre los costos operativos):{" "}
+            <span className="font-bold text-foreground">
+              {(porcImprevistos * 100).toFixed(1)}%
+            </span>
+          </label>
+          <input
+            id="p7-imp"
+            type="range"
+            min={0}
+            max={15}
+            step={0.5}
+            value={porcImprevistos * 100}
+            onChange={(e) => setImprevistos(Number(e.target.value) / 100)}
+            className="mt-1.5 w-full"
+          />
+          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+            <span>0%</span>
+            <span>5% (típico)</span>
+            <span>10%</span>
+            <span>15%</span>
           </div>
         </div>
 
@@ -376,7 +503,7 @@ export default function Paso3Capital() {
             primeros meses.
             <br />
             <br />
-            <strong>Fórmula:</strong> Total costos anuales ÷ 12 × meses de buffer.
+            <strong>Fórmula:</strong> (operativos + imprevistos + cuota préstamo) ÷ 12 × meses de buffer.
             <br />
             <br />
             En Bolivia, considera:
@@ -393,13 +520,15 @@ export default function Paso3Capital() {
   );
 }
 
-type ColorFila = "blue" | "emerald" | "sky" | "green";
+type ColorFila = "blue" | "emerald" | "sky" | "green" | "amber" | "violet";
 
 const COLOR_BORDE: Record<ColorFila, string> = {
   blue: "border-l-blue-500",
   emerald: "border-l-emerald-500",
   sky: "border-l-sky-500",
   green: "border-l-green-500",
+  amber: "border-l-amber-500",
+  violet: "border-l-violet-500",
 };
 
 function FilaGastoDetalle({
