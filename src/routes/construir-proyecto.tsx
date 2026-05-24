@@ -21,6 +21,7 @@ import Paso7GastosOperativos from "@/components/constructor/pasos/Paso7GastosOpe
 import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamiento";
 import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
 import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
+import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
 
 const TOTAL_PASOS = 9;
 
@@ -187,7 +188,10 @@ export default function ConstruirProyecto() {
           <span className="text-xs text-muted-foreground">
             {titulosPasos[pasoActual]}
           </span>
-          <BotonGuardarComoCaso />
+          <div className="flex items-center gap-1.5">
+            <BotonGuardarComoCaso />
+            <BotonVistaPreviaEstudiante />
+          </div>
           <button
             onClick={abandonarProyecto}
             className="flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"

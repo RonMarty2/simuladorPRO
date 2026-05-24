@@ -230,7 +230,7 @@ export async function tomarCasoDelCurso(
  *  Paso 8: capitalTrabajo, mesesBufferCapitalTrabajo
  *  Paso 9: derivado, no se vacía
  */
-function vaciarPasosDesde(caso: Proyecto, pasoInicio: number): Proyecto {
+export function vaciarPasosDesde(caso: Proyecto, pasoInicio: number): Proyecto {
   const out: Proyecto = { ...caso };
 
   if (pasoInicio <= 1) {
