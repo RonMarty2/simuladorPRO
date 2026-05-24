@@ -55,13 +55,40 @@ function deFilaSupabase(fila: any): Proyecto {
   } as Proyecto;
 }
 
+/**
+ * Wrap defensivo: si la promesa no resuelve en `ms`, lanza error claro.
+ * Evita pantallas de "Cargando..." infinitas cuando Supabase no responde
+ * por red caída, sesión caducada, o problema de RLS.
+ */
+function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => {
+      reject(new Error(`Tiempo agotado: ${motivo} (>${ms / 1000}s). Revisa tu conexión o recarga la página.`));
+    }, ms);
+    Promise.resolve(promise).then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(id);
+        reject(e);
+      }
+    );
+  });
+}
+
 /** Lista los proyectos del estudiante autenticado, más reciente primero. */
 export async function listarMisProyectos(estudianteId: string): Promise<Proyecto[]> {
-  const { data, error } = await supabase
-    .from("proyectos")
-    .select("*")
-    .eq("estudiante_id", estudianteId)
-    .order("actualizado_en", { ascending: false });
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .select("*")
+      .eq("estudiante_id", estudianteId)
+      .order("actualizado_en", { ascending: false }),
+    10000,
+    "listando tus proyectos"
+  );
   if (error) throw error;
   return (data ?? []).map(deFilaSupabase);
 }

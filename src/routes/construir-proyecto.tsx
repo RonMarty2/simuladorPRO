@@ -72,6 +72,7 @@ export default function ConstruirProyecto() {
   const limpiar = useProyectoStore((s) => s.limpiar);
   const [pasoActual, setPasoActualState] = useState(1);
   const [iniciando, setIniciando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const estadoGuardado = useAutoGuardado(proyecto);
 
   // Setter que también persiste en localStorage
@@ -92,6 +93,10 @@ export default function ConstruirProyecto() {
           // Restaurar paso guardado para este proyecto
           setPasoActualState(leerPasoGuardado(proyectos[0].id));
         }
+        setErrorCarga(null);
+      })
+      .catch((e) => {
+        setErrorCarga(e?.message ?? String(e));
       })
       .finally(() => setIniciando(false));
   }, [user, cargar]);
@@ -107,6 +112,21 @@ export default function ConstruirProyecto() {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
         Cargando tu proyecto…
+      </div>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <div className="mx-auto max-w-md rounded-lg border border-destructive/40 bg-destructive/5 p-6 text-center">
+        <h2 className="text-base font-semibold text-destructive">No se pudo cargar tu proyecto</h2>
+        <p className="mt-2 text-xs text-muted-foreground">{errorCarga}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:bg-primary/90"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
