@@ -49,12 +49,50 @@ export async function cerrarSesion() {
   if (error) throw error;
 }
 
+/**
+ * Wrap defensivo: si la promesa no resuelve en `ms`, rechaza con error claro
+ * para no dejar al usuario con la pantalla "Cargando..." pegada.
+ */
+function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => {
+      reject(new Error(`Tiempo agotado: ${motivo} (>${ms / 1000}s)`));
+    }, ms);
+    Promise.resolve(promise).then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(id);
+        reject(e);
+      }
+    );
+  });
+}
+
 export async function obtenerPerfil(userId: string): Promise<Perfil | null> {
-  const { data, error } = await supabase
-    .from("perfiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+  // Retry interno: la primera query a Supabase suele colgarse justo después
+  // de un login (OAuth o no). Reintentar una vez resuelve la mayoría.
+  const hacerQuery = () =>
+    supabase
+      .from("perfiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+  let resp;
+  try {
+    resp = await conTimeout(hacerQuery(), 5000, "cargando tu perfil");
+  } catch (primerError) {
+    try {
+      resp = await conTimeout(hacerQuery(), 8000, "cargando tu perfil (reintento)");
+    } catch {
+      throw primerError;
+    }
+  }
+
+  const { data, error } = resp;
   if (error) throw error;
   return (data as Perfil | null) ?? null;
 }

@@ -34,21 +34,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (get().inicializado) return;
     set({ cargando: true });
 
-    const { data } = await supabase.auth.getSession();
-    const session = data.session ?? null;
-    let perfil: Perfil | null = null;
-    if (session?.user) {
-      perfil = await obtenerPerfil(session.user.id).catch(() => null);
+    // Hard timeout total: si después de 15 segundos no terminó, igual marcamos
+    // como inicializado para que el usuario pueda ver la pantalla de login en
+    // vez de quedarse colgado en "Cargando sesión..." para siempre.
+    const timeoutHard = setTimeout(() => {
+      if (!get().inicializado) {
+        console.warn("Auth init timeout — forzando inicializado=true");
+        set({ cargando: false, inicializado: true });
+      }
+    }, 15000);
+
+    try {
+      const sessionPromise = supabase.auth.getSession();
+      const { data } = await Promise.race([
+        sessionPromise,
+        new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 10000)
+        ),
+      ]);
+      const session = data.session ?? null;
+      let perfil: Perfil | null = null;
+      if (session?.user) {
+        perfil = await obtenerPerfil(session.user.id).catch(() => null);
+      }
+
+      set({
+        session,
+        user: session?.user ?? null,
+        perfil,
+        cargando: false,
+        inicializado: true,
+      });
+    } catch (e) {
+      console.error("Error en auth init:", e);
+      set({ cargando: false, inicializado: true });
+    } finally {
+      clearTimeout(timeoutHard);
     }
 
-    set({
-      session,
-      user: session?.user ?? null,
-      perfil,
-      cargando: false,
-      inicializado: true,
-    });
-
+    // Suscripción al cambio de sesión (login OAuth, logout, refresh de token, etc.)
     supabase.auth.onAuthStateChange(async (_evento, nuevaSesion) => {
       let nuevoPerfil: Perfil | null = null;
       if (nuevaSesion?.user) {
