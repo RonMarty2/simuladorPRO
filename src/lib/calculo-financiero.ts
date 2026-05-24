@@ -341,6 +341,53 @@ export function calcularRBC(
   return vpIngresos / vpCostos;
 }
 
+/**
+ * Tasa de Retorno Contable (TRC / ARR — Accounting Rate of Return).
+ * Mide la rentabilidad contable sin considerar el valor del dinero en el
+ * tiempo: utilidad neta promedio anual sobre la inversión inicial.
+ *
+ *   TRC = ( promedio(utilidad_neta[1..n]) ) / |inversionInicial|
+ *
+ * Devuelve 0 si la inversión es 0 (evita divisiones por cero).
+ */
+export function calcularTRC(
+  utilidadesNetas: number[],
+  inversionInicial: number
+): number {
+  if (utilidadesNetas.length === 0) return 0;
+  const inv = Math.abs(inversionInicial);
+  if (inv === 0) return 0;
+  const promedio =
+    utilidadesNetas.reduce((acc, u) => acc + u, 0) / utilidadesNetas.length;
+  return promedio / inv;
+}
+
+/**
+ * Cobertura del Servicio de la Deuda (DSCR — Debt Service Coverage Ratio).
+ * Mide si el flujo de caja operativo del proyecto alcanza para pagar la
+ * cuota de los préstamos (capital + intereses).
+ *
+ *   SD = promedio(flujo_caja_operativo[1..n]) / cuota_anual_total
+ *
+ * Convención de lectura:
+ *   - SD > 1.0 → el proyecto genera suficiente caja para pagar la deuda
+ *   - SD = 1.0 → genera lo justo, sin margen
+ *   - SD < 1.0 → no alcanza, hay que poner plata propia o refinanciar
+ *
+ * Devuelve Infinity si no hay deuda (servicio = 0).
+ */
+export function calcularServicioDeuda(
+  flujosCajaOperativos: number[],
+  cuotaAnualTotal: number
+): number {
+  if (flujosCajaOperativos.length === 0) return 0;
+  if (cuotaAnualTotal === 0) return Infinity;
+  const promedio =
+    flujosCajaOperativos.reduce((acc, f) => acc + f, 0) /
+    flujosCajaOperativos.length;
+  return promedio / cuotaAnualTotal;
+}
+
 // ============================================================================
 // FLUJO DE CAJA
 // ============================================================================

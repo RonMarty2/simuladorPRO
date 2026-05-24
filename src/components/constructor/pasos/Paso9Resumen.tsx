@@ -18,7 +18,10 @@ import {
   calcularCuotaPrestamoFrancesa,
   calcularIR,
   calcularPayback,
+  calcularRBC,
+  calcularServicioDeuda,
   calcularTIR,
+  calcularTRC,
   calcularVAN,
   calcularWACC,
   obtenerTasasAportes,
@@ -42,12 +45,13 @@ export default function Paso9Resumen() {
         </p>
 
         {/* Indicadores principales */}
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <CardIndicador
             titulo="VAN"
             valor={formatearBolivianos(calc.indicadores.van)}
             positivo={calc.indicadores.van > 0}
-            ayuda={`Descontado al ${(calc.wacc * 100).toFixed(2)}%`}
+            ayuda={`Valor Actual Neto · descontado al ${(calc.wacc * 100).toFixed(2)}%`}
+            tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\n\nSi VAN > 0: el proyecto CREA valor (acepta).\nSi VAN < 0: el proyecto DESTRUYE valor (rechaza).\n\nTu VAN: ${formatearBolivianos(calc.indicadores.van)}`}
           />
           <CardIndicador
             titulo="TIR"
@@ -57,7 +61,8 @@ export default function Paso9Resumen() {
                 : "—"
             }
             positivo={isFinite(calc.indicadores.tir) && calc.indicadores.tir > calc.wacc}
-            ayuda={`vs WACC ${(calc.wacc * 100).toFixed(2)}%`}
+            ayuda={`Tasa Interna de Retorno · vs WACC ${(calc.wacc * 100).toFixed(2)}%`}
+            tooltip={`TIR = tasa que hace VAN = 0.\n\nSi TIR > WACC (${(calc.wacc * 100).toFixed(2)}%): proyecto rentable, ACEPTAR.\nSi TIR < WACC: proyecto NO rentable, rechazar.\n\nSi muestra "—" significa que los flujos no permiten calcular la TIR (todos negativos o no converge).`}
           />
           <CardIndicador
             titulo="Payback"
@@ -67,19 +72,55 @@ export default function Paso9Resumen() {
                 : `${calc.indicadores.payback.toFixed(1)} años`
             }
             positivo={calc.indicadores.payback > 0 && calc.indicadores.payback <= 5}
-            ayuda="Período de recuperación"
+            ayuda="Período de recuperación de la inversión"
+            tooltip="Cuántos años tarda el proyecto en recuperar la inversión inicial (suma de flujos hasta llegar a cero). Si es 'No recupera', los flujos acumulados nunca cruzan el cero en el horizonte de 5 años."
+          />
+          <CardIndicador
+            titulo="TRC"
+            valor={
+              isFinite(calc.indicadores.trc)
+                ? `${(calc.indicadores.trc * 100).toFixed(2)}%`
+                : "—"
+            }
+            positivo={calc.indicadores.trc > 0}
+            ayuda="Tasa de Retorno Contable (ARR)"
+            tooltip={`TRC = utilidad neta promedio anual ÷ inversión total\n\nNo descuenta el dinero en el tiempo, así que es menos riguroso que la TIR, pero útil como referencia contable rápida.\n\nTu TRC: ${(calc.indicadores.trc * 100).toFixed(2)}%`}
+          />
+          <CardIndicador
+            titulo="SD"
+            valor={
+              isFinite(calc.indicadores.sd)
+                ? calc.indicadores.sd.toFixed(2)
+                : "Sin deuda"
+            }
+            positivo={calc.indicadores.sd >= 1}
+            ayuda="Cobertura del Servicio de la Deuda (DSCR)"
+            tooltip={`SD = flujo de caja operativo promedio ÷ cuota anual (capital + interés)\n\nSi SD > 1.0: el proyecto genera suficiente caja para pagar la deuda.\nSi SD < 1.0: NO alcanza, hace falta poner plata propia o refinanciar.\n\nCuota anual de referencia (año 1): ${formatearBolivianos(calc.indicadores.cuotaAnualTotal)}\nTu SD: ${isFinite(calc.indicadores.sd) ? calc.indicadores.sd.toFixed(2) : "sin deuda"}`}
           />
           <CardIndicador
             titulo="IR"
             valor={calc.indicadores.ir.toFixed(2)}
             positivo={calc.indicadores.ir > 1}
-            ayuda="Índice de rentabilidad"
+            ayuda="Índice de Rentabilidad"
+            tooltip={`IR = VP(flujos positivos) ÷ inversión inicial\n\nSi IR > 1: por cada Bs invertido, recuperas más de Bs 1 a valor presente. Proyecto rentable.\nSi IR < 1: pierdes valor.\n\nTu IR: ${calc.indicadores.ir.toFixed(2)} → ${calc.indicadores.ir > 1 ? "ACEPTA" : "RECHAZA"}`}
+          />
+          <CardIndicador
+            titulo="RBC"
+            valor={
+              isFinite(calc.indicadores.rbc)
+                ? calc.indicadores.rbc.toFixed(2)
+                : "—"
+            }
+            positivo={calc.indicadores.rbc > 1}
+            ayuda="Relación Beneficio-Costo"
+            tooltip={`RBC = VP(ingresos) ÷ VP(todos los costos + impuestos + intereses)\n\nSi RBC > 1: por cada Bs de costo, generas más de Bs 1 de ingreso (a valor presente). Acepta.\nSi RBC < 1: pierdes valor.\n\nTu RBC: ${calc.indicadores.rbc.toFixed(2)}`}
           />
           <CardIndicador
             titulo="WACC"
             valor={`${(calc.wacc * 100).toFixed(2)}%`}
             positivo
-            ayuda="Costo promedio capital"
+            ayuda="Costo Promedio Ponderado de Capital"
+            tooltip={`WACC = (D/V × Kd × (1−T)) + (E/V × Ke)\n\nEs la tasa mínima que tu proyecto debe rendir para no destruir valor. Se usa como tasa de descuento del VAN y como referencia de comparación de la TIR.`}
           />
         </div>
       </div>
@@ -248,15 +289,26 @@ function CardIndicador({
   valor,
   positivo,
   ayuda,
+  tooltip,
 }: {
   titulo: string;
   valor: string;
   positivo: boolean;
   ayuda: string;
+  tooltip?: string;
 }) {
   return (
-    <div className="rounded-md border border-border p-3">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+    <div
+      className={cn(
+        "rounded-md border border-border p-3",
+        tooltip && "cursor-help"
+      )}
+      title={tooltip}
+    >
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        {titulo}
+        {tooltip && <span className="ml-1 opacity-60">ⓘ</span>}
+      </div>
       <div
         className={cn(
           "mt-0.5 text-lg font-semibold",
@@ -452,6 +504,38 @@ function construirFlujoCaja(proyecto: any) {
   const payback = calcularPayback(flujoCaja);
   const ir = calcularIR(flujoCaja, tasa);
 
+  // TRC = utilidad neta promedio / inversión total
+  const trc = calcularTRC(utilidadNeta, inversionInicial + proyecto.capitalTrabajo);
+
+  // SD = flujo caja operativo promedio / cuota anual total (capital + interés)
+  // Como el flujoCaja del array ya descontó la amortización, sumamos otra vez
+  // amortización + intereses para tener el flujo operativo bruto antes de la
+  // deuda (que es lo que debe cubrir la cuota anual).
+  const flujoOperativo: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    flujoOperativo.push(flujoCaja[i + 1] + amortizacion[i] + intereses[i]);
+  }
+  const cuotaAnualTotal = (amortizacion[0] ?? 0) + (intereses[0] ?? 0); // Año 1 = referencia
+  const sd = calcularServicioDeuda(flujoOperativo, cuotaAnualTotal);
+
+  // RBC = VP(ingresos) / VP(costos+impuestos+deuda)
+  const flujoIngresos: number[] = [0, ...ingresos];
+  const flujoCostosTotal: number[] = [
+    totalInversion - montoPrestamo, // inversión inicial = costo año 0
+  ];
+  for (let i = 0; i < 5; i++) {
+    flujoCostosTotal.push(
+      costosProduccion[i] +
+        gastosAdmin[i] +
+        gastosComerc[i] +
+        personal[i] +
+        imprevistos[i] +
+        intereses[i] +
+        impuestos[i]
+    );
+  }
+  const rbc = calcularRBC(flujoIngresos, flujoCostosTotal, tasa);
+
   return {
     ingresos,
     costosProduccion,
@@ -471,6 +555,6 @@ function construirFlujoCaja(proyecto: any) {
     valorResidual,
     flujoCaja,
     wacc,
-    indicadores: { van, tir, payback, ir },
+    indicadores: { van, tir, payback, ir, trc, sd, rbc, cuotaAnualTotal },
   };
 }
