@@ -177,12 +177,12 @@ export default function Paso9Resumen() {
         </div>
       </div>
 
-      {/* TABLA FLUJO DE CAJA */}
+      {/* TABLA FLUJO DE CAJA con secciones de color */}
       <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
         <h3 className="mb-3 text-sm font-semibold">Flujo de caja proyectado (Bs)</h3>
         <table className="w-full min-w-[700px] text-xs">
           <thead className="text-muted-foreground">
-            <tr className="border-b border-border">
+            <tr className="border-b-2 border-border">
               <th className="p-1.5 text-left">Concepto</th>
               <th className="p-1.5 text-right">Año 0</th>
               {ANIOS.map((a) => (
@@ -191,84 +191,147 @@ export default function Paso9Resumen() {
             </tr>
           </thead>
           <tbody>
-            <FilaFlujo label="(+) Ingresos" valores={[0, ...calc.ingresos]} signo="+" />
+            {/* ── 1. INGRESOS (verde) ─────────────────────────────────── */}
+            <FilaSeccion label="① INGRESOS" color="emerald" />
+            <FilaFlujo
+              label="(+) Ingresos por ventas"
+              valores={[0, ...calc.ingresos]}
+              signo="+"
+              fila="emerald"
+            />
+
+            {/* ── 2. COSTOS Y GASTOS OPERATIVOS (rojo) ───────────────── */}
+            <FilaSeccion label="② COSTOS Y GASTOS OPERATIVOS" color="rose" />
             <FilaFlujo
               label="(-) Costos de producción"
               valores={[0, ...calc.costosProduccion]}
               signo="-"
+              fila="rose"
             />
             <FilaFlujo
               label="(-) Gastos administrativos"
               valores={[0, ...calc.gastosAdmin]}
               signo="-"
+              fila="rose"
             />
             <FilaFlujo
               label="(-) Gastos comercialización"
               valores={[0, ...calc.gastosComerc]}
               signo="-"
+              fila="rose"
             />
             <FilaFlujo
               label="(-) Personal (con aportes 30.37%)"
               valores={[0, ...calc.personal]}
               signo="-"
+              fila="rose"
             />
-            <FilaFlujo label="(-) Depreciación" valores={[0, ...calc.depreciacion]} signo="-" />
-            <FilaFlujo label="(-) Imprevistos" valores={[0, ...calc.imprevistos]} signo="-" />
             <FilaFlujo
-              label="(-) Intereses deuda"
+              label="(-) Depreciación (no efectivo)"
+              valores={[0, ...calc.depreciacion]}
+              signo="-"
+              fila="rose"
+            />
+            <FilaFlujo
+              label="(-) Imprevistos"
+              valores={[0, ...calc.imprevistos]}
+              signo="-"
+              fila="rose"
+            />
+            <FilaFlujo
+              label="(-) Intereses de la deuda"
               valores={[0, ...calc.intereses]}
               signo="-"
+              fila="rose"
             />
+
+            {/* ── 3. RESULTADO ANTES DE IMPUESTOS Y NETO (violeta) ──── */}
+            <FilaSeccion label="③ RESULTADO E IMPUESTOS" color="violet" />
             <FilaFlujo
               label="= Utilidad antes de impuestos"
               valores={[0, ...calc.utilidadAAI]}
               destacada
+              fila="violet"
             />
-            <FilaFlujo label="(-) Impuestos (IUE 25%)" valores={[0, ...calc.impuestos]} signo="-" />
+            <FilaFlujo
+              label="(-) Impuestos (IUE 25%)"
+              valores={[0, ...calc.impuestos]}
+              signo="-"
+              fila="violet"
+            />
             <FilaFlujo
               label="= Utilidad neta"
               valores={[0, ...calc.utilidadNeta]}
               destacada
+              fila="violet"
             />
-            <FilaFlujo label="(+) Depreciación" valores={[0, ...calc.depreciacion]} signo="+" />
+
+            {/* ── 4. AJUSTES A FLUJO DE CAJA (gris/azul) ─────────────── */}
+            <FilaSeccion label="④ AJUSTES A FLUJO DE CAJA" color="sky" />
             <FilaFlujo
-              label="(-) Inversión inicial"
+              label="(+) Depreciación (se reintegra, no salió de caja)"
+              valores={[0, ...calc.depreciacion]}
+              signo="+"
+              fila="sky"
+            />
+            <FilaFlujo
+              label="(-) Inversión inicial (activos fijos)"
               valores={[-calc.inversionInicial, 0, 0, 0, 0, 0]}
               signo="-"
+              fila="sky"
             />
             <FilaFlujo
               label="(-) Capital de trabajo"
               valores={[-calc.capitalTrabajo, 0, 0, 0, 0, 0]}
               signo="-"
+              fila="sky"
             />
             <FilaFlujo
-              label="(+) Préstamo"
+              label="(+) Préstamo recibido"
               valores={[calc.montoPrestamo, 0, 0, 0, 0, 0]}
               signo="+"
+              fila="sky"
             />
             <FilaFlujo
-              label="(-) Amortización de capital"
+              label="(-) Amortización de capital de la deuda"
               valores={[0, ...calc.amortizacion]}
               signo="-"
+              fila="sky"
             />
             <FilaFlujo
-              label="(+) Valor residual"
+              label="(+) Valor residual (año 5)"
               valores={[0, 0, 0, 0, 0, calc.valorResidual]}
               signo="+"
+              fila="sky"
             />
             <FilaFlujo
-              label="(+) Recuperación capital trabajo"
+              label="(+) Recuperación capital de trabajo (año 5)"
               valores={[0, 0, 0, 0, 0, calc.capitalTrabajo]}
               signo="+"
+              fila="sky"
             />
+
+            {/* ── 5. FLUJO DE CAJA TOTAL (destacado primario) ────────── */}
+            <FilaSeccion label="⑤ FLUJO DE CAJA NETO" color="primary" />
             <FilaFlujo
               label="FLUJO DE CAJA"
               valores={calc.flujoCaja}
               destacada
               top
+              fila="primary"
             />
           </tbody>
         </table>
+
+        {/* Leyenda de colores */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="font-semibold">Leyenda:</span>
+          <LeyendaColor color="emerald" texto="① Ingresos" />
+          <LeyendaColor color="rose" texto="② Costos operativos" />
+          <LeyendaColor color="violet" texto="③ Resultado e impuestos" />
+          <LeyendaColor color="sky" texto="④ Ajustes de caja" />
+          <LeyendaColor color="primary" texto="⑤ Flujo de caja neto" />
+        </div>
       </div>
 
       {/* Gráficos */}
@@ -396,23 +459,78 @@ function CardIndicador({
   );
 }
 
+type ColorFila = "emerald" | "rose" | "violet" | "sky" | "primary";
+
+const FILA_BG: Record<ColorFila, string> = {
+  emerald: "bg-emerald-50/40 dark:bg-emerald-950/15",
+  rose: "bg-rose-50/40 dark:bg-rose-950/15",
+  violet: "bg-violet-50/40 dark:bg-violet-950/15",
+  sky: "bg-sky-50/40 dark:bg-sky-950/15",
+  primary: "bg-primary/10",
+};
+
+const FILA_BORDE_IZQ: Record<ColorFila, string> = {
+  emerald: "border-l-4 border-l-emerald-500",
+  rose: "border-l-4 border-l-rose-500",
+  violet: "border-l-4 border-l-violet-500",
+  sky: "border-l-4 border-l-sky-500",
+  primary: "border-l-4 border-l-primary",
+};
+
+const SECCION_BG: Record<ColorFila, string> = {
+  emerald: "bg-emerald-500 text-white",
+  rose: "bg-rose-500 text-white",
+  violet: "bg-violet-500 text-white",
+  sky: "bg-sky-500 text-white",
+  primary: "bg-primary text-primary-foreground",
+};
+
+function FilaSeccion({ label, color }: { label: string; color: ColorFila }) {
+  return (
+    <tr>
+      <td
+        colSpan={7}
+        className={cn(
+          "px-2 py-1 text-[10px] font-bold uppercase tracking-wider",
+          SECCION_BG[color]
+        )}
+      >
+        {label}
+      </td>
+    </tr>
+  );
+}
+
+function LeyendaColor({ color, texto }: { color: ColorFila; texto: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={cn("inline-block h-2.5 w-2.5 rounded", SECCION_BG[color])} />
+      {texto}
+    </span>
+  );
+}
+
 function FilaFlujo({
   label,
   valores,
   destacada,
   top,
+  fila,
 }: {
   label: string;
   valores: number[];
   signo?: "+" | "-"; // Indicador visual ya viene en el label; no se usa internamente
   destacada?: boolean;
   top?: boolean;
+  fila?: ColorFila;
 }) {
   return (
     <tr
       className={cn(
         "border-b border-border/40",
-        destacada && "bg-secondary/30",
+        fila && FILA_BG[fila],
+        fila && FILA_BORDE_IZQ[fila],
+        destacada && (fila ? "font-semibold" : "bg-secondary/30 font-semibold"),
         top && "border-t-2 border-foreground"
       )}
     >
@@ -421,7 +539,7 @@ function FilaFlujo({
         <td
           key={i}
           className={cn(
-            "p-1.5 text-right",
+            "p-1.5 text-right tabular-nums",
             destacada && "font-semibold",
             v < 0 && "text-destructive"
           )}
