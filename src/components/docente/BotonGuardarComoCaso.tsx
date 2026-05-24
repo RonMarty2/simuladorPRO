@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookmarkPlus, Loader2, X } from "lucide-react";
+import { BookmarkPlus, CheckCircle2, Loader2, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { listarMisCursos, type Curso } from "@/lib/cursos-supabase";
 import { guardarComoCasoDelCurso, guardarProyecto } from "@/lib/proyecto-supabase";
@@ -21,6 +21,7 @@ export default function BotonGuardarComoCaso() {
   const perfil = useAuthStore((s) => s.perfil);
   const proyecto = useProyectoStore((s) => s.proyecto);
   const [abierto, setAbierto] = useState(false);
+  const [toast, setToast] = useState<{ pasoInicio: number; cursoNombre: string } | null>(null);
 
   if (perfil?.rol !== "docente" || !proyecto) return null;
 
@@ -37,14 +38,62 @@ export default function BotonGuardarComoCaso() {
 
       {abierto && (
         <ModalGuardar
-          onCerrar={() => setAbierto(false)}
+          onCerrar={(exitoso) => {
+            setAbierto(false);
+            if (exitoso) {
+              setToast(exitoso);
+              // El toast desaparece solo después de 6 segundos
+              setTimeout(() => setToast(null), 6000);
+            }
+          }}
         />
       )}
+
+      {toast && <ToastExito {...toast} onCerrar={() => setToast(null)} />}
     </>
   );
 }
 
-function ModalGuardar({ onCerrar }: { onCerrar: () => void }) {
+function ToastExito({
+  pasoInicio,
+  cursoNombre,
+  onCerrar,
+}: {
+  pasoInicio: number;
+  cursoNombre: string;
+  onCerrar: () => void;
+}) {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+      <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-emerald-400 bg-emerald-50 px-4 py-3 shadow-lg dark:border-emerald-700 dark:bg-emerald-950">
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <CheckCircle2 className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1 text-xs">
+          <div className="font-semibold text-emerald-900 dark:text-emerald-100">
+            Caso guardado en "{cursoNombre}"
+          </div>
+          <div className="mt-0.5 text-emerald-900/80 dark:text-emerald-100/80">
+            Tus estudiantes inscritos podrán tomarlo. Empiezan desde el{" "}
+            <strong>paso {pasoInicio}</strong>.
+          </div>
+        </div>
+        <button
+          onClick={onCerrar}
+          className="flex-shrink-0 rounded p-0.5 text-emerald-900/70 hover:bg-emerald-200 dark:text-emerald-100/70 dark:hover:bg-emerald-900"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ModalGuardar({
+  onCerrar,
+}: {
+  onCerrar: (exitoso: { pasoInicio: number; cursoNombre: string } | null) => void;
+}) {
   const perfil = useAuthStore((s) => s.perfil)!;
   const proyecto = useProyectoStore((s) => s.proyecto)!;
   const [cursos, setCursos] = useState<Curso[]>([]);
@@ -77,10 +126,9 @@ function ModalGuardar({ onCerrar }: { onCerrar: () => void }) {
       await guardarProyecto(proyectoConCurso);
       // 2. Marcar como caso del curso
       await guardarComoCasoDelCurso(proyecto.id, cursoId, pasoInicio);
-      onCerrar();
-      alert(
-        `✓ Caso guardado. Tus estudiantes inscritos en el curso podrán tomarlo. Empiezan desde el paso ${pasoInicio}.`
-      );
+      const cursoElegido = cursos.find((c) => c.id === cursoId);
+      const cursoNombre = cursoElegido?.nombre ?? "el curso";
+      onCerrar({ pasoInicio, cursoNombre });
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
@@ -103,7 +151,7 @@ function ModalGuardar({ onCerrar }: { onCerrar: () => void }) {
               "{proyecto.nombre}" se convertirá en plantilla para tus estudiantes.
             </p>
           </div>
-          <button onClick={onCerrar} className="rounded-md p-1 hover:bg-secondary">
+          <button onClick={() => onCerrar(null)} className="rounded-md p-1 hover:bg-secondary">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -214,7 +262,7 @@ function ModalGuardar({ onCerrar }: { onCerrar: () => void }) {
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t border-border p-4">
           <button
-            onClick={onCerrar}
+            onClick={() => onCerrar(null)}
             disabled={guardando}
             className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
           >
