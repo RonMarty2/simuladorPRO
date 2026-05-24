@@ -55,11 +55,23 @@ export default function Paso2Proyeccion() {
     }
   };
 
+  /**
+   * Edita la cantidad de un año específico.
+   * - Si edita año 1 (anio=0) → propaga a años 2-5 usando las tasas vigentes
+   *   (con tasa 0%, los siguientes años se igualan al año 1).
+   * - Si edita año 2+ → es un override manual: solo cambia ese año.
+   */
   const cambiarCantidad = (id: string, anio: number, valor: number) => {
     const p = productos.find((x) => x.id === id);
     if (!p) return;
     const nuevas = [...p.cantidades] as [number, number, number, number, number];
     nuevas[anio] = valor;
+    if (anio === 0) {
+      // Propaga a 1..4 con la tasa de crecimiento actual
+      for (let i = 1; i < 5; i++) {
+        nuevas[i] = Math.round(nuevas[i - 1] * (1 + (tasasCant[i - 1] ?? 0) / 100));
+      }
+    }
     editar(id, { cantidades: nuevas });
   };
 
@@ -68,6 +80,12 @@ export default function Paso2Proyeccion() {
     if (!p) return;
     const nuevos = [...p.precios] as [number, number, number, number, number];
     nuevos[anio] = valor;
+    if (anio === 0) {
+      for (let i = 1; i < 5; i++) {
+        const sinRedondear = nuevos[i - 1] * (1 + (tasasPrec[i - 1] ?? 0) / 100);
+        nuevos[i] = Math.round(sinRedondear * 100) / 100;
+      }
+    }
     editar(id, { precios: nuevos });
   };
 
