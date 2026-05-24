@@ -78,17 +78,37 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
   });
 }
 
-/** Lista los proyectos del estudiante autenticado, más reciente primero. */
+/**
+ * Lista los proyectos del estudiante autenticado, más reciente primero.
+ *
+ * Implementa retry automático: si la primera query se cuelga (problema
+ * conocido cuando se navega a /construir antes de que el cliente
+ * Supabase termine de sincronizar la sesión), reintenta una vez con un
+ * timeout más largo. Esto evita que el usuario tenga que apretar F5
+ * manualmente.
+ */
 export async function listarMisProyectos(estudianteId: string): Promise<Proyecto[]> {
-  const { data, error } = await conTimeout(
+  const hacerQuery = () =>
     supabase
       .from("proyectos")
       .select("*")
       .eq("estudiante_id", estudianteId)
-      .order("actualizado_en", { ascending: false }),
-    10000,
-    "listando tus proyectos"
-  );
+      .order("actualizado_en", { ascending: false });
+
+  let resp;
+  try {
+    resp = await conTimeout(hacerQuery(), 5000, "listando tus proyectos");
+  } catch (primerError) {
+    // Reintento con timeout más generoso
+    try {
+      resp = await conTimeout(hacerQuery(), 10000, "listando tus proyectos (reintento)");
+    } catch {
+      // Si el reintento también falla, propagar el primer error (más descriptivo)
+      throw primerError;
+    }
+  }
+
+  const { data, error } = resp;
   if (error) throw error;
   return (data ?? []).map(deFilaSupabase);
 }

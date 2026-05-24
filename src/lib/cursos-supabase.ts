@@ -44,15 +44,25 @@ function generarCodigoCurso(): string {
 }
 
 export async function listarMisCursos(docenteId: string): Promise<Curso[]> {
-  const { data, error } = await conTimeout(
+  const hacerQuery = () =>
     supabase
       .from("cursos")
       .select("*")
       .eq("docente_id", docenteId)
-      .order("creado_en", { ascending: false }),
-    10000,
-    "listando tus cursos"
-  );
+      .order("creado_en", { ascending: false });
+
+  let resp;
+  try {
+    resp = await conTimeout(hacerQuery(), 5000, "listando tus cursos");
+  } catch (primerError) {
+    try {
+      resp = await conTimeout(hacerQuery(), 10000, "listando tus cursos (reintento)");
+    } catch {
+      throw primerError;
+    }
+  }
+
+  const { data, error } = resp;
   if (error) throw error;
   return (data ?? []) as Curso[];
 }
@@ -151,14 +161,23 @@ export async function inscribirseACurso(params: {
 export async function listarMisInscripciones(estudianteId: string): Promise<
   Array<{ curso: Curso; inscrito_en: string }>
 > {
-  const { data: inscripciones, error } = await conTimeout(
+  const hacerQuery = () =>
     supabase
       .from("inscripciones")
       .select("inscrito_en, curso_id")
-      .eq("estudiante_id", estudianteId),
-    10000,
-    "listando tus inscripciones"
-  );
+      .eq("estudiante_id", estudianteId);
+
+  let resp;
+  try {
+    resp = await conTimeout(hacerQuery(), 5000, "listando tus inscripciones");
+  } catch (primerError) {
+    try {
+      resp = await conTimeout(hacerQuery(), 10000, "listando tus inscripciones (reintento)");
+    } catch {
+      throw primerError;
+    }
+  }
+  const { data: inscripciones, error } = resp;
   if (error) throw error;
 
   if (!inscripciones || inscripciones.length === 0) return [];
