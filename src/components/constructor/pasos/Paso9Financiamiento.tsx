@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import {
@@ -673,16 +675,33 @@ function BloqueWACC({
   const contribDeuda = porcDeudaTotal * kdNeto;
   const contribCapital = porcCapitalTotal * koa;
 
+  const [abierto, setAbierto] = useState(false);
+
   return (
-    <div className="space-y-3 rounded-md border-2 border-primary/40 bg-primary/5 p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-sm font-bold uppercase tracking-wide">
-            WACC — Costo promedio ponderado de capital
-          </div>
-          <div className="text-[11px] text-muted-foreground">
-            Es la <strong>tasa mínima</strong> que tu proyecto tiene que rendir para que valga la pena.
-            Se usa como tasa de descuento del VAN y se compara con la TIR.
+    <div className="rounded-md border-2 border-primary/40 bg-primary/5">
+      {/* Header siempre visible — botón para expandir/colapsar */}
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 rounded-md p-4 text-left hover:bg-primary/10"
+        aria-expanded={abierto}
+      >
+        <div className="flex items-center gap-3">
+          {abierto ? (
+            <ChevronUp className="h-5 w-5 flex-shrink-0 text-primary" />
+          ) : (
+            <ChevronDown className="h-5 w-5 flex-shrink-0 text-primary" />
+          )}
+          <div>
+            <div className="text-sm font-bold uppercase tracking-wide">
+              WACC — Costo promedio ponderado de capital
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Tasa de descuento para VAN/TIR ·{" "}
+              <span className="text-primary">
+                {abierto ? "Click para ocultar el detalle" : "Click para ver cómo se calcula"}
+              </span>
+            </div>
           </div>
         </div>
         <div
@@ -695,7 +714,11 @@ function BloqueWACC({
           <div className="text-3xl font-bold text-primary">{(wacc * 100).toFixed(2)}%</div>
           <div className="text-[10px] text-muted-foreground">Tasa de descuento</div>
         </div>
-      </div>
+      </button>
+
+      {/* Contenido expandible */}
+      {abierto && (
+        <div className="space-y-3 border-t border-primary/30 p-4 pt-3">
 
       {/* Koa editable */}
       <div className="flex items-center gap-2 rounded-md bg-card p-2">
@@ -888,6 +911,8 @@ function BloqueWACC({
         para no destruir valor. Si la TIR queda por encima → el VAN es positivo y el proyecto
         crea valor. Si queda por debajo → estás perdiendo plata aunque el negocio dé utilidad.
       </div>
+        </div>
+      )}
     </div>
   );
 }
