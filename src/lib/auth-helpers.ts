@@ -27,6 +27,23 @@ export async function iniciarSesion(email: string, password: string) {
   return data;
 }
 
+/**
+ * Inicia sesión con Google OAuth. Redirige al usuario a Google y vuelve
+ * a la app después con la sesión iniciada. El callback es manejado
+ * automáticamente por Supabase (la URL queda con un fragment #access_token=…
+ * que la librería detecta y procesa).
+ */
+export async function iniciarSesionConGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/`,
+    },
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function cerrarSesion() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

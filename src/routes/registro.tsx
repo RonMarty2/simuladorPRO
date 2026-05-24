@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/stores/auth-store";
+import BotonGoogle from "@/components/auth/BotonGoogle";
 
 const esquema = z.object({
   nombre: z.string().min(1, "Requerido"),
@@ -65,6 +66,15 @@ export default function Registro() {
           <p className="mt-1 text-xs text-muted-foreground">
             Simulador de Proyectos de Inversión · Bolivia
           </p>
+        </div>
+
+        {/* Botón Google primero (recomendado para estudiantes) */}
+        <BotonGoogle texto="Crear cuenta con Google" />
+
+        <div className="my-4 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="h-px flex-1 bg-border" />
+          o con email
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

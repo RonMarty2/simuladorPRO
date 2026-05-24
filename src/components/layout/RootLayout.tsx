@@ -8,6 +8,7 @@ import {
   LogOut,
   Newspaper,
   PlayCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -31,7 +32,10 @@ export default function RootLayout() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
 
-  const enlaces = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
+  const enlacesBase = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
+  const enlaces = perfil?.es_admin
+    ? [...enlacesBase, { to: "/admin", label: "Admin", icon: ShieldCheck }]
+    : enlacesBase;
 
   const cerrar = async () => {
     await logout();

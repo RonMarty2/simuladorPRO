@@ -7,6 +7,9 @@ export interface Perfil {
   rol: Rol;
   email: string;
   universidad: string | null;
+  /** Flag de super-usuario. Independiente del rol — un admin sigue siendo
+   *  docente o estudiante a la vez. Solo lo seteamos manualmente vía SQL. */
+  es_admin?: boolean;
   creado_en: string;
 }
 
