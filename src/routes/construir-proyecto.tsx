@@ -6,6 +6,11 @@ import { eliminarProyecto, listarMisProyectos } from "@/lib/proyecto-supabase";
 import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
 import BarraProgreso from "@/components/constructor/BarraProgreso";
+import SelectorProyecto, {
+  guardarProyectoActivo,
+  leerProyectoActivo,
+} from "@/components/constructor/SelectorProyecto";
+import type { Proyecto } from "@/types/proyecto";
 import Paso1Datos from "@/components/constructor/pasos/Paso1Datos";
 import Paso2Proyeccion from "@/components/constructor/pasos/Paso2Proyeccion";
 import Paso2Inversiones from "@/components/constructor/pasos/Paso2Inversiones";
@@ -73,6 +78,7 @@ export default function ConstruirProyecto() {
   const [pasoActual, setPasoActualState] = useState(1);
   const [iniciando, setIniciando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const [todosProyectos, setTodosProyectos] = useState<Proyecto[]>([]);
   const estadoGuardado = useAutoGuardado(proyecto);
 
   // Setter que también persiste en localStorage
@@ -88,10 +94,16 @@ export default function ConstruirProyecto() {
     if (!user) return;
     listarMisProyectos(user.id)
       .then((proyectos) => {
+        setTodosProyectos(proyectos);
         if (proyectos.length > 0) {
-          cargar(proyectos[0]);
-          // Restaurar paso guardado para este proyecto
-          setPasoActualState(leerPasoGuardado(proyectos[0].id));
+          // Elegir el proyecto activo: el guardado en localStorage (si existe
+          // y todavía está en la lista) o el más reciente como fallback.
+          const idActivo = leerProyectoActivo(user.id);
+          const elegido =
+            (idActivo && proyectos.find((p) => p.id === idActivo)) || proyectos[0];
+          cargar(elegido);
+          guardarProyectoActivo(user.id, elegido.id);
+          setPasoActualState(leerPasoGuardado(elegido.id));
         }
         setErrorCarga(null);
       })
@@ -106,6 +118,15 @@ export default function ConstruirProyecto() {
     if (!confirm(`¿Borrar definitivamente "${proyecto.nombre}"?`)) return;
     await eliminarProyecto(proyecto.id);
     limpiar();
+    // Limpia el proyecto activo de localStorage para que la siguiente carga
+    // tome el más reciente disponible.
+    if (user) {
+      try {
+        localStorage.removeItem(`simulador.proyectoActivo.${user.id}`);
+      } catch {}
+    }
+    // Recargar para que se cargue el siguiente proyecto disponible
+    setTimeout(() => window.location.reload(), 50);
   };
 
   if (iniciando) {
@@ -137,6 +158,9 @@ export default function ConstruirProyecto() {
 
   return (
     <div className="space-y-4">
+      {/* Selector de proyecto múltiple */}
+      <SelectorProyecto proyectos={todosProyectos} />
+
       <BarraProgreso
         pasoActual={pasoActual}
         totalPasos={TOTAL_PASOS}
