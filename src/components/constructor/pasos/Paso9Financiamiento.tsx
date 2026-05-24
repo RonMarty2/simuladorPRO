@@ -41,7 +41,7 @@ export default function Paso9Financiamiento() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
       <div className="space-y-5 rounded-lg border border-border bg-card p-6">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Financiamiento</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Paso 7 · Financiamiento</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Cómo financias tu inversión inicial de{" "}
             <strong>{formatearBolivianos(inversionTotal)}</strong>.

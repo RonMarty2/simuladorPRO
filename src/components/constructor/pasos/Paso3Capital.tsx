@@ -102,7 +102,7 @@ export default function Paso3Capital() {
   const porcImprevistos = proyecto.imprevistosPorcentaje ?? 0;
   const imprevistosAnual = subtotalOperativo * porcImprevistos;
 
-  // ── Cuota anual del préstamo (Paso 8) ────────────────────────────────────
+  // ── Cuota anual del préstamo (Paso 7) ────────────────────────────────────
   // Monto del préstamo = inversiones fijas × % préstamo.
   // (No incluimos el capital de trabajo en la base del préstamo para evitar
   // dependencia circular; típicamente el banco financia solo activo fijo.)
@@ -148,7 +148,7 @@ export default function Paso3Capital() {
       <div className="space-y-4 rounded-lg border border-border bg-card p-5">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">
-            Paso 7 · Capital de trabajo
+            Paso 8 · Capital de trabajo
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Dinero que necesitas para operar antes de recibir ingresos del negocio.
@@ -360,11 +360,11 @@ export default function Paso3Capital() {
           <FilaGastoDetalle
             n={6}
             label="Cuota anual del préstamo (capital + interés)"
-            origen="Paso 3 — Inversiones · Paso 8 — Financiamiento"
+            origen="Paso 3 — Inversiones · Paso 7 — Financiamiento"
             valor={cuotaAnualPrestamo}
             formula="cuota_francesa(monto, tasa_anual, plazo_meses) × 12"
             color="violet"
-            vacioMsg="Define tu financiamiento en el Paso 8 (préstamo, tasa, plazo) para que se sume aquí."
+            vacioMsg="Define tu financiamiento en el Paso 7 (préstamo, tasa, plazo) para que se sume aquí."
             detalle={
               financiamientoConfigurado && (
                 <table className="w-full text-[11px]">

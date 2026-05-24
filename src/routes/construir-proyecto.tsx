@@ -25,8 +25,8 @@ const titulosPasos: Record<number, string> = {
   4: "Personal + aportes patronales",
   5: "Costos directos de producción",
   6: "Gastos administrativos y comercialización",
-  7: "Capital de trabajo (se calcula de los anteriores)",
-  8: "Financiamiento + WACC",
+  7: "Financiamiento + WACC",
+  8: "Capital de trabajo (se calcula de los anteriores)",
   9: "Resumen y flujo de caja",
 };
 
@@ -37,8 +37,8 @@ const titulosCortos: Record<number, string> = {
   4: "Personal",
   5: "Costos directos",
   6: "Gastos op.",
-  7: "Capital",
-  8: "Financiam.",
+  7: "Financiam.",
+  8: "Capital",
   9: "Resumen",
 };
 
@@ -179,9 +179,9 @@ function ContenidoPaso({ paso }: { paso: number }) {
     case 6:
       return <Paso7GastosOperativos />;
     case 7:
-      return <Paso3Capital />;
-    case 8:
       return <Paso9Financiamiento />;
+    case 8:
+      return <Paso3Capital />;
     case 9:
       return <Paso9Resumen />;
     default:
