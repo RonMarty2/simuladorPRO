@@ -133,12 +133,16 @@ export async function guardarComoCasoDelCurso(
 
 /** Lista los casos del curso disponibles (creados por el docente del curso). */
 export async function listarCasosDelCurso(cursoId: string): Promise<Proyecto[]> {
-  const { data, error } = await supabase
-    .from("proyectos")
-    .select("*")
-    .eq("curso_id", cursoId)
-    .eq("tipo", "caso_curso")
-    .order("actualizado_en", { ascending: false });
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .select("*")
+      .eq("curso_id", cursoId)
+      .eq("tipo", "caso_curso")
+      .order("actualizado_en", { ascending: false }),
+    10000,
+    "listando casos del curso"
+  );
   if (error) throw error;
   return (data ?? []).map(deFilaSupabase);
 }

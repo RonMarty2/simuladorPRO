@@ -44,11 +44,15 @@ function generarCodigoCurso(): string {
 }
 
 export async function listarMisCursos(docenteId: string): Promise<Curso[]> {
-  const { data, error } = await supabase
-    .from("cursos")
-    .select("*")
-    .eq("docente_id", docenteId)
-    .order("creado_en", { ascending: false });
+  const { data, error } = await conTimeout(
+    supabase
+      .from("cursos")
+      .select("*")
+      .eq("docente_id", docenteId)
+      .order("creado_en", { ascending: false }),
+    10000,
+    "listando tus cursos"
+  );
   if (error) throw error;
   return (data ?? []) as Curso[];
 }
@@ -115,12 +119,16 @@ export async function crearCurso(params: {
 }
 
 export async function buscarCursoPorCodigo(codigo: string): Promise<Curso | null> {
-  const { data, error } = await supabase
-    .from("cursos")
-    .select("*")
-    .eq("codigo", codigo.toUpperCase())
-    .eq("estado", "activo")
-    .maybeSingle();
+  const { data, error } = await conTimeout(
+    supabase
+      .from("cursos")
+      .select("*")
+      .eq("codigo", codigo.toUpperCase())
+      .eq("estado", "activo")
+      .maybeSingle(),
+    10000,
+    "buscando curso por código"
+  );
   if (error) throw error;
   return (data as Curso | null) ?? null;
 }
@@ -129,20 +137,28 @@ export async function inscribirseACurso(params: {
   curso_id: string;
   estudiante_id: string;
 }): Promise<void> {
-  const { error } = await supabase.from("inscripciones").insert({
-    curso_id: params.curso_id,
-    estudiante_id: params.estudiante_id,
-  });
+  const { error } = await conTimeout(
+    supabase.from("inscripciones").insert({
+      curso_id: params.curso_id,
+      estudiante_id: params.estudiante_id,
+    }),
+    10000,
+    "inscribiéndote al curso"
+  );
   if (error) throw error;
 }
 
 export async function listarMisInscripciones(estudianteId: string): Promise<
   Array<{ curso: Curso; inscrito_en: string }>
 > {
-  const { data: inscripciones, error } = await supabase
-    .from("inscripciones")
-    .select("inscrito_en, curso_id")
-    .eq("estudiante_id", estudianteId);
+  const { data: inscripciones, error } = await conTimeout(
+    supabase
+      .from("inscripciones")
+      .select("inscrito_en, curso_id")
+      .eq("estudiante_id", estudianteId),
+    10000,
+    "listando tus inscripciones"
+  );
   if (error) throw error;
 
   if (!inscripciones || inscripciones.length === 0) return [];
