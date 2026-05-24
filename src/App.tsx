@@ -12,6 +12,7 @@ import EvaluacionFinal from "@/routes/evaluacion-final";
 import CatalogoEventos from "@/routes/catalogo-eventos";
 import MisEntregas from "@/routes/mis-entregas";
 import AdminPanel from "@/routes/admin";
+import MiPerfil from "@/routes/mi-perfil";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/eventos" element={<CatalogoEventos />} />
           <Route path="/mis-entregas" element={<MisEntregas />} />
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/perfil" element={<MiPerfil />} />
         </Route>
       </Route>
       <Route path="*" element={<Hub />} />

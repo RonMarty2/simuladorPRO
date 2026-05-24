@@ -56,12 +56,19 @@ export default function RootLayout() {
         </div>
         <div className="flex items-center gap-4">
           {perfil && (
-            <div className="text-right text-xs">
+            <button
+              onClick={() => navigate("/perfil")}
+              className="rounded-md px-2 py-1 text-right text-xs transition hover:bg-accent"
+              title="Editar mi perfil"
+            >
               <div className="font-medium text-foreground">
                 {perfil.nombre} {perfil.apellido}
               </div>
-              <div className="text-muted-foreground capitalize">{perfil.rol}</div>
-            </div>
+              <div className="text-muted-foreground capitalize">
+                {perfil.rol}
+                {perfil.es_admin && " · 🛡️"}
+              </div>
+            </button>
           )}
           <button
             onClick={cerrar}

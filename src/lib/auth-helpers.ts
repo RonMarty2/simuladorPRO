@@ -114,3 +114,61 @@ export async function obtenerPerfilConReintentos(
   }
   return null;
 }
+
+/**
+ * Actualiza nombre y apellido del perfil del usuario autenticado.
+ * Cualquiera puede editar su propio perfil (RLS: perfiles_propietario_actualiza).
+ */
+export async function actualizarMiPerfil(
+  userId: string,
+  cambios: { nombre?: string; apellido?: string; universidad?: string | null }
+): Promise<void> {
+  const { error } = await supabase
+    .from("perfiles")
+    .update(cambios)
+    .eq("id", userId);
+  if (error) throw error;
+}
+
+/**
+ * Si el perfil tiene nombre vacío o el default "Sin nombre", lo sincroniza
+ * con los datos que vienen en la metadata de Google OAuth.
+ * Se llama después de cada login para mantener nombres consistentes.
+ */
+export async function sincronizarNombreConGoogle(
+  userId: string,
+  perfilActual: Perfil | null,
+  metadataGoogle: Record<string, any> | undefined
+): Promise<void> {
+  if (!perfilActual || !metadataGoogle) return;
+
+  const nombreActual = perfilActual.nombre?.trim() ?? "";
+  const apellidoActual = perfilActual.apellido?.trim() ?? "";
+
+  // Solo sincronizar si el nombre actual es vacío o el default
+  const nombreEsDefault =
+    !nombreActual ||
+    nombreActual === "Sin nombre" ||
+    nombreActual.toLowerCase() === perfilActual.email.split("@")[0].toLowerCase();
+
+  if (!nombreEsDefault) return;
+
+  const nombreGoogle =
+    metadataGoogle.given_name?.trim() ||
+    metadataGoogle.name?.split(" ")[0]?.trim();
+  const apellidoGoogle =
+    metadataGoogle.family_name?.trim() ||
+    metadataGoogle.name?.split(" ").slice(1).join(" ").trim();
+
+  if (!nombreGoogle) return;
+
+  const cambios: { nombre?: string; apellido?: string } = {};
+  if (nombreGoogle && nombreGoogle !== nombreActual) cambios.nombre = nombreGoogle;
+  if (apellidoGoogle && apellidoGoogle !== apellidoActual) cambios.apellido = apellidoGoogle;
+
+  if (Object.keys(cambios).length === 0) return;
+
+  await actualizarMiPerfil(userId, cambios).catch((e) => {
+    console.warn("No se pudo sincronizar nombre con Google:", e);
+  });
+}
