@@ -14,6 +14,8 @@ import {
   turnosTotalesPorFrecuencia,
 } from "@/lib/motor-eventos";
 import { listarEventos } from "@/lib/eventos-supabase";
+import { supabase } from "@/lib/supabase";
+import type { Curso, ModoSimulacion } from "@/lib/cursos-supabase";
 import type { Evento, OpcionDecision } from "@/types/evento";
 import type { Frecuencia, Simulacion, TurnoHistorial } from "@/types/simulacion";
 import type { Proyecto } from "@/types/proyecto";
@@ -23,6 +25,8 @@ interface SimulacionState {
   eventos: Evento[];
   historial: TurnoHistorial[];
   eventoActual: Evento | null;
+  /** Curso al que pertenece el proyecto (define modo de simulación y eventos curados) */
+  curso: Curso | null;
   cargando: boolean;
   error: string | null;
 
@@ -44,6 +48,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
   eventos: [],
   historial: [],
   eventoActual: null,
+  curso: null,
   cargando: false,
   error: null,
 
@@ -66,7 +71,19 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
       }
       const eventos = await listarEventos();
       const historial = await obtenerHistorial(sim.id);
-      set({ simulacion: sim, eventos, historial, cargando: false });
+
+      // Cargar el curso si el proyecto está asociado a uno (para modo de simulación)
+      let curso: Curso | null = null;
+      if (proyecto.curso_id) {
+        const { data: cursoFila } = await supabase
+          .from("cursos")
+          .select("*")
+          .eq("id", proyecto.curso_id)
+          .maybeSingle();
+        curso = (cursoFila as Curso | null) ?? null;
+      }
+
+      set({ simulacion: sim, eventos, historial, curso, cargando: false });
 
       // Generar evento del próximo turno si no es el primer turno o si no terminó
       get().prepararSiguienteTurno(proyecto);
@@ -77,7 +94,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
   },
 
   prepararSiguienteTurno: (proyecto) => {
-    const { simulacion, eventos, historial } = get();
+    const { simulacion, eventos, historial, curso } = get();
     if (!simulacion) return;
     if (simulacion.estado !== "activa") return;
     if (simulacion.turno_actual >= simulacion.turnos_totales) return;
@@ -86,11 +103,17 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
       .flatMap((h) => h.eventos_aplicados.map((e) => e.id))
       .filter(Boolean);
 
+    // Si el curso tiene modo de simulación configurado, lo respetamos
+    const modo: ModoSimulacion = curso?.modo_simulacion ?? "automatico";
+    const eventosCurados = curso?.eventos_curados ?? null;
+
     const evento = seleccionarEventoTurno(
       simulacion.turno_actual + 1,
       proyecto.sector,
       eventos,
-      eventosYaUsados
+      eventosYaUsados,
+      Math.random,
+      { modoSimulacion: modo, eventosCurados }
     );
     set({ eventoActual: evento });
   },

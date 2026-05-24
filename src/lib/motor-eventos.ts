@@ -81,13 +81,45 @@ export function mesesPorTurno(freq: Frecuencia): number {
  *
  * Filtra eventos cuyo turno_minimo no se alcanzó y los que afectan otros sectores.
  */
+export type ModoSimulacionMotor = "automatico" | "docente_dispara" | "curado";
+
+export interface ConfigSeleccionEvento {
+  /** Modo de la simulación. Default 'automatico'. */
+  modoSimulacion?: ModoSimulacionMotor;
+  /** Si modo='curado': lista ordenada de IDs de eventos a aplicar. */
+  eventosCurados?: string[] | null;
+}
+
 export function seleccionarEventoTurno(
   turnoActual: number,
   sectorProyecto: string,
   eventos: Evento[],
   eventosYaUsados: string[] = [],
-  rng: () => number = Math.random
+  rng: () => number = Math.random,
+  config: ConfigSeleccionEvento = {}
 ): Evento | null {
+  const modo = config.modoSimulacion ?? "automatico";
+
+  // ── Modo 'docente_dispara': el motor no propone, el docente decide
+  if (modo === "docente_dispara") return null;
+
+  // ── Modo 'curado': aplicar la lista en orden, ignorar probabilidades
+  if (modo === "curado" && config.eventosCurados && config.eventosCurados.length > 0) {
+    // Cuántos eventos ya se aplicaron de la lista curada
+    const aplicadosDeLista = config.eventosCurados.filter((id) =>
+      eventosYaUsados.includes(id)
+    ).length;
+    // Siguiente evento de la lista
+    const siguienteId = config.eventosCurados[aplicadosDeLista];
+    if (!siguienteId) return null; // la lista se agotó
+    const candidato = eventos.find((e) => e.id === siguienteId);
+    if (!candidato) return null;
+    // Verifica turno mínimo del evento (puede que el docente lo puso muy temprano)
+    if (turnoActual < candidato.turno_minimo) return null;
+    return candidato;
+  }
+
+  // ── Modo 'automatico' (lo de siempre): muestreo probabilístico
   const candidatos = eventos.filter(
     (e) =>
       turnoActual >= e.turno_minimo &&

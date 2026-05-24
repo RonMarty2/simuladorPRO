@@ -13,6 +13,8 @@ import {
 } from "@/lib/cursos-supabase";
 import RankingCurso from "@/components/docente/RankingCurso";
 import EntregasCurso from "@/components/docente/EntregasCurso";
+import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
+import type { ModoSimulacion } from "@/lib/cursos-supabase";
 
 export default function DashboardDocente() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -101,11 +103,17 @@ function FormCrearCurso({
   const [materia, setMateria] = useState("Administración Financiera");
   const [paralelo, setParalelo] = useState("");
   const [frecuencia, setFrecuencia] = useState<FrecuenciaCurso>("mensual");
+  const [modo, setModo] = useState<ModoSimulacion>("automatico");
+  const [eventosCurados, setEventosCurados] = useState<string[]>([]);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (modo === "curado" && eventosCurados.length === 0) {
+      setError("Elegiste 'eventos curados' pero no seleccionaste ninguno. Marca al menos 1 evento o cambia el modo.");
+      return;
+    }
     setCreando(true);
     setError(null);
     try {
@@ -115,6 +123,8 @@ function FormCrearCurso({
         materia,
         paralelo: paralelo || undefined,
         frecuencia_turnos: frecuencia,
+        modo_simulacion: modo,
+        eventos_curados: modo === "curado" ? eventosCurados : undefined,
       });
       onCreado(curso);
     } catch (e) {
@@ -155,6 +165,17 @@ function FormCrearCurso({
           </select>
         </div>
       </div>
+
+      {/* Selector de modo de simulación (incluye eventos curados si aplica) */}
+      <SelectorModoSimulacion
+        modo={modo}
+        eventosCurados={eventosCurados}
+        onCambiar={(m, ids) => {
+          setModo(m);
+          setEventosCurados(ids);
+        }}
+      />
+
       {error && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           {error}

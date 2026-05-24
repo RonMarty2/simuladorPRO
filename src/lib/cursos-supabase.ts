@@ -3,6 +3,14 @@ import { supabase } from "./supabase";
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
 export type EstadoCurso = "activo" | "cerrado" | "archivado";
 
+/**
+ * Modo de simulación del curso:
+ *  - automatico       — el sistema sortea eventos aleatorios según probabilidad (default)
+ *  - docente_dispara  — el docente lanza cada evento manualmente desde su panel
+ *  - curado           — el docente preselecciona los eventos que se van a aplicar
+ */
+export type ModoSimulacion = "automatico" | "docente_dispara" | "curado";
+
 export interface Curso {
   id: string;
   docente_id: string;
@@ -13,6 +21,8 @@ export interface Curso {
   frecuencia_turnos: FrecuenciaCurso;
   duracion_anios: number;
   estado: EstadoCurso;
+  modo_simulacion?: ModoSimulacion;
+  eventos_curados?: string[] | null;
   creado_en: string;
 }
 
@@ -43,6 +53,29 @@ export async function listarMisCursos(docenteId: string): Promise<Curso[]> {
   return (data ?? []) as Curso[];
 }
 
+/**
+ * Wrap defensivo: si una promise no resuelve en `ms` lanza error.
+ * Sirve para no dejar al usuario con el botón "Cargando..." infinito
+ * si Supabase no responde por red caída o sesión caducada.
+ */
+function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => {
+      reject(new Error(`Tiempo agotado: ${motivo} (>${ms / 1000}s). Revisa tu conexión o recarga la página.`));
+    }, ms);
+    Promise.resolve(promise).then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(id);
+        reject(e);
+      }
+    );
+  });
+}
+
 export async function crearCurso(params: {
   docente_id: string;
   nombre: string;
@@ -50,23 +83,31 @@ export async function crearCurso(params: {
   paralelo?: string;
   frecuencia_turnos: FrecuenciaCurso;
   duracion_anios?: number;
+  modo_simulacion?: ModoSimulacion;
+  eventos_curados?: string[];
 }): Promise<Curso> {
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
   for (let intento = 0; intento < 5; intento++) {
     const codigo = generarCodigoCurso();
-    const { data, error } = await supabase
-      .from("cursos")
-      .insert({
-        docente_id: params.docente_id,
-        nombre: params.nombre,
-        materia: params.materia,
-        paralelo: params.paralelo ?? null,
-        frecuencia_turnos: params.frecuencia_turnos,
-        duracion_anios: params.duracion_anios ?? 5,
-        codigo,
-      })
-      .select()
-      .single();
+    const { data, error } = await conTimeout(
+      supabase
+        .from("cursos")
+        .insert({
+          docente_id: params.docente_id,
+          nombre: params.nombre,
+          materia: params.materia,
+          paralelo: params.paralelo ?? null,
+          frecuencia_turnos: params.frecuencia_turnos,
+          duracion_anios: params.duracion_anios ?? 5,
+          modo_simulacion: params.modo_simulacion ?? "automatico",
+          eventos_curados: params.eventos_curados ?? null,
+          codigo,
+        })
+        .select()
+        .single(),
+      15000,
+      "creando curso"
+    );
     if (!error) return data as Curso;
     if (!error.message.toLowerCase().includes("codigo")) throw error;
   }
