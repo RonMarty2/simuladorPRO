@@ -10,4 +10,19 @@ if (!url || !anonKey) {
   );
 }
 
-export const supabase = createClient(url ?? "http://localhost", anonKey ?? "anon-placeholder");
+export const supabase = createClient(
+  url ?? "http://localhost",
+  anonKey ?? "anon-placeholder",
+  {
+    auth: {
+      // Persistir sesión en localStorage para que sobreviva refresh
+      persistSession: true,
+      // Auto-refresh del token antes de que venza (sin esto se cuelga después de ~1h)
+      autoRefreshToken: true,
+      // Detectar OAuth callbacks en la URL automáticamente
+      detectSessionInUrl: true,
+      // Usar PKCE flow para OAuth (más seguro y robusto)
+      flowType: "pkce",
+    },
+  }
+);
