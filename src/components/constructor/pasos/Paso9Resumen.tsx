@@ -45,82 +45,134 @@ export default function Paso9Resumen() {
         </p>
 
         {/* Indicadores principales */}
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <CardIndicador
-            titulo="VAN"
+            sigla="VAN"
+            nombre="Valor Actual Neto"
             valor={formatearBolivianos(calc.indicadores.van)}
             positivo={calc.indicadores.van > 0}
-            ayuda={`Valor Actual Neto · descontado al ${(calc.wacc * 100).toFixed(2)}%`}
-            tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\n\nSi VAN > 0: el proyecto CREA valor (acepta).\nSi VAN < 0: el proyecto DESTRUYE valor (rechaza).\n\nTu VAN: ${formatearBolivianos(calc.indicadores.van)}`}
+            pregunta="¿Cuánta plata extra te deja el proyecto?"
+            interpretacion={
+              calc.indicadores.van > 0
+                ? "✓ Positivo: el proyecto crea valor"
+                : "✗ Negativo: el proyecto destruye valor"
+            }
+            tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\nTu VAN descontado al ${(calc.wacc * 100).toFixed(2)}%: ${formatearBolivianos(calc.indicadores.van)}\n\nRegla: VAN > 0 acepta · VAN < 0 rechaza`}
           />
           <CardIndicador
-            titulo="TIR"
+            sigla="TIR"
+            nombre="Tasa Interna de Retorno"
             valor={
               isFinite(calc.indicadores.tir)
                 ? `${(calc.indicadores.tir * 100).toFixed(2)}%`
                 : "—"
             }
             positivo={isFinite(calc.indicadores.tir) && calc.indicadores.tir > calc.wacc}
-            ayuda={`Tasa Interna de Retorno · vs WACC ${(calc.wacc * 100).toFixed(2)}%`}
-            tooltip={`TIR = tasa que hace VAN = 0.\n\nSi TIR > WACC (${(calc.wacc * 100).toFixed(2)}%): proyecto rentable, ACEPTAR.\nSi TIR < WACC: proyecto NO rentable, rechazar.\n\nSi muestra "—" significa que los flujos no permiten calcular la TIR (todos negativos o no converge).`}
+            pregunta="¿Cuánto rinde el proyecto al año?"
+            interpretacion={
+              !isFinite(calc.indicadores.tir)
+                ? "✗ No se puede calcular (flujos malos)"
+                : calc.indicadores.tir > calc.wacc
+                  ? `✓ Supera el WACC (${(calc.wacc * 100).toFixed(2)}%)`
+                  : `✗ Menor al WACC (${(calc.wacc * 100).toFixed(2)}%)`
+            }
+            tooltip={`TIR = tasa que hace VAN = 0.\n\nSi TIR > WACC: proyecto rentable, ACEPTAR.\nSi TIR < WACC: proyecto NO rentable, rechazar.\n\nSi muestra "—" los flujos no permiten calcularla.`}
           />
           <CardIndicador
-            titulo="Payback"
+            sigla="PAYBACK"
+            nombre="Período de recuperación"
             valor={
               calc.indicadores.payback < 0
                 ? "No recupera"
                 : `${calc.indicadores.payback.toFixed(1)} años`
             }
             positivo={calc.indicadores.payback > 0 && calc.indicadores.payback <= 5}
-            ayuda="Período de recuperación de la inversión"
-            tooltip="Cuántos años tarda el proyecto en recuperar la inversión inicial (suma de flujos hasta llegar a cero). Si es 'No recupera', los flujos acumulados nunca cruzan el cero en el horizonte de 5 años."
+            pregunta="¿En cuánto tiempo recuperas tu plata?"
+            interpretacion={
+              calc.indicadores.payback < 0
+                ? "✗ Nunca recupera en 5 años"
+                : calc.indicadores.payback <= 5
+                  ? "✓ Recupera dentro del horizonte"
+                  : "⚠ Tarda más de 5 años"
+            }
+            tooltip="Cuántos años tarda el proyecto en devolverte la inversión inicial (suma de flujos hasta cruzar cero)."
           />
           <CardIndicador
-            titulo="TRC"
+            sigla="TRC"
+            nombre="Tasa de Retorno Contable"
             valor={
               isFinite(calc.indicadores.trc)
                 ? `${(calc.indicadores.trc * 100).toFixed(2)}%`
                 : "—"
             }
             positivo={calc.indicadores.trc > 0}
-            ayuda="Tasa de Retorno Contable (ARR)"
-            tooltip={`TRC = utilidad neta promedio anual ÷ inversión total\n\nNo descuenta el dinero en el tiempo, así que es menos riguroso que la TIR, pero útil como referencia contable rápida.\n\nTu TRC: ${(calc.indicadores.trc * 100).toFixed(2)}%`}
+            pregunta="¿Qué % de utilidad contable da por año?"
+            interpretacion={
+              calc.indicadores.trc > 0
+                ? "✓ Utilidad contable positiva"
+                : "✗ El proyecto pierde plata contablemente"
+            }
+            tooltip={`TRC = utilidad neta promedio ÷ inversión total\n\nNo descuenta el dinero en el tiempo, así que es menos riguroso que la TIR. Sirve como referencia contable rápida (también llamada ARR).`}
           />
           <CardIndicador
-            titulo="SD"
+            sigla="SD"
+            nombre="Servicio de la Deuda"
             valor={
               isFinite(calc.indicadores.sd)
-                ? calc.indicadores.sd.toFixed(2)
+                ? `${calc.indicadores.sd.toFixed(2)} veces`
                 : "Sin deuda"
             }
             positivo={calc.indicadores.sd >= 1}
-            ayuda="Cobertura del Servicio de la Deuda (DSCR)"
-            tooltip={`SD = flujo de caja operativo promedio ÷ cuota anual (capital + interés)\n\nSi SD > 1.0: el proyecto genera suficiente caja para pagar la deuda.\nSi SD < 1.0: NO alcanza, hace falta poner plata propia o refinanciar.\n\nCuota anual de referencia (año 1): ${formatearBolivianos(calc.indicadores.cuotaAnualTotal)}\nTu SD: ${isFinite(calc.indicadores.sd) ? calc.indicadores.sd.toFixed(2) : "sin deuda"}`}
+            pregunta="¿Cuántas veces el flujo cubre la cuota del banco?"
+            interpretacion={
+              !isFinite(calc.indicadores.sd)
+                ? "— No tienes préstamos"
+                : calc.indicadores.sd >= 1.5
+                  ? "✓ Cobertura cómoda"
+                  : calc.indicadores.sd >= 1
+                    ? "⚠ Justa, sin margen"
+                    : "✗ No alcanza, no podrías pagar"
+            }
+            tooltip={`SD (o DSCR) = flujo de caja operativo promedio ÷ cuota anual del préstamo.\n\nSi SD > 1: el proyecto genera suficiente caja para pagar la deuda.\nSi SD < 1: NO alcanza.\n\nCuota anual referencia (año 1): ${formatearBolivianos(calc.indicadores.cuotaAnualTotal)}`}
           />
           <CardIndicador
-            titulo="IR"
+            sigla="IR"
+            nombre="Índice de Rentabilidad"
             valor={calc.indicadores.ir.toFixed(2)}
             positivo={calc.indicadores.ir > 1}
-            ayuda="Índice de Rentabilidad"
-            tooltip={`IR = VP(flujos positivos) ÷ inversión inicial\n\nSi IR > 1: por cada Bs invertido, recuperas más de Bs 1 a valor presente. Proyecto rentable.\nSi IR < 1: pierdes valor.\n\nTu IR: ${calc.indicadores.ir.toFixed(2)} → ${calc.indicadores.ir > 1 ? "ACEPTA" : "RECHAZA"}`}
+            pregunta="¿Cuántos Bs ganas por cada Bs invertido?"
+            interpretacion={
+              calc.indicadores.ir > 1
+                ? `✓ Por cada Bs invertido recuperas Bs ${calc.indicadores.ir.toFixed(2)}`
+                : "✗ No recuperas ni 1 Bs por cada Bs invertido"
+            }
+            tooltip="IR = VP(flujos positivos) ÷ inversión inicial.\n\nSi IR > 1: rentable, acepta.\nSi IR < 1: pierdes valor."
           />
           <CardIndicador
-            titulo="RBC"
+            sigla="RBC"
+            nombre="Relación Beneficio/Costo"
             valor={
               isFinite(calc.indicadores.rbc)
                 ? calc.indicadores.rbc.toFixed(2)
                 : "—"
             }
             positivo={calc.indicadores.rbc > 1}
-            ayuda="Relación Beneficio-Costo"
-            tooltip={`RBC = VP(ingresos) ÷ VP(todos los costos + impuestos + intereses)\n\nSi RBC > 1: por cada Bs de costo, generas más de Bs 1 de ingreso (a valor presente). Acepta.\nSi RBC < 1: pierdes valor.\n\nTu RBC: ${calc.indicadores.rbc.toFixed(2)}`}
+            pregunta="¿Cuántos Bs ingresas por cada Bs gastado?"
+            interpretacion={
+              calc.indicadores.rbc > 1
+                ? `✓ Por cada Bs de costo, ingresas Bs ${calc.indicadores.rbc.toFixed(2)}`
+                : "✗ Gastas más de lo que ingresas"
+            }
+            tooltip="RBC = VP(ingresos) ÷ VP(todos los costos, impuestos e intereses).\n\nSi RBC > 1: el negocio es eficiente. Si RBC < 1: gastas más de lo que generas."
           />
           <CardIndicador
-            titulo="WACC"
+            sigla="WACC"
+            nombre="Costo Promedio Ponderado de Capital"
             valor={`${(calc.wacc * 100).toFixed(2)}%`}
             positivo
-            ayuda="Costo Promedio Ponderado de Capital"
-            tooltip={`WACC = (D/V × Kd × (1−T)) + (E/V × Ke)\n\nEs la tasa mínima que tu proyecto debe rendir para no destruir valor. Se usa como tasa de descuento del VAN y como referencia de comparación de la TIR.`}
+            pregunta="¿Qué rentabilidad mínima debe dar el proyecto?"
+            interpretacion="Es la vara que la TIR debe superar"
+            tooltip="WACC = (D/V × Kd × (1−T)) + (E/V × Ke)\n\nTasa mínima exigida al proyecto. Se usa como tasa de descuento del VAN y se compara con la TIR."
           />
         </div>
       </div>
@@ -285,39 +337,61 @@ export default function Paso9Resumen() {
 }
 
 function CardIndicador({
-  titulo,
+  sigla,
+  nombre,
   valor,
   positivo,
-  ayuda,
+  pregunta,
+  interpretacion,
   tooltip,
 }: {
-  titulo: string;
+  sigla: string;
+  nombre: string;
   valor: string;
   positivo: boolean;
-  ayuda: string;
+  pregunta: string;
+  interpretacion: string;
   tooltip?: string;
 }) {
   return (
     <div
       className={cn(
-        "rounded-md border border-border p-3",
+        "flex flex-col rounded-md border border-border p-3",
         tooltip && "cursor-help"
       )}
       title={tooltip}
     >
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {titulo}
-        {tooltip && <span className="ml-1 opacity-60">ⓘ</span>}
+      {/* Encabezado: sigla técnica + nombre completo */}
+      <div className="flex items-baseline gap-2">
+        <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          {nombre}
+        </span>
+        {tooltip && <span className="ml-auto text-[10px] opacity-60">ⓘ</span>}
       </div>
+
+      {/* Pregunta que responde, en lenguaje simple */}
+      <div className="mt-1 text-[10px] italic text-muted-foreground">{pregunta}</div>
+
+      {/* Valor numérico destacado */}
       <div
         className={cn(
-          "mt-0.5 text-lg font-semibold",
+          "mt-1.5 text-xl font-bold tabular-nums",
           positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
         )}
       >
         {valor}
       </div>
-      <div className="text-[10px] text-muted-foreground">{ayuda}</div>
+
+      {/* Interpretación en lenguaje plano (verde si bien, rojo si mal) */}
+      <div
+        className={cn(
+          "mt-1 text-[10px] font-medium",
+          positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
+        )}
+      >
+        {interpretacion}
+      </div>
     </div>
   );
 }
