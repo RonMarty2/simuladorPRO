@@ -1,25 +1,188 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BookOpen, GraduationCap, Hammer, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
-import { guardarProyecto } from "@/lib/proyecto-supabase";
-import { Hammer } from "lucide-react";
+import { guardarProyecto, listarCasosDelCurso, tomarCasoDelCurso } from "@/lib/proyecto-supabase";
+import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
+import type { Proyecto } from "@/types/proyecto";
+
+interface CasoDisponible {
+  curso: Curso;
+  caso: Proyecto;
+}
 
 export default function EmpezarProyecto() {
   const user = useAuthStore((s) => s.user);
+  const perfil = useAuthStore((s) => s.perfil);
+  const cargar = useProyectoStore((s) => s.cargar);
   const inicializar = useProyectoStore((s) => s.inicializar);
+
+  const [casosDisponibles, setCasosDisponibles] = useState<CasoDisponible[]>([]);
+  const [cargandoCasos, setCargandoCasos] = useState(true);
+
+  // Cargar casos disponibles para este estudiante (de sus cursos)
+  useEffect(() => {
+    if (!user || perfil?.rol === "docente") {
+      setCargandoCasos(false);
+      return;
+    }
+    (async () => {
+      try {
+        const inscripciones = await listarMisInscripciones(user.id);
+        const arr: CasoDisponible[] = [];
+        for (const { curso } of inscripciones) {
+          const casos = await listarCasosDelCurso(curso.id);
+          casos.forEach((caso) => arr.push({ curso, caso }));
+        }
+        setCasosDisponibles(arr);
+      } catch (e) {
+        console.error("Error cargando casos del curso:", e);
+      } finally {
+        setCargandoCasos(false);
+      }
+    })();
+  }, [user, perfil?.rol]);
+
+  if (!user) return null;
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold tracking-tight">Empezar a trabajar</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {perfil?.rol === "docente"
+            ? "Crea un proyecto para experimentar o armar un caso plantilla del curso."
+            : "Elige cómo quieres arrancar."}
+        </p>
+      </div>
+
+      {/* Casos del curso disponibles (solo estudiantes) */}
+      {cargandoCasos && perfil?.rol === "estudiante" && (
+        <div className="flex items-center justify-center gap-2 rounded-md border border-border bg-card p-4 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Buscando casos disponibles…
+        </div>
+      )}
+
+      {casosDisponibles.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            📥 Casos disponibles en tus cursos
+          </div>
+          {casosDisponibles.map(({ curso, caso }) => (
+            <TarjetaCasoDisponible
+              key={caso.id}
+              curso={curso}
+              caso={caso}
+              onTomado={(p) => cargar(p)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Proyecto libre */}
+      <FormularioProyectoLibre
+        userId={user.id}
+        onCreado={() => {
+          // El proyecto ya está en el store después de inicializar/guardar.
+        }}
+        inicializar={inicializar}
+      />
+    </div>
+  );
+}
+
+function TarjetaCasoDisponible({
+  curso,
+  caso,
+  onTomado,
+}: {
+  curso: Curso;
+  caso: Proyecto;
+  onTomado: (p: Proyecto) => void;
+}) {
+  const user = useAuthStore((s) => s.user)!;
+  const [tomando, setTomando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const tomar = async () => {
+    setTomando(true);
+    setError(null);
+    try {
+      const copia = await tomarCasoDelCurso(caso.id, user.id);
+      onTomado(copia);
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setTomando(false);
+    }
+  };
+
+  const pasoInicio = caso.paso_inicio_estudiante ?? 1;
+
+  return (
+    <div className="rounded-md border-2 border-emerald-300 bg-emerald-50/50 p-3 dark:border-emerald-700 dark:bg-emerald-950/20">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-emerald-500 text-white">
+          <BookOpen className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold">{caso.nombre}</div>
+          <div className="text-[11px] text-muted-foreground">
+            Curso: <strong>{curso.nombre}</strong> · {curso.materia}
+            {curso.paralelo ? ` · ${curso.paralelo}` : ""}
+          </div>
+          <div className="mt-1 text-[11px] text-emerald-900 dark:text-emerald-100">
+            {pasoInicio === 1
+              ? "Tendrás que armar TODO el proyecto desde cero (el docente solo te dio el contexto)."
+              : pasoInicio === 9
+              ? "Recibes el proyecto COMPLETO. Solo lo simulas."
+              : `Recibes los pasos 1 al ${pasoInicio - 1} ya armados. Tú completas del ${pasoInicio} al 8.`}
+          </div>
+          {error && (
+            <div className="mt-1 text-[11px] text-destructive">{error}</div>
+          )}
+        </div>
+        <button
+          onClick={tomar}
+          disabled={tomando}
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {tomando ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <GraduationCap className="h-3 w-3" />
+          )}
+          Tomar caso
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FormularioProyectoLibre({
+  userId,
+  onCreado,
+  inicializar,
+}: {
+  userId: string;
+  onCreado: () => void;
+  inicializar: (estudianteId: string, nombre: string) => void;
+}) {
   const [nombre, setNombre] = useState("");
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !nombre.trim()) return;
+    if (!userId || !nombre.trim()) return;
     setCreando(true);
     setError(null);
     try {
-      inicializar(user.id, nombre.trim());
+      inicializar(userId, nombre.trim());
       const proyecto = useProyectoStore.getState().proyecto!;
       await guardarProyecto(proyecto);
+      onCreado();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al crear el proyecto";
       setError(msg);
@@ -29,33 +192,28 @@ export default function EmpezarProyecto() {
   };
 
   return (
-    <div className="mx-auto max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Hammer className="h-6 w-6" />
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <Hammer className="h-4 w-4" />
         </div>
-        <h2 className="text-lg font-semibold tracking-tight">Nuevo proyecto de inversión</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Construirás tu proyecto paso a paso. Al final lo simularemos 5 años con
-          eventos económicos bolivianos reales.
-        </p>
+        <div>
+          <div className="text-sm font-semibold">🆕 Crear proyecto libre</div>
+          <div className="text-[11px] text-muted-foreground">
+            Arranca desde cero, sin guion del docente
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={crear} className="space-y-4">
-        <div className="space-y-1.5">
-          <label htmlFor="nombre-proyecto" className="text-sm font-medium">
-            Nombre del proyecto
-          </label>
-          <input
-            id="nombre-proyecto"
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ej: Cafetería en Cochabamba"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            autoFocus
-          />
-        </div>
+      <form onSubmit={crear} className="space-y-2">
+        <input
+          id="nombre-proyecto"
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Ej: Cafetería en Cochabamba"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
 
         {error && (
           <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">

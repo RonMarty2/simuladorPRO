@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import BotonEntregar from "../BotonEntregar";
 import {
   calcularAportesPatronales,
   calcularCuotaPrestamoFrancesa,
@@ -38,6 +39,15 @@ export default function Paso9Resumen() {
 
   return (
     <div className="space-y-4">
+      <BotonEntregar
+        indicadores={{
+          van: calc.indicadores.van,
+          tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
+          wacc: calc.wacc,
+          payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
+        }}
+      />
+
       <div className="rounded-lg border border-border bg-card p-6">
         <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>
         <p className="mt-1 text-sm text-muted-foreground">

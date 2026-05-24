@@ -15,6 +15,7 @@ import Paso6CostosProduccion from "@/components/constructor/pasos/Paso6CostosPro
 import Paso7GastosOperativos from "@/components/constructor/pasos/Paso7GastosOperativos";
 import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamiento";
 import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
+import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 
 const TOTAL_PASOS = 9;
 
@@ -138,13 +139,14 @@ export default function ConstruirProyecto() {
           Anterior
         </button>
 
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col items-center gap-1.5 text-center">
           <span className="text-xs text-muted-foreground">
             {titulosPasos[pasoActual]}
           </span>
+          <BotonGuardarComoCaso />
           <button
             onClick={abandonarProyecto}
-            className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
           >
             <Trash2 className="h-3 w-3" />
             Borrar este proyecto
