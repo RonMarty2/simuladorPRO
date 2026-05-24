@@ -101,12 +101,35 @@ export interface Producto {
   precioVenta?: number;
 }
 
-export interface Financiamiento {
+/**
+ * Configuración de un préstamo independiente. Tasas típicas en Bolivia:
+ *   - Préstamo de activo fijo: 10-14% anual, plazo 5-10 años.
+ *   - Préstamo de capital de trabajo: 8-12% anual, plazo 3-5 años.
+ */
+export interface PrestamoConfig {
   porcentajePropio: number; // 0..1
   porcentajePrestamo: number; // 0..1
   tasaInteresAnual: number; // 0..1
   plazoMeses: number;
+}
+
+/**
+ * Financiamiento del proyecto. Los campos raíz (porcentajePropio,
+ * porcentajePrestamo, tasaInteresAnual, plazoMeses) representan el
+ * préstamo para ACTIVO FIJO (compatibilidad con proyectos antiguos).
+ *
+ * `prestamoCapitalTrabajo` es opcional — si no existe, se asume que NO hay
+ * préstamo bancario para el capital operativo (todo aporte propio).
+ */
+export interface Financiamiento {
+  porcentajePropio: number; // 0..1 — % propio del préstamo de ACTIVO FIJO
+  porcentajePrestamo: number; // 0..1 — % financiado del préstamo de ACTIVO FIJO
+  tasaInteresAnual: number; // 0..1 — tasa anual del préstamo de ACTIVO FIJO
+  plazoMeses: number; // plazo del préstamo de ACTIVO FIJO
   costoOportunidadAccionista: number; // Koa, 0..1
+
+  /** Configuración opcional del préstamo para CAPITAL DE TRABAJO. */
+  prestamoCapitalTrabajo?: PrestamoConfig;
 }
 
 export interface Proyecto {

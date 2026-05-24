@@ -75,11 +75,19 @@ export function crearProyectoVacio(params: {
     imprevistosPorcentaje: 0.05, // sugerencia inicial: 5%
     productos: [],
     financiamiento: {
+      // Préstamo de ACTIVO FIJO (campos raíz)
       porcentajePropio: 1,
       porcentajePrestamo: 0,
       tasaInteresAnual: 0.12, // sugerencia inicial: 12% anual
-      plazoMeses: 36,
+      plazoMeses: 60, // 5 años (típico activo fijo PYME Bolivia)
       costoOportunidadAccionista: 0.15, // Koa sugerido: 15%
+      // Préstamo de CAPITAL DE TRABAJO (separado)
+      prestamoCapitalTrabajo: {
+        porcentajePropio: 1,
+        porcentajePrestamo: 0,
+        tasaInteresAnual: 0.10, // sugerencia inicial: 10% anual (más barato que activo)
+        plazoMeses: 60, // 5 años
+      },
     },
     crecimientoIngresosAnual: 0.05,
     crecimientoCostosAnual: 0.03,

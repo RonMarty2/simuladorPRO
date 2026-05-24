@@ -115,7 +115,7 @@ describe("proyecto-store", () => {
       expect(f.porcentajePropio).toBe(0.6);
       // los demás valores se mantienen
       expect(f.tasaInteresAnual).toBe(0.12);
-      expect(f.plazoMeses).toBe(36);
+      expect(f.plazoMeses).toBe(60);
     });
   });
 

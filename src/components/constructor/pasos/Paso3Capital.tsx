@@ -102,22 +102,44 @@ export default function Paso3Capital() {
   const porcImprevistos = proyecto.imprevistosPorcentaje ?? 0;
   const imprevistosAnual = subtotalOperativo * porcImprevistos;
 
-  // ── Cuota anual del préstamo (Paso 7) ────────────────────────────────────
-  // Monto del préstamo = inversiones fijas × % préstamo.
-  // (No incluimos el capital de trabajo en la base del préstamo para evitar
-  // dependencia circular; típicamente el banco financia solo activo fijo.)
+  // ── Cuotas anuales de los préstamos (Paso 7) ─────────────────────────────
+  // 1) Préstamo de ACTIVO FIJO: base = suma de inversiones fijas (Paso 3).
+  // 2) Préstamo de CAPITAL OPERATIVO: base = el subtotal operativo
+  //    (personal + producción + admin + comerc), porque ese es el "monto
+  //    necesario" del Paso 8 antes del propio capital de trabajo.
+  //    OJO: para evitar circularidad usamos el subtotal operativo, no el
+  //    capitalTrabajo guardado.
   const inversionesFijas = (Object.values(proyecto.inversiones ?? {}) as any[][])
     .flat()
     .reduce((acc: number, it: any) => acc + (it?.costoTotal ?? 0), 0);
   const fin = proyecto.financiamiento;
-  const montoPrestamo = inversionesFijas * (fin?.porcentajePrestamo ?? 0);
-  const cuotaMensualPrestamo =
-    montoPrestamo > 0 && fin?.plazoMeses
-      ? calcularCuotaPrestamoFrancesa(montoPrestamo, fin.tasaInteresAnual ?? 0, fin.plazoMeses)
+
+  // Préstamo de activo fijo
+  const montoPrestActivo = inversionesFijas * (fin?.porcentajePrestamo ?? 0);
+  const cuotaMensualActivo =
+    montoPrestActivo > 0 && fin?.plazoMeses
+      ? calcularCuotaPrestamoFrancesa(montoPrestActivo, fin.tasaInteresAnual ?? 0, fin.plazoMeses)
       : 0;
-  const cuotaAnualPrestamo = cuotaMensualPrestamo * 12;
+  const cuotaAnualActivo = cuotaMensualActivo * 12;
+
+  // Préstamo de capital de trabajo (basado en lo que ya guardó el proyecto)
+  const cwCfg = fin?.prestamoCapitalTrabajo;
+  const baseCapitalOperativo = proyecto.capitalTrabajo;
+  const montoPrestCapital = baseCapitalOperativo * (cwCfg?.porcentajePrestamo ?? 0);
+  const cuotaMensualCapital =
+    montoPrestCapital > 0 && cwCfg?.plazoMeses
+      ? calcularCuotaPrestamoFrancesa(
+          montoPrestCapital,
+          cwCfg.tasaInteresAnual ?? 0,
+          cwCfg.plazoMeses
+        )
+      : 0;
+  const cuotaAnualCapital = cuotaMensualCapital * 12;
+
+  const cuotaAnualPrestamo = cuotaAnualActivo + cuotaAnualCapital;
   const financiamientoConfigurado =
-    fin && fin.porcentajePrestamo > 0 && fin.plazoMeses > 0 && inversionesFijas > 0;
+    (inversionesFijas > 0 && (fin?.porcentajePrestamo ?? 0) > 0) ||
+    (baseCapitalOperativo > 0 && (cwCfg?.porcentajePrestamo ?? 0) > 0);
 
   const totalAnual = subtotalOperativo + imprevistosAnual + cuotaAnualPrestamo;
   const totalMensual = totalAnual / 12;
@@ -359,41 +381,46 @@ export default function Paso3Capital() {
 
           <FilaGastoDetalle
             n={6}
-            label="Cuota anual del préstamo (capital + interés)"
-            origen="Paso 3 — Inversiones · Paso 7 — Financiamiento"
+            label="Cuota anual de los préstamos (capital + interés)"
+            origen="Paso 3 — Inversiones · Paso 7 — Financiamiento (los dos préstamos)"
             valor={cuotaAnualPrestamo}
-            formula="cuota_francesa(monto, tasa_anual, plazo_meses) × 12"
+            formula="cuota_activo_anual + cuota_capital_operativo_anual"
             color="violet"
-            vacioMsg="Define tu financiamiento en el Paso 7 (préstamo, tasa, plazo) para que se sume aquí."
+            vacioMsg="Define tu financiamiento en el Paso 7 (los dos préstamos: activo fijo y capital operativo)."
             detalle={
               financiamientoConfigurado && (
                 <table className="w-full text-[11px]">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="px-2 py-1 text-left">Préstamo</th>
+                      <th className="px-2 py-1 text-right">Monto financiado</th>
+                      <th className="px-2 py-1 text-right">Tasa · plazo</th>
+                      <th className="px-2 py-1 text-right">Cuota mensual</th>
+                      <th className="px-2 py-1 text-right">Cuota anual</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">Inversiones fijas totales (Paso 3)</td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(inversionesFijas)}</td>
-                    </tr>
-                    <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">× % financiado con préstamo</td>
-                      <td className="px-2 py-1 text-right">{(fin!.porcentajePrestamo * 100).toFixed(1)}%</td>
-                    </tr>
-                    <tr className="border-b border-border/30">
-                      <td className="px-2 py-1 font-semibold">= Monto del préstamo</td>
-                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(montoPrestamo)}</td>
-                    </tr>
-                    <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">Tasa anual · plazo</td>
+                      <td className="px-2 py-1">Activo fijo (base: inversiones {formatearBolivianos(inversionesFijas)})</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestActivo)}</td>
                       <td className="px-2 py-1 text-right">
-                        {(fin!.tasaInteresAnual * 100).toFixed(2)}% · {fin!.plazoMeses} meses
+                        {((fin?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {fin?.plazoMeses ?? 0}m
                       </td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualActivo)}</td>
+                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualActivo)}</td>
                     </tr>
                     <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">Cuota mensual (sistema francés)</td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualPrestamo)}</td>
+                      <td className="px-2 py-1">Capital operativo (base: cap. trabajo {formatearBolivianos(baseCapitalOperativo)})</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestCapital)}</td>
+                      <td className="px-2 py-1 text-right">
+                        {((cwCfg?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {cwCfg?.plazoMeses ?? 0}m
+                      </td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualCapital)}</td>
+                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualCapital)}</td>
                     </tr>
-                    <tr>
-                      <td className="px-2 py-1 font-semibold">× 12 = Cuota anual</td>
-                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualPrestamo)}</td>
+                    <tr className="bg-secondary/40 font-semibold">
+                      <td className="px-2 py-1" colSpan={4}>TOTAL cuota anual préstamos</td>
+                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaAnualPrestamo)}</td>
                     </tr>
                   </tbody>
                 </table>
