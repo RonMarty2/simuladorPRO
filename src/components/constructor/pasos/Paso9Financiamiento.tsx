@@ -252,24 +252,30 @@ function BloquePrestamo({
       : 0;
   const cuotaAnual = cuotaMensual * 12;
 
-  // Tabla de amortización: agrupamos por año los 12 meses
+  // Tabla de amortización mes a mes durante el plazo del préstamo
   const tabla =
     montoFinanciar > 0 && cfg.plazoMeses > 0
       ? calcularTablaAmortizacion(montoFinanciar, cfg.tasaInteresAnual, cfg.plazoMeses)
       : [];
-  const aniosTotales = Math.ceil(cfg.plazoMeses / 12);
-  const filasAnio = Array.from({ length: aniosTotales }, (_, a) => {
+
+  // SIEMPRE mostrar los 5 años del horizonte del proyecto, aunque el plazo
+  // del préstamo sea menor (años post-pago = 0) o mayor (sólo los primeros 5).
+  const HORIZONTE_ANIOS = 5;
+  const filasAnio = Array.from({ length: HORIZONTE_ANIOS }, (_, a) => {
     const desde = a * 12;
     const hasta = Math.min(desde + 12, tabla.length);
     const fragmento = tabla.slice(desde, hasta);
+    const pagado = fragmento.length === 0; // este año el préstamo ya no existe
     return {
       anio: a + 1,
       cuotaAnual: fragmento.reduce((s, f) => s + f.cuota, 0),
       interesAnual: fragmento.reduce((s, f) => s + f.interes, 0),
       amortizacionAnual: fragmento.reduce((s, f) => s + f.amortizacionCapital, 0),
       saldoFinal: fragmento.length > 0 ? fragmento[fragmento.length - 1].saldoCapital : 0,
+      pagado,
     };
   });
+  const plazoMayor5 = cfg.plazoMeses > HORIZONTE_ANIOS * 12;
 
   const cambiarMezcla = (porcPrestamo: number) =>
     onChange({ porcentajePrestamo: porcPrestamo, porcentajePropio: 1 - porcPrestamo });
@@ -289,101 +295,87 @@ function BloquePrestamo({
           {msgVacio}
         </div>
       ) : (
-        <div className="space-y-3 p-3">
-          {/* Tabla 1: monto necesario y mezcla */}
-          <table className="w-full text-xs">
-            <tbody>
-              <tr className="border-b border-border/40">
-                <td className="p-1.5 font-semibold uppercase">Total monto necesario</td>
-                <td className="p-1.5 text-right">—</td>
-                <td className="p-1.5 text-right font-bold">{formatearBolivianos(totalNecesario)}</td>
-              </tr>
-              <tr className="border-b border-border/40">
-                <td className="p-1.5">Financiamiento</td>
-                <td className="p-1.5 text-right">
-                  <input
-                    type="number"
-                    value={Math.round(cfg.porcentajePrestamo * 1000) / 10}
-                    onChange={(e) => cambiarMezcla(Math.min(100, Math.max(0, Number(e.target.value))) / 100)}
-                    min={0}
-                    max={100}
-                    step={0.5}
-                    className="w-20 rounded border border-input bg-background px-2 py-0.5 text-right"
-                  />
-                  <span className="ml-1 text-muted-foreground">%</span>
-                </td>
-                <td className="p-1.5 text-right">{formatearBolivianos(montoFinanciar)}</td>
-              </tr>
-              <tr>
-                <td className="p-1.5">Aporte propio</td>
-                <td className="p-1.5 text-right text-muted-foreground">
-                  {(cfg.porcentajePropio * 100).toFixed(1)}%
-                </td>
-                <td className="p-1.5 text-right">{formatearBolivianos(aportePropio)}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 gap-3 p-3 md:grid-cols-2">
+          {/* COLUMNA IZQUIERDA: Estructura del financiamiento */}
+          <div className="space-y-1 rounded-md border border-border bg-background/60 p-2">
+            <div className="border-b border-border pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Estructura del financiamiento
+            </div>
 
-          {/* Tabla 2: condiciones del préstamo */}
-          <table className="w-full text-xs">
-            <tbody>
-              <tr className="border-b border-border/40">
-                <td className="p-1.5 font-medium">Monto a financiar</td>
-                <td className="p-1.5 text-right font-bold">{formatearBolivianos(montoFinanciar)}</td>
-              </tr>
-              <tr className="border-b border-border/40">
-                <td className="p-1.5">Plazo del préstamo (meses)</td>
-                <td className="p-1.5 text-right">
-                  <input
-                    type="number"
-                    value={cfg.plazoMeses}
-                    onChange={(e) =>
-                      onChange({ plazoMeses: Math.max(1, Math.round(Number(e.target.value) || 1)) })
-                    }
-                    min={1}
-                    max={240}
-                    step={1}
-                    className="w-24 rounded border border-input bg-background px-2 py-0.5 text-right"
-                  />
-                  <span className="ml-1 text-muted-foreground">
-                    ({(cfg.plazoMeses / 12).toFixed(1)} años)
-                  </span>
-                </td>
-              </tr>
-              <tr className="border-b border-border/40">
-                <td className="p-1.5">Tasa de interés anual</td>
-                <td className="p-1.5 text-right">
-                  <input
-                    type="number"
-                    value={Math.round(cfg.tasaInteresAnual * 1000) / 10}
-                    onChange={(e) =>
-                      onChange({ tasaInteresAnual: Math.max(0, Number(e.target.value) || 0) / 100 })
-                    }
-                    min={0}
-                    max={50}
-                    step={0.25}
-                    className="w-20 rounded border border-input bg-background px-2 py-0.5 text-right"
-                  />
-                  <span className="ml-1 text-muted-foreground">%</span>
-                </td>
-              </tr>
-              <tr>
-                <td className="p-1.5 font-medium">Cuota mensual (francés)</td>
-                <td className="p-1.5 text-right font-bold">{formatearBolivianos(cuotaMensual)}</td>
-              </tr>
-            </tbody>
-          </table>
+            <FilaLinea label="Total monto necesario" valor={formatearBolivianos(totalNecesario)} negrita />
 
-          {/* Tabla 3: amortización año a año */}
-          {filasAnio.length > 0 && (
-            <div className="overflow-x-auto rounded border border-border">
+            <FilaLineaInput
+              label="% Financiamiento (préstamo)"
+              valor={Math.round(cfg.porcentajePrestamo * 1000) / 10}
+              sufijo="%"
+              ancho="w-20"
+              min={0}
+              max={100}
+              step={0.5}
+              onChange={(v) => cambiarMezcla(Math.min(100, Math.max(0, v)) / 100)}
+              valorDerecho={formatearBolivianos(montoFinanciar)}
+            />
+
+            <FilaLinea
+              label={`Aporte propio (${(cfg.porcentajePropio * 100).toFixed(1)}%)`}
+              valor={formatearBolivianos(aportePropio)}
+            />
+          </div>
+
+          {/* COLUMNA DERECHA: Condiciones del préstamo */}
+          <div className="space-y-1 rounded-md border border-border bg-background/60 p-2">
+            <div className="border-b border-border pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Condiciones del préstamo
+            </div>
+
+            <FilaLinea label="Monto a financiar" valor={formatearBolivianos(montoFinanciar)} negrita />
+
+            <FilaLineaInput
+              label="Plazo del préstamo (meses)"
+              valor={cfg.plazoMeses}
+              ancho="w-20"
+              min={1}
+              max={240}
+              step={1}
+              onChange={(v) => onChange({ plazoMeses: Math.max(1, Math.round(v)) })}
+              valorDerecho={`${(cfg.plazoMeses / 12).toFixed(1)} años`}
+              valorDerechoMuted
+            />
+
+            <FilaLineaInput
+              label="Tasa de interés anual"
+              valor={Math.round(cfg.tasaInteresAnual * 1000) / 10}
+              sufijo="%"
+              ancho="w-20"
+              min={0}
+              max={50}
+              step={0.25}
+              onChange={(v) => onChange({ tasaInteresAnual: Math.max(0, v) / 100 })}
+            />
+
+            <FilaLinea
+              label="Cuota mensual (sistema francés)"
+              valor={formatearBolivianos(cuotaMensual)}
+              negrita
+              destacado={colorBase}
+            />
+          </div>
+
+          {/* FILA COMPLETA: Tabla de amortización 5 años */}
+          <div className="md:col-span-2">
+            <div className="overflow-x-auto rounded-md border border-border">
               <table className="w-full text-[11px]">
                 <thead className={cn("uppercase tracking-wide", COLOR_HEADER[colorBase])}>
                   <tr>
-                    <th className="p-1.5 text-left">Año</th>
+                    <th className="p-1.5 text-left">Año del proyecto</th>
                     {filasAnio.map((f) => (
                       <th key={f.anio} className="p-1.5 text-right">
-                        {f.anio}
+                        Año {f.anio}
+                        {f.pagado && (
+                          <span className="ml-1 rounded bg-white/25 px-1 text-[8px] font-normal">
+                            pagado
+                          </span>
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -396,18 +388,115 @@ function BloquePrestamo({
                     filas={filasAnio}
                     campo="amortizacionAnual"
                   />
-                  <FilaAmortAnio label="Saldo al cierre" filas={filasAnio} campo="saldoFinal" />
+                  <FilaAmortAnio label="Saldo al cierre" filas={filasAnio} campo="saldoFinal" resaltar />
                 </tbody>
               </table>
             </div>
-          )}
 
-          <div className="rounded bg-secondary/30 px-2 py-1 text-[11px] text-muted-foreground">
-            <strong className="text-foreground">Cuota anual:</strong>{" "}
-            {formatearBolivianos(cuotaAnual)} (= cuota mensual × 12). Este monto es el que se
-            suma al Capital de trabajo del Paso 8.
+            {plazoMayor5 && (
+              <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-[10px] text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+                ⓘ Tu préstamo dura {(cfg.plazoMeses / 12).toFixed(1)} años. La tabla muestra
+                solo los primeros 5 (horizonte del proyecto). Al cierre del año 5 todavía
+                queda saldo por pagar.
+              </div>
+            )}
+
+            <div className="mt-2 rounded bg-secondary/30 px-2 py-1 text-[11px] text-muted-foreground">
+              <strong className="text-foreground">Cuota anual:</strong>{" "}
+              {formatearBolivianos(cuotaAnual)} (= cuota mensual × 12). Este monto se suma
+              al Capital de trabajo del Paso 8.
+            </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers de UI: fila key-value y fila con input
+// ────────────────────────────────────────────────────────────────────────────
+
+const DESTACADO_COLOR: Record<"orange" | "red", string> = {
+  orange: "bg-orange-50 dark:bg-orange-950/30",
+  red: "bg-red-50 dark:bg-red-950/30",
+};
+
+function FilaLinea({
+  label,
+  valor,
+  negrita,
+  destacado,
+}: {
+  label: string;
+  valor: string;
+  negrita?: boolean;
+  destacado?: "orange" | "red";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 rounded px-1 py-1 text-xs",
+        destacado && DESTACADO_COLOR[destacado]
+      )}
+    >
+      <span className={cn(negrita && "font-semibold")}>{label}</span>
+      <span className={cn("tabular-nums", negrita && "font-bold")}>{valor}</span>
+    </div>
+  );
+}
+
+function FilaLineaInput({
+  label,
+  valor,
+  sufijo,
+  ancho = "w-20",
+  min,
+  max,
+  step,
+  onChange,
+  valorDerecho,
+  valorDerechoMuted,
+}: {
+  label: string;
+  valor: number;
+  sufijo?: string;
+  ancho?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (v: number) => void;
+  valorDerecho?: string;
+  valorDerechoMuted?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 rounded px-1 py-1 text-xs">
+      <span className="flex-1">{label}</span>
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          value={valor}
+          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          onFocus={(e) => e.currentTarget.select()}
+          min={min}
+          max={max}
+          step={step}
+          className={cn(
+            "rounded border border-input bg-background px-2 py-1 text-right text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring",
+            ancho
+          )}
+        />
+        {sufijo && <span className="text-muted-foreground">{sufijo}</span>}
+      </div>
+      {valorDerecho && (
+        <span
+          className={cn(
+            "min-w-[100px] text-right text-xs tabular-nums",
+            valorDerechoMuted && "text-muted-foreground"
+          )}
+        >
+          {valorDerecho}
+        </span>
       )}
     </div>
   );
@@ -419,22 +508,36 @@ type FilaAnio = {
   interesAnual: number;
   amortizacionAnual: number;
   saldoFinal: number;
+  pagado: boolean;
 };
 
 function FilaAmortAnio({
   label,
   filas,
   campo,
+  resaltar,
 }: {
   label: string;
   filas: FilaAnio[];
-  campo: keyof Omit<FilaAnio, "anio">;
+  campo: keyof Omit<FilaAnio, "anio" | "pagado">;
+  resaltar?: boolean;
 }) {
   return (
-    <tr className="border-b border-border/30 last:border-0">
+    <tr
+      className={cn(
+        "border-b border-border/30 last:border-0",
+        resaltar && "bg-secondary/30 font-semibold"
+      )}
+    >
       <td className="p-1.5 font-medium">{label}</td>
       {filas.map((f) => (
-        <td key={f.anio} className="p-1.5 text-right tabular-nums">
+        <td
+          key={f.anio}
+          className={cn(
+            "p-1.5 text-right tabular-nums",
+            f.pagado && "text-muted-foreground/60"
+          )}
+        >
           {formatearBolivianos(f[campo])}
         </td>
       ))}
