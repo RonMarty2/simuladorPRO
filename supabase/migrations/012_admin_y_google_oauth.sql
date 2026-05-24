@@ -117,7 +117,7 @@ AS $$
 DECLARE
   v_nombre TEXT;
   v_apellido TEXT;
-  v_rol rol_tipo;
+  v_rol TEXT;
 BEGIN
   -- Nombre: registro normal → Google given_name → primera palabra de name → email → fallback
   v_nombre := COALESCE(
@@ -139,11 +139,17 @@ BEGIN
     ''
   );
 
-  -- Rol: lo que mandó el registro o 'estudiante' por defecto
+  -- Rol: lo que mandó el registro o 'estudiante' por defecto.
+  -- La columna rol es TEXT con CHECK (rol IN ('docente', 'estudiante')),
+  -- no un enum, así que insertamos directo como string.
   v_rol := COALESCE(
     NULLIF(NEW.raw_user_meta_data->>'rol', ''),
     'estudiante'
-  )::rol_tipo;
+  );
+  -- Defensa: si vino un valor inválido (ej. de Google), forzamos estudiante
+  IF v_rol NOT IN ('docente', 'estudiante') THEN
+    v_rol := 'estudiante';
+  END IF;
 
   INSERT INTO public.perfiles (id, email, nombre, apellido, rol, universidad)
   VALUES (
