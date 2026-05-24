@@ -38,6 +38,11 @@ export async function iniciarSesionConGoogle() {
     provider: "google",
     options: {
       redirectTo: `${window.location.origin}/`,
+      queryParams: {
+        // Forzar al usuario a elegir cuenta cada vez, incluso si ya está
+        // logueado en una sola cuenta de Google en el navegador.
+        prompt: "select_account",
+      },
     },
   });
   if (error) throw error;
