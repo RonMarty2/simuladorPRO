@@ -289,7 +289,11 @@ function BloquePrestamo({
               label="Total monto necesario"
               valor={formatearBolivianos(totalNecesario)}
               negrita
-              tooltip="Es la base sobre la que se reparte la mezcla deuda/capital propio. Para activo fijo viene del Paso 3 (inversiones). Para capital operativo viene del Paso 8."
+              tooltip={
+                colorBase === "orange"
+                  ? `Bs ${totalNecesario.toLocaleString("es-BO")} — Suma de las inversiones fijas del Paso 3: terreno + obras civiles + maquinaria + mobiliario + activo diferido. Es la base sobre la que se reparte la mezcla deuda/capital propio de este bloque.`
+                  : `Bs ${totalNecesario.toLocaleString("es-BO")} — Es el capital de trabajo calculado en el Paso 8 (lo que necesitas para operar antes de cobrar). Sobre este monto se decide cuánto financiar con préstamo bancario y cuánto poner de aporte propio.`
+              }
             />
 
             <FilaLineaInput
