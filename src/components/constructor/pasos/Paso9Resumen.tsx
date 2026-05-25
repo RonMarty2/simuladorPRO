@@ -17,9 +17,16 @@ import BotonEntregar from "../BotonEntregar";
 import {
   calcularAportesPatronales,
   calcularCuotaPrestamoFrancesa,
+  calcularFlujoInversionista,
+  calcularGAF,
+  calcularGAO,
+  calcularGAT,
   calcularIR,
   calcularPayback,
+  calcularPaybackDescontado,
+  calcularPuntoEquilibrio,
   calcularRBC,
+  calcularSensibilidad,
   calcularServicioDeuda,
   calcularTIR,
   calcularTRC,
@@ -187,6 +194,9 @@ export default function Paso9Resumen() {
           />
         </div>
       </div>
+
+      {/* ANÁLISIS AVANZADO V2 — solo si el proyecto es versión extendida */}
+      {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
 
       {/* TABLA FLUJO DE CAJA con secciones de color */}
       <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
@@ -408,6 +418,256 @@ export default function Paso9Resumen() {
       />
     </div>
   );
+}
+
+// ============================================================================
+// ANÁLISIS AVANZADO (V2) — solo se renderiza para proyectos versión extendida
+// ============================================================================
+function AnalisisAvanzadoV2({
+  proyecto,
+  calc,
+}: {
+  proyecto: any;
+  calc: ReturnType<typeof construirFlujoCaja>;
+}) {
+  const v2 = useMemo(() => calcularV2(proyecto, calc), [proyecto, calc]);
+
+  const fmtRatio = (n: number) =>
+    isFinite(n) ? `${n.toFixed(2)}×` : "—";
+  const fmtPct = (n: number) =>
+    isFinite(n) ? `${(n * 100).toFixed(2)}%` : "—";
+
+  return (
+    <div className="rounded-lg border-2 border-indigo-300 bg-indigo-50/40 p-6 dark:border-indigo-800 dark:bg-indigo-950/20">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          V2
+        </span>
+        <h3 className="text-base font-semibold tracking-tight">Análisis avanzado</h3>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Indicadores adicionales de la versión extendida. No reemplazan a los de
+        arriba: los complementan.
+      </p>
+
+      {/* Fila de tarjetas */}
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <CardIndicador
+          sigla="PE"
+          nombre="Punto de equilibrio"
+          valor={
+            isFinite(v2.puntoEquilibrio.unidades)
+              ? `${Math.ceil(v2.puntoEquilibrio.unidades).toLocaleString("es-BO")} u`
+              : "No equilibra"
+          }
+          positivo={isFinite(v2.puntoEquilibrio.unidades) && v2.puntoEquilibrio.unidades <= v2.unidadesAnio1}
+          pregunta="¿Cuánto debes vender para no perder?"
+          interpretacion={
+            !isFinite(v2.puntoEquilibrio.unidades)
+              ? "✗ Cada unidad pierde plata (sin margen)"
+              : v2.puntoEquilibrio.unidades <= v2.unidadesAnio1
+                ? `✓ Tu venta del año 1 (${v2.unidadesAnio1.toLocaleString("es-BO")} u) lo supera`
+                : "⚠ Vendes menos que el punto de equilibrio"
+          }
+          tooltip={`Punto de equilibrio = Costos Fijos ÷ Margen de contribución unitario.\n\nEn Bs: ${formatearBolivianos(v2.puntoEquilibrio.ingresoBs)}\nMargen de contribución: ${(v2.puntoEquilibrio.ratioMargenContribucion * 100).toFixed(1)}% del precio.\nCostos fijos año 1: ${formatearBolivianos(v2.costosFijosAnio1)}\nCostos variables año 1: ${formatearBolivianos(v2.costosVariablesAnio1)}`}
+        />
+        <CardIndicador
+          sigla="PBD"
+          nombre="Payback descontado"
+          valor={v2.paybackDescontado < 0 ? "No recupera" : `${v2.paybackDescontado.toFixed(1)} años`}
+          positivo={v2.paybackDescontado > 0 && v2.paybackDescontado <= 5}
+          pregunta="¿En cuánto recuperas, ya descontado?"
+          interpretacion={
+            v2.paybackDescontado < 0
+              ? "✗ No recupera en 5 años (descontado)"
+              : v2.paybackDescontado <= 5
+                ? "✓ Recupera dentro del horizonte"
+                : "⚠ Tarda más de 5 años"
+          }
+          tooltip={`Igual que el Payback, pero descontando los flujos al WACC (${(calc.wacc * 100).toFixed(2)}%) antes de acumular.\n\nSiempre es ≥ que el payback simple (${calc.indicadores.payback < 0 ? "no recupera" : calc.indicadores.payback.toFixed(1) + " años"}), porque el dinero futuro vale menos.`}
+        />
+        <div className="flex flex-col rounded-md border border-border p-3" title={`GAO = Margen contribución ÷ EBIT\nGAF = EBIT ÷ (EBIT − intereses)\nGAT = GAO × GAF\n\nMiden cuánto se amplifican los cambios en ventas sobre la utilidad. Año 1.`}>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-sm font-bold tracking-tight">APAL.</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Apalancamiento</span>
+            <span className="ml-auto text-[10px] opacity-60">ⓘ</span>
+          </div>
+          <div className="mt-1 text-[10px] italic text-muted-foreground">¿Cuánto amplifican los costos fijos y la deuda?</div>
+          <div className="mt-1.5 space-y-0.5 text-xs tabular-nums">
+            <div className="flex justify-between"><span className="text-muted-foreground">GAO</span><span className="font-semibold">{fmtRatio(v2.gao)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">GAF</span><span className="font-semibold">{fmtRatio(v2.gaf)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">GAT</span><span className="font-semibold">{fmtRatio(v2.gat)}</span></div>
+          </div>
+        </div>
+        <div className="flex flex-col rounded-md border border-border p-3" title={`Flujo del proyecto (FCF): como si todo fuera capital propio, descontado al WACC (${(calc.wacc * 100).toFixed(2)}%).\nFlujo del accionista (FCFE): lo que recibe el dueño tras pagar al banco, descontado al Koa (${(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%).\n\nSi el VAN del accionista supera al del proyecto, la deuda crea valor para el dueño.`}>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-sm font-bold tracking-tight">VAN·INV</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Inversionista</span>
+            <span className="ml-auto text-[10px] opacity-60">ⓘ</span>
+          </div>
+          <div className="mt-1 text-[10px] italic text-muted-foreground">¿La deuda te conviene como dueño?</div>
+          <div className="mt-1.5 space-y-0.5 text-xs tabular-nums">
+            <div className="flex justify-between gap-2"><span className="text-muted-foreground">Proyecto</span><span className={cn("font-semibold", v2.flujoInv.vanProyecto >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanProyecto)}</span></div>
+            <div className="flex justify-between gap-2"><span className="text-muted-foreground">Accionista</span><span className={cn("font-semibold", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span></div>
+          </div>
+          <div className="mt-1 text-[10px] font-medium text-muted-foreground">
+            {v2.flujoInv.vanAccionista > v2.flujoInv.vanProyecto
+              ? "✓ La deuda agrega valor al dueño"
+              : "⚠ El apalancamiento no mejora al dueño"}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla de sensibilidad */}
+      <div className="mt-4 overflow-x-auto rounded-md border border-border bg-card p-4">
+        <h4 className="mb-1 text-sm font-semibold">Análisis de sensibilidad del VAN</h4>
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          Cómo cambia el VAN si una variable se mueve, manteniendo todo lo demás
+          igual. Sirve para ver qué variable es más peligrosa. <em>Es estático —
+          distinto de la simulación con eventos.</em>
+        </p>
+        <table className="w-full min-w-[480px] text-xs">
+          <thead className="text-muted-foreground">
+            <tr className="border-b-2 border-border">
+              <th className="p-1.5 text-left">Variable</th>
+              {v2.variaciones.map((v) => (
+                <th key={v} className="p-1.5 text-right">
+                  {v === 0 ? "Base" : `${v > 0 ? "+" : ""}${(v * 100).toFixed(0)}%`}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <FilaSensibilidadVAN label="Ingresos (precio × cantidad)" filas={v2.sensIngresos} />
+            <FilaSensibilidadVAN label="Costos operativos" filas={v2.sensCostos} />
+          </tbody>
+        </table>
+        <div className="mt-2 text-[10px] text-muted-foreground">
+          VAN base: <strong>{formatearBolivianos(calc.indicadores.van)}</strong> · TIR base:{" "}
+          <strong>{isFinite(calc.indicadores.tir) ? fmtPct(calc.indicadores.tir) : "—"}</strong> ·
+          descontado al WACC {fmtPct(calc.wacc)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilaSensibilidadVAN({
+  label,
+  filas,
+}: {
+  label: string;
+  filas: { variacion: number; van: number }[];
+}) {
+  return (
+    <tr className="border-b border-border/40">
+      <td className="p-1.5">{label}</td>
+      {filas.map((f) => (
+        <td
+          key={f.variacion}
+          className={cn(
+            "p-1.5 text-right tabular-nums",
+            f.van < 0 && "text-destructive",
+            f.variacion === 0 && "font-semibold"
+          )}
+        >
+          {formatearBolivianos(f.van)}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+// Calcula todos los indicadores V2 a partir del flujo de caja ya construido.
+function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) {
+  // ── Punto de equilibrio (año 1) ──────────────────────────────────────────
+  const ingA1 = calc.ingresos[0];
+  const costosVariablesAnio1 = calc.costosProduccion[0]; // costos directos = varían con la producción
+  const costosFijosAnio1 =
+    calc.personal[0] +
+    calc.gastosAdmin[0] +
+    calc.gastosComerc[0] +
+    calc.depreciacion[0] +
+    calc.imprevistos[0] +
+    calc.intereses[0];
+  const unidadesAnio1 = proyecto.productos.reduce(
+    (a: number, p: any) => a + (p.cantidades?.[0] ?? p.cantidadAnio1 ?? 0),
+    0
+  );
+  const precioPromedio = unidadesAnio1 > 0 ? ingA1 / unidadesAnio1 : 0;
+  const costoVariableUnitProm = unidadesAnio1 > 0 ? costosVariablesAnio1 / unidadesAnio1 : 0;
+  const puntoEquilibrio = calcularPuntoEquilibrio(
+    costosFijosAnio1,
+    precioPromedio,
+    costoVariableUnitProm
+  );
+
+  // ── Payback descontado ───────────────────────────────────────────────────
+  const tasa = calc.wacc > 0 ? calc.wacc : 0.1;
+  const paybackDescontado = calcularPaybackDescontado(calc.flujoCaja, tasa);
+
+  // ── Apalancamiento (año 1) ───────────────────────────────────────────────
+  const margenContribucion = ingA1 - costosVariablesAnio1;
+  const ebitAnio1 = calc.utilidadAAI[0] + calc.intereses[0];
+  const gao = calcularGAO(margenContribucion, ebitAnio1);
+  const gaf = calcularGAF(ebitAnio1, calc.intereses[0]);
+  const gat = calcularGAT(margenContribucion, ebitAnio1, calc.intereses[0]);
+
+  // ── Flujo del inversionista (proyecto vs accionista) ─────────────────────
+  const ebitArr = calc.utilidadAAI.map((u: number, i: number) => u + calc.intereses[i]);
+  const flujoInv = calcularFlujoInversionista({
+    inversionTotal: calc.inversionInicial + calc.capitalTrabajo,
+    montoPrestamo: calc.montoPrestamo,
+    ebit: ebitArr,
+    depreciacion: calc.depreciacion,
+    intereses: calc.intereses,
+    amortizacion: calc.amortizacion,
+    tasaImpuesto: TASA_IUE,
+    extrasUltimoAnio: calc.valorResidual + calc.capitalTrabajo,
+    wacc: tasa,
+    koa: proyecto.financiamiento.costoOportunidadAccionista,
+  });
+
+  // ── Sensibilidad (variando ingresos o costos operativos) ─────────────────
+  const variaciones = [-0.2, -0.1, 0, 0.1, 0.2];
+  const flujoConFactores = (facIngreso: number, facCosto: number): number[] => {
+    const flujos: number[] = [calc.flujoCaja[0]]; // año 0 = inversión, no cambia
+    for (let i = 0; i < 5; i++) {
+      const ing = calc.ingresos[i] * (1 + facIngreso);
+      const costOper =
+        (calc.costosProduccion[i] +
+          calc.gastosAdmin[i] +
+          calc.gastosComerc[i] +
+          calc.personal[i] +
+          calc.imprevistos[i]) *
+        (1 + facCosto);
+      const uOp = ing - costOper - calc.depreciacion[i];
+      const aai = uOp - calc.intereses[i];
+      const imp = Math.max(0, aai) * TASA_IUE;
+      const neta = aai - imp;
+      let fc = neta + calc.depreciacion[i] - calc.amortizacion[i];
+      if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
+      flujos.push(fc);
+    }
+    return flujos;
+  };
+  const sensIngresos = calcularSensibilidad((f) => flujoConFactores(f, 0), tasa, variaciones);
+  const sensCostos = calcularSensibilidad((f) => flujoConFactores(0, f), tasa, variaciones);
+
+  return {
+    puntoEquilibrio,
+    costosFijosAnio1,
+    costosVariablesAnio1,
+    unidadesAnio1,
+    paybackDescontado,
+    gao,
+    gaf,
+    gat,
+    flujoInv,
+    variaciones,
+    sensIngresos,
+    sensCostos,
+  };
 }
 
 function CardIndicador({

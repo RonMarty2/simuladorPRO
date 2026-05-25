@@ -5,11 +5,18 @@ import {
   calcularDepreciacionAcumulada,
   calcularDepreciacionAnual,
   calcularFlujoCajaAnual,
+  calcularFlujoInversionista,
+  calcularGAF,
+  calcularGAO,
+  calcularGAT,
   calcularIR,
   calcularIT,
   calcularIUE,
   calcularPayback,
+  calcularPaybackDescontado,
+  calcularPuntoEquilibrio,
   calcularRBC,
+  calcularSensibilidad,
   calcularTIR,
   calcularTablaAmortizacion,
   calcularVAN,
@@ -298,5 +305,160 @@ describe("proyectarConCrecimiento", () => {
 
   it("anios 0 → array vacío", () => {
     expect(proyectarConCrecimiento(1000, 0.10, 0)).toEqual([]);
+  });
+});
+
+// ============================================================================
+// ===================  INDICADORES V2 (EXTENDIDO)  ===========================
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// PUNTO DE EQUILIBRIO
+// ----------------------------------------------------------------------------
+describe("calcularPuntoEquilibrio", () => {
+  it("CF 100.000, precio 50, costo var 30 → 5.000 unidades y Bs 250.000", () => {
+    const r = calcularPuntoEquilibrio(100000, 50, 30);
+    expect(cerca(r.unidades, 5000)).toBe(true);
+    expect(cerca(r.ingresoBs, 250000)).toBe(true);
+    expect(cerca(r.margenContribucionUnitario, 20)).toBe(true);
+    expect(cerca(r.ratioMargenContribucion, 0.4)).toBe(true);
+  });
+
+  it("margen de contribución ≤ 0 → unidades Infinity (nunca equilibra)", () => {
+    const r = calcularPuntoEquilibrio(100000, 30, 30);
+    expect(r.unidades).toBe(Infinity);
+    expect(r.ingresoBs).toBe(Infinity);
+  });
+
+  it("costos fijos 0 → equilibrio en 0 unidades", () => {
+    const r = calcularPuntoEquilibrio(0, 50, 30);
+    expect(r.unidades).toBe(0);
+    expect(r.ingresoBs).toBe(0);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// PAYBACK DESCONTADO
+// ----------------------------------------------------------------------------
+describe("calcularPaybackDescontado", () => {
+  it("tarda más que el payback simple (descontar retrasa la recuperación)", () => {
+    const flujos = [-1000, 400, 400, 400, 400];
+    const simple = calcularPayback(flujos);
+    const desc = calcularPaybackDescontado(flujos, 0.1);
+    expect(desc).toBeGreaterThan(simple);
+  });
+
+  it("tasa 0% → igual al payback simple", () => {
+    const flujos = [-1000, 500, 500, 500];
+    expect(cerca(calcularPaybackDescontado(flujos, 0), calcularPayback(flujos))).toBe(true);
+  });
+
+  it("nunca recupera → -1", () => {
+    const flujos = [-1000, 100, 100, 100];
+    expect(calcularPaybackDescontado(flujos, 0.1)).toBe(-1);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// SENSIBILIDAD
+// ----------------------------------------------------------------------------
+describe("calcularSensibilidad", () => {
+  it("escenario base (factor 0) coincide con el VAN/TIR del caso base", () => {
+    const base = [-1000, 500, 500, 500];
+    const construir = (f: number) => base.map((v, t) => (t === 0 ? v : v * (1 + f)));
+    const filas = calcularSensibilidad(construir, 0.1, [-0.2, 0, 0.2]);
+    const fbase = filas.find((r) => r.variacion === 0)!;
+    expect(cerca(fbase.van, calcularVAN(base, 0.1))).toBe(true);
+  });
+
+  it("VAN crece monótonamente al subir los ingresos", () => {
+    const base = [-1000, 500, 500, 500];
+    const construir = (f: number) => base.map((v, t) => (t === 0 ? v : v * (1 + f)));
+    const filas = calcularSensibilidad(construir, 0.1, [-0.2, -0.1, 0, 0.1, 0.2]);
+    for (let i = 1; i < filas.length; i++) {
+      expect(filas[i].van).toBeGreaterThan(filas[i - 1].van);
+    }
+  });
+
+  it("usa las variaciones por defecto cuando no se especifican", () => {
+    const filas = calcularSensibilidad(() => [-100, 50, 50, 50], 0.1);
+    expect(filas).toHaveLength(5);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// APALANCAMIENTO
+// ----------------------------------------------------------------------------
+describe("apalancamiento (GAO / GAF / GAT)", () => {
+  // Margen contribución 200.000, costos fijos 120.000 → EBIT 80.000, interés 30.000
+  it("GAO = margen contribución / EBIT", () => {
+    expect(cerca(calcularGAO(200000, 80000), 2.5)).toBe(true);
+  });
+
+  it("GAF = EBIT / (EBIT − interés)", () => {
+    expect(cerca(calcularGAF(80000, 30000), 1.6)).toBe(true); // 80000 / 50000
+  });
+
+  it("GAT = GAO × GAF", () => {
+    const gat = calcularGAT(200000, 80000, 30000);
+    expect(cerca(gat, 2.5 * 1.6)).toBe(true); // 4.0
+  });
+
+  it("EBIT 0 → GAO NaN", () => {
+    expect(Number.isNaN(calcularGAO(200000, 0))).toBe(true);
+  });
+
+  it("utilidad antes de impuestos 0 → GAF NaN", () => {
+    expect(Number.isNaN(calcularGAF(80000, 80000))).toBe(true);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// FLUJO DEL INVERSIONISTA (proyecto vs accionista)
+// ----------------------------------------------------------------------------
+describe("calcularFlujoInversionista", () => {
+  const params = {
+    inversionTotal: 100000,
+    montoPrestamo: 40000,
+    ebit: [30000, 30000, 30000],
+    depreciacion: [10000, 10000, 10000],
+    intereses: [4000, 3000, 2000],
+    amortizacion: [12000, 13000, 14000],
+    tasaImpuesto: 0.25,
+    extrasUltimoAnio: 0,
+    wacc: 0.12,
+    koa: 0.18,
+  };
+
+  it("año 0 del proyecto = −inversión total; del accionista = −(inversión − préstamo)", () => {
+    const r = calcularFlujoInversionista(params);
+    expect(r.flujoProyecto[0]).toBe(-100000);
+    expect(r.flujoAccionista[0]).toBe(-60000);
+  });
+
+  it("flujo del proyecto año 1 = EBIT − impuesto sobre EBIT + depreciación", () => {
+    const r = calcularFlujoInversionista(params);
+    // 30000 − 7500 + 10000 = 32500
+    expect(cerca(r.flujoProyecto[1], 32500)).toBe(true);
+  });
+
+  it("flujo del accionista año 1 incluye escudo fiscal de intereses y resta amortización", () => {
+    const r = calcularFlujoInversionista(params);
+    // UAI = 30000 − 4000 = 26000; imp = 6500; neta = 19500; +10000 dep −12000 amort = 17500
+    expect(cerca(r.flujoAccionista[1], 17500)).toBe(true);
+  });
+
+  it("calcula VAN del proyecto al WACC y del accionista al Koa", () => {
+    const r = calcularFlujoInversionista(params);
+    expect(cerca(r.vanProyecto, calcularVAN(r.flujoProyecto, 0.12))).toBe(true);
+    expect(cerca(r.vanAccionista, calcularVAN(r.flujoAccionista, 0.18))).toBe(true);
+  });
+
+  it("extras del último año solo se agregan al final", () => {
+    const conExtra = calcularFlujoInversionista({ ...params, extrasUltimoAnio: 5000 });
+    const sinExtra = calcularFlujoInversionista(params);
+    const ult = conExtra.flujoProyecto.length - 1;
+    expect(cerca(conExtra.flujoProyecto[ult] - sinExtra.flujoProyecto[ult], 5000)).toBe(true);
+    expect(cerca(conExtra.flujoProyecto[1], sinExtra.flujoProyecto[1])).toBe(true);
   });
 });

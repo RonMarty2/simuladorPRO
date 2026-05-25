@@ -134,10 +134,24 @@ export interface Financiamiento {
 
 export type TipoProyecto = "libre" | "caso_curso" | "entrega_estudiante";
 
+/**
+ * Versión del modelo de indicadores del proyecto.
+ *  - 'v1' (default): indicadores clásicos (VAN, TIR, Payback, IR, TRC, SD, RBC, WACC).
+ *  - 'v2': v1 + análisis avanzado (punto de equilibrio, payback descontado,
+ *    sensibilidad, apalancamiento y flujo del inversionista).
+ *
+ * Es opcional: los proyectos sin el campo se tratan como 'v1', por lo que
+ * nada de lo existente cambia de comportamiento.
+ */
+export type VersionProyecto = "v1" | "v2";
+
 export interface Proyecto {
   id: string;
   estudiante_id: string;
   curso_id: string | null;
+
+  /** Versión de indicadores. Ausente o 'v1' = comportamiento clásico. */
+  version?: VersionProyecto;
 
   /**
    * Tipo del proyecto:

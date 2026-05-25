@@ -465,3 +465,262 @@ export function proyectarConCrecimiento(
   }
   return out;
 }
+
+// ============================================================================
+// ====================  INDICADORES V2 (EXTENDIDO)  ==========================
+// ============================================================================
+// Todo lo de abajo es ADITIVO: funciones nuevas que NO modifican el cálculo
+// V1. Solo se usan cuando un proyecto tiene version === "v2".
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// PUNTO DE EQUILIBRIO (break-even)
+// ----------------------------------------------------------------------------
+
+export interface PuntoEquilibrio {
+  /** Unidades a vender para no ganar ni perder. Infinity si no hay margen. */
+  unidades: number;
+  /** Ingreso en Bs en el punto de equilibrio. */
+  ingresoBs: number;
+  /** Margen de contribución por unidad = precio − costo variable unitario. */
+  margenContribucionUnitario: number;
+  /** Margen de contribución como proporción del precio (0..1). */
+  ratioMargenContribucion: number;
+}
+
+/**
+ * Punto de equilibrio en unidades y en Bs.
+ *
+ *   Q* = Costos Fijos / (Precio − Costo Variable Unitario)
+ *   Ingreso* = Q* × Precio
+ *
+ * Si el margen de contribución unitario es ≤ 0, el negocio pierde con cada
+ * unidad vendida y nunca alcanza equilibrio → unidades = Infinity.
+ */
+export function calcularPuntoEquilibrio(
+  costosFijos: number,
+  precioUnitario: number,
+  costoVariableUnitario: number
+): PuntoEquilibrio {
+  const margenContribucionUnitario = precioUnitario - costoVariableUnitario;
+  const ratioMargenContribucion =
+    precioUnitario > 0 ? margenContribucionUnitario / precioUnitario : 0;
+  if (margenContribucionUnitario <= 0) {
+    return {
+      unidades: Infinity,
+      ingresoBs: Infinity,
+      margenContribucionUnitario,
+      ratioMargenContribucion,
+    };
+  }
+  const unidades = costosFijos / margenContribucionUnitario;
+  return {
+    unidades,
+    ingresoBs: unidades * precioUnitario,
+    margenContribucionUnitario,
+    ratioMargenContribucion,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// PAYBACK DESCONTADO
+// ----------------------------------------------------------------------------
+
+/**
+ * Período de recuperación DESCONTADO. Igual que `calcularPayback` pero
+ * descontando cada flujo a valor presente antes de acumular, así considera el
+ * valor del dinero en el tiempo. Devuelve años (decimal con interpolación) o
+ * -1 si nunca se recupera dentro del horizonte.
+ *
+ * Convención: flujos[0] es el flujo del año 0 (inversión inicial negativa).
+ */
+export function calcularPaybackDescontado(
+  flujos: number[],
+  tasaDescuento: number
+): number {
+  let acumulado = 0;
+  for (let t = 0; t < flujos.length; t++) {
+    const vp = flujos[t] / Math.pow(1 + tasaDescuento, t);
+    const antes = acumulado;
+    acumulado += vp;
+    if (antes < 0 && acumulado >= 0) {
+      const faltante = -antes;
+      return t - 1 + faltante / vp;
+    }
+  }
+  return -1;
+}
+
+// ----------------------------------------------------------------------------
+// ANÁLISIS DE SENSIBILIDAD (estático — NO es la simulación con eventos)
+// ----------------------------------------------------------------------------
+
+export interface FilaSensibilidad {
+  /** Variación aplicada a la variable (-0.2 = −20%, 0 = base, 0.2 = +20%). */
+  variacion: number;
+  van: number;
+  tir: number;
+}
+
+/**
+ * Análisis de sensibilidad de una sola variable (one-way). Recibe una función
+ * pura que construye los flujos del proyecto dado un factor de variación, y
+ * recalcula VAN/TIR para cada escenario.
+ *
+ * Es estático y determinista — no tiene azar ni turnos. Sirve para detectar
+ * QUÉ variable es más peligrosa para el proyecto ANTES de simular. Es distinto
+ * del motor de eventos (inflación, bloqueos…), que es dinámico y turno a turno.
+ *
+ * @param construirFlujos  factor → flujos del proyecto (factor 0 = caso base).
+ * @param tasaDescuento    tasa para el VAN (típicamente WACC).
+ * @param variaciones      lista de variaciones a probar.
+ */
+export function calcularSensibilidad(
+  construirFlujos: (factor: number) => number[],
+  tasaDescuento: number,
+  variaciones: number[] = [-0.2, -0.1, 0, 0.1, 0.2]
+): FilaSensibilidad[] {
+  return variaciones.map((variacion) => {
+    const flujos = construirFlujos(variacion);
+    return {
+      variacion,
+      van: calcularVAN(flujos, tasaDescuento),
+      tir: calcularTIR(flujos),
+    };
+  });
+}
+
+// ----------------------------------------------------------------------------
+// APALANCAMIENTO (operativo, financiero y total)
+// ----------------------------------------------------------------------------
+
+/**
+ * Grado de Apalancamiento Operativo.
+ *   GAO = Margen de Contribución / Utilidad Operativa (EBIT)
+ * Mide cuánto amplifica los cambios en ventas sobre la utilidad operativa,
+ * por efecto de los costos fijos. Devuelve NaN si EBIT = 0.
+ */
+export function calcularGAO(
+  margenContribucion: number,
+  utilidadOperativa: number
+): number {
+  if (utilidadOperativa === 0) return NaN;
+  return margenContribucion / utilidadOperativa;
+}
+
+/**
+ * Grado de Apalancamiento Financiero.
+ *   GAF = Utilidad Operativa (EBIT) / Utilidad Antes de Impuestos (EBIT − interés)
+ * Mide cuánto amplifican los intereses los cambios del EBIT sobre la utilidad
+ * antes de impuestos. Devuelve NaN si la utilidad antes de impuestos = 0.
+ */
+export function calcularGAF(
+  utilidadOperativa: number,
+  interes: number
+): number {
+  const utilidadAntesImpuestos = utilidadOperativa - interes;
+  if (utilidadAntesImpuestos === 0) return NaN;
+  return utilidadOperativa / utilidadAntesImpuestos;
+}
+
+/**
+ * Grado de Apalancamiento Total = GAO × GAF.
+ *   GAT = Margen de Contribución / (EBIT − interés)
+ */
+export function calcularGAT(
+  margenContribucion: number,
+  utilidadOperativa: number,
+  interes: number
+): number {
+  return (
+    calcularGAO(margenContribucion, utilidadOperativa) *
+    calcularGAF(utilidadOperativa, interes)
+  );
+}
+
+// ----------------------------------------------------------------------------
+// FLUJO DEL INVERSIONISTA — proyecto (FCF) vs accionista (FCFE)
+// ----------------------------------------------------------------------------
+
+export interface ParamsFlujoInversionista {
+  /** Inversión total = activos fijos + capital de trabajo. */
+  inversionTotal: number;
+  /** Préstamo total recibido (lo que NO pone el accionista). */
+  montoPrestamo: number;
+  /** Utilidad operativa (EBIT) por año: ingresos − costos − depreciación. */
+  ebit: number[];
+  /** Depreciación por año (gasto no efectivo, se reintegra). */
+  depreciacion: number[];
+  /** Intereses de la deuda por año. */
+  intereses: number[];
+  /** Amortización de capital de la deuda por año. */
+  amortizacion: number[];
+  /** Tasa de impuesto (IUE, típicamente 0.25). */
+  tasaImpuesto: number;
+  /** Extras del último año (valor residual + recuperación capital trabajo). */
+  extrasUltimoAnio?: number;
+  /** WACC — descuenta el flujo del PROYECTO. */
+  wacc: number;
+  /** Koa (costo de oportunidad del accionista) — descuenta el flujo del ACCIONISTA. */
+  koa: number;
+}
+
+export interface ResultadoFlujoInversionista {
+  /** Flujo libre del proyecto (sin financiamiento). Se descuenta al WACC. */
+  flujoProyecto: number[];
+  /** Flujo del accionista (después de deuda). Se descuenta al Koa. */
+  flujoAccionista: number[];
+  vanProyecto: number;
+  vanAccionista: number;
+  tirProyecto: number;
+  tirAccionista: number;
+}
+
+/**
+ * Construye y evalúa dos perspectivas de flujo:
+ *
+ *  - FLUJO DEL PROYECTO (FCF): como si todo fuera capital propio. No resta
+ *    intereses ni amortización; los impuestos se calculan sobre el EBIT
+ *    completo (escudo fiscal de la deuda NO aplica). Se descuenta al WACC.
+ *
+ *  - FLUJO DEL ACCIONISTA (FCFE): lo que efectivamente recibe el dueño tras
+ *    pagar al banco. Año 0 = solo el aporte propio (inversión − préstamo);
+ *    los impuestos se calculan sobre la utilidad después de intereses
+ *    (escudo fiscal incluido). Se descuenta al Koa.
+ *
+ * El apalancamiento es favorable cuando el VAN del accionista supera al VAN
+ * del proyecto — señal de que la deuda crea valor para el dueño.
+ */
+export function calcularFlujoInversionista(
+  p: ParamsFlujoInversionista
+): ResultadoFlujoInversionista {
+  const n = p.ebit.length;
+  const extras = p.extrasUltimoAnio ?? 0;
+  const flujoProyecto: number[] = [-p.inversionTotal];
+  const flujoAccionista: number[] = [-(p.inversionTotal - p.montoPrestamo)];
+
+  for (let i = 0; i < n; i++) {
+    const extra = i === n - 1 ? extras : 0;
+
+    // Flujo del proyecto (sin deuda): impuestos sobre EBIT completo.
+    const impuestoProyecto = Math.max(0, p.ebit[i]) * p.tasaImpuesto;
+    const fcf = p.ebit[i] - impuestoProyecto + p.depreciacion[i] + extra;
+    flujoProyecto.push(fcf);
+
+    // Flujo del accionista (con deuda): impuestos sobre utilidad tras intereses.
+    const utilidadAntesImpuestos = p.ebit[i] - p.intereses[i];
+    const impuestoAccionista = Math.max(0, utilidadAntesImpuestos) * p.tasaImpuesto;
+    const utilidadNeta = utilidadAntesImpuestos - impuestoAccionista;
+    const fcfe = utilidadNeta + p.depreciacion[i] - p.amortizacion[i] + extra;
+    flujoAccionista.push(fcfe);
+  }
+
+  return {
+    flujoProyecto,
+    flujoAccionista,
+    vanProyecto: calcularVAN(flujoProyecto, p.wacc),
+    vanAccionista: calcularVAN(flujoAccionista, p.koa),
+    tirProyecto: calcularTIR(flujoProyecto),
+    tirAccionista: calcularTIR(flujoAccionista),
+  };
+}

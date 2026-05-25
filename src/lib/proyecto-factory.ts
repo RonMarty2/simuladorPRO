@@ -1,4 +1,4 @@
-import type { Producto, Proyecto } from "@/types/proyecto";
+import type { Producto, Proyecto, VersionProyecto } from "@/types/proyecto";
 
 /**
  * Migra un producto antiguo al shape actual.
@@ -50,12 +50,14 @@ export function crearProyectoVacio(params: {
   estudiante_id: string;
   curso_id?: string | null;
   nombre: string;
+  version?: VersionProyecto;
 }): Proyecto {
   const ahora = new Date().toISOString();
   return {
     id: params.id ?? nuevoId(),
     estudiante_id: params.estudiante_id,
     curso_id: params.curso_id ?? null,
+    version: params.version ?? "v1",
     nombre: params.nombre,
     ubicacion: "",
     descripcion: "",

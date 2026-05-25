@@ -4,7 +4,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto, listarCasosDelCurso, tomarCasoDelCurso } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
-import type { Proyecto } from "@/types/proyecto";
+import { cn } from "@/lib/utils";
+import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
 interface CasoDisponible {
   curso: Curso;
@@ -167,9 +168,15 @@ function FormularioProyectoLibre({
 }: {
   userId: string;
   onCreado: () => void;
-  inicializar: (estudianteId: string, nombre: string) => void;
+  inicializar: (
+    estudianteId: string,
+    nombre: string,
+    curso_id?: string | null,
+    version?: VersionProyecto
+  ) => void;
 }) {
   const [nombre, setNombre] = useState("");
+  const [version, setVersion] = useState<VersionProyecto>("v1");
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -179,7 +186,7 @@ function FormularioProyectoLibre({
     setCreando(true);
     setError(null);
     try {
-      inicializar(userId, nombre.trim());
+      inicializar(userId, nombre.trim(), null, version);
       const proyecto = useProyectoStore.getState().proyecto!;
       await guardarProyecto(proyecto);
       onCreado();
@@ -205,7 +212,7 @@ function FormularioProyectoLibre({
         </div>
       </div>
 
-      <form onSubmit={crear} className="space-y-2">
+      <form onSubmit={crear} className="space-y-3">
         <input
           id="nombre-proyecto"
           type="text"
@@ -214,6 +221,27 @@ function FormularioProyectoLibre({
           placeholder="Ej: Cafetería en Cochabamba"
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
+
+        {/* Selector de versión de indicadores */}
+        <div>
+          <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+            Tipo de análisis financiero
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <OpcionVersion
+              activa={version === "v1"}
+              onClick={() => setVersion("v1")}
+              titulo="Clásico (V1)"
+              descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC. Igual que siempre."
+            />
+            <OpcionVersion
+              activa={version === "v2"}
+              onClick={() => setVersion("v2")}
+              titulo="Extendido (V2)"
+              descripcion="Todo lo de V1 + punto de equilibrio, payback descontado, sensibilidad y apalancamiento."
+            />
+          </div>
+        </div>
 
         {error && (
           <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -230,5 +258,46 @@ function FormularioProyectoLibre({
         </button>
       </form>
     </div>
+  );
+}
+
+function OpcionVersion({
+  activa,
+  onClick,
+  titulo,
+  descripcion,
+}: {
+  activa: boolean;
+  onClick: () => void;
+  titulo: string;
+  descripcion: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={activa}
+      className={cn(
+        "flex flex-col rounded-md border p-2.5 text-left transition",
+        activa
+          ? "border-primary bg-primary/5 ring-1 ring-primary"
+          : "border-border hover:border-primary/50"
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          className={cn(
+            "flex h-3.5 w-3.5 items-center justify-center rounded-full border",
+            activa ? "border-primary" : "border-muted-foreground/50"
+          )}
+        >
+          {activa && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+        </span>
+        <span className="text-xs font-semibold">{titulo}</span>
+      </div>
+      <span className="mt-1 text-[10px] leading-snug text-muted-foreground">
+        {descripcion}
+      </span>
+    </button>
   );
 }

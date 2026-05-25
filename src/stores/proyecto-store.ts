@@ -15,13 +15,19 @@ import type {
   Proyecto,
   PuestoTrabajo,
   Sector,
+  VersionProyecto,
 } from "@/types/proyecto";
 
 interface ProyectoState {
   proyecto: Proyecto | null;
 
   // Ciclo de vida
-  inicializar: (estudiante_id: string, nombre: string, curso_id?: string | null) => void;
+  inicializar: (
+    estudiante_id: string,
+    nombre: string,
+    curso_id?: string | null,
+    version?: VersionProyecto
+  ) => void;
   cargar: (proyecto: Proyecto) => void;
   limpiar: () => void;
 
@@ -115,8 +121,8 @@ function conTimestamp(p: Proyecto): Proyecto {
 export const useProyectoStore = create<ProyectoState>((set, get) => ({
   proyecto: null,
 
-  inicializar: (estudiante_id, nombre, curso_id) => {
-    set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id }) });
+  inicializar: (estudiante_id, nombre, curso_id, version) => {
+    set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id, version }) });
   },
 
   cargar: (proyecto) => set({ proyecto }),
