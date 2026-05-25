@@ -21,6 +21,7 @@ import {
   calcularAportesPatronales,
   calcularIR,
   calcularPayback,
+  calcularPaybackDescontado,
   calcularTIR,
   calcularVAN,
   calcularWACC,
@@ -125,6 +126,15 @@ export default function EvaluacionFinal() {
           formato="moneda"
           mejorEsMayor
         />
+        {proyecto.version === "v2" && (
+          <ComparativoCard
+            titulo="Payback descontado (V2)"
+            proyectado={proyectado.paybackDescontado}
+            real={real.paybackDescontado}
+            formato="anios"
+            mejorEsMayor={false}
+          />
+        )}
       </div>
 
       {/* Gráfico flujos proyectados vs reales */}
@@ -344,6 +354,7 @@ function calcularComparativo(
     van: calcularVAN(flujosProyectados, tasa),
     tir: calcularTIR(flujosProyectados),
     payback: calcularPayback(flujosProyectados),
+    paybackDescontado: calcularPaybackDescontado(flujosProyectados, tasa),
     ir: calcularIR(flujosProyectados, tasa),
     cajaFinal: proyecto.capitalTrabajo + flujoAcumProy,
   };
@@ -364,6 +375,7 @@ function calcularComparativo(
     van: calcularVAN(flujosReales, tasa),
     tir: calcularTIR(flujosReales),
     payback: calcularPayback(flujosReales),
+    paybackDescontado: calcularPaybackDescontado(flujosReales, tasa),
     ir: calcularIR(flujosReales, tasa),
     cajaFinal: simulacion.estado_actual.caja,
   };

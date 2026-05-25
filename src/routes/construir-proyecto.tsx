@@ -166,6 +166,7 @@ export default function ConstruirProyecto() {
         pasoActual={pasoActual}
         totalPasos={TOTAL_PASOS}
         nombreProyecto={proyecto.nombre}
+        version={proyecto.version}
         estadoGuardado={estadoGuardado}
         onCambiarPaso={setPasoActual}
         titulos={titulosPasos}

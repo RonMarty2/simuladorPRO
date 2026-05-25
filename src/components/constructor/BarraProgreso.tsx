@@ -1,11 +1,13 @@
 import { Check, Save } from "lucide-react";
 import type { EstadoGuardado } from "@/hooks/useAutoGuardado";
+import type { VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 
 interface Props {
   pasoActual: number;
   totalPasos: number;
   nombreProyecto: string;
+  version?: VersionProyecto;
   estadoGuardado: EstadoGuardado;
   onCambiarPaso: (paso: number) => void;
   titulos: Record<number, string>;
@@ -16,6 +18,7 @@ export default function BarraProgreso({
   pasoActual,
   totalPasos,
   nombreProyecto,
+  version,
   estadoGuardado,
   onCambiarPaso,
   titulos,
@@ -29,8 +32,11 @@ export default function BarraProgreso({
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
             Proyecto
           </div>
-          <div className="truncate text-base font-semibold tracking-tight">
-            {nombreProyecto}
+          <div className="flex items-center gap-2">
+            <div className="truncate text-base font-semibold tracking-tight">
+              {nombreProyecto}
+            </div>
+            <BadgeVersion version={version} />
           </div>
         </div>
         <EstadoGuardadoChip estado={estadoGuardado} />
@@ -92,6 +98,27 @@ export default function BarraProgreso({
         </span>
       </div>
     </div>
+  );
+}
+
+function BadgeVersion({ version }: { version?: VersionProyecto }) {
+  const esV2 = version === "v2";
+  return (
+    <span
+      className={cn(
+        "flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+        esV2
+          ? "bg-indigo-600 text-white"
+          : "bg-secondary text-muted-foreground"
+      )}
+      title={
+        esV2
+          ? "Versión extendida: incluye análisis avanzado en el Paso 9"
+          : "Versión clásica: indicadores estándar"
+      }
+    >
+      {esV2 ? "V2 · Extendido" : "V1 · Clásico"}
+    </span>
   );
 }
 
