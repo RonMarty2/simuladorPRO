@@ -16,6 +16,17 @@ export default function ProtectedRoute() {
     inicializar();
   }, [inicializar]);
 
+  // Auto-retry en background: si tenemos user pero no perfil, reintentar
+  // cada 4 segundos. Soluciona los casos de cuelgue temporal de la query.
+  useEffect(() => {
+    if (inicializado && user && !perfil) {
+      const id = setInterval(() => {
+        recargarPerfil();
+      }, 4000);
+      return () => clearInterval(id);
+    }
+  }, [inicializado, user, perfil, recargarPerfil]);
+
   if (!inicializado) {
     return (
       <div className="flex h-screen w-screen items-center justify-center text-sm text-muted-foreground">
@@ -53,16 +64,26 @@ export default function ProtectedRoute() {
             </button>
             <button
               onClick={async () => {
-                await logout();
+                // Logout server-side
+                await logout().catch(() => {});
+                // Limpieza completa del cliente: localStorage, sessionStorage e IndexedDB
+                // (Supabase persiste tokens en varios lugares)
                 try {
                   localStorage.clear();
+                  sessionStorage.clear();
+                  if (window.indexedDB?.databases) {
+                    const dbs = await window.indexedDB.databases();
+                    for (const db of dbs) {
+                      if (db.name) indexedDB.deleteDatabase(db.name);
+                    }
+                  }
                 } catch {}
                 navigate("/login", { replace: true });
-                setTimeout(() => window.location.reload(), 100);
+                setTimeout(() => window.location.reload(), 200);
               }}
               className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary"
             >
-              🚪 Cerrar sesión y volver a entrar
+              🚪 Cerrar sesión y volver a entrar (limpieza total)
             </button>
           </div>
 
