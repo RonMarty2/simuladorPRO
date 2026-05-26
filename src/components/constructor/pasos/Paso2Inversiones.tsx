@@ -9,6 +9,7 @@ import type { CategoriaInversion } from "@/types/proyecto";
 interface ConfigCategoria {
   valor: CategoriaInversion;
   label: string;
+  ejemplo: string;
   sinDepreciacion?: boolean;
   vidaDefault: number;
   // Clases para el color de la categoría
@@ -22,6 +23,7 @@ const categorias: ConfigCategoria[] = [
   {
     valor: "terreno",
     label: "Terreno",
+    ejemplo: "Ej: Terreno 200 m², lote",
     sinDepreciacion: true,
     vidaDefault: 0,
     borde: "border-l-amber-500",
@@ -32,6 +34,7 @@ const categorias: ConfigCategoria[] = [
   {
     valor: "obrasCiviles",
     label: "Obras civiles",
+    ejemplo: "Ej: Galpón, adecuación, instalación eléctrica",
     vidaDefault: 20,
     borde: "border-l-blue-500",
     chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
@@ -41,6 +44,7 @@ const categorias: ConfigCategoria[] = [
   {
     valor: "maquinaria",
     label: "Maquinaria y equipos",
+    ejemplo: "Ej: Cafetera espresso, horno, refrigerador",
     vidaDefault: 10,
     borde: "border-l-emerald-500",
     chip: "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
@@ -50,6 +54,7 @@ const categorias: ConfigCategoria[] = [
   {
     valor: "mobiliario",
     label: "Mobiliario",
+    ejemplo: "Ej: Mesas, sillas, estantería, vitrina",
     vidaDefault: 7,
     borde: "border-l-purple-500",
     chip: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
@@ -59,6 +64,7 @@ const categorias: ConfigCategoria[] = [
   {
     valor: "activoDiferido",
     label: "Activo diferido (intangibles)",
+    ejemplo: "Ej: Licencias, registro de marca, software, web",
     vidaDefault: 5,
     borde: "border-l-pink-500",
     chip: "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100",
@@ -364,7 +370,7 @@ function SeccionCategoria({
                           value={it.descripcion}
                           onChange={(e) => onEditar(it.id, { descripcion: e.target.value })}
                           onFocus={selectOnFocus}
-                          placeholder="Ej: Galpón, Espresso…"
+                          placeholder={config.ejemplo}
                           className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
