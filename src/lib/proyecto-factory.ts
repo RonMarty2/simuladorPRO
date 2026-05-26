@@ -292,3 +292,154 @@ export function crearProyectoEjemploCafeteriaV2(params: {
     actualizado_en: ahora,
   };
 }
+
+// Financiamiento + CAPM por defecto compartido para los ejemplos.
+function finCapmEjemplo(): Pick<Proyecto, "financiamiento" | "capmV2"> {
+  return {
+    financiamiento: {
+      porcentajePropio: 0.65,
+      porcentajePrestamo: 0.35,
+      tasaInteresAnual: 0.13,
+      plazoMeses: 60,
+      costoOportunidadAccionista: 0.12, // = CAPM 4% + 1.0 × 8%
+      prestamoCapitalTrabajo: {
+        porcentajePropio: 0.7,
+        porcentajePrestamo: 0.3,
+        tasaInteresAnual: 0.11,
+        plazoMeses: 48,
+      },
+    },
+    capmV2: { tasaLibreRiesgo: 0.04, beta: 1.0, primaMercado: 0.08 },
+  };
+}
+
+/**
+ * EJEMPLO — PRODUCCIÓN (V2): panadería de quinoa.
+ * Hace y vende unidades físicas. Costos directos = materia prima + insumos +
+ * empaque por unidad. Mismo motor "unidades × precio", vocabulario de producción.
+ */
+export function crearProyectoEjemploPanaderiaV2(params: {
+  estudiante_id: string;
+  curso_id?: string | null;
+  nombre?: string;
+}): Proyecto {
+  const ahora = new Date().toISOString();
+  const idPan = nuevoId();
+  const idGalleta = nuevoId();
+  return {
+    id: nuevoId(),
+    estudiante_id: params.estudiante_id,
+    curso_id: params.curso_id ?? null,
+    version: "v2",
+    tipo: "libre",
+    nombre: params.nombre ?? "panaderiav2",
+    ubicacion: "Cochabamba, zona sur",
+    descripcion: "Panadería de productos de quinoa: pan y galletas integrales. Ejemplo de PRODUCCIÓN (se fabrica el producto).",
+    sector: "produccion",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [itemInv("Adecuación del local y horno fijo", "obra", 1, 25000, 10)],
+      maquinaria: [
+        itemInv("Horno industrial", "und", 1, 28000, 10),
+        itemInv("Amasadora y batidora", "set", 1, 12000, 10),
+      ],
+      mobiliario: [itemInv("Vitrinas, mesones y estantería", "set", 1, 10000, 8)],
+      activoDiferido: [itemInv("Registro sanitario, licencias e instalación", "global", 1, 5000, 5)],
+    },
+    capitalTrabajo: 50000,
+    mesesBufferCapitalTrabajo: 3,
+    personal: [
+      { id: nuevoId(), puesto: "Panadero", cantidad: 2, sueldoMensual: 3000 },
+      { id: nuevoId(), puesto: "Vendedor / despacho", cantidad: 1, sueldoMensual: 2800 },
+    ],
+    costosDirectos: [
+      { id: nuevoId(), productoId: idPan, categoria: "materia_prima", descripcion: "Harina de quinoa y trigo", unidadMedida: "und", cantidadPorUnidad: 1, costoUnitario: 1.2 },
+      { id: nuevoId(), productoId: idPan, categoria: "insumo", descripcion: "Levadura, sal, energía del horno", unidadMedida: "und", cantidadPorUnidad: 1, costoUnitario: 0.3 },
+      { id: nuevoId(), productoId: idGalleta, categoria: "materia_prima", descripcion: "Ingredientes de galletas", unidadMedida: "paquete", cantidadPorUnidad: 1, costoUnitario: 5 },
+      { id: nuevoId(), productoId: idGalleta, categoria: "empaque", descripcion: "Bolsa y etiqueta", unidadMedida: "paquete", cantidadPorUnidad: 1, costoUnitario: 1 },
+    ],
+    costosAdministracion: [
+      { id: nuevoId(), descripcion: "Alquiler del local", unidadMedida: "mes", cantidad: 1, costoUnitario: 3000 },
+      { id: nuevoId(), descripcion: "Servicios (gas, luz, agua)", unidadMedida: "mes", cantidad: 1, costoUnitario: 2500 },
+      { id: nuevoId(), descripcion: "Internet y administración", unidadMedida: "mes", cantidad: 1, costoUnitario: 250 },
+    ],
+    costosComercializacion: [
+      { id: nuevoId(), descripcion: "Redes y degustaciones", unidadMedida: "mes", cantidad: 1, costoUnitario: 500 },
+    ],
+    imprevistosPorcentaje: 0.05,
+    productos: [
+      { id: idPan, nombre: "Pan de quinoa", unidadMedida: "unidad", cantidades: serie5(120000, 0.05), precios: serie5(3.5, 0.03, 2) },
+      { id: idGalleta, nombre: "Galletas integrales", unidadMedida: "paquete", cantidades: serie5(24000, 0.05), precios: serie5(12, 0.03, 2) },
+    ],
+    ...finCapmEjemplo(),
+    crecimientoIngresosAnual: 0.05,
+    crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [5, 5, 5, 5],
+    tasasCrecPrecio: [3, 3, 3, 3],
+    estado: "completo",
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
+
+/**
+ * EJEMPLO — COMERCIO (V2): tienda de barrio / minimarket.
+ * Compra y revende (alto volumen, bajo margen). El costo directo es la
+ * MERCADERÍA que se revende. Mismo motor, vocabulario de comercio.
+ */
+export function crearProyectoEjemploTiendaV2(params: {
+  estudiante_id: string;
+  curso_id?: string | null;
+  nombre?: string;
+}): Proyecto {
+  const ahora = new Date().toISOString();
+  const idVenta = nuevoId();
+  return {
+    id: nuevoId(),
+    estudiante_id: params.estudiante_id,
+    curso_id: params.curso_id ?? null,
+    version: "v2",
+    tipo: "libre",
+    nombre: params.nombre ?? "tiendav2",
+    ubicacion: "El Alto, zona comercial",
+    descripcion: "Minimarket de barrio: compra y reventa de abarrotes. Ejemplo de COMERCIO (alto volumen, bajo margen).",
+    sector: "comercio",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [itemInv("Adecuación del local", "obra", 1, 22000, 10)],
+      maquinaria: [itemInv("Refrigeradores y congelador", "set", 1, 20000, 10)],
+      mobiliario: [itemInv("Estantería y góndolas", "set", 1, 15000, 10)],
+      activoDiferido: [itemInv("Caja registradora y sistema de inventario", "set", 1, 8000, 5)],
+    },
+    capitalTrabajo: 80000,
+    mesesBufferCapitalTrabajo: 2,
+    personal: [
+      { id: nuevoId(), puesto: "Cajero/a", cantidad: 1, sueldoMensual: 2800 },
+      { id: nuevoId(), puesto: "Repositor / almacén", cantidad: 1, sueldoMensual: 2600 },
+    ],
+    costosDirectos: [
+      { id: nuevoId(), productoId: idVenta, categoria: "mercaderia", descripcion: "Costo de la mercadería revendida", unidadMedida: "venta", cantidadPorUnidad: 1, costoUnitario: 26 },
+      { id: nuevoId(), productoId: idVenta, categoria: "empaque", descripcion: "Bolsas y empaque", unidadMedida: "venta", cantidadPorUnidad: 1, costoUnitario: 0.5 },
+    ],
+    costosAdministracion: [
+      { id: nuevoId(), descripcion: "Alquiler del local", unidadMedida: "mes", cantidad: 1, costoUnitario: 4000 },
+      { id: nuevoId(), descripcion: "Servicios básicos", unidadMedida: "mes", cantidad: 1, costoUnitario: 1200 },
+      { id: nuevoId(), descripcion: "Internet y sistema", unidadMedida: "mes", cantidad: 1, costoUnitario: 300 },
+    ],
+    costosComercializacion: [
+      { id: nuevoId(), descripcion: "Promociones y letrero", unidadMedida: "mes", cantidad: 1, costoUnitario: 600 },
+    ],
+    imprevistosPorcentaje: 0.04,
+    productos: [
+      { id: idVenta, nombre: "Venta promedio (canasta de abarrotes)", unidadMedida: "venta", cantidades: serie5(60000, 0.06), precios: serie5(35, 0.03, 2) },
+    ],
+    ...finCapmEjemplo(),
+    crecimientoIngresosAnual: 0.06,
+    crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [6, 6, 6, 6],
+    tasasCrecPrecio: [3, 3, 3, 3],
+    estado: "completo",
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
