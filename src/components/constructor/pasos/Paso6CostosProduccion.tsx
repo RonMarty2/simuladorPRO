@@ -314,8 +314,8 @@ function BloqueProducto({
   onEditar: (id: string, cambios: Partial<CostoDirecto>) => void;
   onEliminar: (id: string) => void;
 }) {
-  // Primer producto abierto por default, los demás colapsados
-  const [abierto, setAbierto] = useState(productoIndex === 0);
+  // Colapsado por defecto (vista limpia); el resumen del header muestra costo/u y margen.
+  const [abierto, setAbierto] = useState(false);
   const margen = producto.precios[0] - costoUnit;
   const margenPct = producto.precios[0] > 0 ? (margen / producto.precios[0]) * 100 : 0;
   const totalItems = costos.length;

@@ -55,6 +55,7 @@ export default function Paso4Personal() {
   const setAporte = useProyectoStore((s) => s.setAportePatronal);
   const restaurarDefault = useProyectoStore((s) => s.restaurarAportesPatronalesDefault);
   const [mostrarConfig, setMostrarConfig] = useState(false);
+  const [mostrarPersonal, setMostrarPersonal] = useState(proyecto.personal.length === 0);
 
   const tasas = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
   const totalTasa =
@@ -211,20 +212,28 @@ export default function Paso4Personal() {
           )}
         </div>
 
-        {/* BLOQUE 2: PERSONAL (azul) */}
+        {/* BLOQUE 2: PERSONAL (azul) — colapsable */}
         <div className={cn("overflow-hidden rounded-md border-l-4", BLOQUE_PERSONAL.borde, BLOQUE_PERSONAL.bgFila)}>
-          <div className={cn("flex items-center justify-between px-3 py-2", BLOQUE_PERSONAL.bgHeader)}>
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5" />
-              <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", BLOQUE_PERSONAL.chip)}>
+          <button
+            onClick={() => setMostrarPersonal((v) => !v)}
+            className={cn("flex w-full items-center justify-between gap-2 px-3 py-2 text-left", BLOQUE_PERSONAL.bgHeader)}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <Users className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className={cn("flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", BLOQUE_PERSONAL.chip)}>
                 2. Personal
               </span>
               <span className="text-xs font-medium text-foreground/70">
                 ({proyecto.personal.length} {proyecto.personal.length === 1 ? "puesto" : "puestos"})
               </span>
             </div>
-          </div>
+            <div className="flex flex-shrink-0 items-center gap-3">
+              <span className="text-sm font-bold tabular-nums">{formatearBolivianos(costoAnualTotal)}/año</span>
+              <span className="text-xs text-muted-foreground">{mostrarPersonal ? "▾" : "▸"}</span>
+            </div>
+          </button>
 
+          {mostrarPersonal && (
           <div className="space-y-2 p-3">
             {proyecto.personal.length === 0 && (
               <div className="rounded border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
@@ -310,6 +319,7 @@ export default function Paso4Personal() {
               Agregar puesto
             </button>
           </div>
+          )}
         </div>
 
       </div>

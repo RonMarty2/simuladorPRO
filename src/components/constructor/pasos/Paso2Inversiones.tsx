@@ -203,7 +203,8 @@ function SeccionCategoria({
   onEliminar: (id: string) => void;
   onKeyEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
-  const [abierto, setAbierto] = useState(true);
+  // Colapsado por defecto si ya tiene ítems (vista limpia); abierto si está vacío.
+  const [abierto, setAbierto] = useState(items.length === 0);
   const subtotal = items.reduce((acc, it) => acc + it.costoTotal, 0);
   const { borde, chip, bgFila, bgHeader, label, sinDepreciacion } = config;
 
