@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
@@ -26,6 +26,12 @@ export default function Paso2Proyeccion() {
   const setTasaCant = useProyectoStore((s) => s.setTasaCrecCantidad);
   const setTasaPrec = useProyectoStore((s) => s.setTasaCrecPrecio);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Estado de colapso: tasas y cada producto (por id). Default: colapsado.
+  const [tasasAbierto, setTasasAbierto] = useState(false);
+  const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
+  const toggleProducto = (id: string) =>
+    setExpandidos((e) => ({ ...e, [id]: !e[id] }));
 
   const productos = proyecto.productos.map(migrarProducto);
   const tasasCant = proyecto.tasasCrecCantidad ?? [0, 0, 0, 0];
@@ -123,58 +129,76 @@ export default function Paso2Proyeccion() {
               </tr>
             </thead>
             <tbody>
-              {/* SECCIÓN TASAS GLOBALES */}
-              <tr className="bg-amber-100/60 dark:bg-amber-950/30">
+              {/* SECCIÓN TASAS GLOBALES — encabezado colapsable */}
+              <tr
+                className="cursor-pointer bg-amber-100/60 hover:bg-amber-100 dark:bg-amber-950/30"
+                onClick={() => setTasasAbierto((v) => !v)}
+              >
                 <td
                   className="border-l-4 border-l-amber-500 p-2 text-[11px] font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200"
-                  colSpan={2}
+                  colSpan={8}
                 >
-                  📈 Tasas de crecimiento (aplican a todos)
+                  <span className="inline-flex items-center gap-1">
+                    {tasasAbierto ? (
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    )}
+                    📈 Tasas de crecimiento (aplican a todos)
+                    {!tasasAbierto && (
+                      <span className="ml-1 normal-case text-[10px] font-normal opacity-70">
+                        — clic para editar
+                      </span>
+                    )}
+                  </span>
                 </td>
-                <td colSpan={6}></td>
               </tr>
-              <tr className="bg-amber-50/60 dark:bg-amber-950/20">
-                <td className="border-l-4 border-l-amber-500 p-1.5 text-[11px]" colSpan={2}>
-                  ↳ Cantidad (%)
-                </td>
-                <td className="p-1.5 text-center text-muted-foreground">—</td>
-                {tasasCant.map((t, i) => (
-                  <td key={i} className="p-1.5">
-                    <input
-                      type="number"
-                      step="0.5"
-                      value={t}
-                      onChange={(e) => setTasaCant(i, Number(e.target.value) || 0)}
-                      onKeyDown={onKeyEnter}
-                      onFocus={selectOnFocus}
-                      data-col={`anio-${i + 2}`}
-                      className={inputClase}
-                    />
-                  </td>
-                ))}
-                <td></td>
-              </tr>
-              <tr className="border-b-2 border-border bg-amber-50/60 dark:bg-amber-950/20">
-                <td className="border-l-4 border-l-amber-500 p-1.5 text-[11px]" colSpan={2}>
-                  ↳ Precio (%)
-                </td>
-                <td className="p-1.5 text-center text-muted-foreground">—</td>
-                {tasasPrec.map((t, i) => (
-                  <td key={i} className="p-1.5">
-                    <input
-                      type="number"
-                      step="0.5"
-                      value={t}
-                      onChange={(e) => setTasaPrec(i, Number(e.target.value) || 0)}
-                      onKeyDown={onKeyEnter}
-                      onFocus={selectOnFocus}
-                      data-col={`anio-${i + 2}`}
-                      className={inputClase}
-                    />
-                  </td>
-                ))}
-                <td></td>
-              </tr>
+              {tasasAbierto && (
+                <>
+                  <tr className="bg-amber-50/60 dark:bg-amber-950/20">
+                    <td className="border-l-4 border-l-amber-500 p-1.5 text-[11px]" colSpan={2}>
+                      ↳ Cantidad (%)
+                    </td>
+                    <td className="p-1.5 text-center text-muted-foreground">—</td>
+                    {tasasCant.map((t, i) => (
+                      <td key={i} className="p-1.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={t}
+                          onChange={(e) => setTasaCant(i, Number(e.target.value) || 0)}
+                          onKeyDown={onKeyEnter}
+                          onFocus={selectOnFocus}
+                          data-col={`anio-${i + 2}`}
+                          className={inputClase}
+                        />
+                      </td>
+                    ))}
+                    <td></td>
+                  </tr>
+                  <tr className="border-b-2 border-border bg-amber-50/60 dark:bg-amber-950/20">
+                    <td className="border-l-4 border-l-amber-500 p-1.5 text-[11px]" colSpan={2}>
+                      ↳ Precio (%)
+                    </td>
+                    <td className="p-1.5 text-center text-muted-foreground">—</td>
+                    {tasasPrec.map((t, i) => (
+                      <td key={i} className="p-1.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={t}
+                          onChange={(e) => setTasaPrec(i, Number(e.target.value) || 0)}
+                          onKeyDown={onKeyEnter}
+                          onFocus={selectOnFocus}
+                          data-col={`anio-${i + 2}`}
+                          className={inputClase}
+                        />
+                      </td>
+                    ))}
+                    <td></td>
+                  </tr>
+                </>
+              )}
 
               {productos.length === 0 && (
                 <tr>
@@ -192,6 +216,8 @@ export default function Paso2Proyeccion() {
                     prod={p}
                     color={color}
                     productoIndex={pi}
+                    abierto={!!expandidos[p.id]}
+                    onToggle={() => toggleProducto(p.id)}
                     onChangeNombre={(v) => editar(p.id, { nombre: v })}
                     onChangeUnidad={(v) => editar(p.id, { unidadMedida: v })}
                     onChangeCantidad={(anio, v) => cambiarCantidad(p.id, anio, v)}
@@ -234,14 +260,18 @@ export default function Paso2Proyeccion() {
         </div>
 
         <button
-          onClick={() =>
+          onClick={() => {
             agregar({
               nombre: "Nuevo producto",
               unidadMedida: "und",
               cantidades: [0, 0, 0, 0, 0],
               precios: [0, 0, 0, 0, 0],
-            } as any)
-          }
+            } as any);
+            // Abrir automáticamente el producto recién creado para editarlo.
+            const lista = useProyectoStore.getState().proyecto?.productos ?? [];
+            const nuevo = lista[lista.length - 1];
+            if (nuevo) setExpandidos((e) => ({ ...e, [nuevo.id]: true }));
+          }}
           className="flex items-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground hover:border-foreground hover:text-foreground"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -279,6 +309,8 @@ function ProductoFilas({
   prod,
   color,
   productoIndex,
+  abierto,
+  onToggle,
   onChangeNombre,
   onChangeUnidad,
   onChangeCantidad,
@@ -290,6 +322,8 @@ function ProductoFilas({
   prod: ReturnType<typeof migrarProducto>;
   color: { borde: string; chip: string };
   productoIndex: number;
+  abierto: boolean;
+  onToggle: () => void;
   onChangeNombre: (v: string) => void;
   onChangeUnidad: (v: string) => void;
   onChangeCantidad: (anio: number, v: number) => void;
@@ -300,10 +334,21 @@ function ProductoFilas({
 }) {
   return (
     <>
-      {/* HEADER del producto — destacado */}
+      {/* HEADER del producto — clic para expandir/contraer */}
       <tr className={cn("border-t-4 border-border", color.chip.split(" ")[0])}>
-        <td className={cn("border-l-4 p-2", color.borde)}>
-          <div className="flex items-center gap-2">
+        <td className={cn("border-l-4 p-2", color.borde)} colSpan={abierto ? 1 : 2}>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onToggle}
+              className="rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
+              title={abierto ? "Contraer" : "Expandir para editar"}
+            >
+              {abierto ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
             <span
               className={cn(
                 "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
@@ -312,27 +357,43 @@ function ProductoFilas({
             >
               Producto {productoIndex + 1}
             </span>
+            {!abierto && (
+              <span className="truncate text-xs font-bold">{prod.nombre}</span>
+            )}
           </div>
-          <input
-            type="text"
-            value={prod.nombre}
-            onChange={(e) => onChangeNombre(e.target.value)}
-            onFocus={(e) => e.currentTarget.select()}
-            placeholder="Nombre del producto"
-            className="mt-1.5 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          {abierto && (
+            <input
+              type="text"
+              value={prod.nombre}
+              onChange={(e) => onChangeNombre(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              placeholder="Nombre del producto"
+              className="mt-1.5 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
         </td>
-        <td className="p-2">
-          <input
-            type="text"
-            value={prod.unidadMedida}
-            onChange={(e) => onChangeUnidad(e.target.value)}
-            onFocus={(e) => e.currentTarget.select()}
-            placeholder="taza, kg…"
-            className="mt-[26px] w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </td>
-        <td colSpan={5}></td>
+        {abierto && (
+          <td className="p-2">
+            <input
+              type="text"
+              value={prod.unidadMedida}
+              onChange={(e) => onChangeUnidad(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              placeholder="taza, kg…"
+              className="mt-[26px] w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </td>
+        )}
+        {/* Colapsado: muestra el ingreso por año junto al nombre. Expandido: vacío. */}
+        {abierto ? (
+          <td colSpan={5}></td>
+        ) : (
+          prod.cantidades.map((c, i) => (
+            <td key={i} className="p-1.5 text-right text-xs font-semibold">
+              {formatearBolivianos(c * prod.precios[i])}
+            </td>
+          ))
+        )}
         <td className="p-2 align-top">
           <button
             onClick={onEliminar}
@@ -343,59 +404,64 @@ function ProductoFilas({
           </button>
         </td>
       </tr>
-      {/* Cantidad */}
-      <tr>
-        <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
-          <span className="pl-3 font-medium">↳ Cantidad</span>
-        </td>
-        {prod.cantidades.map((c, i) => (
-          <td key={i} className="p-1.5">
-            <input
-              type="number"
-              value={c}
-              onChange={(e) => onChangeCantidad(i, Number(e.target.value) || 0)}
-              onKeyDown={onKeyEnter}
-              onFocus={(e) => e.currentTarget.select()}
-              data-col={`anio-${i + 1}`}
-              className={inputClase}
-            />
-          </td>
-        ))}
-        <td></td>
-      </tr>
-      {/* Precio */}
-      <tr>
-        <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
-          <span className="pl-3 font-medium">↳ Precio (Bs)</span>
-        </td>
-        {prod.precios.map((pr, i) => (
-          <td key={i} className="p-1.5">
-            <input
-              type="number"
-              step="0.01"
-              value={pr}
-              onChange={(e) => onChangePrecio(i, Number(e.target.value) || 0)}
-              onKeyDown={onKeyEnter}
-              onFocus={(e) => e.currentTarget.select()}
-              data-col={`anio-${i + 1}`}
-              className={inputClase}
-            />
-          </td>
-        ))}
-        <td></td>
-      </tr>
-      {/* Ingreso */}
-      <tr className="bg-secondary/20">
-        <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
-          <span className="pl-3 font-semibold">↳ Ingreso (Bs)</span>
-        </td>
-        {prod.cantidades.map((c, i) => (
-          <td key={i} className="p-1.5 text-right text-xs font-semibold">
-            {formatearBolivianos(c * prod.precios[i])}
-          </td>
-        ))}
-        <td></td>
-      </tr>
+
+      {abierto && (
+        <>
+          {/* Cantidad */}
+          <tr>
+            <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
+              <span className="pl-3 font-medium">↳ Cantidad</span>
+            </td>
+            {prod.cantidades.map((c, i) => (
+              <td key={i} className="p-1.5">
+                <input
+                  type="number"
+                  value={c}
+                  onChange={(e) => onChangeCantidad(i, Number(e.target.value) || 0)}
+                  onKeyDown={onKeyEnter}
+                  onFocus={(e) => e.currentTarget.select()}
+                  data-col={`anio-${i + 1}`}
+                  className={inputClase}
+                />
+              </td>
+            ))}
+            <td></td>
+          </tr>
+          {/* Precio */}
+          <tr>
+            <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
+              <span className="pl-3 font-medium">↳ Precio (Bs)</span>
+            </td>
+            {prod.precios.map((pr, i) => (
+              <td key={i} className="p-1.5">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={pr}
+                  onChange={(e) => onChangePrecio(i, Number(e.target.value) || 0)}
+                  onKeyDown={onKeyEnter}
+                  onFocus={(e) => e.currentTarget.select()}
+                  data-col={`anio-${i + 1}`}
+                  className={inputClase}
+                />
+              </td>
+            ))}
+            <td></td>
+          </tr>
+          {/* Ingreso */}
+          <tr className="bg-secondary/20">
+            <td className={cn("border-l-4 p-1.5 text-[11px]", color.borde)} colSpan={2}>
+              <span className="pl-3 font-semibold">↳ Ingreso (Bs)</span>
+            </td>
+            {prod.cantidades.map((c, i) => (
+              <td key={i} className="p-1.5 text-right text-xs font-semibold">
+                {formatearBolivianos(c * prod.precios[i])}
+              </td>
+            ))}
+            <td></td>
+          </tr>
+        </>
+      )}
     </>
   );
 }
