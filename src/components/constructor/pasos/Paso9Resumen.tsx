@@ -76,6 +76,7 @@ export default function Paso9Resumen() {
                 : "✗ Negativo: el proyecto destruye valor"
             }
             tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\nTu VAN descontado al ${(calc.wacc * 100).toFixed(2)}%: ${formatearBolivianos(calc.indicadores.van)}\n\nRegla: VAN > 0 acepta · VAN < 0 rechaza`}
+            explicacion="Suma toda la plata que genera el proyecto en 5 años, pero traída a valor de HOY (el dinero futuro vale menos). Si da positivo, el negocio te deja ganancia por encima de lo mínimo que exiges; si da negativo, pierdes valor. Es el indicador más importante."
           />
           <CardIndicador
             sigla="TIR"
@@ -95,6 +96,7 @@ export default function Paso9Resumen() {
                   : `✗ Menor al WACC (${(calc.wacc * 100).toFixed(2)}%)`
             }
             tooltip={`TIR = tasa que hace VAN = 0.\n\nSi TIR > WACC: proyecto rentable, ACEPTAR.\nSi TIR < WACC: proyecto NO rentable, rechazar.\n\nSi muestra "—" los flujos no permiten calcularla.`}
+            explicacion="Es el rendimiento anual que da el proyecto, como un interés. Se compara con el WACC (lo mínimo que exiges): si la TIR es mayor, el proyecto vale la pena; si es menor, no conviene. Una TIR alta = el negocio rinde bien."
           />
           <CardIndicador
             sigla="PAYBACK"
@@ -114,6 +116,7 @@ export default function Paso9Resumen() {
                   : "⚠ Tarda más de 5 años"
             }
             tooltip="Cuántos años tarda el proyecto en devolverte la inversión inicial (suma de flujos hasta cruzar cero)."
+            explicacion="Cuánto tardas en recuperar la plata que invertiste, sumando lo que el negocio te devuelve año a año. Mientras más corto, menos tiempo tienes tu dinero en riesgo. No considera el valor del dinero en el tiempo (para eso está el Payback descontado)."
           />
           <CardIndicador
             sigla="TRC"
@@ -131,6 +134,7 @@ export default function Paso9Resumen() {
                 : "✗ El proyecto pierde plata contablemente"
             }
             tooltip={`TRC = utilidad neta promedio ÷ inversión total\n\nNo descuenta el dinero en el tiempo, así que es menos riguroso que la TIR. Sirve como referencia contable rápida (también llamada ARR).`}
+            explicacion="Qué porcentaje de tu inversión recuperas como utilidad contable cada año, en promedio. Es una mirada rápida y contable (no financiera): no considera el valor del dinero en el tiempo, así que se usa solo como referencia, no para decidir."
           />
           <CardIndicador
             sigla="SD"
@@ -152,6 +156,7 @@ export default function Paso9Resumen() {
                     : "✗ No alcanza, no podrías pagar"
             }
             tooltip={`SD (o DSCR) = flujo de caja operativo promedio ÷ cuota anual del préstamo.\n\nSi SD > 1: el proyecto genera suficiente caja para pagar la deuda.\nSi SD < 1: NO alcanza.\n\nCuota anual referencia (año 1): ${formatearBolivianos(calc.indicadores.cuotaAnualTotal)}`}
+            explicacion="Cuántas veces la plata que genera el negocio alcanza para pagar la cuota anual del banco. 1.0 = genera justo lo de la cuota (sin margen); más de 1.5 = cómodo; menos de 1 = no alcanza y podrías no poder pagar. El banco lo mira para darte el crédito."
           />
           <CardIndicador
             sigla="IR"
@@ -165,6 +170,7 @@ export default function Paso9Resumen() {
                 : "✗ No recuperas ni 1 Bs por cada Bs invertido"
             }
             tooltip="IR = VP(flujos positivos) ÷ inversión inicial.\n\nSi IR > 1: rentable, acepta.\nSi IR < 1: pierdes valor."
+            explicacion="Por cada Bs que inviertes, cuántos Bs recuperas (ya traídos a hoy). Si es 1.20, recuperas Bs 1.20 por cada Bs puesto → ganas 20 centavos. Mayor a 1 conviene; menor a 1 pierdes. Útil para comparar proyectos de distinto tamaño."
           />
           <CardIndicador
             sigla="RBC"
@@ -182,6 +188,7 @@ export default function Paso9Resumen() {
                 : "✗ Gastas más de lo que ingresas"
             }
             tooltip="RBC = VP(ingresos) ÷ VP(todos los costos, impuestos e intereses).\n\nSi RBC > 1: el negocio es eficiente. Si RBC < 1: gastas más de lo que generas."
+            explicacion="Por cada Bs que gastas (costos, impuestos e intereses), cuántos Bs ingresas. Si es 1.15, por cada Bs de costo entran Bs 1.15. Mayor a 1 = el negocio es eficiente; menor a 1 = gastas más de lo que generas. Parecido al IR pero mirando ingresos vs costos."
           />
           <CardIndicador
             sigla="WACC"
@@ -191,6 +198,7 @@ export default function Paso9Resumen() {
             pregunta="¿Qué rentabilidad mínima debe dar el proyecto?"
             interpretacion="Es la vara que la TIR debe superar"
             tooltip="WACC = (D/V × Kd × (1−T)) + (E/V × Ke)\n\nTasa mínima exigida al proyecto. Se usa como tasa de descuento del VAN y se compara con la TIR."
+            explicacion="Es el costo de la plata que usas en el proyecto: mezcla lo que te cobra el banco por la deuda y lo que tú le exiges a tu propio dinero, según cuánto pones de cada uno. Es la 'vara' mínima: el proyecto debe rendir más que esto (la TIR debe superarlo) para valer la pena."
           />
         </div>
       </div>
@@ -876,6 +884,7 @@ function CardIndicador({
   pregunta,
   interpretacion,
   tooltip,
+  explicacion,
 }: {
   sigla: string;
   nombre: string;
@@ -884,22 +893,16 @@ function CardIndicador({
   pregunta: string;
   interpretacion: string;
   tooltip?: string;
+  explicacion?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col rounded-md border border-border p-3",
-        tooltip && "cursor-help"
-      )}
-      title={tooltip}
-    >
+    <div className="flex flex-col rounded-md border border-border p-3">
       {/* Encabezado: sigla técnica + nombre completo */}
       <div className="flex items-baseline gap-2">
         <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
           {nombre}
         </span>
-        {tooltip && <span className="ml-auto text-[10px] opacity-60">ⓘ</span>}
       </div>
 
       {/* Pregunta que responde, en lenguaje simple */}
@@ -924,6 +927,28 @@ function CardIndicador({
       >
         {interpretacion}
       </div>
+
+      {/* Explicación desplegable "¿Qué es?" + cómo se calcula */}
+      {(explicacion || tooltip) && (
+        <details className="group mt-2 border-t border-border/60 pt-1.5">
+          <summary className="cursor-pointer list-none text-[10px] font-medium text-primary">
+            <span className="group-open:hidden">▸ ¿qué es?</span>
+            <span className="hidden group-open:inline">▾ ocultar</span>
+          </summary>
+          {explicacion && (
+            <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+              {explicacion}
+            </p>
+          )}
+          {tooltip && (
+            <p className="mt-1.5 whitespace-pre-line border-t border-border/40 pt-1.5 text-[9px] leading-snug text-muted-foreground">
+              <strong>Cómo se calcula:</strong>
+              {"\n"}
+              {tooltip}
+            </p>
+          )}
+        </details>
+      )}
     </div>
   );
 }
