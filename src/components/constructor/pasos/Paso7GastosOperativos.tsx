@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
@@ -211,28 +212,44 @@ function SeccionGastos({
   onEditar: (id: string, cambios: Partial<CostoGeneral>) => void;
   onEliminar: (id: string) => void;
 }) {
+  // Colapsada por defecto si ya tiene ítems; abierta si está vacía (para agregar).
+  const [abierto, setAbierto] = useState(items.length === 0);
+
   return (
     <div className={cn("overflow-hidden rounded-md border-l-4", config.borde, config.bgFila)}>
-      <div
-        className={cn("flex items-center justify-between px-3 py-2", config.bgHeader)}
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 px-3 py-2 text-left",
+          config.bgHeader
+        )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          {abierto ? (
+            <ChevronDown className="h-4 w-4 flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 flex-shrink-0" />
+          )}
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
               config.chip
             )}
           >
             {config.label}
           </span>
-          <span className="text-[10px] text-foreground/70">{config.sugerencia}</span>
+          <span className="truncate text-[10px] text-foreground/70">{config.sugerencia}</span>
         </div>
-        <div className="text-right">
-          <div className="text-[10px] text-muted-foreground">Total año 1</div>
+        <div className="flex-shrink-0 text-right">
+          <div className="text-[10px] text-muted-foreground">
+            Total año 1 · {items.length} ítem{items.length === 1 ? "" : "s"}
+          </div>
           <div className="text-sm font-bold">{formatearBolivianos(totalAnio1)}</div>
         </div>
-      </div>
+      </button>
 
+      {abierto && (
       <div className="space-y-2 p-3">
         {items.length > 0 && (
           <div className="overflow-x-auto rounded-md border border-border bg-card">
@@ -325,6 +342,7 @@ function SeccionGastos({
           Agregar a {config.label.toLowerCase()}
         </button>
       </div>
+      )}
     </div>
   );
 }
