@@ -580,19 +580,40 @@ function AnalisisAvanzadoV2({
 
       {/* Tabla de sensibilidad */}
       <div className="mt-4 overflow-x-auto rounded-md border border-border bg-card p-4">
-        <h4 className="mb-1 text-sm font-semibold">Análisis de sensibilidad del VAN</h4>
-        <p className="mb-3 text-[11px] text-muted-foreground">
-          Cómo cambia el VAN si una variable se mueve, manteniendo todo lo demás
-          igual. Sirve para ver qué variable es más peligrosa. <em>Es estático —
-          distinto de la simulación con eventos.</em>
+        <h4 className="mb-1 text-sm font-semibold">
+          Análisis de sensibilidad del VAN — "¿qué pasaría si…?"
+        </h4>
+        <p className="mb-1 text-[11px] leading-snug text-muted-foreground">
+          Cada <strong>fila</strong> es una variable de tu proyecto. Cada{" "}
+          <strong>columna</strong> dice cuánto sería el VAN si esa variable{" "}
+          <strong>subiera o bajara</strong> ese porcentaje, dejando todo lo demás igual.
+          La columna del medio (<strong>Base</strong>) es tu VAN actual sin cambios.
         </p>
-        <table className="w-full min-w-[480px] text-xs">
-          <thead className="text-muted-foreground">
-            <tr className="border-b-2 border-border">
-              <th className="p-1.5 text-left">Variable</th>
+        <p className="mb-3 text-[10px] italic text-muted-foreground">
+          Sirve para ver qué variable es más peligrosa. Es estático — distinto de la
+          simulación con eventos (inflación, bloqueos…).
+        </p>
+
+        {/* Leyenda de dirección */}
+        <div className="mb-1 flex items-center justify-end gap-3 text-[9px] uppercase tracking-wide text-muted-foreground">
+          <span>← la variable BAJA</span>
+          <span>sin cambio</span>
+          <span>la variable SUBE →</span>
+        </div>
+
+        <table className="w-full min-w-[520px] text-xs">
+          <thead>
+            <tr className="border-b-2 border-border text-muted-foreground">
+              <th className="p-1.5 text-left font-medium">Si cambia…</th>
               {v2.variaciones.map((v) => (
-                <th key={v} className="p-1.5 text-right">
-                  {v === 0 ? "Base" : `${v > 0 ? "+" : ""}${(v * 100).toFixed(0)}%`}
+                <th
+                  key={v}
+                  className={cn(
+                    "p-1.5 text-right font-medium",
+                    v === 0 && "bg-secondary/50 text-foreground"
+                  )}
+                >
+                  {v === 0 ? "Base (hoy)" : `${v > 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(0)}%`}
                 </th>
               ))}
             </tr>
@@ -602,10 +623,22 @@ function AnalisisAvanzadoV2({
             <FilaSensibilidadVAN label="Costos operativos" filas={v2.sensCostos} />
           </tbody>
         </table>
+
+        {/* Lectura guiada con ejemplo real */}
+        <div className="mt-3 space-y-1.5 rounded-md bg-secondary/30 p-2.5 text-[11px]">
+          <div>
+            <strong>Cómo leerla:</strong> {v2.lectura}
+          </div>
+          <div>
+            <strong>Más peligrosa:</strong> {v2.masPeligrosa}. Es la variable que más
+            mueve tu VAN, así que es la que más debes cuidar.
+          </div>
+        </div>
+
         <div className="mt-2 text-[10px] text-muted-foreground">
-          VAN base: <strong>{formatearBolivianos(calc.indicadores.van)}</strong> · TIR base:{" "}
-          <strong>{isFinite(calc.indicadores.tir) ? fmtPct(calc.indicadores.tir) : "—"}</strong> ·
-          descontado al WACC {fmtPct(calc.wacc)}
+          Verde = el proyecto sigue creando valor (VAN &gt; 0) · Rojo = destruye valor
+          (VAN &lt; 0). VAN base: <strong>{formatearBolivianos(calc.indicadores.van)}</strong> ·
+          descontado al WACC {fmtPct(calc.wacc)}.
         </div>
       </div>
     </div>
@@ -621,14 +654,16 @@ function FilaSensibilidadVAN({
 }) {
   return (
     <tr className="border-b border-border/40">
-      <td className="p-1.5">{label}</td>
+      <td className="p-1.5 font-medium">{label}</td>
       {filas.map((f) => (
         <td
           key={f.variacion}
           className={cn(
             "p-1.5 text-right tabular-nums",
-            f.van < 0 && "text-destructive",
-            f.variacion === 0 && "font-semibold"
+            f.van < 0
+              ? "text-destructive"
+              : "text-emerald-700 dark:text-emerald-400",
+            f.variacion === 0 && "bg-secondary/50 font-semibold"
           )}
         >
           {formatearBolivianos(f.van)}
@@ -714,6 +749,20 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
   const sensIngresos = calcularSensibilidad((f) => flujoConFactores(f, 0), tasa, variaciones);
   const sensCostos = calcularSensibilidad((f) => flujoConFactores(0, f), tasa, variaciones);
 
+  // ── Lectura guiada + variable más peligrosa ──────────────────────────────
+  const fmtBs = (n: number) => `Bs ${Math.round(n).toLocaleString("es-BO")}`;
+  const ingBaja20 = sensIngresos.find((s) => s.variacion === -0.2)?.van ?? 0;
+  const vanBase = sensIngresos.find((s) => s.variacion === 0)?.van ?? calc.indicadores.van;
+  const lectura =
+    `si tus ingresos BAJAN 20%, tu VAN pasaría de ${fmtBs(vanBase)} (hoy) a ${fmtBs(ingBaja20)}` +
+    (ingBaja20 < 0
+      ? " → el proyecto pasaría a destruir valor (VAN negativo)."
+      : " → el proyecto seguiría creando valor.");
+
+  const rango = (filas: { van: number }[]) =>
+    Math.max(...filas.map((f) => f.van)) - Math.min(...filas.map((f) => f.van));
+  const masPeligrosa = rango(sensIngresos) >= rango(sensCostos) ? "los ingresos" : "los costos operativos";
+
   return {
     puntoEquilibrio,
     costosFijosAnio1,
@@ -727,6 +776,8 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     variaciones,
     sensIngresos,
     sensCostos,
+    lectura,
+    masPeligrosa,
   };
 }
 
