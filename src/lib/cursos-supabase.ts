@@ -128,6 +128,21 @@ export async function crearCurso(params: {
   throw new Error("No se pudo generar código único para el curso");
 }
 
+/**
+ * Borra un curso del docente. DESTRUCTIVO: por las reglas ON DELETE CASCADE de
+ * la base, también se eliminan las inscripciones, los proyectos y las entregas
+ * asociadas a ese curso. La política RLS `cursos_docente_propio` garantiza que
+ * un docente solo puede borrar sus propios cursos.
+ */
+export async function eliminarCurso(cursoId: string): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").delete().eq("id", cursoId),
+    15000,
+    "borrando curso"
+  );
+  if (error) throw error;
+}
+
 export async function buscarCursoPorCodigo(codigo: string): Promise<Curso | null> {
   const hacerQuery = () =>
     supabase

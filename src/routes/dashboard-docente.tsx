@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Copy, GraduationCap, Plus, Trophy, Users } from "lucide-react";
+import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   crearCurso,
+  eliminarCurso,
   listarInscritosDeCurso,
   listarMisCursos,
   type Curso,
@@ -37,6 +38,11 @@ export default function DashboardDocente() {
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);
     setMostrarForm(false);
+  };
+
+  const onCursoEliminado = (cursoId: string) => {
+    setCursos((prev) => prev.filter((c) => c.id !== cursoId));
+    setCursoExpandido((id) => (id === cursoId ? null : id));
   };
 
   return (
@@ -84,6 +90,7 @@ export default function DashboardDocente() {
           curso={c}
           expandido={cursoExpandido === c.id}
           onToggle={() => setCursoExpandido(cursoExpandido === c.id ? null : c.id)}
+          onEliminado={() => onCursoEliminado(c.id)}
         />
       ))}
     </div>
@@ -233,14 +240,32 @@ function CursoCard({
   curso,
   expandido,
   onToggle,
+  onEliminado,
 }: {
   curso: Curso;
   expandido: boolean;
   onToggle: () => void;
+  onEliminado: () => void;
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas">("ranking");
+  const [confirmando, setConfirmando] = useState(false);
+  const [textoConfirm, setTextoConfirm] = useState("");
+  const [borrando, setBorrando] = useState(false);
+  const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
+
+  const borrar = async () => {
+    setBorrando(true);
+    setErrorBorrar(null);
+    try {
+      await eliminarCurso(curso.id);
+      onEliminado();
+    } catch (e) {
+      setErrorBorrar(e instanceof Error ? e.message : "No se pudo borrar el curso");
+      setBorrando(false);
+    }
+  };
 
   useEffect(() => {
     if (expandido && !inscritos) {
@@ -282,14 +307,81 @@ function CursoCard({
         </div>
       </div>
 
-      <button
-        onClick={onToggle}
-        className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
-      >
-        <Users className="h-3.5 w-3.5" />
-        {expandido ? "Ocultar" : "Ver"} estudiantes
-        {inscritos && ` (${inscritos.length})`}
-      </button>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+        >
+          <Users className="h-3.5 w-3.5" />
+          {expandido ? "Ocultar" : "Ver"} estudiantes
+          {inscritos && ` (${inscritos.length})`}
+        </button>
+        {!confirmando && (
+          <button
+            onClick={() => {
+              setConfirmando(true);
+              setTextoConfirm("");
+              setErrorBorrar(null);
+            }}
+            className="flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Borrar curso
+          </button>
+        )}
+      </div>
+
+      {confirmando && (
+        <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 p-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-destructive" />
+            <div className="text-xs text-foreground">
+              <p className="font-semibold text-destructive">
+                Esto borra el curso de forma permanente.
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                También se eliminarán <strong>las inscripciones, los proyectos y las
+                entregas</strong> de los estudiantes de este curso. No se puede deshacer.
+              </p>
+              <p className="mt-2">
+                Para confirmar, escribe el código del curso:{" "}
+                <strong className="font-mono">{curso.codigo}</strong>
+              </p>
+            </div>
+          </div>
+
+          <input
+            type="text"
+            value={textoConfirm}
+            onChange={(e) => setTextoConfirm(e.target.value)}
+            placeholder={curso.codigo}
+            autoFocus
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-1.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-destructive/40"
+          />
+
+          {errorBorrar && (
+            <div className="mt-2 text-[11px] text-destructive">{errorBorrar}</div>
+          )}
+
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={borrar}
+              disabled={textoConfirm.trim() !== curso.codigo || borrando}
+              className="flex items-center gap-1.5 rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground transition hover:bg-destructive/90 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {borrando ? "Borrando…" : "Borrar definitivamente"}
+            </button>
+            <button
+              onClick={() => setConfirmando(false)}
+              disabled={borrando}
+              className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground transition hover:bg-accent disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {expandido && (
         <div className="mt-3 space-y-3 border-t border-border pt-3">
