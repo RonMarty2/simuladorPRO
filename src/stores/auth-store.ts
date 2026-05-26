@@ -74,30 +74,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // Suscripción al cambio de sesión (login OAuth, logout, refresh de token, etc.)
     supabase.auth.onAuthStateChange(async (evento, nuevaSesion) => {
-      let nuevoPerfil: Perfil | null = null;
-      if (nuevaSesion?.user) {
-        nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
-          () => null
-        );
-        // Si se acaba de loguear con Google y el perfil tiene nombre default,
-        // sincronizar con los datos de Google (given_name, family_name, name)
-        if (evento === "SIGNED_IN" && nuevoPerfil && nuevaSesion.user.app_metadata?.provider === "google") {
-          const { sincronizarNombreConGoogle } = await import("@/lib/auth-helpers");
-          await sincronizarNombreConGoogle(
-            nuevaSesion.user.id,
-            nuevoPerfil,
-            nuevaSesion.user.user_metadata
-          );
-          // Recargar perfil después de la sincronización
-          nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
-            () => nuevoPerfil
-          );
-        }
+      // Logout o sin sesión: limpiar todo.
+      if (evento === "SIGNED_OUT" || !nuevaSesion?.user) {
+        set({ session: null, user: null, perfil: null });
+        return;
       }
+
+      const prev = get();
+      const mismoUsuario = prev.user?.id === nuevaSesion.user.id;
+
+      // Refresco de token (TOKEN_REFRESHED) u otros eventos donde la identidad
+      // no cambió y ya tenemos el perfil cargado: solo actualizar la sesión.
+      // NO volver a pedir el perfil — una query fallida en segundo plano no
+      // debe borrar el perfil bueno y mandar al usuario a la pantalla de error.
+      if (mismoUsuario && prev.perfil) {
+        set({ session: nuevaSesion, user: nuevaSesion.user });
+        return;
+      }
+
+      let nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
+        () => null
+      );
+      // Si se acaba de loguear con Google y el perfil tiene nombre default,
+      // sincronizar con los datos de Google (given_name, family_name, name)
+      if (evento === "SIGNED_IN" && nuevoPerfil && nuevaSesion.user.app_metadata?.provider === "google") {
+        const { sincronizarNombreConGoogle } = await import("@/lib/auth-helpers");
+        await sincronizarNombreConGoogle(
+          nuevaSesion.user.id,
+          nuevoPerfil,
+          nuevaSesion.user.user_metadata
+        );
+        // Recargar perfil después de la sincronización
+        nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
+          () => nuevoPerfil
+        );
+      }
+
       set({
         session: nuevaSesion,
-        user: nuevaSesion?.user ?? null,
-        perfil: nuevoPerfil,
+        user: nuevaSesion.user,
+        // Nunca pisar un perfil bueno del mismo usuario con null por un fallo
+        // transitorio de la query.
+        perfil: nuevoPerfil ?? (mismoUsuario ? prev.perfil : null),
       });
     });
   },
