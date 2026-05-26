@@ -337,10 +337,10 @@ function ProductoFilas({
       {/* HEADER del producto — clic para expandir/contraer */}
       <tr className={cn("border-t-4 border-border", color.chip.split(" ")[0])}>
         <td className={cn("border-l-4 p-2", color.borde)} colSpan={abierto ? 1 : 2}>
-          <div className="flex items-center gap-1.5">
+          <div className="flex min-w-0 items-center gap-1.5">
             <button
               onClick={onToggle}
-              className="rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
+              className="flex-shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
               title={abierto ? "Contraer" : "Expandir para editar"}
             >
               {abierto ? (
@@ -351,14 +351,14 @@ function ProductoFilas({
             </button>
             <span
               className={cn(
-                "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
                 color.chip
               )}
             >
               Producto {productoIndex + 1}
             </span>
             {!abierto && (
-              <span className="truncate text-xs font-bold">{prod.nombre}</span>
+              <span className="min-w-0 truncate text-xs font-bold">{prod.nombre}</span>
             )}
           </div>
           {abierto && (
