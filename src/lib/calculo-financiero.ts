@@ -639,6 +639,74 @@ export function calcularGAT(
 }
 
 // ----------------------------------------------------------------------------
+// MODELO DE INGRESO: SUSCRIPCIÓN / RECURRENTE
+// ----------------------------------------------------------------------------
+
+export interface ParamsSuscripcion {
+  /** Suscriptores con los que arrancas (mes 0). */
+  suscriptoresIniciales: number;
+  /** Nuevos suscriptores que ganas por mes (altas). */
+  altasMensuales: number;
+  /** Fracción de suscriptores que se va cada mes (churn). 0.05 = 5%. */
+  churnMensual: number;
+  /** Cuota que paga cada suscriptor por mes. */
+  cuotaMensual: number;
+}
+
+export interface ProyeccionSuscripcionAnio {
+  /** Promedio de suscriptores activos durante el año. */
+  promedioSuscriptores: number;
+  /** Suscriptores al cierre del año (mes 12). */
+  suscriptoresFin: number;
+  /** Ingreso del año = promedio × cuota mensual × 12. */
+  ingresoAnual: number;
+}
+
+/**
+ * Proyecta la base de suscriptores mes a mes y la resume por año.
+ *
+ * Dinámica mensual:  S(m) = S(m-1) × (1 − churn) + altas
+ *
+ * Cada mes pierdes una fracción (churn) de tu base y ganas altas nuevas. La
+ * base tiende a estabilizarse en  altas / churn  (punto de equilibrio del
+ * modelo). El ingreso anual usa el promedio de suscriptores activos del año.
+ */
+export function proyectarSuscriptores(
+  p: ParamsSuscripcion,
+  anios = 5
+): ProyeccionSuscripcionAnio[] {
+  const out: ProyeccionSuscripcionAnio[] = [];
+  let s = p.suscriptoresIniciales;
+  for (let y = 0; y < anios; y++) {
+    let suma = 0;
+    for (let m = 0; m < 12; m++) {
+      s = s * (1 - p.churnMensual) + p.altasMensuales;
+      suma += s;
+    }
+    const promedio = suma / 12;
+    out.push({
+      promedioSuscriptores: promedio,
+      suscriptoresFin: s,
+      ingresoAnual: promedio * p.cuotaMensual * 12,
+    });
+  }
+  return out;
+}
+
+/**
+ * Valor de vida del cliente (LTV) en un modelo de suscripción.
+ *   LTV = cuota mensual / churn mensual
+ * Es cuánto deja en promedio un suscriptor antes de irse. Infinity si churn=0.
+ */
+export function calcularLTVSuscripcion(
+  cuotaMensual: number,
+  churnMensual: number
+): number {
+  if (churnMensual <= 0) return Infinity;
+  return cuotaMensual / churnMensual;
+}
+
+// ----------------------------------------------------------------------------
 // COSTO DE CAPITAL PROPIO — CAPM
 // ----------------------------------------------------------------------------
 

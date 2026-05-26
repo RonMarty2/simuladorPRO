@@ -6,6 +6,7 @@ import { guardarProyecto } from "@/lib/proyecto-supabase";
 import {
   crearProyectoEjemploCafeteriaV2,
   crearProyectoEjemploPanaderiaV2,
+  crearProyectoEjemploPodcastV2,
   crearProyectoEjemploTiendaV2,
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
@@ -276,10 +277,11 @@ function ModalNuevoProyecto({
               <Sparkles className="h-3.5 w-3.5" />
               O carga un ejemplo completo (V2) para ver y entender:
             </div>
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
-              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploCafeteriaV2)} disabled={guardando} titulo="☕ Cafetería" sub="Servicios" />
-              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPanaderiaV2)} disabled={guardando} titulo="🥖 Panadería" sub="Producción" />
-              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploTiendaV2)} disabled={guardando} titulo="🛒 Tienda" sub="Comercio" />
+            <div className="grid grid-cols-2 gap-1.5">
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploCafeteriaV2)} disabled={guardando} titulo="☕ Cafetería" sub="Servicios · unidades" />
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPanaderiaV2)} disabled={guardando} titulo="🥖 Panadería" sub="Producción · unidades" />
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploTiendaV2)} disabled={guardando} titulo="🛒 Tienda" sub="Comercio · unidades" />
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPodcastV2)} disabled={guardando} titulo="🎙️ Podcast" sub="Suscripción" />
             </div>
           </div>
 

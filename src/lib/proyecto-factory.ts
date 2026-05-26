@@ -1,3 +1,4 @@
+import { proyectarSuscriptores } from "@/lib/calculo-financiero";
 import type {
   ItemInversion,
   Producto,
@@ -376,6 +377,84 @@ export function crearProyectoEjemploPanaderiaV2(params: {
     crecimientoCostosAnual: 0.04,
     tasasCrecCantidad: [5, 5, 5, 5],
     tasasCrecPrecio: [3, 3, 3, 3],
+    estado: "completo",
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
+
+/**
+ * EJEMPLO — SUSCRIPCIÓN (V2): podcast con membresías.
+ * Modelo de ingreso recurrente: una base de suscriptores que crece con altas y
+ * baja con churn. Los ingresos NO son "unidades × precio" sino la base activa ×
+ * cuota. El producto portador se calcula con proyectarSuscriptores.
+ */
+export function crearProyectoEjemploPodcastV2(params: {
+  estudiante_id: string;
+  curso_id?: string | null;
+  nombre?: string;
+}): Proyecto {
+  const ahora = new Date().toISOString();
+  const sus = {
+    suscriptoresIniciales: 150,
+    altasMensuales: 40,
+    churnMensual: 0.04,
+    cuotaMensual: 35,
+  };
+  const proy = proyectarSuscriptores(sus, 5);
+  const cantidades = proy.map((a) => Math.round(a.promedioSuscriptores)) as [
+    number, number, number, number, number,
+  ];
+  const precioAnual = sus.cuotaMensual * 12;
+  const idSus = nuevoId();
+  return {
+    id: nuevoId(),
+    estudiante_id: params.estudiante_id,
+    curso_id: params.curso_id ?? null,
+    version: "v2",
+    tipo: "libre",
+    nombre: params.nombre ?? "podcastv2",
+    ubicacion: "La Paz (online)",
+    descripcion: "Podcast con membresías de pago. Ejemplo de modelo de ingreso por SUSCRIPCIÓN (base recurrente con altas y churn).",
+    sector: "servicios",
+    modeloIngreso: "suscripcion",
+    suscripcionV2: sus,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [itemInv("Acondicionamiento acústico del estudio", "obra", 1, 8000, 8)],
+      maquinaria: [
+        itemInv("Micrófonos, interfaz y audífonos", "set", 1, 12000, 5),
+        itemInv("Computadora y software de edición", "set", 1, 10000, 5),
+      ],
+      mobiliario: [itemInv("Mobiliario del estudio", "set", 1, 4000, 8)],
+      activoDiferido: [itemInv("Marca, web y configuración de plataforma", "global", 1, 4000, 5)],
+    },
+    capitalTrabajo: 20000,
+    mesesBufferCapitalTrabajo: 3,
+    personal: [
+      { id: nuevoId(), puesto: "Conductor / productor", cantidad: 1, sueldoMensual: 4000 },
+      { id: nuevoId(), puesto: "Editor de audio", cantidad: 1, sueldoMensual: 3000 },
+    ],
+    costosDirectos: [
+      // Comisión de la pasarela de cobro por cada suscriptor-año (≈5% de la cuota anual).
+      { id: nuevoId(), productoId: idSus, categoria: "comision_venta", descripcion: "Comisión de la plataforma de cobro", unidadMedida: "suscriptor/año", cantidadPorUnidad: 1, costoUnitario: Math.round(precioAnual * 0.05 * 100) / 100 },
+    ],
+    costosAdministracion: [
+      { id: nuevoId(), descripcion: "Hosting de audio y plataforma de membresías", unidadMedida: "mes", cantidad: 1, costoUnitario: 800 },
+      { id: nuevoId(), descripcion: "Internet y herramientas", unidadMedida: "mes", cantidad: 1, costoUnitario: 250 },
+    ],
+    costosComercializacion: [
+      { id: nuevoId(), descripcion: "Pauta para captar suscriptores", unidadMedida: "mes", cantidad: 1, costoUnitario: 1500 },
+    ],
+    imprevistosPorcentaje: 0.05,
+    productos: [
+      { id: idSus, nombre: "Suscripción", unidadMedida: "suscriptor/año", cantidades, precios: [precioAnual, precioAnual, precioAnual, precioAnual, precioAnual] },
+    ],
+    ...finCapmEjemplo(),
+    crecimientoIngresosAnual: 0.06,
+    crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0],
+    tasasCrecPrecio: [0, 0, 0, 0],
     estado: "completo",
     creado_en: ahora,
     actualizado_en: ahora,

@@ -6,6 +6,8 @@ import {
   calcularDepreciacionAnual,
   calcularFlujoCajaAnual,
   calcularCostoCapitalCAPM,
+  calcularLTVSuscripcion,
+  proyectarSuscriptores,
   calcularFlujoInversionista,
   calcularGAF,
   calcularGAO,
@@ -411,6 +413,56 @@ describe("apalancamiento (GAO / GAF / GAT)", () => {
 
   it("utilidad antes de impuestos 0 → GAF NaN", () => {
     expect(Number.isNaN(calcularGAF(80000, 80000))).toBe(true);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// SUSCRIPCIÓN / RECURRENTE
+// ----------------------------------------------------------------------------
+describe("proyectarSuscriptores", () => {
+  it("churn 0% → la base crece linealmente con las altas", () => {
+    const r = proyectarSuscriptores(
+      { suscriptoresIniciales: 100, altasMensuales: 10, churnMensual: 0, cuotaMensual: 30 },
+      1
+    );
+    // sin churn: 100 + 12×10 = 220 al cierre del año 1
+    expect(cerca(r[0].suscriptoresFin, 220)).toBe(true);
+  });
+
+  it("con churn, la base tiende a estabilizarse en altas/churn", () => {
+    const r = proyectarSuscriptores(
+      { suscriptoresIniciales: 0, altasMensuales: 50, churnMensual: 0.1, cuotaMensual: 20 },
+      5
+    );
+    // equilibrio = 50 / 0.1 = 500; al año 5 debe estar cerca
+    expect(r[4].suscriptoresFin).toBeGreaterThan(450);
+    expect(r[4].suscriptoresFin).toBeLessThanOrEqual(500);
+  });
+
+  it("ingreso anual = promedio suscriptores × cuota × 12", () => {
+    const r = proyectarSuscriptores(
+      { suscriptoresIniciales: 200, altasMensuales: 0, churnMensual: 0, cuotaMensual: 25 },
+      1
+    );
+    // sin altas ni churn: 200 constante → 200 × 25 × 12 = 60.000
+    expect(cerca(r[0].ingresoAnual, 60000)).toBe(true);
+  });
+
+  it("devuelve un registro por año", () => {
+    const r = proyectarSuscriptores(
+      { suscriptoresIniciales: 10, altasMensuales: 5, churnMensual: 0.05, cuotaMensual: 10 },
+      5
+    );
+    expect(r).toHaveLength(5);
+  });
+});
+
+describe("calcularLTVSuscripcion", () => {
+  it("cuota 30, churn 5% → LTV 600", () => {
+    expect(cerca(calcularLTVSuscripcion(30, 0.05), 600)).toBe(true);
+  });
+  it("churn 0 → LTV Infinity", () => {
+    expect(calcularLTVSuscripcion(30, 0)).toBe(Infinity);
   });
 });
 

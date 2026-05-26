@@ -154,6 +154,21 @@ export interface Proyecto {
   version?: VersionProyecto;
 
   /**
+   * Modelo de cómo entra el ingreso. Ausente o 'unidades' = clásico
+   * (productos con cantidad × precio). 'suscripcion' = base de suscriptores
+   * recurrentes (los `productos` se derivan de `suscripcionV2`).
+   */
+  modeloIngreso?: "unidades" | "suscripcion";
+
+  /** Parámetros del modelo de suscripción (solo si modeloIngreso='suscripcion'). */
+  suscripcionV2?: {
+    suscriptoresIniciales: number;
+    altasMensuales: number;
+    churnMensual: number;
+    cuotaMensual: number;
+  };
+
+  /**
    * Tipo del proyecto:
    *  - 'libre'              proyecto creado libremente por un estudiante
    *  - 'caso_curso'         plantilla creada por el docente (no se simula)

@@ -4,6 +4,8 @@ import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
+import { calcularLTVSuscripcion, proyectarSuscriptores } from "@/lib/calculo-financiero";
+import type { Proyecto } from "@/types/proyecto";
 
 // Paleta de colores por producto (cíclica si hay más de 6)
 const COLORES_PRODUCTO = [
@@ -25,7 +27,14 @@ export default function Paso2Proyeccion() {
   const eliminar = useProyectoStore((s) => s.eliminarProducto);
   const setTasaCant = useProyectoStore((s) => s.setTasaCrecCantidad);
   const setTasaPrec = useProyectoStore((s) => s.setTasaCrecPrecio);
+  const setSuscripcion = useProyectoStore((s) => s.setSuscripcionV2);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Modelo de ingreso por SUSCRIPCIÓN: pantalla propia (el motor recibe el
+  // producto portador ya calculado). El modo "unidades" sigue intacto abajo.
+  if (proyecto.modeloIngreso === "suscripcion") {
+    return <PanelSuscripcion proyecto={proyecto} onChange={setSuscripcion} />;
+  }
 
   // Estado de colapso: tasas y cada producto (por id). Default: colapsado.
   const [tasasAbierto, setTasasAbierto] = useState(false);
@@ -301,6 +310,154 @@ export default function Paso2Proyeccion() {
           </>
         }
       />
+    </div>
+  );
+}
+
+function PanelSuscripcion({
+  proyecto,
+  onChange,
+}: {
+  proyecto: Proyecto;
+  onChange: (
+    cambios: Partial<{
+      suscriptoresIniciales: number;
+      altasMensuales: number;
+      churnMensual: number;
+      cuotaMensual: number;
+    }>
+  ) => void;
+}) {
+  const sus = proyecto.suscripcionV2 ?? {
+    suscriptoresIniciales: 100,
+    altasMensuales: 20,
+    churnMensual: 0.05,
+    cuotaMensual: 30,
+  };
+  const proy = proyectarSuscriptores(sus, 5);
+  const ltv = calcularLTVSuscripcion(sus.cuotaMensual, sus.churnMensual);
+  const equilibrio = sus.churnMensual > 0 ? sus.altasMensuales / sus.churnMensual : Infinity;
+
+  const inputClase =
+    "w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring";
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Paso 2 · Demanda (modelo de suscripción)
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Aquí no vendes "unidades": tienes una <strong>base de suscriptores</strong> que
+            crece con las altas y baja con el churn (los que se van). El ingreso de cada año
+            sale de los suscriptores activos × su cuota.
+          </p>
+        </div>
+
+        {/* 4 parámetros */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <CampoSus label="Suscriptores iniciales" ayuda="Con cuántos arrancas el mes 0." valor={sus.suscriptoresIniciales} sufijo="subs" onChange={(v) => onChange({ suscriptoresIniciales: Math.max(0, Math.round(v)) })} clase={inputClase} />
+          <CampoSus label="Altas por mes" ayuda="Nuevos suscriptores que ganas cada mes." valor={sus.altasMensuales} sufijo="subs/mes" onChange={(v) => onChange({ altasMensuales: Math.max(0, Math.round(v)) })} clase={inputClase} />
+          <CampoSus label="Churn mensual" ayuda="% de la base que se da de baja cada mes. Típico 2-8%." valor={Math.round(sus.churnMensual * 1000) / 10} sufijo="%" paso={0.5} onChange={(v) => onChange({ churnMensual: Math.max(0, v) / 100 })} clase={inputClase} />
+          <CampoSus label="Cuota mensual" ayuda="Lo que paga cada suscriptor por mes." valor={sus.cuotaMensual} sufijo="Bs/mes" onChange={(v) => onChange({ cuotaMensual: Math.max(0, v) })} clase={inputClase} />
+        </div>
+
+        {/* Proyección */}
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-secondary text-muted-foreground">
+              <tr className="border-b-2 border-border">
+                <th className="p-2 text-left font-semibold">Concepto</th>
+                {[1, 2, 3, 4, 5].map((a) => (
+                  <th key={a} className="p-2 text-right font-semibold">Año {a}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/40">
+                <td className="p-2">Suscriptores al cierre</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.suscriptoresFin).toLocaleString("es-BO")}</td>
+                ))}
+              </tr>
+              <tr className="border-b border-border/40">
+                <td className="p-2">Promedio activo (año)</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.promedioSuscriptores).toLocaleString("es-BO")}</td>
+                ))}
+              </tr>
+              <tr className="bg-primary/10 font-bold">
+                <td className="p-2">Ingreso anual (Bs)</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{formatearBolivianos(a.ingresoAnual)}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Indicadores propios del modelo */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="rounded-md border border-border bg-secondary/20 p-2.5 text-[11px]">
+            <div className="font-semibold">LTV (valor de vida del suscriptor)</div>
+            <div className="mt-0.5 text-lg font-bold">{isFinite(ltv) ? formatearBolivianos(ltv) : "∞"}</div>
+            <div className="text-muted-foreground">= cuota ÷ churn. Cuánto deja en promedio cada suscriptor antes de irse.</div>
+          </div>
+          <div className="rounded-md border border-border bg-secondary/20 p-2.5 text-[11px]">
+            <div className="font-semibold">Techo de la base (equilibrio)</div>
+            <div className="mt-0.5 text-lg font-bold">{isFinite(equilibrio) ? `${Math.round(equilibrio).toLocaleString("es-BO")} subs` : "∞"}</div>
+            <div className="text-muted-foreground">= altas ÷ churn. Si no subes las altas o bajas el churn, tu base tiende a estabilizarse aquí.</div>
+          </div>
+        </div>
+      </div>
+
+      <FichaPedagogica
+        titulo="Modelo de suscripción"
+        contenido={
+          <>
+            En un negocio recurrente lo que importa no es vender una vez, sino{" "}
+            <strong>retener</strong>. Dos palancas:
+            <ul className="ml-3 mt-1 list-disc">
+              <li><strong>Altas:</strong> cuánta gente nueva entra (marketing).</li>
+              <li><strong>Churn:</strong> cuánta se va (calidad/retención).</li>
+            </ul>
+            <br />
+            Bajar el churn del 5% al 3% puede más que duplicar tu base de equilibrio. Por eso
+            el <strong>LTV</strong> y el <strong>churn</strong> son los números clave aquí, no
+            el precio puntual.
+          </>
+        }
+      />
+    </div>
+  );
+}
+
+function CampoSus({
+  label,
+  ayuda,
+  valor,
+  sufijo,
+  paso = 1,
+  onChange,
+  clase,
+}: {
+  label: string;
+  ayuda: string;
+  valor: number;
+  sufijo: string;
+  paso?: number;
+  onChange: (v: number) => void;
+  clase: string;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-background/60 p-2">
+      <label className="text-[11px] font-medium text-foreground">{label}</label>
+      <div className="mt-1 flex items-center gap-1">
+        <input type="number" min={0} step={paso} value={valor} onChange={(e) => onChange(Number(e.target.value) || 0)} onFocus={(e) => e.currentTarget.select()} className={clase} />
+        <span className="whitespace-nowrap text-[10px] text-muted-foreground">{sufijo}</span>
+      </div>
+      <p className="mt-1 text-[9px] leading-snug text-muted-foreground">{ayuda}</p>
     </div>
   );
 }

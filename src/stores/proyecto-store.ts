@@ -4,6 +4,7 @@ import {
   calcularCostoCapitalCAPM,
   calcularDepreciacionAnual,
   calcularValorResidual,
+  proyectarSuscriptores,
 } from "@/lib/calculo-financiero";
 import type {
   CategoriaInversion,
@@ -91,6 +92,16 @@ interface ProyectoState {
   // CAPM (solo V2): calcula el costo del capital propio y lo aplica al Koa
   setCapmV2: (
     cambios: Partial<{ tasaLibreRiesgo: number; beta: number; primaMercado: number }>
+  ) => void;
+
+  // Suscripción (modelo de ingreso recurrente): recalcula el producto portador
+  setSuscripcionV2: (
+    cambios: Partial<{
+      suscriptoresIniciales: number;
+      altasMensuales: number;
+      churnMensual: number;
+      cuotaMensual: number;
+    }>
   ) => void;
 
   // Override de aportes patronales (si la LGT cambia)
@@ -455,6 +466,45 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
         ...p,
         capmV2: capm,
         financiamiento: { ...p.financiamiento, costoOportunidadAccionista: ke },
+      }),
+    });
+  },
+
+  setSuscripcionV2: (cambios) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const params = {
+      suscriptoresIniciales: 100,
+      altasMensuales: 20,
+      churnMensual: 0.05,
+      cuotaMensual: 30,
+      ...(p.suscripcionV2 ?? {}),
+      ...cambios,
+    };
+    const proy = proyectarSuscriptores(params, 5);
+    // El ingreso recurrente se representa como UN producto portador, para que
+    // el motor de flujo (que suma productos) funcione sin cambios.
+    const cantidades = proy.map((a) => Math.round(a.promedioSuscriptores)) as [
+      number, number, number, number, number,
+    ];
+    const precioAnual = Math.round(params.cuotaMensual * 12 * 100) / 100;
+    const precios: [number, number, number, number, number] = [
+      precioAnual, precioAnual, precioAnual, precioAnual, precioAnual,
+    ];
+    const prodId = p.productos[0]?.id ?? nuevoId();
+    const producto: Producto = {
+      id: prodId,
+      nombre: "Suscripción",
+      unidadMedida: "suscriptor/año",
+      cantidades,
+      precios,
+    };
+    set({
+      proyecto: conTimestamp({
+        ...p,
+        modeloIngreso: "suscripcion",
+        suscripcionV2: params,
+        productos: [producto],
       }),
     });
   },
