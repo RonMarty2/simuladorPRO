@@ -700,9 +700,18 @@ function PanelCAPM({
           Costo del capital propio con CAPM
         </h3>
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        En vez de inventar el Ke, lo calculas:{" "}
-        <strong className="font-mono">Ke = Rf + β × (Rm − Rf)</strong>. El resultado se
+      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+        El <strong>Ke</strong> es el rendimiento que tú, como dueño, le exiges a tu propia
+        plata por meterla en este negocio (en vez de ponerla en algo seguro). En lugar de
+        inventar ese número, el modelo <strong>CAPM</strong> lo calcula a partir de 3 datos
+        del mercado:
+      </p>
+      <p className="mt-1.5 rounded bg-card px-2 py-1 text-center font-mono text-xs">
+        Ke = Rf + β × (Rm − Rf)
+      </p>
+      <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+        En palabras: partes de lo que rinde una inversión <em>sin riesgo</em> (Rf) y le
+        sumas un premio por el riesgo del negocio (β × prima de mercado). El resultado se
         usa automáticamente como Ke en el WACC de abajo.
       </p>
 
@@ -765,9 +774,9 @@ function CampoCAPM({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="rounded-md border border-border bg-background/60 p-2" title={ayuda}>
-      <label className="text-[10px] font-medium leading-tight text-muted-foreground">
-        {label} <span className="opacity-60">ⓘ</span>
+    <div className="rounded-md border border-border bg-background/60 p-2">
+      <label className="text-[10px] font-medium leading-tight text-foreground">
+        {label}
       </label>
       <div className="mt-1 flex items-center gap-1">
         <input
@@ -781,6 +790,7 @@ function CampoCAPM({
         />
         <span className="text-xs text-muted-foreground">{sufijo}</span>
       </div>
+      <p className="mt-1 text-[9px] leading-snug text-muted-foreground">{ayuda}</p>
     </div>
   );
 }

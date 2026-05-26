@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -43,6 +43,16 @@ export default function Paso9Resumen() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
 
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
+
+  // Colapso por sección del flujo de caja (todas abiertas por defecto).
+  const [secAbierta, setSecAbierta] = useState<Record<string, boolean>>({
+    emerald: true,
+    rose: true,
+    violet: true,
+    sky: true,
+  });
+  const toggleSeccion = (k: string) =>
+    setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
 
   return (
     <div className="space-y-4">
@@ -206,13 +216,14 @@ export default function Paso9Resumen() {
       {/* ANÁLISIS AVANZADO V2 — solo si el proyecto es versión extendida */}
       {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
 
-      {/* TABLA FLUJO DE CAJA con secciones de color — colapsable */}
-      <details className="rounded-lg border border-border bg-card">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 hover:bg-secondary/40">
-          <span className="text-sm font-semibold">Flujo de caja proyectado (Bs)</span>
-          <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
-        </summary>
-        <div className="overflow-x-auto px-4 pb-4">
+      {/* TABLA FLUJO DE CAJA — cada sección de color se contrae/expande */}
+      <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
+        <h3 className="mb-3 text-sm font-semibold">
+          Flujo de caja proyectado (Bs){" "}
+          <span className="font-normal text-[10px] text-muted-foreground">
+            — clic en cada barra de color para contraer/expandir
+          </span>
+        </h3>
         <table className="w-full min-w-[700px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b-2 border-border">
@@ -225,126 +236,75 @@ export default function Paso9Resumen() {
           </thead>
           <tbody>
             {/* ── 1. INGRESOS (verde) ─────────────────────────────────── */}
-            <FilaSeccion label="① INGRESOS" color="emerald" />
-            <FilaFlujo
-              label="(+) Ingresos por ventas"
-              valores={[0, ...calc.ingresos]}
-              signo="+"
-              fila="emerald"
+            <FilaSeccion
+              label="① INGRESOS"
+              color="emerald"
+              abierta={secAbierta.emerald}
+              onToggle={() => toggleSeccion("emerald")}
             />
+            {secAbierta.emerald && (
+              <FilaFlujo
+                label="(+) Ingresos por ventas"
+                valores={[0, ...calc.ingresos]}
+                signo="+"
+                fila="emerald"
+              />
+            )}
 
             {/* ── 2. COSTOS Y GASTOS OPERATIVOS (rojo) ───────────────── */}
-            <FilaSeccion label="② COSTOS Y GASTOS OPERATIVOS" color="rose" />
-            <FilaFlujo
-              label="(-) Costos de producción"
-              valores={[0, ...calc.costosProduccion]}
-              signo="-"
-              fila="rose"
+            <FilaSeccion
+              label="② COSTOS Y GASTOS OPERATIVOS"
+              color="rose"
+              abierta={secAbierta.rose}
+              onToggle={() => toggleSeccion("rose")}
             />
-            <FilaFlujo
-              label="(-) Gastos administrativos"
-              valores={[0, ...calc.gastosAdmin]}
-              signo="-"
-              fila="rose"
-            />
-            <FilaFlujo
-              label="(-) Gastos comercialización"
-              valores={[0, ...calc.gastosComerc]}
-              signo="-"
-              fila="rose"
-            />
-            <FilaFlujo
-              label="(-) Personal (con aportes 30.37%)"
-              valores={[0, ...calc.personal]}
-              signo="-"
-              fila="rose"
-            />
-            <FilaFlujo
-              label="(-) Depreciación (no efectivo)"
-              valores={[0, ...calc.depreciacion]}
-              signo="-"
-              fila="rose"
-            />
-            <FilaFlujo
-              label="(-) Imprevistos"
-              valores={[0, ...calc.imprevistos]}
-              signo="-"
-              fila="rose"
-            />
-            <FilaFlujo
-              label="(-) Intereses de la deuda"
-              valores={[0, ...calc.intereses]}
-              signo="-"
-              fila="rose"
-            />
+            {secAbierta.rose && (
+              <>
+                <FilaFlujo label="(-) Costos de producción" valores={[0, ...calc.costosProduccion]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Gastos administrativos" valores={[0, ...calc.gastosAdmin]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Gastos comercialización" valores={[0, ...calc.gastosComerc]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Personal (con aportes 30.37%)" valores={[0, ...calc.personal]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Depreciación (no efectivo)" valores={[0, ...calc.depreciacion]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Imprevistos" valores={[0, ...calc.imprevistos]} signo="-" fila="rose" />
+                <FilaFlujo label="(-) Intereses de la deuda" valores={[0, ...calc.intereses]} signo="-" fila="rose" />
+              </>
+            )}
 
             {/* ── 3. RESULTADO ANTES DE IMPUESTOS Y NETO (violeta) ──── */}
-            <FilaSeccion label="③ RESULTADO E IMPUESTOS" color="violet" />
-            <FilaFlujo
-              label="= Utilidad antes de impuestos"
-              valores={[0, ...calc.utilidadAAI]}
-              destacada
-              fila="violet"
+            <FilaSeccion
+              label="③ RESULTADO E IMPUESTOS"
+              color="violet"
+              abierta={secAbierta.violet}
+              onToggle={() => toggleSeccion("violet")}
             />
-            <FilaFlujo
-              label="(-) Impuestos (IUE 25%)"
-              valores={[0, ...calc.impuestos]}
-              signo="-"
-              fila="violet"
-            />
-            <FilaFlujo
-              label="= Utilidad neta"
-              valores={[0, ...calc.utilidadNeta]}
-              destacada
-              fila="violet"
-            />
+            {secAbierta.violet && (
+              <>
+                <FilaFlujo label="= Utilidad antes de impuestos" valores={[0, ...calc.utilidadAAI]} destacada fila="violet" />
+                <FilaFlujo label="(-) Impuestos (IUE 25%)" valores={[0, ...calc.impuestos]} signo="-" fila="violet" />
+                <FilaFlujo label="= Utilidad neta" valores={[0, ...calc.utilidadNeta]} destacada fila="violet" />
+              </>
+            )}
 
             {/* ── 4. AJUSTES A FLUJO DE CAJA (gris/azul) ─────────────── */}
-            <FilaSeccion label="④ AJUSTES A FLUJO DE CAJA" color="sky" />
-            <FilaFlujo
-              label="(+) Depreciación (se reintegra, no salió de caja)"
-              valores={[0, ...calc.depreciacion]}
-              signo="+"
-              fila="sky"
+            <FilaSeccion
+              label="④ AJUSTES A FLUJO DE CAJA"
+              color="sky"
+              abierta={secAbierta.sky}
+              onToggle={() => toggleSeccion("sky")}
             />
-            <FilaFlujo
-              label="(-) Inversión inicial (activos fijos)"
-              valores={[-calc.inversionInicial, 0, 0, 0, 0, 0]}
-              signo="-"
-              fila="sky"
-            />
-            <FilaFlujo
-              label="(-) Capital de trabajo"
-              valores={[-calc.capitalTrabajo, 0, 0, 0, 0, 0]}
-              signo="-"
-              fila="sky"
-            />
-            <FilaFlujo
-              label="(+) Préstamo recibido"
-              valores={[calc.montoPrestamo, 0, 0, 0, 0, 0]}
-              signo="+"
-              fila="sky"
-            />
-            <FilaFlujo
-              label="(-) Amortización de capital de la deuda"
-              valores={[0, ...calc.amortizacion]}
-              signo="-"
-              fila="sky"
-            />
-            <FilaFlujo
-              label="(+) Valor residual (año 5)"
-              valores={[0, 0, 0, 0, 0, calc.valorResidual]}
-              signo="+"
-              fila="sky"
-            />
-            <FilaFlujo
-              label="(+) Recuperación capital de trabajo (año 5)"
-              valores={[0, 0, 0, 0, 0, calc.capitalTrabajo]}
-              signo="+"
-              fila="sky"
-            />
+            {secAbierta.sky && (
+              <>
+                <FilaFlujo label="(+) Depreciación (se reintegra, no salió de caja)" valores={[0, ...calc.depreciacion]} signo="+" fila="sky" />
+                <FilaFlujo label="(-) Inversión inicial (activos fijos)" valores={[-calc.inversionInicial, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
+                <FilaFlujo label="(-) Capital de trabajo" valores={[-calc.capitalTrabajo, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
+                <FilaFlujo label="(+) Préstamo recibido" valores={[calc.montoPrestamo, 0, 0, 0, 0, 0]} signo="+" fila="sky" />
+                <FilaFlujo label="(-) Amortización de capital de la deuda" valores={[0, ...calc.amortizacion]} signo="-" fila="sky" />
+                <FilaFlujo label="(+) Valor residual (año 5)" valores={[0, 0, 0, 0, 0, calc.valorResidual]} signo="+" fila="sky" />
+                <FilaFlujo label="(+) Recuperación capital de trabajo (año 5)" valores={[0, 0, 0, 0, 0, calc.capitalTrabajo]} signo="+" fila="sky" />
+              </>
+            )}
 
-            {/* ── 5. FLUJO DE CAJA TOTAL (destacado primario) ────────── */}
+            {/* ── 5. FLUJO DE CAJA TOTAL (siempre visible) ───────────── */}
             <FilaSeccion label="⑤ FLUJO DE CAJA NETO" color="primary" />
             <FilaFlujo
               label="FLUJO DE CAJA"
@@ -365,8 +325,7 @@ export default function Paso9Resumen() {
           <LeyendaColor color="sky" texto="④ Ajustes de caja" />
           <LeyendaColor color="primary" texto="⑤ Flujo de caja neto" />
         </div>
-        </div>
-      </details>
+      </div>
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -984,16 +943,29 @@ const SECCION_BG: Record<ColorFila, string> = {
   primary: "bg-primary text-primary-foreground",
 };
 
-function FilaSeccion({ label, color }: { label: string; color: ColorFila }) {
+function FilaSeccion({
+  label,
+  color,
+  abierta,
+  onToggle,
+}: {
+  label: string;
+  color: ColorFila;
+  abierta?: boolean;
+  onToggle?: () => void;
+}) {
   return (
     <tr>
       <td
         colSpan={7}
+        onClick={onToggle}
         className={cn(
           "px-2 py-1 text-[10px] font-bold uppercase tracking-wider",
-          SECCION_BG[color]
+          SECCION_BG[color],
+          onToggle && "cursor-pointer select-none"
         )}
       >
+        {onToggle && <span className="mr-1">{abierta ? "▾" : "▸"}</span>}
         {label}
       </td>
     </tr>
