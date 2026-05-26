@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto, listarCasosDelCurso, tomarCasoDelCurso } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
+import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import { cn } from "@/lib/utils";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
@@ -172,13 +173,43 @@ function FormularioProyectoLibre({
     estudianteId: string,
     nombre: string,
     curso_id?: string | null,
-    version?: VersionProyecto
+    version?: VersionProyecto,
+    modeloIngreso?: ModeloIngreso
   ) => void;
 }) {
   const [nombre, setNombre] = useState("");
   const [version, setVersion] = useState<VersionProyecto>("v1");
+  const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [cursoId, setCursoId] = useState<string>("");
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listarMisInscripciones(userId)
+      .then((insc) => setCursos(insc.map((i) => i.curso)))
+      .catch(() => {});
+    // Respetar el "Nuevo aquí" del panel (curso preseleccionado).
+    try {
+      const hint = localStorage.getItem("simulador.nuevoProyecto");
+      if (hint) setCursoId(hint);
+      localStorage.removeItem("simulador.nuevoProyecto");
+    } catch {}
+  }, [userId]);
+
+  const placeholderNombre: Record<ModeloIngreso, string> = {
+    unidades: "Ej: Cafetería, Tienda, Taller mecánico…",
+    suscripcion: "Ej: Podcast con membresías, Gimnasio…",
+    publicidad: "Ej: Canal de YouTube, Radio, Newsletter…",
+    costo_beneficio: "Ej: Plan de marketing, Campaña de comunicación…",
+  };
+
+  const modelos: { v: ModeloIngreso; t: string; d: string }[] = [
+    { v: "unidades", t: "Unidades × precio", d: "Vendes productos o servicios por unidad." },
+    { v: "suscripcion", t: "Suscripción", d: "Base de clientes recurrentes (altas y churn)." },
+    { v: "publicidad", t: "Publicidad", d: "Ingreso por audiencia × CPM." },
+    { v: "costo_beneficio", t: "Costo-beneficio", d: "No vende; se evalúa por el beneficio que genera." },
+  ];
 
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +217,7 @@ function FormularioProyectoLibre({
     setCreando(true);
     setError(null);
     try {
-      inicializar(userId, nombre.trim(), null, version);
+      inicializar(userId, nombre.trim(), cursoId || null, version, modelo);
       const proyecto = useProyectoStore.getState().proyecto!;
       await guardarProyecto(proyecto);
       onCreado();
@@ -205,9 +236,9 @@ function FormularioProyectoLibre({
           <Hammer className="h-4 w-4" />
         </div>
         <div>
-          <div className="text-sm font-semibold">🆕 Crear proyecto libre</div>
+          <div className="text-sm font-semibold">🆕 Crear proyecto</div>
           <div className="text-[11px] text-muted-foreground">
-            Arranca desde cero, sin guion del docente
+            Arranca desde cero y llénalo paso a paso
           </div>
         </div>
       </div>
@@ -218,9 +249,27 @@ function FormularioProyectoLibre({
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          placeholder="Ej: nombre de tu proyecto o negocio"
+          placeholder={placeholderNombre[modelo]}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
+
+        {cursos.length > 0 && (
+          <div>
+            <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">Curso al que pertenece</div>
+            <select
+              value={cursoId}
+              onChange={(e) => setCursoId(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Sin curso (proyecto libre)</option>
+              {cursos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}{c.paralelo ? ` · ${c.paralelo}` : ""} ({c.codigo})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Selector de versión de indicadores */}
         <div>
@@ -240,6 +289,24 @@ function FormularioProyectoLibre({
               titulo="Extendido (V2)"
               descripcion="Todo lo de V1 + punto de equilibrio, payback descontado, sensibilidad y apalancamiento."
             />
+          </div>
+        </div>
+
+        {/* Selector de modelo de ingreso */}
+        <div>
+          <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+            Modelo de ingreso (¿cómo entra la plata?)
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {modelos.map((m) => (
+              <OpcionVersion
+                key={m.v}
+                activa={modelo === m.v}
+                onClick={() => setModelo(m.v)}
+                titulo={m.t}
+                descripcion={m.d}
+              />
+            ))}
           </div>
         </div>
 
