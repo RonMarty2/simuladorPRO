@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { crearProyectoVacio, nuevoId } from "@/lib/proyecto-factory";
 import {
+  calcularCostoCapitalCAPM,
   calcularDepreciacionAnual,
   calcularValorResidual,
 } from "@/lib/calculo-financiero";
@@ -86,6 +87,11 @@ interface ProyectoState {
   // Tasas de crecimiento globales que aplican a TODOS los productos
   setTasaCrecCantidad: (indice: number, valorPct: number) => void;
   setTasaCrecPrecio: (indice: number, valorPct: number) => void;
+
+  // CAPM (solo V2): calcula el costo del capital propio y lo aplica al Koa
+  setCapmV2: (
+    cambios: Partial<{ tasaLibreRiesgo: number; beta: number; primaMercado: number }>
+  ) => void;
 
   // Override de aportes patronales (si la LGT cambia)
   setAportePatronal: (
@@ -431,6 +437,26 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
       return { ...prod, precios };
     });
     set({ proyecto: conTimestamp({ ...p, productos, tasasCrecPrecio: tasas }) });
+  },
+
+  setCapmV2: (cambios) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const capm = {
+      tasaLibreRiesgo: 0.04,
+      beta: 1,
+      primaMercado: 0.08,
+      ...(p.capmV2 ?? {}),
+      ...cambios,
+    };
+    const ke = calcularCostoCapitalCAPM(capm.tasaLibreRiesgo, capm.beta, capm.primaMercado);
+    set({
+      proyecto: conTimestamp({
+        ...p,
+        capmV2: capm,
+        financiamiento: { ...p.financiamiento, costoOportunidadAccionista: ke },
+      }),
+    });
   },
 
   setAportePatronal: (campo, valorDecimal) => {

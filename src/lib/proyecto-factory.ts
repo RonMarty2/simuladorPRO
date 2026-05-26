@@ -268,7 +268,8 @@ export function crearProyectoEjemploCafeteriaV2(params: {
       porcentajePrestamo: 0.35,
       tasaInteresAnual: 0.13,
       plazoMeses: 60,
-      costoOportunidadAccionista: 0.18,
+      // Ke derivado del CAPM de abajo: 5% + 1.1 × 8% = 13.8%
+      costoOportunidadAccionista: 0.138,
       // Préstamo de capital de trabajo: 30% financiado
       prestamoCapitalTrabajo: {
         porcentajePropio: 0.7,
@@ -277,6 +278,9 @@ export function crearProyectoEjemploCafeteriaV2(params: {
         plazoMeses: 48,
       },
     },
+
+    // CAPM (V2): Ke = Rf 5% + β 1.1 × prima 8% = 13.8%
+    capmV2: { tasaLibreRiesgo: 0.05, beta: 1.1, primaMercado: 0.08 },
 
     crecimientoIngresosAnual: 0.06,
     crecimientoCostosAnual: 0.04,

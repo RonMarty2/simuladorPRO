@@ -639,6 +639,30 @@ export function calcularGAT(
 }
 
 // ----------------------------------------------------------------------------
+// COSTO DE CAPITAL PROPIO — CAPM
+// ----------------------------------------------------------------------------
+
+/**
+ * Costo del capital propio (Ke) por el modelo CAPM:
+ *
+ *   Ke = Rf + β × (Rm − Rf)
+ *
+ * donde:
+ *   Rf            = tasa libre de riesgo (ej. bonos del TGN)
+ *   β (beta)      = sensibilidad del proyecto al riesgo de mercado
+ *   primaMercado  = prima de riesgo de mercado = (Rm − Rf)
+ *
+ * Reemplaza al Koa "puesto a mano". Todas las tasas en decimal (0.04 = 4%).
+ */
+export function calcularCostoCapitalCAPM(
+  tasaLibreRiesgo: number,
+  beta: number,
+  primaMercado: number
+): number {
+  return tasaLibreRiesgo + beta * primaMercado;
+}
+
+// ----------------------------------------------------------------------------
 // FLUJO DEL INVERSIONISTA — proyecto (FCF) vs accionista (FCFE)
 // ----------------------------------------------------------------------------
 

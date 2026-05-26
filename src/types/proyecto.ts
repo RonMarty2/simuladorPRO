@@ -232,6 +232,18 @@ export interface Proyecto {
     previsionIndemnizacion?: number;
   };
 
+  /**
+   * Parámetros del CAPM para calcular el costo del capital propio (Ke).
+   * Solo se usa en proyectos V2. Si está presente, el Koa
+   * (costoOportunidadAccionista) se deriva de aquí: Ke = Rf + β·(Rm − Rf).
+   * Valores en decimal (0.04 = 4%).
+   */
+  capmV2?: {
+    tasaLibreRiesgo: number;
+    beta: number;
+    primaMercado: number;
+  };
+
   // Metadatos
   estado: EstadoProyecto;
   creado_en: string;

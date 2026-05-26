@@ -14,8 +14,10 @@ import type { PrestamoConfig } from "@/types/proyecto";
 export default function Paso9Financiamiento() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
   const setFin = useProyectoStore((s) => s.setFinanciamiento);
+  const setCapmV2 = useProyectoStore((s) => s.setCapmV2);
 
   const f = proyecto.financiamiento;
+  const esV2 = proyecto.version === "v2";
 
   // ── Totales necesarios ────────────────────────────────────────────────────
   const inversionesFijas = Object.values(proyecto.inversiones)
@@ -103,6 +105,17 @@ export default function Paso9Financiamiento() {
           onChange={setCapital}
           msgVacio="Todavía no calculaste el capital de trabajo en el Paso 8. Volvé y elegí los meses de buffer."
         />
+
+        {/* CAPM (solo V2) — calcula el costo del capital propio (Ke) */}
+        {esV2 && (
+          <PanelCAPM
+            capm={
+              proyecto.capmV2 ?? { tasaLibreRiesgo: 0.04, beta: 1, primaMercado: 0.08 }
+            }
+            ke={f.costoOportunidadAccionista}
+            onChange={setCapmV2}
+          />
+        )}
 
         {/* WACC — explicación visual + cálculo paso a paso */}
         <BloqueWACC
@@ -627,6 +640,116 @@ function FilaResumen({
         {formatearBolivianos(cuotaMensual * 12)}
       </td>
     </tr>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PanelCAPM (solo V2) — calcula el costo del capital propio Ke = Rf + β(Rm−Rf)
+// ════════════════════════════════════════════════════════════════════════════
+
+function PanelCAPM({
+  capm,
+  ke,
+  onChange,
+}: {
+  capm: { tasaLibreRiesgo: number; beta: number; primaMercado: number };
+  ke: number;
+  onChange: (
+    cambios: Partial<{ tasaLibreRiesgo: number; beta: number; primaMercado: number }>
+  ) => void;
+}) {
+  return (
+    <div className="rounded-md border-2 border-indigo-300 bg-indigo-50/40 p-4 dark:border-indigo-800 dark:bg-indigo-950/20">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          V2
+        </span>
+        <h3 className="text-sm font-bold uppercase tracking-wide">
+          Costo del capital propio con CAPM
+        </h3>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        En vez de inventar el Ke, lo calculas:{" "}
+        <strong className="font-mono">Ke = Rf + β × (Rm − Rf)</strong>. El resultado se
+        usa automáticamente como Ke en el WACC de abajo.
+      </p>
+
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <CampoCAPM
+          label="Tasa libre de riesgo (Rf)"
+          ayuda="Rendimiento de una inversión sin riesgo, ej. bonos del TGN. En Bolivia ~4-6%."
+          valorPct={Math.round(capm.tasaLibreRiesgo * 1000) / 10}
+          sufijo="%"
+          onChange={(v) => onChange({ tasaLibreRiesgo: Math.max(0, v) / 100 })}
+        />
+        <CampoCAPM
+          label="Beta (β)"
+          ayuda="Riesgo del negocio frente al mercado. β=1 igual que el mercado; >1 más riesgoso; <1 más estable."
+          valorPct={Math.round(capm.beta * 100) / 100}
+          sufijo="×"
+          paso={0.05}
+          onChange={(v) => onChange({ beta: Math.max(0, v) })}
+        />
+        <CampoCAPM
+          label="Prima de mercado (Rm − Rf)"
+          ayuda="Cuánto más rinde el mercado por encima de lo libre de riesgo. Típico 6-9%."
+          valorPct={Math.round(capm.primaMercado * 1000) / 10}
+          sufijo="%"
+          onChange={(v) => onChange({ primaMercado: Math.max(0, v) / 100 })}
+        />
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-md bg-card p-3">
+        <div className="font-mono text-xs text-muted-foreground">
+          {(capm.tasaLibreRiesgo * 100).toFixed(1)}% + {capm.beta.toFixed(2)} ×{" "}
+          {(capm.primaMercado * 100).toFixed(1)}% =
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Ke (costo del capital propio)
+          </div>
+          <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+            {(ke * 100).toFixed(2)}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CampoCAPM({
+  label,
+  ayuda,
+  valorPct,
+  sufijo,
+  paso = 0.25,
+  onChange,
+}: {
+  label: string;
+  ayuda: string;
+  valorPct: number;
+  sufijo: string;
+  paso?: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-background/60 p-2" title={ayuda}>
+      <label className="text-[10px] font-medium leading-tight text-muted-foreground">
+        {label} <span className="opacity-60">ⓘ</span>
+      </label>
+      <div className="mt-1 flex items-center gap-1">
+        <input
+          type="number"
+          value={valorPct}
+          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          onFocus={(e) => e.currentTarget.select()}
+          min={0}
+          step={paso}
+          className="w-full rounded border border-input bg-background px-2 py-1 text-right text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+        <span className="text-xs text-muted-foreground">{sufijo}</span>
+      </div>
+    </div>
   );
 }
 

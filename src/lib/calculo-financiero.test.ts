@@ -5,6 +5,7 @@ import {
   calcularDepreciacionAcumulada,
   calcularDepreciacionAnual,
   calcularFlujoCajaAnual,
+  calcularCostoCapitalCAPM,
   calcularFlujoInversionista,
   calcularGAF,
   calcularGAO,
@@ -410,6 +411,23 @@ describe("apalancamiento (GAO / GAF / GAT)", () => {
 
   it("utilidad antes de impuestos 0 → GAF NaN", () => {
     expect(Number.isNaN(calcularGAF(80000, 80000))).toBe(true);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// COSTO DE CAPITAL CAPM
+// ----------------------------------------------------------------------------
+describe("calcularCostoCapitalCAPM", () => {
+  it("Rf 4%, β 1.0, prima 8% → Ke 12%", () => {
+    expect(cerca(calcularCostoCapitalCAPM(0.04, 1.0, 0.08), 0.12)).toBe(true);
+  });
+
+  it("β > 1 amplifica el riesgo (Ke mayor)", () => {
+    expect(cerca(calcularCostoCapitalCAPM(0.04, 1.5, 0.08), 0.16)).toBe(true);
+  });
+
+  it("β 0 → Ke iguala la tasa libre de riesgo", () => {
+    expect(cerca(calcularCostoCapitalCAPM(0.05, 0, 0.08), 0.05)).toBe(true);
   });
 });
 
