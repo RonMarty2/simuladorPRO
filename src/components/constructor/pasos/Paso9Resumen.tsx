@@ -619,8 +619,9 @@ function AnalisisAvanzadoV2({
             </tr>
           </thead>
           <tbody>
-            <FilaSensibilidadVAN label="Ingresos (precio × cantidad)" filas={v2.sensIngresos} />
-            <FilaSensibilidadVAN label="Costos operativos" filas={v2.sensCostos} />
+            {v2.sensVariables.map((sv) => (
+              <FilaSensibilidadVAN key={sv.label} label={sv.label} filas={sv.filas} />
+            ))}
           </tbody>
         </table>
 
@@ -723,45 +724,59 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     koa: proyecto.financiamiento.costoOportunidadAccionista,
   });
 
-  // ── Sensibilidad (variando ingresos o costos operativos) ─────────────────
+  // ── Sensibilidad: 5 variables, cada una recalcula los flujos ─────────────
   const variaciones = [-0.2, -0.1, 0, 0.1, 0.2];
-  const flujoConFactores = (facIngreso: number, facCosto: number): number[] => {
+  const pct = proyecto.imprevistosPorcentaje ?? 0;
+  // Recalcula el flujo aplicando factores independientes a cada variable.
+  //  - precio: solo escala los ingresos.
+  //  - cantidad: escala ingresos Y los costos variables (producir más cuesta más).
+  //  - costoVar: escala los costos de producción.
+  //  - costoFijo: escala personal + admin + comercialización.
+  const flujoVar = (
+    fPrecio: number,
+    fCantidad: number,
+    fCostoVar: number,
+    fCostoFijo: number
+  ): number[] => {
     const flujos: number[] = [calc.flujoCaja[0]]; // año 0 = inversión, no cambia
     for (let i = 0; i < 5; i++) {
-      const ing = calc.ingresos[i] * (1 + facIngreso);
-      const costOper =
-        (calc.costosProduccion[i] +
-          calc.gastosAdmin[i] +
-          calc.gastosComerc[i] +
-          calc.personal[i] +
-          calc.imprevistos[i]) *
-        (1 + facCosto);
-      const uOp = ing - costOper - calc.depreciacion[i];
+      const ing = calc.ingresos[i] * (1 + fPrecio) * (1 + fCantidad);
+      const cVar = calc.costosProduccion[i] * (1 + fCantidad) * (1 + fCostoVar);
+      const cFijo =
+        (calc.gastosAdmin[i] + calc.gastosComerc[i] + calc.personal[i]) * (1 + fCostoFijo);
+      const imprev = (cVar + cFijo) * pct;
+      const uOp = ing - cVar - cFijo - imprev - calc.depreciacion[i];
       const aai = uOp - calc.intereses[i];
-      const imp = Math.max(0, aai) * TASA_IUE;
-      const neta = aai - imp;
+      const neta = aai - Math.max(0, aai) * TASA_IUE;
       let fc = neta + calc.depreciacion[i] - calc.amortizacion[i];
       if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
       flujos.push(fc);
     }
     return flujos;
   };
-  const sensIngresos = calcularSensibilidad((f) => flujoConFactores(f, 0), tasa, variaciones);
-  const sensCostos = calcularSensibilidad((f) => flujoConFactores(0, f), tasa, variaciones);
+
+  const sensVariables: { label: string; filas: { variacion: number; van: number }[] }[] = [
+    { label: "Precio de venta", filas: calcularSensibilidad((f) => flujoVar(f, 0, 0, 0), tasa, variaciones) },
+    { label: "Cantidad vendida", filas: calcularSensibilidad((f) => flujoVar(0, f, 0, 0), tasa, variaciones) },
+    { label: "Costos variables (producción)", filas: calcularSensibilidad((f) => flujoVar(0, 0, f, 0), tasa, variaciones) },
+    { label: "Costos fijos (personal + admin)", filas: calcularSensibilidad((f) => flujoVar(0, 0, 0, f), tasa, variaciones) },
+    // WACC: no cambia los flujos, cambia la tasa de descuento.
+    { label: "WACC (tasa de descuento)", filas: variaciones.map((v) => ({ variacion: v, van: calcularVAN(calc.flujoCaja, tasa * (1 + v)) })) },
+  ];
 
   // ── Lectura guiada + variable más peligrosa ──────────────────────────────
   const fmtBs = (n: number) => `Bs ${Math.round(n).toLocaleString("es-BO")}`;
-  const ingBaja20 = sensIngresos.find((s) => s.variacion === -0.2)?.van ?? 0;
-  const vanBase = sensIngresos.find((s) => s.variacion === 0)?.van ?? calc.indicadores.van;
-  const lectura =
-    `si tus ingresos BAJAN 20%, tu VAN pasaría de ${fmtBs(vanBase)} (hoy) a ${fmtBs(ingBaja20)}` +
-    (ingBaja20 < 0
-      ? " → el proyecto pasaría a destruir valor (VAN negativo)."
-      : " → el proyecto seguiría creando valor.");
-
   const rango = (filas: { van: number }[]) =>
     Math.max(...filas.map((f) => f.van)) - Math.min(...filas.map((f) => f.van));
-  const masPeligrosa = rango(sensIngresos) >= rango(sensCostos) ? "los ingresos" : "los costos operativos";
+  let peligrosa = sensVariables[0];
+  for (const sv of sensVariables) {
+    if (rango(sv.filas) > rango(peligrosa.filas)) peligrosa = sv;
+  }
+  const peorVan = Math.min(...peligrosa.filas.map((f) => f.van));
+  const lectura =
+    `la variable que más mueve tu VAN es "${peligrosa.label}". En el peor escenario analizado (±20%), tu VAN caería hasta ${fmtBs(peorVan)}` +
+    (peorVan < 0 ? " → llegaría a destruir valor (negativo)." : " → seguiría siendo positivo.");
+  const masPeligrosa = peligrosa.label;
 
   return {
     puntoEquilibrio,
@@ -774,8 +789,7 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     gat,
     flujoInv,
     variaciones,
-    sensIngresos,
-    sensCostos,
+    sensVariables,
     lectura,
     masPeligrosa,
   };
