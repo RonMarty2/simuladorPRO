@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import {
@@ -89,7 +89,7 @@ export default function Paso9Financiamiento() {
         <BloquePrestamo
           titulo="Amortización de la deuda en activo"
           subtitulo="Cubre la inversión fija (terreno, obras, maquinaria, mobiliario, intangibles)"
-          colorBase="orange"
+          colorBase="activo"
           totalNecesario={inversionesFijas}
           cfg={activo}
           onChange={setActivo}
@@ -99,7 +99,7 @@ export default function Paso9Financiamiento() {
         <BloquePrestamo
           titulo="Amortización del capital operativo"
           subtitulo="Cubre el capital de trabajo (calculado en el Paso 8)"
-          colorBase="red"
+          colorBase="capital"
           totalNecesario={capitalOperativo}
           cfg={capital}
           onChange={setCapital}
@@ -215,14 +215,25 @@ export default function Paso9Financiamiento() {
 // Bloque de UN préstamo (activo fijo o capital operativo)
 // ════════════════════════════════════════════════════════════════════════════
 
-const COLOR_HEADER: Record<"orange" | "red", string> = {
-  orange: "bg-orange-500 text-white",
-  red: "bg-red-600 text-white",
-};
+// Estilo suave consistente con el resto de los pasos: borde lateral + fondo
+// claro + chip. Colores de la paleta de la app (azul y ámbar).
+type EstiloBloque = "activo" | "capital";
 
-const COLOR_BORDE: Record<"orange" | "red", string> = {
-  orange: "border-orange-400/60",
-  red: "border-red-500/60",
+const ESTILO_BLOQUE: Record<EstiloBloque, { borde: string; headerBg: string; chip: string; thead: string; fila: string }> = {
+  activo: {
+    borde: "border-l-sky-500",
+    headerBg: "bg-sky-100/70 dark:bg-sky-950/40",
+    chip: "bg-sky-200 text-sky-900 dark:bg-sky-900/60 dark:text-sky-100",
+    thead: "bg-sky-100 text-sky-900 dark:bg-sky-950/60 dark:text-sky-100",
+    fila: "bg-sky-50/40 dark:bg-sky-950/15",
+  },
+  capital: {
+    borde: "border-l-amber-500",
+    headerBg: "bg-amber-100/70 dark:bg-amber-950/40",
+    chip: "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100",
+    thead: "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-100",
+    fila: "bg-amber-50/40 dark:bg-amber-950/15",
+  },
 };
 
 function BloquePrestamo({
@@ -236,12 +247,13 @@ function BloquePrestamo({
 }: {
   titulo: string;
   subtitulo: string;
-  colorBase: "orange" | "red";
+  colorBase: EstiloBloque;
   totalNecesario: number;
   cfg: PrestamoConfig;
   onChange: (cambios: Partial<PrestamoConfig>) => void;
   msgVacio: string;
 }) {
+  const estilo = ESTILO_BLOQUE[colorBase];
   const montoFinanciar = totalNecesario * cfg.porcentajePrestamo;
   const aportePropio = totalNecesario * cfg.porcentajePropio;
   const cuotaMensual =
@@ -278,17 +290,37 @@ function BloquePrestamo({
   const cambiarMezcla = (porcPrestamo: number) =>
     onChange({ porcentajePrestamo: porcPrestamo, porcentajePropio: 1 - porcPrestamo });
 
-  return (
-    <div className={cn("overflow-hidden rounded-md border-2", COLOR_BORDE[colorBase])}>
-      {/* Header */}
-      <div className={cn("px-3 py-2 text-sm font-bold uppercase tracking-wide", COLOR_HEADER[colorBase])}>
-        {titulo}
-      </div>
-      <div className="border-b border-border bg-secondary/30 px-3 py-1 text-[11px] text-muted-foreground">
-        {subtitulo}
-      </div>
+  // Colapsado por defecto si ya hay préstamo configurado; abierto para configurarlo.
+  const [abierto, setAbierto] = useState(cfg.porcentajePrestamo <= 0);
 
-      {totalNecesario <= 0 ? (
+  return (
+    <div className={cn("overflow-hidden rounded-md border border-border border-l-4", estilo.borde)}>
+      {/* Header colapsable */}
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        className={cn("flex w-full items-center justify-between gap-2 px-3 py-2 text-left", estilo.headerBg)}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          {abierto ? (
+            <ChevronDown className="h-4 w-4 flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 flex-shrink-0" />
+          )}
+          <span className={cn("flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", estilo.chip)}>
+            {titulo}
+          </span>
+          <span className="truncate text-[10px] text-muted-foreground">{subtitulo}</span>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          <div className="text-[10px] text-muted-foreground">Préstamo · cuota/mes</div>
+          <div className="text-sm font-bold tabular-nums">
+            {formatearBolivianos(montoFinanciar)} · {formatearBolivianos(cuotaMensual)}
+          </div>
+        </div>
+      </button>
+
+      {abierto && (totalNecesario <= 0 ? (
         <div className="m-3 rounded-md border border-dashed border-amber-400/60 bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
           {msgVacio}
         </div>
@@ -305,7 +337,7 @@ function BloquePrestamo({
               valor={formatearBolivianos(totalNecesario)}
               negrita
               tooltip={
-                colorBase === "orange"
+                colorBase === "activo"
                   ? `Bs ${totalNecesario.toLocaleString("es-BO")} — Suma de las inversiones fijas del Paso 3: terreno + obras civiles + maquinaria + mobiliario + activo diferido. Es la base sobre la que se reparte la mezcla deuda/capital propio de este bloque.`
                   : `Bs ${totalNecesario.toLocaleString("es-BO")} — Es el capital de trabajo calculado en el Paso 8 (lo que necesitas para operar antes de cobrar). Sobre este monto se decide cuánto financiar con préstamo bancario y cuánto poner de aporte propio.`
               }
@@ -382,7 +414,7 @@ function BloquePrestamo({
           <div className="md:col-span-2">
             <div className="overflow-x-auto rounded-md border border-border">
               <table className="w-full text-[11px]">
-                <thead className={cn("uppercase tracking-wide", COLOR_HEADER[colorBase])}>
+                <thead className={cn("uppercase tracking-wide", estilo.thead)}>
                   <tr>
                     <th className="p-1.5 text-left">Año del proyecto</th>
                     {filasAnio.map((f) => (
@@ -425,7 +457,7 @@ function BloquePrestamo({
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -434,9 +466,9 @@ function BloquePrestamo({
 // Helpers de UI: fila key-value y fila con input
 // ────────────────────────────────────────────────────────────────────────────
 
-const DESTACADO_COLOR: Record<"orange" | "red", string> = {
-  orange: "bg-orange-50 dark:bg-orange-950/30",
-  red: "bg-red-50 dark:bg-red-950/30",
+const DESTACADO_COLOR: Record<EstiloBloque, string> = {
+  activo: "bg-sky-50 dark:bg-sky-950/30",
+  capital: "bg-amber-50 dark:bg-amber-950/30",
 };
 
 function FilaLinea({
@@ -449,7 +481,7 @@ function FilaLinea({
   label: string;
   valor: string;
   negrita?: boolean;
-  destacado?: "orange" | "red";
+  destacado?: EstiloBloque;
   tooltip?: string;
 }) {
   return (
