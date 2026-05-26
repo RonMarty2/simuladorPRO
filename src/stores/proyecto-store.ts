@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { crearProyectoVacio, nuevoId } from "@/lib/proyecto-factory";
+import { crearProyectoVacio, nuevoId, type ModeloIngreso } from "@/lib/proyecto-factory";
 import {
   calcularCostoCapitalCAPM,
   calcularDepreciacionAnual,
@@ -29,7 +29,8 @@ interface ProyectoState {
     estudiante_id: string,
     nombre: string,
     curso_id?: string | null,
-    version?: VersionProyecto
+    version?: VersionProyecto,
+    modeloIngreso?: ModeloIngreso
   ) => void;
   cargar: (proyecto: Proyecto) => void;
   limpiar: () => void;
@@ -154,8 +155,8 @@ function conTimestamp(p: Proyecto): Proyecto {
 export const useProyectoStore = create<ProyectoState>((set, get) => ({
   proyecto: null,
 
-  inicializar: (estudiante_id, nombre, curso_id, version) => {
-    set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id, version }) });
+  inicializar: (estudiante_id, nombre, curso_id, version, modeloIngreso) => {
+    set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id, version, modeloIngreso }) });
   },
 
   cargar: (proyecto) => set({ proyecto }),

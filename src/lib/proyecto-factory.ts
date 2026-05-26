@@ -51,15 +51,18 @@ export function nuevoId(): string {
  * Crea un proyecto vacío con valores por defecto razonables para el contexto
  * boliviano. No persiste — la persistencia es responsabilidad del caller.
  */
+export type ModeloIngreso = "unidades" | "suscripcion" | "publicidad" | "costo_beneficio";
+
 export function crearProyectoVacio(params: {
   id?: string;
   estudiante_id: string;
   curso_id?: string | null;
   nombre: string;
   version?: VersionProyecto;
+  modeloIngreso?: ModeloIngreso;
 }): Proyecto {
   const ahora = new Date().toISOString();
-  return {
+  const p: Proyecto = {
     id: params.id ?? nuevoId(),
     estudiante_id: params.estudiante_id,
     curso_id: params.curso_id ?? null,
@@ -106,6 +109,55 @@ export function crearProyectoVacio(params: {
     creado_en: ahora,
     actualizado_en: ahora,
   };
+  aplicarModeloIngresoInicial(p, params.modeloIngreso ?? "unidades");
+  return p;
+}
+
+/**
+ * Inicializa un proyecto VACÍO según el modelo de ingreso elegido. Para los
+ * modelos especiales deja parámetros por defecto editables y un "producto
+ * portador" calculado, para que el panel del Paso 2 funcione y el estudiante
+ * solo ajuste los números. Para 'unidades' no hace nada (productos vacíos).
+ */
+function aplicarModeloIngresoInicial(p: Proyecto, modelo: ModeloIngreso): void {
+  if (modelo === "suscripcion") {
+    const sus = { suscriptoresIniciales: 100, altasMensuales: 20, churnMensual: 0.05, cuotaMensual: 30 };
+    const proy = proyectarSuscriptores(sus, 5);
+    p.modeloIngreso = "suscripcion";
+    p.suscripcionV2 = sus;
+    p.productos = [{
+      id: nuevoId(),
+      nombre: "Suscripción",
+      unidadMedida: "suscriptor/año",
+      cantidades: proy.map((a) => Math.round(a.promedioSuscriptores)) as [number, number, number, number, number],
+      precios: Array(5).fill(sus.cuotaMensual * 12) as [number, number, number, number, number],
+    }];
+  } else if (modelo === "publicidad") {
+    const pub = { audienciaMensual: 5000, crecimientoMensual: 0.04, impresionesPorUsuario: 3, cpm: 40 };
+    const proy = proyectarPublicidad(pub, 5);
+    p.modeloIngreso = "publicidad";
+    p.publicidadV2 = pub;
+    p.productos = [{
+      id: nuevoId(),
+      nombre: "Publicidad",
+      unidadMedida: "mil impresiones",
+      cantidades: proy.map((a) => Math.round(a.impresionesAnio / 1000)) as [number, number, number, number, number],
+      precios: Array(5).fill(pub.cpm) as [number, number, number, number, number],
+    }];
+  } else if (modelo === "costo_beneficio") {
+    const cb = { beneficioAnualBase: 100000, crecimientoAnual: 0.05 };
+    p.modeloIngreso = "costo_beneficio";
+    p.costoBeneficioV2 = cb;
+    p.productos = [{
+      id: nuevoId(),
+      nombre: "Beneficio incremental estimado",
+      unidadMedida: "año",
+      cantidades: [1, 1, 1, 1, 1],
+      precios: [0, 1, 2, 3, 4].map((i) => Math.round(cb.beneficioAnualBase * Math.pow(1 + cb.crecimientoAnual, i) * 100) / 100) as [number, number, number, number, number],
+    }];
+  } else {
+    p.modeloIngreso = "unidades";
+  }
 }
 
 // Helpers para el proyecto de ejemplo --------------------------------------

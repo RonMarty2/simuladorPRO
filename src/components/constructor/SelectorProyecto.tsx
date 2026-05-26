@@ -10,6 +10,7 @@ import {
   crearProyectoEjemploPodcastV2,
   crearProyectoEjemploPublicidadV2,
   crearProyectoEjemploTiendaV2,
+  type ModeloIngreso,
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
@@ -183,6 +184,7 @@ function ModalNuevoProyecto({
   const cargar = useProyectoStore((s) => s.cargar);
   const [nombre, setNombre] = useState("");
   const [version, setVersion] = useState<VersionProyecto>("v1");
+  const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -192,7 +194,7 @@ function ModalNuevoProyecto({
     setGuardando(true);
     setError(null);
     try {
-      inicializar(userId, nombre.trim(), null, version);
+      inicializar(userId, nombre.trim(), null, version, modelo);
       const p = useProyectoStore.getState().proyecto;
       if (!p) throw new Error("No se pudo inicializar el proyecto");
       await guardarProyecto(p);
@@ -268,6 +270,21 @@ function ModalNuevoProyecto({
             </div>
           </div>
 
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Modelo de ingreso (¿cómo entra la plata?)
+            </label>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              <OpcionModelo activa={modelo === "unidades"} onClick={() => setModelo("unidades")} titulo="Unidades × precio" descripcion="Vendes productos o servicios por unidad. Café, producción, comercio, turismo." />
+              <OpcionModelo activa={modelo === "suscripcion"} onClick={() => setModelo("suscripcion")} titulo="Suscripción" descripcion="Base de clientes recurrentes (altas y churn). Membresías, gimnasio." />
+              <OpcionModelo activa={modelo === "publicidad"} onClick={() => setModelo("publicidad")} titulo="Publicidad" descripcion="Ingreso por audiencia × CPM. Radio, canal, podcast con sponsors." />
+              <OpcionModelo activa={modelo === "costo_beneficio"} onClick={() => setModelo("costo_beneficio")} titulo="Costo-beneficio" descripcion="No vende; se evalúa por el beneficio que genera. Plan de marketing interno." />
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Sale <strong>vacío</strong> con los campos de ese modelo, listo para llenar.
+            </p>
+          </div>
+
           <div className="rounded-md bg-secondary/50 p-2 text-[11px] text-muted-foreground">
             💡 Tus proyectos anteriores se conservan. Vas a poder cambiar entre
             ellos desde el selector de arriba.
@@ -339,6 +356,33 @@ function BotonEjemplo({
     >
       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">{titulo}</span>
       <span className="text-[9px] uppercase tracking-wide text-muted-foreground">{sub}</span>
+    </button>
+  );
+}
+
+function OpcionModelo({
+  activa,
+  onClick,
+  titulo,
+  descripcion,
+}: {
+  activa: boolean;
+  onClick: () => void;
+  titulo: string;
+  descripcion: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={activa}
+      className={cn(
+        "flex flex-col rounded-md border p-2 text-left transition",
+        activa ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"
+      )}
+    >
+      <span className="text-xs font-semibold">{titulo}</span>
+      <span className="mt-0.5 text-[10px] leading-snug text-muted-foreground">{descripcion}</span>
     </button>
   );
 }
