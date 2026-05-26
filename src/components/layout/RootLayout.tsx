@@ -14,7 +14,8 @@ import { useAuthStore } from "@/stores/auth-store";
 
 const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
-  { to: "/construir", label: "Construir proyecto", icon: Hammer },
+  // "Construir proyecto" se quitó del menú: el estudiante entra al constructor
+  // haciendo clic en un proyecto de su panel (evita la redundancia).
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
