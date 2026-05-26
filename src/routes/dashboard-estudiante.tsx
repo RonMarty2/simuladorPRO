@@ -62,6 +62,15 @@ export default function DashboardEstudiante() {
     navigate("/construir");
   };
 
+  // Crear un proyecto nuevo: deja una "pista" (curso preseleccionado, o "" para
+  // libre) y va al constructor, que abrirá la ventana de crear automáticamente.
+  const nuevo = (cursoId?: string) => {
+    try {
+      localStorage.setItem("simulador.nuevoProyecto", cursoId ?? "");
+    } catch {}
+    navigate("/construir");
+  };
+
   const inscribirse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -100,7 +109,7 @@ export default function DashboardEstudiante() {
           </p>
         </div>
         <button
-          onClick={() => navigate("/construir")}
+          onClick={() => nuevo()}
           className="flex flex-shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
@@ -127,7 +136,16 @@ export default function DashboardEstudiante() {
                     </div>
                   </div>
                 </div>
-                <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => nuevo(curso.id)}
+                    className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary transition hover:bg-primary/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Nuevo aquí
+                  </button>
+                  <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
+                </div>
               </div>
 
               {delCurso.length === 0 ? (

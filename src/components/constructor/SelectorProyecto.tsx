@@ -45,6 +45,20 @@ export default function SelectorProyecto({ proyectos }: Props) {
 
   const [abierto, setAbierto] = useState(false);
   const [creando, setCreando] = useState(false);
+  const [cursoInicial, setCursoInicial] = useState<string>("");
+
+  // Si llegamos con intención de crear desde el panel (con o sin curso
+  // preseleccionado), abrir directamente la ventana de crear.
+  useEffect(() => {
+    try {
+      const hint = localStorage.getItem("simulador.nuevoProyecto");
+      if (hint !== null) {
+        setCursoInicial(hint);
+        setCreando(true);
+        localStorage.removeItem("simulador.nuevoProyecto");
+      }
+    } catch {}
+  }, []);
 
   if (!user) return null;
 
@@ -161,8 +175,10 @@ export default function SelectorProyecto({ proyectos }: Props) {
       {creando && (
         <ModalNuevoProyecto
           userId={user.id}
+          cursoInicial={cursoInicial}
           onCerrar={(creado) => {
             setCreando(false);
+            setCursoInicial("");
             if (creado) {
               guardarProyectoActivo(user.id, creado);
               setTimeout(() => window.location.reload(), 50);
@@ -176,9 +192,11 @@ export default function SelectorProyecto({ proyectos }: Props) {
 
 function ModalNuevoProyecto({
   userId,
+  cursoInicial = "",
   onCerrar,
 }: {
   userId: string;
+  cursoInicial?: string;
   onCerrar: (proyectoIdCreado: string | null) => void;
 }) {
   const inicializar = useProyectoStore((s) => s.inicializar);
@@ -188,7 +206,7 @@ function ModalNuevoProyecto({
   const [version, setVersion] = useState<VersionProyecto>("v1");
   const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
   const [cursos, setCursos] = useState<Curso[]>([]);
-  const [cursoId, setCursoId] = useState<string>("");
+  const [cursoId, setCursoId] = useState<string>(cursoInicial);
 
   const placeholderNombre: Record<ModeloIngreso, string> = {
     unidades: "Ej: Cafetería, Tienda, Taller mecánico…",
