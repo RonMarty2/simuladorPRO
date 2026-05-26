@@ -206,9 +206,13 @@ export default function Paso9Resumen() {
       {/* ANÁLISIS AVANZADO V2 — solo si el proyecto es versión extendida */}
       {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
 
-      {/* TABLA FLUJO DE CAJA con secciones de color */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-3 text-sm font-semibold">Flujo de caja proyectado (Bs)</h3>
+      {/* TABLA FLUJO DE CAJA con secciones de color — colapsable */}
+      <details className="rounded-lg border border-border bg-card">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 hover:bg-secondary/40">
+          <span className="text-sm font-semibold">Flujo de caja proyectado (Bs)</span>
+          <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
+        </summary>
+        <div className="overflow-x-auto px-4 pb-4">
         <table className="w-full min-w-[700px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b-2 border-border">
@@ -361,7 +365,8 @@ export default function Paso9Resumen() {
           <LeyendaColor color="sky" texto="④ Ajustes de caja" />
           <LeyendaColor color="primary" texto="⑤ Flujo de caja neto" />
         </div>
-      </div>
+        </div>
+      </details>
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
