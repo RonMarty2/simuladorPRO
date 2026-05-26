@@ -3,7 +3,7 @@ import { ChevronDown, FolderOpen, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto } from "@/lib/proyecto-supabase";
-import type { Proyecto } from "@/types/proyecto";
+import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 
 const LS_KEY_PROYECTO_ACTIVO = "simulador.proyectoActivo";
@@ -173,6 +173,7 @@ function ModalNuevoProyecto({
 }) {
   const inicializar = useProyectoStore((s) => s.inicializar);
   const [nombre, setNombre] = useState("");
+  const [version, setVersion] = useState<VersionProyecto>("v1");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -182,7 +183,7 @@ function ModalNuevoProyecto({
     setGuardando(true);
     setError(null);
     try {
-      inicializar(userId, nombre.trim());
+      inicializar(userId, nombre.trim(), null, version);
       const p = useProyectoStore.getState().proyecto;
       if (!p) throw new Error("No se pudo inicializar el proyecto");
       await guardarProyecto(p);
@@ -222,6 +223,26 @@ function ModalNuevoProyecto({
             />
           </div>
 
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Tipo de análisis financiero
+            </label>
+            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <OpcionVersionModal
+                activa={version === "v1"}
+                onClick={() => setVersion("v1")}
+                titulo="Clásico (V1)"
+                descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC."
+              />
+              <OpcionVersionModal
+                activa={version === "v2"}
+                onClick={() => setVersion("v2")}
+                titulo="Extendido (V2)"
+                descripcion="Todo V1 + punto de equilibrio, payback descontado, sensibilidad y apalancamiento."
+              />
+            </div>
+          </div>
+
           <div className="rounded-md bg-secondary/50 p-2 text-[11px] text-muted-foreground">
             💡 Tus proyectos anteriores se conservan. Vas a poder cambiar entre
             ellos desde el selector de arriba.
@@ -254,5 +275,46 @@ function ModalNuevoProyecto({
         </form>
       </div>
     </div>
+  );
+}
+
+function OpcionVersionModal({
+  activa,
+  onClick,
+  titulo,
+  descripcion,
+}: {
+  activa: boolean;
+  onClick: () => void;
+  titulo: string;
+  descripcion: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={activa}
+      className={cn(
+        "flex flex-col rounded-md border p-2 text-left transition",
+        activa
+          ? "border-primary bg-primary/5 ring-1 ring-primary"
+          : "border-border hover:border-primary/50"
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          className={cn(
+            "flex h-3.5 w-3.5 items-center justify-center rounded-full border",
+            activa ? "border-primary" : "border-muted-foreground/50"
+          )}
+        >
+          {activa && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+        </span>
+        <span className="text-xs font-semibold">{titulo}</span>
+      </div>
+      <span className="mt-1 text-[10px] leading-snug text-muted-foreground">
+        {descripcion}
+      </span>
+    </button>
   );
 }
