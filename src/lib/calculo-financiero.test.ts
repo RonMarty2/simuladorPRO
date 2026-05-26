@@ -8,6 +8,7 @@ import {
   calcularCostoCapitalCAPM,
   calcularLTVSuscripcion,
   proyectarSuscriptores,
+  proyectarPublicidad,
   calcularFlujoInversionista,
   calcularGAF,
   calcularGAO,
@@ -463,6 +464,36 @@ describe("calcularLTVSuscripcion", () => {
   });
   it("churn 0 → LTV Infinity", () => {
     expect(calcularLTVSuscripcion(30, 0)).toBe(Infinity);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// PUBLICIDAD / AUDIENCIA (CPM)
+// ----------------------------------------------------------------------------
+describe("proyectarPublicidad", () => {
+  it("sin crecimiento: ingreso = audiencia × impresiones × 12 / 1000 × CPM", () => {
+    const r = proyectarPublicidad(
+      { audienciaMensual: 10000, crecimientoMensual: 0, impresionesPorUsuario: 4, cpm: 50 },
+      1
+    );
+    // impresiones/año = 10000 × 4 × 12 = 480.000 → /1000 × 50 = 24.000
+    expect(cerca(r[0].ingresoAnual, 24000)).toBe(true);
+  });
+
+  it("la audiencia crece mes a mes", () => {
+    const r = proyectarPublicidad(
+      { audienciaMensual: 1000, crecimientoMensual: 0.1, impresionesPorUsuario: 1, cpm: 30 },
+      2
+    );
+    expect(r[1].audienciaFin).toBeGreaterThan(r[0].audienciaFin);
+  });
+
+  it("devuelve un registro por año", () => {
+    const r = proyectarPublicidad(
+      { audienciaMensual: 5000, crecimientoMensual: 0.05, impresionesPorUsuario: 2, cpm: 40 },
+      5
+    );
+    expect(r).toHaveLength(5);
   });
 });
 

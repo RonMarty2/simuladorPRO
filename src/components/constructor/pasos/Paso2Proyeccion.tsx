@@ -4,7 +4,7 @@ import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
-import { calcularLTVSuscripcion, proyectarSuscriptores } from "@/lib/calculo-financiero";
+import { calcularLTVSuscripcion, proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
 import type { Proyecto } from "@/types/proyecto";
 
 // Paleta de colores por producto (cíclica si hay más de 6)
@@ -28,12 +28,20 @@ export default function Paso2Proyeccion() {
   const setTasaCant = useProyectoStore((s) => s.setTasaCrecCantidad);
   const setTasaPrec = useProyectoStore((s) => s.setTasaCrecPrecio);
   const setSuscripcion = useProyectoStore((s) => s.setSuscripcionV2);
+  const setPublicidad = useProyectoStore((s) => s.setPublicidadV2);
+  const setCostoBeneficio = useProyectoStore((s) => s.setCostoBeneficioV2);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Modelo de ingreso por SUSCRIPCIÓN: pantalla propia (el motor recibe el
-  // producto portador ya calculado). El modo "unidades" sigue intacto abajo.
+  // Modelos de ingreso especiales: pantalla propia (el motor recibe el producto
+  // portador ya calculado). El modo "unidades × precio" sigue intacto abajo.
   if (proyecto.modeloIngreso === "suscripcion") {
     return <PanelSuscripcion proyecto={proyecto} onChange={setSuscripcion} />;
+  }
+  if (proyecto.modeloIngreso === "publicidad") {
+    return <PanelPublicidad proyecto={proyecto} onChange={setPublicidad} />;
+  }
+  if (proyecto.modeloIngreso === "costo_beneficio") {
+    return <PanelCostoBeneficio proyecto={proyecto} onChange={setCostoBeneficio} />;
   }
 
   // Estado de colapso: tasas y cada producto (por id). Default: colapsado.
@@ -426,6 +434,186 @@ function PanelSuscripcion({
             Bajar el churn del 5% al 3% puede más que duplicar tu base de equilibrio. Por eso
             el <strong>LTV</strong> y el <strong>churn</strong> son los números clave aquí, no
             el precio puntual.
+          </>
+        }
+      />
+    </div>
+  );
+}
+
+function PanelPublicidad({
+  proyecto,
+  onChange,
+}: {
+  proyecto: Proyecto;
+  onChange: (
+    cambios: Partial<{
+      audienciaMensual: number;
+      crecimientoMensual: number;
+      impresionesPorUsuario: number;
+      cpm: number;
+    }>
+  ) => void;
+}) {
+  const pub = proyecto.publicidadV2 ?? {
+    audienciaMensual: 10000,
+    crecimientoMensual: 0.05,
+    impresionesPorUsuario: 4,
+    cpm: 40,
+  };
+  const proy = proyectarPublicidad(pub, 5);
+  const inputClase =
+    "w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring";
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Paso 2 · Demanda (modelo de publicidad)
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Aquí no vendes un producto: vendes <strong>espacios a anunciantes</strong>. El
+            ingreso depende de tu <strong>audiencia</strong> y del <strong>CPM</strong> (lo
+            que pagan por cada 1.000 impresiones).
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <CampoSus label="Audiencia (mes 1)" ayuda="Oyentes / visitas / espectadores al inicio." valor={pub.audienciaMensual} sufijo="pers/mes" onChange={(v) => onChange({ audienciaMensual: Math.max(0, Math.round(v)) })} clase={inputClase} />
+          <CampoSus label="Crecimiento mensual de audiencia" ayuda="% que crece la audiencia cada mes." valor={Math.round(pub.crecimientoMensual * 1000) / 10} sufijo="%" paso={0.5} onChange={(v) => onChange({ crecimientoMensual: Math.max(0, v) / 100 })} clase={inputClase} />
+          <CampoSus label="Anuncios por usuario / mes" ayuda="Cuántas impresiones de anuncio ve cada usuario al mes." valor={pub.impresionesPorUsuario} sufijo="imp" onChange={(v) => onChange({ impresionesPorUsuario: Math.max(0, v) })} clase={inputClase} />
+          <CampoSus label="CPM (tarifa por 1.000 imp.)" ayuda="Lo que paga el anunciante por cada 1.000 impresiones." valor={pub.cpm} sufijo="Bs/mil" onChange={(v) => onChange({ cpm: Math.max(0, v) })} clase={inputClase} />
+        </div>
+
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-secondary text-muted-foreground">
+              <tr className="border-b-2 border-border">
+                <th className="p-2 text-left font-semibold">Concepto</th>
+                {[1, 2, 3, 4, 5].map((a) => (
+                  <th key={a} className="p-2 text-right font-semibold">Año {a}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/40">
+                <td className="p-2">Audiencia promedio</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.audienciaPromedio).toLocaleString("es-BO")}</td>
+                ))}
+              </tr>
+              <tr className="border-b border-border/40">
+                <td className="p-2">Impresiones del año</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.impresionesAnio).toLocaleString("es-BO")}</td>
+                ))}
+              </tr>
+              <tr className="bg-primary/10 font-bold">
+                <td className="p-2">Ingreso anual (Bs)</td>
+                {proy.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{formatearBolivianos(a.ingresoAnual)}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <FichaPedagogica
+        titulo="Modelo por publicidad"
+        contenido={
+          <>
+            Tu ingreso = <strong>(audiencia × anuncios ÷ 1.000) × CPM</strong>. Las dos
+            palancas son <strong>crecer la audiencia</strong> y subir el <strong>CPM</strong>
+            (que mejora con mejor segmentación y nicho).
+            <br />
+            <br />
+            Ojo: con audiencia chica el ingreso es bajo aunque el CPM sea bueno. Por eso al
+            inicio se invierte en crecer audiencia aunque aún no sea rentable.
+          </>
+        }
+      />
+    </div>
+  );
+}
+
+function PanelCostoBeneficio({
+  proyecto,
+  onChange,
+}: {
+  proyecto: Proyecto;
+  onChange: (
+    cambios: Partial<{ beneficioAnualBase: number; crecimientoAnual: number }>
+  ) => void;
+}) {
+  const cb = proyecto.costoBeneficioV2 ?? { beneficioAnualBase: 100000, crecimientoAnual: 0.05 };
+  const beneficios = [0, 1, 2, 3, 4].map(
+    (i) => cb.beneficioAnualBase * Math.pow(1 + cb.crecimientoAnual, i)
+  );
+  const inputClase =
+    "w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring";
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Paso 2 · Beneficio (modelo costo-beneficio)
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Este proyecto <strong>no vende nada propio</strong> (ej. un plan de marketing
+            interno). Su "ingreso" es el <strong>beneficio incremental</strong>: las ventas
+            o ahorros adicionales que le genera al negocio. El VAN compara ese beneficio
+            contra el costo del plan.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <CampoSus label="Beneficio incremental (año 1)" ayuda="Ventas o ahorros ADICIONALES que esperas generar el primer año gracias a este proyecto." valor={cb.beneficioAnualBase} sufijo="Bs/año" paso={1000} onChange={(v) => onChange({ beneficioAnualBase: Math.max(0, v) })} clase={inputClase} />
+          <CampoSus label="Crecimiento anual del beneficio" ayuda="% que crece ese beneficio cada año." valor={Math.round(cb.crecimientoAnual * 1000) / 10} sufijo="%" paso={0.5} onChange={(v) => onChange({ crecimientoAnual: Math.max(0, v) / 100 })} clase={inputClase} />
+        </div>
+
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-secondary text-muted-foreground">
+              <tr className="border-b-2 border-border">
+                <th className="p-2 text-left font-semibold">Concepto</th>
+                {[1, 2, 3, 4, 5].map((a) => (
+                  <th key={a} className="p-2 text-right font-semibold">Año {a}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-primary/10 font-bold">
+                <td className="p-2">Beneficio incremental (Bs)</td>
+                {beneficios.map((b, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">{formatearBolivianos(b)}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="rounded-md border border-amber-400/60 bg-amber-50 p-2.5 text-[11px] text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+          ⓘ El costo del plan se carga en los pasos siguientes (personal, gastos,
+          inversión). El proyecto "conviene" si el <strong>VAN sale positivo</strong>: el
+          beneficio incremental supera lo que cuesta el plan.
+        </div>
+      </div>
+
+      <FichaPedagogica
+        titulo="Análisis costo-beneficio"
+        contenido={
+          <>
+            No todo proyecto vende algo. Un plan de marketing, una capacitación o una mejora
+            interna se justifican por el <strong>beneficio que generan</strong> (más ventas,
+            menos costos), comparado con lo que cuestan.
+            <br />
+            <br />
+            Lo difícil aquí es <strong>estimar bien el beneficio incremental</strong>: sé
+            conservador. Si aun con una estimación prudente el VAN es positivo, el plan vale
+            la pena.
           </>
         }
       />

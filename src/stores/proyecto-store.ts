@@ -5,6 +5,7 @@ import {
   calcularDepreciacionAnual,
   calcularValorResidual,
   proyectarSuscriptores,
+  proyectarPublicidad,
 } from "@/lib/calculo-financiero";
 import type {
   CategoriaInversion,
@@ -102,6 +103,21 @@ interface ProyectoState {
       churnMensual: number;
       cuotaMensual: number;
     }>
+  ) => void;
+
+  // Publicidad (audiencia × CPM): recalcula el producto portador
+  setPublicidadV2: (
+    cambios: Partial<{
+      audienciaMensual: number;
+      crecimientoMensual: number;
+      impresionesPorUsuario: number;
+      cpm: number;
+    }>
+  ) => void;
+
+  // Costo-beneficio (sin ingresos propios): recalcula el "beneficio incremental"
+  setCostoBeneficioV2: (
+    cambios: Partial<{ beneficioAnualBase: number; crecimientoAnual: number }>
   ) => void;
 
   // Override de aportes patronales (si la LGT cambia)
@@ -504,6 +520,74 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
         ...p,
         modeloIngreso: "suscripcion",
         suscripcionV2: params,
+        productos: [producto],
+      }),
+    });
+  },
+
+  setPublicidadV2: (cambios) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const params = {
+      audienciaMensual: 10000,
+      crecimientoMensual: 0.05,
+      impresionesPorUsuario: 4,
+      cpm: 40,
+      ...(p.publicidadV2 ?? {}),
+      ...cambios,
+    };
+    const proy = proyectarPublicidad(params, 5);
+    // Producto portador: cantidad = miles de impresiones del año, precio = CPM.
+    const cantidades = proy.map((a) => Math.round(a.impresionesAnio / 1000)) as [
+      number, number, number, number, number,
+    ];
+    const precios: [number, number, number, number, number] = [
+      params.cpm, params.cpm, params.cpm, params.cpm, params.cpm,
+    ];
+    const prodId = p.productos[0]?.id ?? nuevoId();
+    const producto: Producto = {
+      id: prodId,
+      nombre: "Publicidad",
+      unidadMedida: "mil impresiones",
+      cantidades,
+      precios,
+    };
+    set({
+      proyecto: conTimestamp({
+        ...p,
+        modeloIngreso: "publicidad",
+        publicidadV2: params,
+        productos: [producto],
+      }),
+    });
+  },
+
+  setCostoBeneficioV2: (cambios) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const params = {
+      beneficioAnualBase: 100000,
+      crecimientoAnual: 0.05,
+      ...(p.costoBeneficioV2 ?? {}),
+      ...cambios,
+    };
+    // El beneficio incremental se modela como el "ingreso" (cantidad 1 × beneficio).
+    const precios = [0, 1, 2, 3, 4].map(
+      (i) => Math.round(params.beneficioAnualBase * Math.pow(1 + params.crecimientoAnual, i) * 100) / 100
+    ) as [number, number, number, number, number];
+    const prodId = p.productos[0]?.id ?? nuevoId();
+    const producto: Producto = {
+      id: prodId,
+      nombre: "Beneficio incremental estimado",
+      unidadMedida: "año",
+      cantidades: [1, 1, 1, 1, 1],
+      precios,
+    };
+    set({
+      proyecto: conTimestamp({
+        ...p,
+        modeloIngreso: "costo_beneficio",
+        costoBeneficioV2: params,
         productos: [producto],
       }),
     });

@@ -1,4 +1,4 @@
-import { proyectarSuscriptores } from "@/lib/calculo-financiero";
+import { proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
 import type {
   ItemInversion,
   Producto,
@@ -452,6 +452,147 @@ export function crearProyectoEjemploPodcastV2(params: {
     ],
     ...finCapmEjemplo(),
     crecimientoIngresosAnual: 0.06,
+    crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0],
+    tasasCrecPrecio: [0, 0, 0, 0],
+    estado: "completo",
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
+
+/**
+ * EJEMPLO — PUBLICIDAD (V2): canal/programa que vive de pauta publicitaria.
+ * El ingreso = audiencia × impresiones × CPM. No vende un producto, vende
+ * espacios a anunciantes.
+ */
+export function crearProyectoEjemploPublicidadV2(params: {
+  estudiante_id: string;
+  curso_id?: string | null;
+  nombre?: string;
+}): Proyecto {
+  const ahora = new Date().toISOString();
+  const pub = {
+    audienciaMensual: 8000,
+    crecimientoMensual: 0.06,
+    impresionesPorUsuario: 6,
+    cpm: 45,
+  };
+  const proy = proyectarPublicidad(pub, 5);
+  const cantidades = proy.map((a) => Math.round(a.impresionesAnio / 1000)) as [
+    number, number, number, number, number,
+  ];
+  const idPub = nuevoId();
+  return {
+    id: nuevoId(),
+    estudiante_id: params.estudiante_id,
+    curso_id: params.curso_id ?? null,
+    version: "v2",
+    tipo: "libre",
+    nombre: params.nombre ?? "canalv2",
+    ubicacion: "Santa Cruz (digital)",
+    descripcion: "Canal/programa que vive de la pauta publicitaria. Ejemplo de modelo de ingreso por PUBLICIDAD (audiencia × CPM).",
+    sector: "servicios",
+    modeloIngreso: "publicidad",
+    publicidadV2: pub,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [itemInv("Set y acondicionamiento", "obra", 1, 10000, 8)],
+      maquinaria: [
+        itemInv("Cámaras, luces y audio", "set", 1, 25000, 5),
+        itemInv("Computo y edición", "set", 1, 12000, 5),
+      ],
+      mobiliario: [itemInv("Mobiliario del set", "set", 1, 4000, 8)],
+      activoDiferido: [itemInv("Marca, canal y configuración", "global", 1, 3000, 5)],
+    },
+    capitalTrabajo: 25000,
+    mesesBufferCapitalTrabajo: 3,
+    personal: [
+      { id: nuevoId(), puesto: "Conductor", cantidad: 1, sueldoMensual: 4000 },
+      { id: nuevoId(), puesto: "Productor / community", cantidad: 1, sueldoMensual: 3000 },
+    ],
+    costosDirectos: [
+      // La red publicitaria (Google/Meta) se queda ~30% de lo cobrado por mil impresiones.
+      { id: nuevoId(), productoId: idPub, categoria: "comision_venta", descripcion: "Comisión de la red publicitaria", unidadMedida: "mil impresiones", cantidadPorUnidad: 1, costoUnitario: Math.round(pub.cpm * 0.3 * 100) / 100 },
+    ],
+    costosAdministracion: [
+      { id: nuevoId(), descripcion: "Streaming, hosting y herramientas", unidadMedida: "mes", cantidad: 1, costoUnitario: 600 },
+      { id: nuevoId(), descripcion: "Internet", unidadMedida: "mes", cantidad: 1, costoUnitario: 300 },
+    ],
+    costosComercializacion: [
+      { id: nuevoId(), descripcion: "Pauta para crecer audiencia", unidadMedida: "mes", cantidad: 1, costoUnitario: 1000 },
+    ],
+    imprevistosPorcentaje: 0.05,
+    productos: [
+      { id: idPub, nombre: "Publicidad", unidadMedida: "mil impresiones", cantidades, precios: [pub.cpm, pub.cpm, pub.cpm, pub.cpm, pub.cpm] },
+    ],
+    ...finCapmEjemplo(),
+    crecimientoIngresosAnual: 0.06,
+    crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0],
+    tasasCrecPrecio: [0, 0, 0, 0],
+    estado: "completo",
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
+
+/**
+ * EJEMPLO — COSTO-BENEFICIO (V2): plan de marketing interno.
+ * No vende nada propio: es un gasto que busca generar ventas adicionales en el
+ * negocio. Se evalúa comparando el beneficio incremental estimado contra su costo.
+ */
+export function crearProyectoEjemploPlanMarketingV2(params: {
+  estudiante_id: string;
+  curso_id?: string | null;
+  nombre?: string;
+}): Proyecto {
+  const ahora = new Date().toISOString();
+  const cb = { beneficioAnualBase: 180000, crecimientoAnual: 0.05 };
+  const precios = [0, 1, 2, 3, 4].map(
+    (i) => Math.round(cb.beneficioAnualBase * Math.pow(1 + cb.crecimientoAnual, i) * 100) / 100
+  ) as [number, number, number, number, number];
+  const idBen = nuevoId();
+  return {
+    id: nuevoId(),
+    estudiante_id: params.estudiante_id,
+    curso_id: params.curso_id ?? null,
+    version: "v2",
+    tipo: "libre",
+    nombre: params.nombre ?? "planmarketingv2",
+    ubicacion: "Cochabamba",
+    descripcion: "Plan de marketing interno de una empresa. No vende nada propio; se evalúa por el BENEFICIO INCREMENTAL (ventas extra) que genera vs. su costo (costo-beneficio).",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [],
+      mobiliario: [],
+      activoDiferido: [
+        itemInv("Diseño de marca y material gráfico", "global", 1, 15000, 5),
+        itemInv("Web / landing y configuración", "global", 1, 8000, 5),
+      ],
+    },
+    capitalTrabajo: 10000,
+    mesesBufferCapitalTrabajo: 2,
+    personal: [
+      { id: nuevoId(), puesto: "Encargado de marketing", cantidad: 1, sueldoMensual: 4500 },
+    ],
+    costosDirectos: [],
+    costosAdministracion: [
+      { id: nuevoId(), descripcion: "Herramientas y software de marketing", unidadMedida: "mes", cantidad: 1, costoUnitario: 500 },
+    ],
+    costosComercializacion: [
+      { id: nuevoId(), descripcion: "Pauta en redes y medios (el plan en sí)", unidadMedida: "mes", cantidad: 1, costoUnitario: 8000 },
+    ],
+    imprevistosPorcentaje: 0.05,
+    productos: [
+      { id: idBen, nombre: "Beneficio incremental estimado", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios },
+    ],
+    ...finCapmEjemplo(),
+    crecimientoIngresosAnual: 0.05,
     crecimientoCostosAnual: 0.04,
     tasasCrecCantidad: [0, 0, 0, 0],
     tasasCrecPrecio: [0, 0, 0, 0],

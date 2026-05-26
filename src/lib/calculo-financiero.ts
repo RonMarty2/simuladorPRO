@@ -707,6 +707,60 @@ export function calcularLTVSuscripcion(
 }
 
 // ----------------------------------------------------------------------------
+// MODELO DE INGRESO: PUBLICIDAD / AUDIENCIA (CPM)
+// ----------------------------------------------------------------------------
+
+export interface ParamsPublicidad {
+  /** Audiencia del primer mes (oyentes, visitas, espectadores). */
+  audienciaMensual: number;
+  /** Crecimiento mensual de la audiencia. 0.05 = 5%. */
+  crecimientoMensual: number;
+  /** Anuncios (impresiones) mostrados a cada usuario por mes. */
+  impresionesPorUsuario: number;
+  /** Tarifa por cada 1000 impresiones (CPM), en Bs. */
+  cpm: number;
+}
+
+export interface ProyeccionPublicidadAnio {
+  audienciaPromedio: number;
+  audienciaFin: number;
+  /** Impresiones totales del año = audiencia × impresiones/usuario × 12. */
+  impresionesAnio: number;
+  /** Ingreso del año = (impresiones / 1000) × CPM. */
+  ingresoAnual: number;
+}
+
+/**
+ * Proyecta el ingreso por publicidad: la audiencia crece mes a mes, genera
+ * impresiones y cada 1000 impresiones se cobran al CPM.
+ *
+ *   ingreso = (audiencia × impresiones_por_usuario / 1000) × CPM
+ */
+export function proyectarPublicidad(
+  p: ParamsPublicidad,
+  anios = 5
+): ProyeccionPublicidadAnio[] {
+  const out: ProyeccionPublicidadAnio[] = [];
+  let aud = p.audienciaMensual;
+  for (let y = 0; y < anios; y++) {
+    let sumaAud = 0;
+    for (let m = 0; m < 12; m++) {
+      aud = aud * (1 + p.crecimientoMensual);
+      sumaAud += aud;
+    }
+    const audienciaPromedio = sumaAud / 12;
+    const impresionesAnio = audienciaPromedio * p.impresionesPorUsuario * 12;
+    out.push({
+      audienciaPromedio,
+      audienciaFin: aud,
+      impresionesAnio,
+      ingresoAnual: (impresionesAnio / 1000) * p.cpm,
+    });
+  }
+  return out;
+}
+
+// ----------------------------------------------------------------------------
 // COSTO DE CAPITAL PROPIO — CAPM
 // ----------------------------------------------------------------------------
 

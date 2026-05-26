@@ -155,10 +155,13 @@ export interface Proyecto {
 
   /**
    * Modelo de cómo entra el ingreso. Ausente o 'unidades' = clásico
-   * (productos con cantidad × precio). 'suscripcion' = base de suscriptores
-   * recurrentes (los `productos` se derivan de `suscripcionV2`).
+   * (productos con cantidad × precio). Los demás derivan los `productos` de
+   * sus parámetros propios, sin tocar el motor de flujo.
+   *  - 'suscripcion'      base de suscriptores recurrentes (altas/churn).
+   *  - 'publicidad'       audiencia × CPM.
+   *  - 'costo_beneficio'  no vende; se evalúa por el beneficio incremental.
    */
-  modeloIngreso?: "unidades" | "suscripcion";
+  modeloIngreso?: "unidades" | "suscripcion" | "publicidad" | "costo_beneficio";
 
   /** Parámetros del modelo de suscripción (solo si modeloIngreso='suscripcion'). */
   suscripcionV2?: {
@@ -166,6 +169,20 @@ export interface Proyecto {
     altasMensuales: number;
     churnMensual: number;
     cuotaMensual: number;
+  };
+
+  /** Parámetros del modelo de publicidad (solo si modeloIngreso='publicidad'). */
+  publicidadV2?: {
+    audienciaMensual: number;
+    crecimientoMensual: number;
+    impresionesPorUsuario: number;
+    cpm: number;
+  };
+
+  /** Parámetros de costo-beneficio (solo si modeloIngreso='costo_beneficio'). */
+  costoBeneficioV2?: {
+    beneficioAnualBase: number;
+    crecimientoAnual: number;
   };
 
   /**

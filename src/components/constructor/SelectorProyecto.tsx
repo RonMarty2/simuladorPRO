@@ -6,7 +6,9 @@ import { guardarProyecto } from "@/lib/proyecto-supabase";
 import {
   crearProyectoEjemploCafeteriaV2,
   crearProyectoEjemploPanaderiaV2,
+  crearProyectoEjemploPlanMarketingV2,
   crearProyectoEjemploPodcastV2,
+  crearProyectoEjemploPublicidadV2,
   crearProyectoEjemploTiendaV2,
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
@@ -282,6 +284,8 @@ function ModalNuevoProyecto({
               <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPanaderiaV2)} disabled={guardando} titulo="🥖 Panadería" sub="Producción · unidades" />
               <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploTiendaV2)} disabled={guardando} titulo="🛒 Tienda" sub="Comercio · unidades" />
               <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPodcastV2)} disabled={guardando} titulo="🎙️ Podcast" sub="Suscripción" />
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPublicidadV2)} disabled={guardando} titulo="📺 Canal" sub="Publicidad · CPM" />
+              <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPlanMarketingV2)} disabled={guardando} titulo="📣 Plan mkt" sub="Costo-beneficio" />
             </div>
           </div>
 
