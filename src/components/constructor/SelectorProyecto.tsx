@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, FolderOpen, Loader2, Plus, X } from "lucide-react";
+import { ChevronDown, FolderOpen, Loader2, Plus, Sparkles, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto } from "@/lib/proyecto-supabase";
+import { crearProyectoEjemploCafeteriaV2 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 
@@ -172,6 +173,7 @@ function ModalNuevoProyecto({
   onCerrar: (proyectoIdCreado: string | null) => void;
 }) {
   const inicializar = useProyectoStore((s) => s.inicializar);
+  const cargar = useProyectoStore((s) => s.cargar);
   const [nombre, setNombre] = useState("");
   const [version, setVersion] = useState<VersionProyecto>("v1");
   const [guardando, setGuardando] = useState(false);
@@ -186,6 +188,23 @@ function ModalNuevoProyecto({
       inicializar(userId, nombre.trim(), null, version);
       const p = useProyectoStore.getState().proyecto;
       if (!p) throw new Error("No se pudo inicializar el proyecto");
+      await guardarProyecto(p);
+      onCerrar(p.id);
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+      setGuardando(false);
+    }
+  };
+
+  const cargarEjemplo = async () => {
+    setGuardando(true);
+    setError(null);
+    try {
+      const p = crearProyectoEjemploCafeteriaV2({
+        estudiante_id: userId,
+        nombre: nombre.trim() || "cafeteriav2",
+      });
+      cargar(p);
       await guardarProyecto(p);
       onCerrar(p.id);
     } catch (e: any) {
@@ -247,6 +266,21 @@ function ModalNuevoProyecto({
             💡 Tus proyectos anteriores se conservan. Vas a poder cambiar entre
             ellos desde el selector de arriba.
           </div>
+
+          {/* Atajo: cargar un proyecto de ejemplo V2 ya lleno */}
+          <button
+            type="button"
+            onClick={cargarEjemplo}
+            disabled={guardando}
+            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300"
+          >
+            {guardando ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            Cargar ejemplo lleno: Cafetería (V2)
+          </button>
 
           {error && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
