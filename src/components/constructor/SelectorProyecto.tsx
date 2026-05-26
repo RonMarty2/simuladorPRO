@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, FolderOpen, Loader2, Plus, Sparkles, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto } from "@/lib/proyecto-supabase";
+import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import {
   crearProyectoEjemploCafeteriaV2,
   crearProyectoEjemploPanaderiaV2,
@@ -186,6 +187,8 @@ function ModalNuevoProyecto({
   const [nombre, setNombre] = useState("");
   const [version, setVersion] = useState<VersionProyecto>("v1");
   const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [cursoId, setCursoId] = useState<string>("");
 
   const placeholderNombre: Record<ModeloIngreso, string> = {
     unidades: "Ej: Cafetería, Tienda, Taller mecánico…",
@@ -196,13 +199,20 @@ function ModalNuevoProyecto({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Cursos del estudiante, para asignar el proyecto a uno de ellos al crearlo.
+  useEffect(() => {
+    listarMisInscripciones(userId)
+      .then((insc) => setCursos(insc.map((i) => i.curso)))
+      .catch(() => {});
+  }, [userId]);
+
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim()) return;
     setGuardando(true);
     setError(null);
     try {
-      inicializar(userId, nombre.trim(), null, version, modelo);
+      inicializar(userId, nombre.trim(), cursoId || null, version, modelo);
       const p = useProyectoStore.getState().proyecto;
       if (!p) throw new Error("No se pudo inicializar el proyecto");
       await guardarProyecto(p);
@@ -257,6 +267,30 @@ function ModalNuevoProyecto({
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
+
+          {cursos.length > 0 && (
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Curso al que pertenece
+              </label>
+              <select
+                value={cursoId}
+                onChange={(e) => setCursoId(e.target.value)}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Sin curso (proyecto libre)</option>
+                {cursos.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                    {c.paralelo ? ` · ${c.paralelo}` : ""} ({c.codigo})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Quedará registrado en ese curso; tus entregas irán ahí.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
