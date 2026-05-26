@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import InputNumero from "../InputNumero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { CategoriaInversion } from "@/types/proyecto";
 
@@ -74,13 +75,13 @@ const ANIOS_PROYECTO = 5;
 
 // Anchos consistentes de columnas para que se alineen entre categorías
 const COLS_ANCHO = {
-  descripcion: "w-[22%]",
+  descripcion: "w-[20%]",
   unidad: "w-[8%]",
   cantidad: "w-[8%]",
   costo: "w-[11%]",
   total: "w-[12%]",
-  vidaUtil: "w-[7%]",
-  depAnio: "w-[10%]",
+  vidaUtil: "w-[11%]",
+  depAnio: "w-[9%]",
   valorResidual: "w-[12%]",
   acciones: "w-[5%]",
 };
@@ -378,27 +379,19 @@ function SeccionCategoria({
                         />
                       </td>
                       <td className="p-1">
-                        <input
-                          type="number"
+                        <InputNumero
                           value={it.cantidad}
-                          onChange={(e) =>
-                            onEditar(it.id, { cantidad: Number(e.target.value) || 0 })
-                          }
-                          onFocus={selectOnFocus}
+                          onChange={(n) => onEditar(it.id, { cantidad: n })}
                           onKeyDown={onKeyEnter}
                           data-col={`${config.valor}-cant`}
                           className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </td>
                       <td className="p-1">
-                        <input
-                          type="number"
+                        <InputNumero
                           step="0.01"
                           value={it.costoUnitario}
-                          onChange={(e) =>
-                            onEditar(it.id, { costoUnitario: Number(e.target.value) || 0 })
-                          }
-                          onFocus={selectOnFocus}
+                          onChange={(n) => onEditar(it.id, { costoUnitario: n })}
                           onKeyDown={onKeyEnter}
                           data-col={`${config.valor}-costo`}
                           className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
@@ -412,15 +405,9 @@ function SeccionCategoria({
                           <div className="text-center text-xs text-muted-foreground">—</div>
                         ) : (
                           <div className="relative">
-                            <input
-                              type="number"
+                            <InputNumero
                               value={it.vidaUtilAnios ?? 0}
-                              onChange={(e) =>
-                                onEditar(it.id, {
-                                  vidaUtilAnios: Number(e.target.value) || 0,
-                                })
-                              }
-                              onFocus={selectOnFocus}
+                              onChange={(n) => onEditar(it.id, { vidaUtilAnios: n })}
                               onKeyDown={onKeyEnter}
                               data-col={`${config.valor}-vida`}
                               className={cn(
