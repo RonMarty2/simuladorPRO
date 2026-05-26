@@ -451,7 +451,7 @@ function AnalisisAvanzadoV2({
       </p>
 
       {/* Glosario rápido de las siglas del panel V2 */}
-      <details className="mt-3 rounded-md border border-border bg-card p-2 text-[11px]">
+      <details className="mt-3 max-w-4xl rounded-md border border-border bg-card p-2 text-[11px]">
         <summary className="cursor-pointer font-semibold text-foreground">
           📖 ¿Qué significan estas siglas? (clic para abrir)
         </summary>
@@ -485,7 +485,7 @@ function AnalisisAvanzadoV2({
       </details>
 
       {/* Tarjetas colapsables — cada una muestra solo el titular; se despliega para ver el detalle */}
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 grid max-w-4xl grid-cols-1 gap-2 sm:grid-cols-2">
         <V2Card
           sigla="PE"
           nombre="Punto de equilibrio"
@@ -598,7 +598,7 @@ function AnalisisAvanzadoV2({
       </div>
 
       {/* Tabla de sensibilidad — colapsable */}
-      <details className="mt-3 overflow-hidden rounded-md border border-border bg-card">
+      <details className="mt-3 max-w-4xl overflow-hidden rounded-md border border-border bg-card">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3 hover:bg-secondary/40">
           <span className="text-sm font-semibold">
             Análisis de sensibilidad del VAN — "¿qué pasaría si…?"
@@ -685,18 +685,20 @@ function V2Card({
 }) {
   return (
     <details className="group rounded-md border border-border bg-card">
-      <summary className="flex cursor-pointer list-none items-center gap-2 p-3 hover:bg-secondary/40">
-        <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-          {nombre}
-        </span>
-        <span
-          className={cn(
-            "ml-auto text-base font-bold tabular-nums",
-            positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
-          )}
-        >
-          {valor}
+      <summary className="flex cursor-pointer list-none items-center gap-2 p-2.5 hover:bg-secondary/40">
+        <span className="min-w-0 flex-1">
+          <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
+          <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+            {nombre}
+          </span>
+          <span
+            className={cn(
+              "ml-2 text-base font-bold tabular-nums",
+              positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
+            )}
+          >
+            {valor}
+          </span>
         </span>
         <span className="flex-shrink-0 text-[10px] text-muted-foreground">
           <span className="group-open:hidden">▸ ver</span>
