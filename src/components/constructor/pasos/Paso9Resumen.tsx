@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -484,9 +484,9 @@ function AnalisisAvanzadoV2({
         </div>
       </details>
 
-      {/* Fila de tarjetas */}
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <CardIndicador
+      {/* Tarjetas colapsables — cada una muestra solo el titular; se despliega para ver el detalle */}
+      <div className="mt-4 space-y-2">
+        <V2Card
           sigla="PE"
           nombre="Punto de equilibrio"
           valor={
@@ -495,79 +495,98 @@ function AnalisisAvanzadoV2({
               : "No equilibra"
           }
           positivo={isFinite(v2.puntoEquilibrio.unidades) && v2.puntoEquilibrio.unidades <= v2.unidadesAnio1}
-          pregunta="¿Cuánto debes vender para no perder?"
-          interpretacion={
-            !isFinite(v2.puntoEquilibrio.unidades)
-              ? "✗ Cada unidad pierde plata (sin margen)"
+        >
+          <p className="text-[11px] text-muted-foreground">
+            <strong>¿Qué es?</strong> Cuántas unidades necesitas vender para no ganar ni
+            perder (cubrir todos tus costos). Por debajo de ese número pierdes plata; por
+            encima, empiezas a ganar.
+          </p>
+          <div className="mt-2 space-y-0.5 text-[11px]">
+            <FilaDetalle k="En dinero (Bs)" v={isFinite(v2.puntoEquilibrio.ingresoBs) ? formatearBolivianos(v2.puntoEquilibrio.ingresoBs) : "—"} />
+            <FilaDetalle k="Margen de contribución" v={`${(v2.puntoEquilibrio.ratioMargenContribucion * 100).toFixed(1)}% del precio`} />
+            <FilaDetalle k="Tu venta del año 1" v={`${v2.unidadesAnio1.toLocaleString("es-BO")} u`} />
+          </div>
+          <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
+            {!isFinite(v2.puntoEquilibrio.unidades)
+              ? "✗ Cada unidad pierde plata (sin margen)."
               : v2.puntoEquilibrio.unidades <= v2.unidadesAnio1
-                ? `✓ Tu venta del año 1 (${v2.unidadesAnio1.toLocaleString("es-BO")} u) lo supera`
-                : "⚠ Vendes menos que el punto de equilibrio"
-          }
-          tooltip={`Punto de equilibrio = Costos Fijos ÷ Margen de contribución unitario.\n\nEn Bs: ${formatearBolivianos(v2.puntoEquilibrio.ingresoBs)}\nMargen de contribución: ${(v2.puntoEquilibrio.ratioMargenContribucion * 100).toFixed(1)}% del precio.\nCostos fijos año 1: ${formatearBolivianos(v2.costosFijosAnio1)}\nCostos variables año 1: ${formatearBolivianos(v2.costosVariablesAnio1)}`}
-        />
-        <CardIndicador
+                ? "✓ Vendes más que el punto de equilibrio → ganas."
+                : "⚠ Vendes menos que el punto de equilibrio → pierdes."}
+          </div>
+        </V2Card>
+
+        <V2Card
           sigla="PBD"
           nombre="Payback descontado"
           valor={v2.paybackDescontado < 0 ? "No recupera" : `${v2.paybackDescontado.toFixed(1)} años`}
           positivo={v2.paybackDescontado > 0 && v2.paybackDescontado <= 5}
-          pregunta="¿En cuánto recuperas, ya descontado?"
-          interpretacion={
-            v2.paybackDescontado < 0
-              ? "✗ No recupera en 5 años (descontado)"
+        >
+          <p className="text-[11px] text-muted-foreground">
+            <strong>¿Qué es?</strong> En cuántos años recuperas tu inversión, pero contando
+            que el dinero de mañana vale menos que el de hoy (lo "descuenta" al WACC{" "}
+            {(calc.wacc * 100).toFixed(1)}%). Por eso siempre tarda un poco más que el
+            payback normal.
+          </p>
+          <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
+            {v2.paybackDescontado < 0
+              ? "✗ No recupera en los 5 años."
               : v2.paybackDescontado <= 5
-                ? "✓ Recupera dentro del horizonte"
-                : "⚠ Tarda más de 5 años"
-          }
-          tooltip={`Igual que el Payback, pero descontando los flujos al WACC (${(calc.wacc * 100).toFixed(2)}%) antes de acumular.\n\nSiempre es ≥ que el payback simple (${calc.indicadores.payback < 0 ? "no recupera" : calc.indicadores.payback.toFixed(1) + " años"}), porque el dinero futuro vale menos.`}
-        />
-        <div className="flex flex-col rounded-md border border-border p-3" title={`GAO = Margen contribución ÷ EBIT\nGAF = EBIT ÷ (EBIT − intereses)\nGAT = GAO × GAF\n\nMiden cuánto se amplifican los cambios en ventas sobre la utilidad. Año 1.`}>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-sm font-bold tracking-tight">APAL.</span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Apalancamiento</span>
-            <span className="ml-auto text-[10px] opacity-60">ⓘ</span>
+                ? "✓ Recupera dentro del horizonte de 5 años."
+                : "⚠ Tarda más de 5 años en recuperar."}
           </div>
-          <div className="mt-1 text-[10px] italic text-muted-foreground">¿Cuánto amplifican los costos fijos y la deuda?</div>
-          <div className="mt-1.5 space-y-0.5 text-xs tabular-nums">
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">GAO · operativo (costos fijos)</span>
-              <span className="font-semibold">{fmtRatio(v2.gao)}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">GAF · financiero (deuda)</span>
-              <span className="font-semibold">{fmtRatio(v2.gaf)}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">GAT · total (= GAO × GAF)</span>
-              <span className="font-semibold">{fmtRatio(v2.gat)}</span>
-            </div>
+        </V2Card>
+
+        <V2Card
+          sigla="APAL"
+          nombre="Apalancamiento"
+          valor={isFinite(v2.gat) ? `${v2.gat.toFixed(2)}×` : "—"}
+          positivo
+        >
+          <p className="text-[11px] text-muted-foreground">
+            <strong>¿Qué es?</strong> Mide cuánto se <em>amplifican</em> tus ganancias (y
+            también tus pérdidas) cuando cambian las ventas. Los costos fijos y la deuda
+            actúan como una palanca: magnifican lo bueno y lo malo. Más alto = más sensible
+            = más riesgo.
+          </p>
+          <div className="mt-2 space-y-0.5 text-[11px]">
+            <FilaDetalle k="GAO · por tus costos fijos" v={fmtRatio(v2.gao)} />
+            <FilaDetalle k="GAF · por la deuda" v={fmtRatio(v2.gaf)} />
+            <FilaDetalle k="GAT · total (GAO × GAF)" v={fmtRatio(v2.gat)} />
           </div>
           <div className="mt-1.5 text-[10px] font-medium leading-snug text-muted-foreground">
             {isFinite(v2.gat)
-              ? `Si tus ventas suben 1%, la ganancia del dueño se mueve ~${v2.gat.toFixed(1)}%. Más alto = más sensible (más riesgo).`
+              ? `En palabras: si tus ventas suben (o bajan) 1%, la ganancia del dueño sube (o baja) ~${v2.gat.toFixed(1)}%.`
               : "No calculable con los datos actuales."}
           </div>
-        </div>
-        <div className="flex flex-col rounded-md border border-border p-3" title={`Flujo del proyecto (FCF): como si todo fuera capital propio, descontado al WACC (${(calc.wacc * 100).toFixed(2)}%).\nFlujo del accionista (FCFE): lo que recibe el dueño tras pagar al banco, descontado al Koa (${(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%).\n\nSi el VAN del accionista supera al del proyecto, la deuda crea valor para el dueño.`}>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-sm font-bold tracking-tight">VAN·INV</span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Inversionista</span>
-            <span className="ml-auto text-[10px] opacity-60">ⓘ</span>
-          </div>
-          <div className="mt-1 text-[10px] italic text-muted-foreground">¿La deuda te conviene como dueño?</div>
-          <div className="mt-1.5 space-y-1 text-xs tabular-nums">
+        </V2Card>
+
+        <V2Card
+          sigla="VAN·INV"
+          nombre="Inversionista (proyecto vs dueño)"
+          valor={formatearBolivianos(v2.flujoInv.vanAccionista)}
+          positivo={v2.flujoInv.vanAccionista >= 0}
+        >
+          <p className="text-[11px] text-muted-foreground">
+            <strong>¿Qué es?</strong> Hay dos formas de medir la ganancia: la del{" "}
+            <strong>negocio entero</strong> (como si lo pagaras todo de tu bolsillo) y la de{" "}
+            <strong>tu parte como dueño</strong> (lo que te queda después de pagarle al
+            banco). Si tu parte vale más que el negocio entero, endeudarte te conviene; si
+            vale menos, la deuda no te suma.
+          </p>
+          <div className="mt-2 space-y-1 text-[11px]">
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
-                Del proyecto<br />
-                <span className="text-[9px] opacity-70">negocio entero · al WACC {(calc.wacc * 100).toFixed(1)}%</span>
+                VAN del proyecto<br />
+                <span className="text-[9px] opacity-70">negocio entero · descontado al WACC {(calc.wacc * 100).toFixed(1)}%</span>
               </span>
-              <span className={cn("font-semibold", v2.flujoInv.vanProyecto >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanProyecto)}</span>
+              <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanProyecto >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanProyecto)}</span>
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
-                Tu parte (accionista)<br />
-                <span className="text-[9px] opacity-70">tras pagar la deuda · al Ke {(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%</span>
+                VAN de tu parte (accionista)<br />
+                <span className="text-[9px] opacity-70">tras pagar la deuda · descontado al Ke {(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%</span>
               </span>
-              <span className={cn("font-semibold", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span>
+              <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span>
             </div>
           </div>
           <div className="mt-1.5 text-[10px] font-medium leading-snug text-muted-foreground">
@@ -575,14 +594,18 @@ function AnalisisAvanzadoV2({
               ? "✓ Tu parte vale más que el negocio entero: la deuda te conviene."
               : "⚠ Tu parte no supera al negocio entero: la deuda no te suma valor."}
           </div>
-        </div>
+        </V2Card>
       </div>
 
-      {/* Tabla de sensibilidad */}
-      <div className="mt-4 overflow-x-auto rounded-md border border-border bg-card p-4">
-        <h4 className="mb-1 text-sm font-semibold">
-          Análisis de sensibilidad del VAN — "¿qué pasaría si…?"
-        </h4>
+      {/* Tabla de sensibilidad — colapsable */}
+      <details className="mt-3 overflow-hidden rounded-md border border-border bg-card">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3 hover:bg-secondary/40">
+          <span className="text-sm font-semibold">
+            Análisis de sensibilidad del VAN — "¿qué pasaría si…?"
+          </span>
+          <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
+        </summary>
+        <div className="overflow-x-auto p-4 pt-0">
         <p className="mb-1 text-[11px] leading-snug text-muted-foreground">
           Cada <strong>fila</strong> es una variable de tu proyecto. Cada{" "}
           <strong>columna</strong> dice cuánto sería el VAN si esa variable{" "}
@@ -641,7 +664,55 @@ function AnalisisAvanzadoV2({
           (VAN &lt; 0). VAN base: <strong>{formatearBolivianos(calc.indicadores.van)}</strong> ·
           descontado al WACC {fmtPct(calc.wacc)}.
         </div>
-      </div>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function V2Card({
+  sigla,
+  nombre,
+  valor,
+  positivo,
+  children,
+}: {
+  sigla: string;
+  nombre: string;
+  valor: string;
+  positivo: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details className="group rounded-md border border-border bg-card">
+      <summary className="flex cursor-pointer list-none items-center gap-2 p-3 hover:bg-secondary/40">
+        <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          {nombre}
+        </span>
+        <span
+          className={cn(
+            "ml-auto text-base font-bold tabular-nums",
+            positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
+          )}
+        >
+          {valor}
+        </span>
+        <span className="flex-shrink-0 text-[10px] text-muted-foreground">
+          <span className="group-open:hidden">▸ ver</span>
+          <span className="hidden group-open:inline">▾ ocultar</span>
+        </span>
+      </summary>
+      <div className="border-t border-border/60 p-3 pt-2">{children}</div>
+    </details>
+  );
+}
+
+function FilaDetalle({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <span className="text-muted-foreground">{k}</span>
+      <span className="font-semibold tabular-nums">{v}</span>
     </div>
   );
 }
