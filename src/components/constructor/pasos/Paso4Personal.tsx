@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, RotateCcw, Trash2, Users, Receipt } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import InputNumero from "../InputNumero";
 import {
   APORTES_PATRONALES_BOLIVIA,
   calcularAportesPatronales,
@@ -242,7 +243,7 @@ export default function Paso4Personal() {
             )}
 
             {proyecto.personal.length > 0 && (
-              <div className="overflow-x-auto rounded-md border border-border bg-card">
+              <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
                 <table className="w-full text-xs">
                   <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                     <tr className="border-b border-border">
@@ -308,6 +309,58 @@ export default function Paso4Personal() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* ── Vista MÓVIL: una tarjeta por puesto ───────────────────────── */}
+            {proyecto.personal.length > 0 && (
+              <div className="space-y-2 md:hidden">
+                {proyecto.personal.map((p) => {
+                  const aportes = calcularAportesPatronales(p.sueldoMensual, tasas);
+                  return (
+                    <div key={p.id} className="rounded-md border border-border bg-card p-2">
+                      <div className="flex items-start gap-2">
+                        <input
+                          type="text"
+                          value={p.puesto}
+                          onChange={(e) => editar(p.id, { puesto: e.target.value })}
+                          onFocus={selectOnFocus}
+                          placeholder="Barista, Administrador…"
+                          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                        />
+                        <button
+                          onClick={() => eliminar(p.id)}
+                          className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Eliminar puesto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <label className="text-[9px] text-muted-foreground">
+                          Cantidad
+                          <InputNumero
+                            value={p.cantidad}
+                            onChange={(n) => editar(p.id, { cantidad: n })}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                        <label className="text-[9px] text-muted-foreground">
+                          Sueldo mensual (Bs)
+                          <InputNumero
+                            value={p.sueldoMensual}
+                            onChange={(n) => editar(p.id, { sueldoMensual: n })}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-0.5 border-t border-border/50 pt-1.5 text-[11px]">
+                        <span><span className="text-muted-foreground">Aportes/mes:</span> {formatearBolivianos(aportes.totalAportes)}</span>
+                        <span><span className="text-muted-foreground">Costo anual:</span> <strong>{formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}</strong></span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
