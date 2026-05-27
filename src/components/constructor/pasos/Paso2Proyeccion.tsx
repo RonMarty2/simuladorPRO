@@ -682,42 +682,33 @@ function ProductoFilas({
       {/* HEADER del producto — clic para expandir/contraer */}
       <tr className={cn("border-t-4 border-border", color.chip.split(" ")[0])}>
         <td className={cn("border-l-4 p-2", color.borde)} colSpan={abierto ? 1 : 2}>
-          {/* Cuando está colapsado, toda la franja es clickeable para expandir.
-              Cuando está abierto, solo la flecha contrae (el nombre es editable). */}
-          <div
-            onClick={!abierto ? onToggle : undefined}
-            className={cn(
-              "flex min-w-0 items-center gap-1.5",
-              !abierto && "cursor-pointer"
-            )}
-          >
+          {/* La flecha + el chip "Producto N" (y el nombre cuando está colapsado)
+              forman una sola zona clickeable que abre y cierra por igual. El
+              nombre, cuando está abierto, es un input editable aparte. */}
+          <div className="flex min-w-0 items-center gap-1.5">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggle();
-              }}
-              className="flex-shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
-              title={abierto ? "Contraer" : "Expandir para editar"}
+              type="button"
+              onClick={onToggle}
+              className="flex min-w-0 items-center gap-1.5 rounded p-0.5 text-left hover:bg-black/5 dark:hover:bg-white/10"
+              title={abierto ? "Contraer" : "Expandir"}
             >
               {abierto ? (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4 flex-shrink-0" />
               ) : (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span
+                className={cn(
+                  "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  color.chip
+                )}
+              >
+                Producto {productoIndex + 1}
+              </span>
+              {!abierto && (
+                <span className="min-w-0 truncate text-xs font-bold">{prod.nombre}</span>
               )}
             </button>
-            <span
-              className={cn(
-                "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                color.chip
-              )}
-            >
-              Producto {productoIndex + 1}
-            </span>
-            {!abierto && (
-              <span className="min-w-0 truncate text-xs font-bold hover:underline">
-                {prod.nombre}
-              </span>
-            )}
           </div>
           {abierto && (
             <input

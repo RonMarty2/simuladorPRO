@@ -276,34 +276,32 @@ function SeccionCategoria({
                       <div className="mb-1.5 font-semibold">
                         Si planeas comprar repuestos cuando se acaben:
                       </div>
-                      <ul className="ml-3 space-y-1.5">
+                      <ul className="ml-3 space-y-2">
                         {itemsCortos.map((it) => {
                           const vida = it.vidaUtilAnios ?? 1;
-                          const cantSugerida = Math.ceil(ANIOS_PROYECTO / vida);
-                          const cantActual = it.cantidad;
-                          const yaEsSuficiente = cantActual >= cantSugerida;
+                          // Veces que comprarás CADA unidad durante el proyecto
+                          // (1 original + reposiciones). Ej: dura 2 años en 5 → 3.
+                          const factor = Math.ceil(ANIOS_PROYECTO / vida);
+                          const enUso = it.cantidad; // las que usas a la vez
+                          const totalReponer = enUso * factor;
+                          const repuestos = factor - 1;
                           return (
                             <li key={it.id} className="flex flex-wrap items-center gap-2">
                               <span>
                                 <strong>{it.descripcion || "(sin nombre)"}</strong> dura{" "}
-                                {vida} años → necesitas <strong>{cantSugerida}{" "}
-                                unidades</strong> para cubrir los 5 años (1 original +{" "}
-                                {cantSugerida - 1} {cantSugerida - 1 === 1 ? "repuesto" : "repuestos"})
+                                {vida} años. Si usas <strong>{enUso.toLocaleString()}</strong>{" "}
+                                a la vez, en los 5 años comprarás <strong>{factor} veces</strong>{" "}
+                                cada uno (1 + {repuestos} {repuestos === 1 ? "repuesto" : "repuestos"}) ={" "}
+                                <strong>{totalReponer.toLocaleString()} unidades</strong> en total.
                               </span>
-                              {!yaEsSuficiente && (
+                              {totalReponer !== enUso && (
                                 <button
-                                  onClick={() =>
-                                    onEditar(it.id, { cantidad: cantSugerida })
-                                  }
+                                  onClick={() => onEditar(it.id, { cantidad: totalReponer })}
                                   className="rounded-md border border-amber-500 bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-800/40 dark:text-amber-100 dark:hover:bg-amber-700/50"
+                                  title={`Cambia la cantidad a ${enUso} × ${factor} = ${totalReponer} (incluye los repuestos para los 5 años).`}
                                 >
-                                  ✓ Cambiar cantidad a {cantSugerida}
+                                  ✓ Cambiar cantidad a {totalReponer.toLocaleString()} ({enUso}×{factor})
                                 </button>
-                              )}
-                              {yaEsSuficiente && (
-                                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-                                  Ya tienes suficiente (cantidad = {cantActual})
-                                </span>
                               )}
                             </li>
                           );
