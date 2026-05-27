@@ -305,36 +305,30 @@ function SeccionCategoria({
                                   Ya tienes suficiente (cantidad = {cantActual})
                                 </span>
                               )}
-                              <button
-                                onClick={() =>
-                                  onEditar(it.id, { vidaUtilAnios: ANIOS_PROYECTO })
-                                }
-                                className="rounded-md border border-emerald-500 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-800/40 dark:text-emerald-100 dark:hover:bg-emerald-700/50"
-                                title="Pone la vida útil en 5 años: el activo dura todo el proyecto y recupera valor residual."
-                              >
-                                📈 Subir vida útil a {ANIOS_PROYECTO} años
-                              </button>
                             </li>
                           );
                         })}
                       </ul>
                     </div>
 
-                    <div className="text-[11px]">
-                      <strong>Cómo resolverlo:</strong>
+                    <div className="rounded bg-card/60 p-2 text-[11px]">
+                      <strong>Importante:</strong> que un activo termine en{" "}
+                      <strong>Bs 0 de valor residual no es un error</strong> — significa que
+                      se usó por completo dentro del proyecto. Es normal. Solo decide qué
+                      harás cuando se acabe:
                       <ul className="ml-3 mt-1 list-disc space-y-0.5">
                         <li>
-                          Usa el botón verde <strong>"📈 Subir vida útil a {ANIOS_PROYECTO} años"</strong>{" "}
-                          si crees que en la práctica te durará todo el proyecto
-                          (mantenimiento, uso liviano). Recupera valor residual.
+                          <strong>Comprar repuestos</strong> cuando se acabe → usa el botón
+                          ámbar <strong>"Cambiar cantidad"</strong> (sube tu inversión).
                         </li>
                         <li>
-                          O el botón ámbar <strong>"Cambiar cantidad"</strong> si vas a
-                          comprar repuestos cuando se acabe.
+                          <strong>Operar sin él al final:</strong> ajusta tu proyección de
+                          demanda (Paso 2) a la baja en los años que ya no funcione.
                         </li>
                         <li>
-                          O <strong>operar sin él al final:</strong> ajusta tu proyección
-                          de demanda (Paso 2) a la baja en los años que ya no funcione.
+                          ¿Pusiste mal la vida útil? <strong>Corrígela a su valor real</strong>{" "}
+                          en la columna "Vida útil" (no la infles solo para que desaparezca
+                          el aviso).
                         </li>
                       </ul>
                     </div>
