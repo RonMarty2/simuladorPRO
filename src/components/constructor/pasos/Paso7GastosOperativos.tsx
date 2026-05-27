@@ -81,7 +81,9 @@ export default function Paso7GastosOperativos() {
                 Administrativos →
               </span>{" "}
               <span className="text-blue-900/80 dark:text-blue-100/80">
-                hacen que la empresa <em>funcione</em> (oficina, contador, luz, agua, sueldos no productivos).
+                hacen que la empresa <em>funcione</em> (alquiler de oficina, luz, agua,
+                internet, contador externo, papelería). Los <strong>sueldos van en el Paso 4 ·
+                Personal</strong>, no aquí.
               </span>
             </div>
             <div className="rounded-md border border-emerald-500/40 bg-emerald-50 px-2.5 py-1.5 text-[11px] dark:bg-emerald-950/20">

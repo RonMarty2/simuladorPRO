@@ -62,7 +62,7 @@ export default function CantidadFraccionInput({
   const hayError = texto.trim() !== "" && parsed === null;
 
   return (
-    <div className="relative">
+    <div>
       <input
         type="text"
         value={texto}
@@ -76,12 +76,12 @@ export default function CantidadFraccionInput({
         title="Puedes escribir un número (0.25) o una fracción (3/12)"
       />
       {mostrarDecimal && (
-        <div className="absolute -bottom-3 right-0 rounded bg-emerald-100 px-1 text-[9px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+        <div className="mt-0.5 text-right text-[9px] font-semibold leading-none text-emerald-700 dark:text-emerald-300">
           = {parsed!.toFixed(4)}
         </div>
       )}
       {hayError && (
-        <div className="absolute -bottom-3 right-0 rounded bg-destructive/15 px-1 text-[9px] font-semibold text-destructive">
+        <div className="mt-0.5 text-right text-[9px] font-semibold leading-none text-destructive">
           inválido
         </div>
       )}
