@@ -199,8 +199,8 @@ export default function Paso9Resumen() {
                 ? `✓ Por cada Bs de costo, ingresas Bs ${calc.indicadores.rbc.toFixed(2)}`
                 : "✗ Gastas más de lo que ingresas"
             }
-            tooltip="RBC = VP(ingresos) ÷ VP(todos los costos, impuestos e intereses).\n\nSi RBC > 1: el negocio es eficiente. Si RBC < 1: gastas más de lo que generas."
-            explicacion="Por cada Bs que gastas (costos, impuestos e intereses), cuántos Bs ingresas. Si es 1.15, por cada Bs de costo entran Bs 1.15. Mayor a 1 = el negocio es eficiente; menor a 1 = gastas más de lo que generas. Parecido al IR pero mirando ingresos vs costos."
+            tooltip="RBC = VP(beneficios) ÷ VP(costos), con los MISMOS flujos que el VAN.\n\nBeneficios = ventas + préstamo + valor residual + recuperación del capital de trabajo.\nCostos = inversión + operación + impuestos + intereses + amortización.\n\nPor eso siempre coincide con el VAN: si VAN > 0, RBC > 1."
+            explicacion="Por cada Bs de costo (incluida la inversión), cuántos Bs de beneficio recibes en total (ventas + valor residual + recuperación de capital). Usa los mismos flujos que el VAN, así que nunca se contradicen: VAN positivo ⟺ RBC mayor a 1. Si está apenas por encima de 1, el proyecto es rentable pero ajustado."
           />
           <CardIndicador
             sigla="WACC"
@@ -1436,11 +1436,15 @@ function construirFlujoCaja(proyecto: any) {
   const cuotaAnualTotal = (amortizacion[0] ?? 0) + (intereses[0] ?? 0); // Año 1 = referencia
   const sd = calcularServicioDeuda(flujoOperativo, cuotaAnualTotal);
 
-  // RBC = VP(ingresos) / VP(costos+impuestos+deuda)
-  const flujoIngresos: number[] = [0, ...ingresos];
-  const flujoCostosTotal: number[] = [
-    totalProyecto - montoPrestamo, // inversión inicial = costo año 0
-  ];
+  // RBC = VP(beneficios) / VP(costos), usando EXACTAMENTE los mismos flujos que
+  // el VAN para que nunca se contradigan (RBC > 1 ⟺ VAN > 0).
+  // Beneficios (entradas): préstamo recibido (año 0) + ventas + valor residual y
+  // recuperación del capital de trabajo (año 5).
+  // Costos (salidas): inversión total (año 0) + costos operativos + intereses +
+  // impuestos + amortización de la deuda.
+  const flujoIngresos: number[] = [montoPrestamo, ...ingresos];
+  flujoIngresos[5] += valorResidual + proyecto.capitalTrabajo;
+  const flujoCostosTotal: number[] = [totalProyecto];
   for (let i = 0; i < 5; i++) {
     flujoCostosTotal.push(
       costosProduccion[i] +
@@ -1449,7 +1453,8 @@ function construirFlujoCaja(proyecto: any) {
         personal[i] +
         imprevistos[i] +
         intereses[i] +
-        impuestos[i]
+        impuestos[i] +
+        amortizacion[i]
     );
   }
   const rbc = calcularRBC(flujoIngresos, flujoCostosTotal, tasa);
