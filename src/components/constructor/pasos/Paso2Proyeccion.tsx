@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import Recomendacion from "../Recomendacion";
+import InputNumero from "../InputNumero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
 import { calcularLTVSuscripcion, proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
@@ -132,7 +133,7 @@ export default function Paso2Proyeccion() {
           </p>
         </div>
 
-        <div className="overflow-x-auto rounded-md border border-border">
+        <div className="hidden overflow-x-auto rounded-md border border-border md:block">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b-2 border-border bg-secondary">
@@ -275,6 +276,135 @@ export default function Paso2Proyeccion() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── Vista MÓVIL: tarjetas (sin scroll horizontal) ─────────────────── */}
+        <div className="space-y-3 md:hidden">
+          {/* Tasas de crecimiento */}
+          <details className="rounded-md border-l-4 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20">
+            <summary className="cursor-pointer list-none p-2.5 text-[11px] font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
+              📈 Tasas de crecimiento (aplican a todos) · tocar para editar
+            </summary>
+            <div className="space-y-2 p-2.5 pt-0">
+              {[
+                { label: "Cantidad (% por año)", tasas: tasasCant, set: setTasaCant },
+                { label: "Precio (% por año)", tasas: tasasPrec, set: setTasaPrec },
+              ].map((fila) => (
+                <div key={fila.label}>
+                  <div className="text-[10px] font-semibold text-muted-foreground">{fila.label}</div>
+                  <div className="mt-1 grid grid-cols-4 gap-1">
+                    {fila.tasas.map((t, i) => (
+                      <label key={i} className="text-center text-[9px] text-muted-foreground">
+                        Año {i + 2}
+                        <InputNumero
+                          value={t}
+                          step="0.5"
+                          onChange={(v) => fila.set(i, v)}
+                          className="mt-0.5 w-full rounded border border-input bg-background px-1 py-1 text-center text-xs"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+
+          {productos.length === 0 && (
+            <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Aún no agregaste productos.
+            </div>
+          )}
+
+          {/* Una tarjeta por producto */}
+          {productos.map((p, pi) => {
+            const color = COLORES_PRODUCTO[pi % COLORES_PRODUCTO.length];
+            return (
+              <div key={p.id} className={cn("overflow-hidden rounded-md border border-border border-l-4", color.borde)}>
+                <div className={cn("flex items-center justify-between gap-2 p-2", color.chip.split(" ")[0])}>
+                  <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", color.chip)}>
+                    Producto {pi + 1}
+                  </span>
+                  <button
+                    onClick={() => eliminar(p.id)}
+                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Eliminar producto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-2 p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="text-[10px] text-muted-foreground">
+                      Nombre
+                      <input
+                        type="text"
+                        value={p.nombre}
+                        onChange={(e) => editar(p.id, { nombre: e.target.value })}
+                        onFocus={(e) => e.currentTarget.select()}
+                        placeholder="Nombre"
+                        className="mt-0.5 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                      />
+                    </label>
+                    <label className="text-[10px] text-muted-foreground">
+                      Unidad
+                      <input
+                        type="text"
+                        value={p.unidadMedida}
+                        onChange={(e) => editar(p.id, { unidadMedida: e.target.value })}
+                        onFocus={(e) => e.currentTarget.select()}
+                        placeholder="taza, kg…"
+                        className="mt-0.5 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                      />
+                    </label>
+                  </div>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} className="rounded-md border border-border bg-background/60 p-2">
+                      <div className="mb-1 text-[10px] font-semibold text-muted-foreground">Año {i + 1}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="text-[9px] text-muted-foreground">
+                          Cantidad
+                          <InputNumero
+                            value={p.cantidades[i]}
+                            onChange={(v) => cambiarCantidad(p.id, i, v)}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                        <label className="text-[9px] text-muted-foreground">
+                          Precio (Bs)
+                          <InputNumero
+                            value={p.precios[i]}
+                            step="0.01"
+                            onChange={(v) => cambiarPrecio(p.id, i, v)}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-1 text-right text-[11px] font-semibold">
+                        Ingreso: {formatearBolivianos(p.cantidades[i] * p.precios[i])}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Totales */}
+          {productos.length > 0 && (
+            <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-2 text-xs">
+              <div className="mb-1 font-bold uppercase tracking-wide">Total ingresos por año</div>
+              {ingresosPorAnio.map((ing, i) => (
+                <div key={i} className="flex justify-between border-b border-border/40 py-0.5">
+                  <span className="text-muted-foreground">
+                    Año {i + 1}{" "}
+                    <span className="text-[10px]">({unidadesPorAnio[i].toLocaleString()} u)</span>
+                  </span>
+                  <span className="font-semibold tabular-nums">{formatearBolivianos(ing)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
