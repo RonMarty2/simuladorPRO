@@ -220,10 +220,14 @@ export default function Paso6CostosProduccion() {
 
         {/* Resumen consolidado */}
         <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide">
-            Costos directos consolidados (todos los productos)
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Costos directos consolidados (todos los productos)
+            </span>
+            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
-          <table className="w-full text-xs">
+          <div className="-mx-1 overflow-x-auto md:mx-0">
+          <table className="w-full min-w-[480px] text-xs md:min-w-0">
             <thead className="text-muted-foreground">
               <tr>
                 <th className="p-1 text-left">Concepto</th>
@@ -268,6 +272,7 @@ export default function Paso6CostosProduccion() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -331,7 +336,7 @@ function BloqueProducto({
           color.bgHeader
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {abierto ? (
             <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
           ) : (

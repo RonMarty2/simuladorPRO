@@ -139,10 +139,14 @@ export default function Paso7GastosOperativos() {
 
         {/* Totales año a año */}
         <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide">
-            Proyección 5 años
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Proyección 5 años
+            </span>
+            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
-          <table className="w-full text-xs">
+          <div className="-mx-1 overflow-x-auto md:mx-0">
+          <table className="w-full min-w-[480px] text-xs md:min-w-0">
             <thead className="text-muted-foreground">
               <tr>
                 <th className="p-1 text-left">Concepto</th>
@@ -180,6 +184,7 @@ export default function Paso7GastosOperativos() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -222,7 +227,7 @@ function SeccionGastos({
         type="button"
         onClick={() => setAbierto((v) => !v)}
         className={cn(
-          "flex w-full items-center justify-between gap-2 px-3 py-2 text-left",
+          "flex w-full flex-col gap-1 px-3 py-2 text-left md:flex-row md:items-center md:justify-between md:gap-2",
           config.bgHeader
         )}
       >
@@ -234,15 +239,15 @@ function SeccionGastos({
           )}
           <span
             className={cn(
-              "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap",
               config.chip
             )}
           >
             {config.label}
           </span>
-          <span className="truncate text-[10px] text-foreground/70">{config.sugerencia}</span>
+          <span className="hidden truncate text-[10px] text-foreground/70 md:inline">{config.sugerencia}</span>
         </div>
-        <div className="flex-shrink-0 text-right">
+        <div className="flex-shrink-0 pl-6 md:pl-0 md:text-right">
           <div className="text-[10px] text-muted-foreground">
             Total año 1 · {items.length} ítem{items.length === 1 ? "" : "s"}
           </div>

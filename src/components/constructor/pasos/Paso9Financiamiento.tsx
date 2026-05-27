@@ -138,10 +138,14 @@ export default function Paso9Financiamiento() {
 
         {/* Resumen rápido */}
         <div className="rounded-md border border-border bg-secondary/20 p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide">
-            Resumen de financiamiento
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Resumen de financiamiento
+            </span>
+            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
-          <table className="w-full text-xs">
+          <div className="-mx-1 overflow-x-auto md:mx-0">
+          <table className="w-full min-w-[600px] text-xs md:min-w-0">
             <thead className="text-muted-foreground">
               <tr>
                 <th className="p-1 text-left">Concepto</th>
@@ -181,6 +185,7 @@ export default function Paso9Financiamiento() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -299,7 +304,7 @@ function BloquePrestamo({
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className={cn("flex w-full items-center justify-between gap-2 px-3 py-2 text-left", estilo.headerBg)}
+        className={cn("flex w-full flex-col gap-1 px-3 py-2 text-left md:flex-row md:items-center md:justify-between md:gap-2", estilo.headerBg)}
       >
         <div className="flex min-w-0 items-center gap-2">
           {abierto ? (
@@ -307,12 +312,12 @@ function BloquePrestamo({
           ) : (
             <ChevronRight className="h-4 w-4 flex-shrink-0" />
           )}
-          <span className={cn("flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", estilo.chip)}>
+          <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap", estilo.chip)}>
             {titulo}
           </span>
-          <span className="truncate text-[10px] text-muted-foreground">{subtitulo}</span>
+          <span className="hidden truncate text-[10px] text-muted-foreground md:inline">{subtitulo}</span>
         </div>
-        <div className="flex-shrink-0 text-right">
+        <div className="flex-shrink-0 pl-6 md:pl-0 md:text-right">
           <div className="text-[10px] text-muted-foreground">Préstamo · cuota/mes</div>
           <div className="text-sm font-bold tabular-nums">
             {formatearBolivianos(montoFinanciar)} · {formatearBolivianos(cuotaMensual)}
