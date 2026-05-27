@@ -18,15 +18,13 @@ import {
 } from "@/lib/simulacion-supabase";
 import { supabase } from "@/lib/supabase";
 import {
-  calcularAportesPatronales,
   calcularIR,
   calcularPayback,
   calcularPaybackDescontado,
   calcularTIR,
   calcularVAN,
-  calcularWACC,
-  obtenerTasasAportes,
 } from "@/lib/calculo-financiero";
+import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { formatearBolivianos } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 import type { Simulacion, TurnoHistorial } from "@/types/simulacion";
@@ -292,76 +290,25 @@ function calcularComparativo(
   simulacion: Simulacion,
   historial: TurnoHistorial[]
 ) {
-  // 1) Proyectados (igual que paso 10 del constructor)
-  const inversionInicial =
-    Object.values(proyecto.inversiones)
-      .flat()
-      .reduce((acc, it) => acc + it.costoTotal, 0) + proyecto.capitalTrabajo;
-
-  const tasasAportes = obtenerTasasAportes(proyecto.aportesPatronalesOverride);
-  const personalAnual = proyecto.personal.reduce(
-    (acc, p) => acc + calcularAportesPatronales(p.sueldoMensual, tasasAportes).costoTotalAnual * p.cantidad,
-    0
-  );
-  const adminAnual = proyecto.costosAdministracion.reduce(
-    (acc, c) => acc + c.cantidad * c.costoUnitario * (c.unidadMedida === "mes" ? 12 : 1),
-    0
-  );
-  const comercAnual = proyecto.costosComercializacion.reduce(
-    (acc, c) => acc + c.cantidad * c.costoUnitario * (c.unidadMedida === "mes" ? 12 : 1),
-    0
-  );
-  const ingresoBase = proyecto.productos.reduce(
-    (acc, p: any) => {
-      const cant = p.cantidades?.[0] ?? p.cantidadAnio1 ?? 0;
-      const precio = p.precios?.[0] ?? p.precioVenta ?? 0;
-      return acc + cant * precio;
-    },
-    0
-  );
-  const insumosAnio = proyecto.productos.reduce(
-    (acc, p: any) =>
-      acc +
-      (p.cantidades?.[0] ?? p.cantidadAnio1 ?? 0) *
-        proyecto.costosDirectos.reduce(
-          (s, c) => s + c.cantidadPorUnidad * c.costoUnitario,
-          0
-        ),
-    0
-  );
-
-  const wacc = calcularWACC({
-    porcentajeDeuda: proyecto.financiamiento.porcentajePrestamo,
-    porcentajeCapital: proyecto.financiamiento.porcentajePropio,
-    tasaInteresDeuda: proyecto.financiamiento.tasaInteresAnual,
-    costoOportunidadAccionista: proyecto.financiamiento.costoOportunidadAccionista,
-    tasaImpuesto: 0.25,
-  });
-  const tasa = wacc > 0 ? wacc : 0.1;
-
-  const flujosProyectados: number[] = [-inversionInicial];
-  let flujoAcumProy = 0;
-  for (let a = 1; a <= 5; a++) {
-    const ing = ingresoBase * Math.pow(1 + proyecto.crecimientoIngresosAnual, a - 1);
-    const cost = (insumosAnio + personalAnual + adminAnual + comercAnual) *
-      Math.pow(1 + proyecto.crecimientoCostosAnual, a - 1);
-    const u = (ing - cost) * 0.75;
-    flujosProyectados.push(u);
-    flujoAcumProy += u;
-  }
+  // 1) PROYECTADO — usa el MISMO motor que el Paso 9 (sin recalcular aparte).
+  const calc = construirFlujoCaja(proyecto);
+  const tasa = calc.wacc > 0 ? calc.wacc : 0.1;
+  const flujosProyectados = calc.flujoCaja;
+  const cajaFinalProy =
+    proyecto.capitalTrabajo + flujosProyectados.slice(1).reduce((a: number, b: number) => a + b, 0);
 
   const proyectado = {
-    van: calcularVAN(flujosProyectados, tasa),
-    tir: calcularTIR(flujosProyectados),
-    payback: calcularPayback(flujosProyectados),
+    van: calc.indicadores.van,
+    tir: calc.indicadores.tir,
+    payback: calc.indicadores.payback,
     paybackDescontado: calcularPaybackDescontado(flujosProyectados, tasa),
-    ir: calcularIR(flujosProyectados, tasa),
-    cajaFinal: proyecto.capitalTrabajo + flujoAcumProy,
+    ir: calc.indicadores.ir,
+    cajaFinal: cajaFinalProy,
   };
 
-  // 2) Reales (del estado final de la simulación)
-  const flujosReales: number[] = [-inversionInicial];
-  // Agrupar historial por año
+  // 2) REAL — del estado final de la simulación. Mismo punto de partida (año 0)
+  // que el proyectado para que la comparación sea justa.
+  const flujosReales: number[] = [flujosProyectados[0]];
   const turnosPorAnio = Math.ceil(simulacion.turnos_totales / 5);
   for (let a = 0; a < 5; a++) {
     const turnosAnio = historial.slice(a * turnosPorAnio, (a + 1) * turnosPorAnio);
