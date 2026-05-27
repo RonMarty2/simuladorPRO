@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import Recomendacion from "../Recomendacion";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
 import { calcularLTVSuscripcion, proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
@@ -294,6 +295,54 @@ export default function Paso2Proyeccion() {
           <Plus className="h-3.5 w-3.5" />
           Agregar producto
         </button>
+
+        <Recomendacion titulo="💡 ¿De dónde saco la cantidad y el precio? — buenas prácticas">
+          <p>
+            <strong>La cantidad NO se inventa.</strong> Estímala por uno de estos dos caminos:
+          </p>
+          <ul className="ml-4 list-disc space-y-1">
+            <li>
+              <strong>Por el mercado (de arriba hacia abajo):</strong> tamaño del mercado
+              (cuántos clientes potenciales hay en tu zona) × el <em>% realista</em> que
+              puedes captar. Ej: 10.000 personas en el barrio × 3% que vendrían = 300
+              clientes.
+            </li>
+            <li>
+              <strong>Por capacidad (de abajo hacia arriba):</strong> cuánto puedes
+              producir/atender por día × días de operación. <em>Nunca</em> proyectes vender
+              más de lo que físicamente puedes.
+            </li>
+          </ul>
+          <p>
+            <strong>Valida con datos reales:</strong> observa negocios parecidos, cuenta el
+            flujo de gente (aforo) en la zona y horario, haz una encuesta corta, mira datos
+            del sector.
+          </p>
+          <p>
+            <strong>Fuentes en Bolivia:</strong> INE (población y gasto de los hogares),
+            cámaras de comercio/industria, asociaciones del rubro, municipios (patentes) y tu
+            propia observación de campo.
+          </p>
+          <p>
+            <strong>Sé conservador el año 1</strong> (el arranque es lento) y{" "}
+            <strong>justifica el crecimiento</strong>: no pongas 10% porque sí — lígalo a tu
+            plan de marketing, apertura de nuevos puntos, etc.
+          </p>
+          <p>
+            <strong>El precio:</strong> como mínimo cubre tus costos + margen; como máximo, lo
+            que el cliente está dispuesto a pagar. Compara con la competencia.
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>Según tu tipo de negocio:</strong>
+          </p>
+          <ul className="ml-4 list-disc space-y-0.5">
+            <li><strong>Producción:</strong> parte de la capacidad de tu planta/máquinas.</li>
+            <li><strong>Comercio:</strong> tráfico peatonal × % que entra y compra × ticket promedio.</li>
+            <li><strong>Servicios:</strong> clientes que puedes atender por día × precio del servicio.</li>
+            <li><strong>Turismo:</strong> flujo de turistas de la zona y temporadas alta/baja.</li>
+            <li><strong>Agricultura:</strong> rendimiento por hectárea × superficie sembrada.</li>
+          </ul>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
@@ -418,6 +467,31 @@ function PanelSuscripcion({
             <div className="text-muted-foreground">= altas ÷ churn. Si no subes las altas o bajas el churn, tu base tiende a estabilizarse aquí.</div>
           </div>
         </div>
+
+        <Recomendacion titulo="💡 ¿De dónde saco suscriptores, altas y churn? — buenas prácticas">
+          <p>
+            <strong>Suscriptores iniciales:</strong> sé realista, casi siempre es bajo.
+            Básalo en tu audiencia o lista de espera <em>real</em>, no en un número soñado.
+          </p>
+          <p>
+            <strong>Altas por mes:</strong> salen de tu embudo → (personas que te
+            conocen/visitan al mes) × (% que se convierte en pago). Una conversión del 1-5%
+            ya es buena.
+          </p>
+          <p>
+            <strong>Churn (bajas):</strong> es EL número clave. Usa referencias del rubro:
+            contenido/membresías <strong>5-10% mensual</strong>, gimnasios 3-5%, software
+            bueno &lt;5%. Un churn alto hace que nunca crezcas.
+          </p>
+          <p>
+            <strong>Cuota:</strong> compárala con la competencia y con el valor que entregas.
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>Regla de oro:</strong> tu base se estabiliza en <em>altas ÷ churn</em>.
+            Si captas 40 al mes pero pierdes el 4% de 1.000, te estancas en ~1.000.{" "}
+            <strong>Bajar el churn vale más que captar más.</strong>
+          </p>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
@@ -518,6 +592,33 @@ function PanelPublicidad({
             </tbody>
           </table>
         </div>
+
+        <Recomendacion titulo="💡 ¿De dónde saco la audiencia y el CPM? — buenas prácticas">
+          <p>
+            <strong>Audiencia:</strong> si ya tienes canal, usa tus datos reales (analytics,
+            descargas, oyentes). Si recién arrancas, usa comparables de tu nicho y empieza{" "}
+            <strong>bajo</strong>.
+          </p>
+          <p>
+            <strong>Crecimiento mensual:</strong> está ligado a tu esfuerzo de contenido y
+            promoción. Un <strong>5-10% mensual sostenido ya es agresivo</strong>; no
+            proyectes "hacerte viral".
+          </p>
+          <p>
+            <strong>CPM (tarifa por mil impresiones):</strong> usa benchmarks por plataforma y
+            nicho — varía muchísimo (temas de finanzas/B2B pagan más que entretenimiento).{" "}
+            <strong>No infles el CPM.</strong>
+          </p>
+          <p>
+            <strong>Anuncios por usuario:</strong> cuántos avisos ve cada persona al mes. Sé
+            realista: saturar de anuncios espanta a la audiencia.
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>Regla:</strong> con audiencia chica el ingreso es bajo aunque el CPM sea
+            bueno. Por eso al inicio se invierte en <em>crecer audiencia</em> antes que en
+            monetizar.
+          </p>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
@@ -600,6 +701,27 @@ function PanelCostoBeneficio({
           inversión). El proyecto "conviene" si el <strong>VAN sale positivo</strong>: el
           beneficio incremental supera lo que cuesta el plan.
         </div>
+
+        <Recomendacion titulo="💡 ¿Cómo estimo el beneficio incremental? — buenas prácticas">
+          <p>
+            <strong>El beneficio incremental NO son las ventas totales.</strong> Es la
+            diferencia entre el negocio <strong>CON</strong> el plan y <strong>SIN</strong> el
+            plan (la línea base). No cuentes ventas que igual ocurrirían sin hacer nada.
+          </p>
+          <p>
+            <strong>Sé conservador:</strong> si aun con una estimación prudente el VAN sale
+            positivo, el plan se justifica. Si necesitas ser optimista para que dé,
+            desconfía.
+          </p>
+          <p>
+            <strong>Apóyate en evidencia:</strong> una prueba piloto pequeña, resultados de
+            campañas pasadas, o benchmarks del sector — no en "esperamos vender más".
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>Define cómo lo vas a medir (KPIs):</strong> ventas atribuibles, clientes
+            nuevos, % de aumento. Así después puedes comprobar si el plan realmente funcionó.
+          </p>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
