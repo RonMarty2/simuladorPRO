@@ -292,6 +292,9 @@ export default function Paso9Resumen() {
                 <FilaFlujo label="(-) Capital de trabajo" valores={[-calc.capitalTrabajo, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
                 <FilaFlujo label="(+) Préstamo recibido" valores={[calc.montoPrestamo, 0, 0, 0, 0, 0]} signo="+" fila="sky" />
                 <FilaFlujo label="(-) Amortización de capital de la deuda" valores={[0, ...calc.amortizacion]} signo="-" fila="sky" />
+                {calc.reinversionPorAnio.some((r) => r > 0) && (
+                  <FilaFlujo label="(-) Reinversión (reposición de activos de vida corta)" valores={[0, ...calc.reinversionPorAnio]} signo="-" fila="sky" />
+                )}
                 <FilaFlujo label="(+) Valor residual (año 5)" valores={[0, 0, 0, 0, 0, calc.valorResidual]} signo="+" fila="sky" />
                 <FilaFlujo label="(+) Recuperación capital de trabajo (año 5)" valores={[0, 0, 0, 0, 0, calc.capitalTrabajo]} signo="+" fila="sky" />
               </>

@@ -34,28 +34,38 @@ export function construirFlujoCaja(proyecto: any) {
     return { ...p, cantidades, precios };
   });
 
-  // ── Inversión y depreciación ──────────────────────────────────────────────
+  // ── Inversión, depreciación, reposiciones y valor residual ───────────────
+  // Solo los activos de vida < 5 reciben tratamiento especial (reposición
+  // escalonada). Los de vida ≥ 5 y el terreno se comportan EXACTAMENTE igual
+  // que antes: compra en año 0, depreciación durante su vida, sin reposición.
+  const HORIZONTE = 5;
   const inversionItems = Object.values(proyecto.inversiones).flat() as any[];
   const inversionInicial = inversionItems.reduce((a, it) => a + it.costoTotal, 0);
 
-  // Depreciación POR AÑO: cada activo se deprecia solo durante su vida útil
-  // (un activo de vida 2 no se deprecia los 5 años). El terreno no se deprecia.
-  const depreciacion = [0, 1, 2, 3, 4].map((anio) =>
-    inversionItems.reduce((a, it) => {
-      const vida = it.vidaUtilAnios;
-      if (!vida || vida <= 0) return a; // terreno / no se deprecia
-      return anio < vida ? a + it.costoTotal / vida : a;
-    }, 0)
-  );
+  const depreciacion = [0, 0, 0, 0, 0]; // por año 1..5
+  const reinversionPorAnio = [0, 0, 0, 0, 0]; // recompras de activos de vida corta, año 1..5
+  let valorResidual = 0;
 
-  // Valor residual al AÑO 5 = lo que queda sin depreciar (no el costo completo).
-  // Terreno mantiene su valor; lo demás = costo − depreciación acumulada en 5 años.
-  const valorResidual = inversionItems.reduce((a, it) => {
+  for (const it of inversionItems) {
     const vida = it.vidaUtilAnios;
-    if (!vida || vida <= 0) return a + it.costoTotal; // terreno conserva valor
-    const depAcum = (it.costoTotal / vida) * Math.min(5, vida);
-    return a + Math.max(0, it.costoTotal - depAcum);
-  }, 0);
+    const costo = it.costoTotal;
+    if (!vida || vida <= 0) {
+      // Terreno / no se deprecia: conserva todo su valor, sin depreciación.
+      valorResidual += costo;
+      continue;
+    }
+    // Lotes comprados en los años 0, vida, 2·vida… mientras quepan en el horizonte.
+    for (let offset = 0; offset < HORIZONTE; offset += vida) {
+      // El lote del año 0 ya está en inversionInicial; los demás son reposiciones.
+      if (offset >= 1) reinversionPorAnio[offset - 1] += costo;
+      const finDep = Math.min(offset + vida, HORIZONTE); // hasta dónde alcanza a depreciarse
+      for (let y = offset + 1; y <= finDep; y++) {
+        depreciacion[y - 1] += costo / vida;
+      }
+      // Lo que le queda a ESTE lote sin depreciar al final del horizonte.
+      valorResidual += Math.max(0, costo - (costo / vida) * (finDep - offset));
+    }
+  }
 
   // ── Financiamiento: DOS préstamos separados (activo fijo + capital op) ────
   const f = proyecto.financiamiento;
@@ -218,7 +228,8 @@ export function construirFlujoCaja(proyecto: any) {
 
   const flujoCaja: number[] = [-(totalProyecto - montoPrestamo)];
   for (let i = 0; i < 5; i++) {
-    let fc = utilidadNeta[i] + depreciacion[i] - amortizacion[i];
+    // Resta la reposición de activos de vida corta en el año que toca recomprarlos.
+    let fc = utilidadNeta[i] + depreciacion[i] - amortizacion[i] - reinversionPorAnio[i];
     if (i === 4) fc += valorResidual + proyecto.capitalTrabajo;
     flujoCaja.push(fc);
   }
@@ -252,7 +263,8 @@ export function construirFlujoCaja(proyecto: any) {
         imprevistos[i] +
         intereses[i] +
         impuestos[i] +
-        amortizacion[i]
+        amortizacion[i] +
+        reinversionPorAnio[i]
     );
   }
   const rbc = calcularRBC(flujoIngresos, flujoCostosTotal, tasa);
@@ -264,6 +276,7 @@ export function construirFlujoCaja(proyecto: any) {
     gastosComerc,
     personal,
     depreciacion,
+    reinversionPorAnio,
     imprevistos,
     intereses,
     amortizacion,

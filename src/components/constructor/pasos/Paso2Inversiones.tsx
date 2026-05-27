@@ -187,9 +187,10 @@ export default function Paso2Inversiones() {
             cómputo ~4, mobiliario ~5-10). No la infles para tapar un aviso.
           </p>
           <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
-            <strong>Ojo con los activos que duran menos que el proyecto (5 años):</strong> al
-            año 5 valdrán Bs 0 (se gastaron por completo). Eso es normal — solo planifica si
-            comprarás repuestos. El simulador te avisa y te ayuda con la cantidad.
+            <strong>Activos que duran menos que el proyecto (5 años):</strong> no te
+            preocupes — el modelo los <strong>repone automáticamente</strong> en el año que se
+            acaban (lo verás como "Reinversión" en el flujo de caja) y ajusta solo su
+            depreciación y valor residual. Tú solo pon <strong>cuántos usas y su vida real</strong>.
           </p>
         </Recomendacion>
       </div>
@@ -292,47 +293,30 @@ function SeccionCategoria({
             );
             if (itemsCortos.length === 0) return null;
             return (
-              <div className="rounded-md border-2 border-amber-400 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100">
+              <div className="rounded-md border-2 border-sky-400 bg-sky-50 p-3 text-xs text-sky-950 dark:border-sky-600 dark:bg-sky-950/40 dark:text-sky-100">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600" />
                   <div className="space-y-2 leading-relaxed">
                     <div className="text-sm font-semibold">
                       {itemsCortos.length === 1
-                        ? "Tienes 1 activo que no dura los 5 años del proyecto"
-                        : `Tienes ${itemsCortos.length} activos que no duran los 5 años del proyecto`}
+                        ? "Tienes 1 activo que no dura los 5 años — el modelo lo repone solo"
+                        : `Tienes ${itemsCortos.length} activos que no duran los 5 años — el modelo los repone solos`}
                     </div>
 
-                    <div className="rounded bg-amber-100/70 p-2.5 dark:bg-amber-900/30">
-                      <div className="mb-1.5 font-semibold">
-                        Si planeas comprar repuestos cuando se acaben:
-                      </div>
-                      <ul className="ml-3 space-y-2">
+                    <div className="rounded bg-sky-100/70 p-2.5 dark:bg-sky-900/30">
+                      <ul className="ml-3 space-y-1.5">
                         {itemsCortos.map((it) => {
                           const vida = it.vidaUtilAnios ?? 1;
-                          // Veces que comprarás CADA unidad durante el proyecto
-                          // (1 original + reposiciones). Ej: dura 2 años en 5 → 3.
-                          const factor = Math.ceil(ANIOS_PROYECTO / vida);
-                          const enUso = it.cantidad; // las que usas a la vez
-                          const totalReponer = enUso * factor;
-                          const repuestos = factor - 1;
+                          const enUso = it.cantidad;
+                          const aniosRecompra: number[] = [];
+                          for (let o = vida; o < ANIOS_PROYECTO; o += vida) aniosRecompra.push(o);
                           return (
-                            <li key={it.id} className="flex flex-wrap items-center gap-2">
-                              <span>
-                                <strong>{it.descripcion || "(sin nombre)"}</strong> dura{" "}
-                                {vida} años. Si usas <strong>{enUso.toLocaleString()}</strong>{" "}
-                                a la vez, en los 5 años comprarás <strong>{factor} veces</strong>{" "}
-                                cada uno (1 + {repuestos} {repuestos === 1 ? "repuesto" : "repuestos"}) ={" "}
-                                <strong>{totalReponer.toLocaleString()} unidades</strong> en total.
-                              </span>
-                              {totalReponer !== enUso && (
-                                <button
-                                  onClick={() => onEditar(it.id, { cantidad: totalReponer })}
-                                  className="rounded-md border border-amber-500 bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-800/40 dark:text-amber-100 dark:hover:bg-amber-700/50"
-                                  title={`Cambia la cantidad a ${enUso} × ${factor} = ${totalReponer} (incluye los repuestos para los 5 años).`}
-                                >
-                                  ✓ Cambiar cantidad a {totalReponer.toLocaleString()} ({enUso}×{factor})
-                                </button>
-                              )}
+                            <li key={it.id}>
+                              <strong>{it.descripcion || "(sin nombre)"}</strong> dura {vida} años.
+                              Como usas <strong>{enUso.toLocaleString()}</strong>, el modelo{" "}
+                              <strong>recompra {enUso.toLocaleString()} automáticamente</strong> en
+                              el/los año(s) <strong>{aniosRecompra.join(", ")}</strong>. Lo verás
+                              como <em>"Reinversión"</em> en el flujo de caja del Paso 9.
                             </li>
                           );
                         })}
@@ -340,23 +324,18 @@ function SeccionCategoria({
                     </div>
 
                     <div className="rounded bg-card/60 p-2 text-[11px]">
-                      <strong>Importante:</strong> que un activo termine en{" "}
-                      <strong>Bs 0 de valor residual no es un error</strong> — significa que
-                      se usó por completo dentro del proyecto. Es normal. Solo decide qué
-                      harás cuando se acabe:
+                      <strong>No tienes que hacer nada:</strong> ya no inflas la cantidad ni
+                      compras repuestos a mano. Solo pon <strong>cuántos usas a la vez</strong> y{" "}
+                      <strong>su vida útil real</strong>; el motor registra las recompras y
+                      ajusta la depreciación y el valor residual solo.
                       <ul className="ml-3 mt-1 list-disc space-y-0.5">
                         <li>
-                          <strong>Comprar repuestos</strong> cuando se acabe → usa el botón
-                          ámbar <strong>"Cambiar cantidad"</strong> (sube tu inversión).
-                        </li>
-                        <li>
-                          <strong>Operar sin él al final:</strong> ajusta tu proyección de
-                          demanda (Paso 2) a la baja en los años que ya no funcione.
-                        </li>
-                        <li>
                           ¿Pusiste mal la vida útil? <strong>Corrígela a su valor real</strong>{" "}
-                          en la columna "Vida útil" (no la infles solo para que desaparezca
-                          el aviso).
+                          en la columna "Vida útil".
+                        </li>
+                        <li>
+                          ¿No piensas reponerlo? Puedes <strong>operar sin él al final</strong>:
+                          baja tu proyección de demanda (Paso 2) en los años que ya no funcione.
                         </li>
                       </ul>
                     </div>
