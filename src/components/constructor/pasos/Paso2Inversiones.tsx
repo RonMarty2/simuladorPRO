@@ -3,6 +3,7 @@ import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import InputNumero from "../InputNumero";
+import Recomendacion from "../Recomendacion";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { CategoriaInversion } from "@/types/proyecto";
 
@@ -162,6 +163,35 @@ export default function Paso2Inversiones() {
             onKeyEnter={onKeyEnter}
           />
         ))}
+
+        <Recomendacion titulo="💡 ¿Qué inversiones poner y cómo estimarlas? — buenas prácticas">
+          <p>
+            Incluye <strong>todo lo que compras UNA vez al inicio</strong> para poder operar
+            (no lo que se gasta mes a mes — eso son costos, van en otros pasos).
+          </p>
+          <ul className="ml-4 list-disc space-y-1">
+            <li><strong>Terreno:</strong> no se deprecia (mantiene su valor). Usa precios de mercado/zona o avalúos.</li>
+            <li><strong>Obras civiles:</strong> construcción y adecuación del local. Pide cotización a un albañil/constructor.</li>
+            <li><strong>Maquinaria y equipos:</strong> lo que produce/atiende. Cotiza con proveedores reales (no precios "redondos").</li>
+            <li><strong>Mobiliario:</strong> mesas, estantería, vitrinas, computadoras.</li>
+            <li><strong>Activo diferido (intangibles):</strong> licencias, registro de marca, software, página web, gastos de constitución.</li>
+          </ul>
+          <p>
+            <strong>Cotiza de verdad:</strong> pide proformas a proveedores; en Bolivia,
+            mercados y ferias industriales, importadoras, o catálogos en línea. Guarda la
+            proforma como respaldo.
+          </p>
+          <p>
+            <strong>Vida útil:</strong> ponla según cuánto dura <em>realmente</em> el bien
+            (referencias contables: edificios ~20-40 años, maquinaria ~5-10, equipos de
+            cómputo ~4, mobiliario ~5-10). No la infles para tapar un aviso.
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>Ojo con los activos que duran menos que el proyecto (5 años):</strong> al
+            año 5 valdrán Bs 0 (se gastaron por completo). Eso es normal — solo planifica si
+            comprarás repuestos. El simulador te avisa y te ayuda con la cantidad.
+          </p>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
