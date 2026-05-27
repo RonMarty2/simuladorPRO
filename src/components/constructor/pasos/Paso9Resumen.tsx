@@ -211,12 +211,15 @@ export default function Paso9Resumen() {
 
       {/* TABLA FLUJO DE CAJA — cada sección de color se contrae/expande */}
       <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-3 text-sm font-semibold">
+        <h3 className="mb-1 text-sm font-semibold">
           Flujo de caja proyectado (Bs){" "}
           <span className="font-normal text-[10px] text-muted-foreground">
             — clic en cada barra de color para contraer/expandir
           </span>
         </h3>
+        <div className="mb-2 text-[10px] text-muted-foreground md:hidden">
+          👉 Desliza la tabla para ver los 5 años (el concepto queda fijo).
+        </div>
         <table className="w-full min-w-[700px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b-2 border-border">
@@ -1192,7 +1195,16 @@ function FilaFlujo({
         top && "border-t-2 border-foreground"
       )}
     >
-      <td className={cn("p-1.5", destacada && "font-semibold")}>{label}</td>
+      {/* En móvil, la columna del concepto queda congelada al deslizar los años.
+          En escritorio se ve igual que siempre (md:static, sin fondo propio). */}
+      <td
+        className={cn(
+          "sticky left-0 z-[1] bg-card p-1.5 md:static md:bg-transparent",
+          destacada && "font-semibold"
+        )}
+      >
+        {label}
+      </td>
       {valores.map((v, i) => (
         <td
           key={i}
