@@ -799,6 +799,37 @@ function PanelMonteCarlo({
           Cada barra = cuántos de los 1.000 escenarios cayeron en ese rango de VAN.
           Rojo = pérdida (VAN &lt; 0), verde = ganancia.
         </div>
+
+        {/* Cómo leerla — guía didáctica */}
+        <div className="mt-3 space-y-1.5 rounded-md bg-secondary/30 p-3 text-[11px] leading-snug">
+          <div className="font-semibold">📖 Cómo leerla:</div>
+          <div>
+            <strong>{(prob * 100).toFixed(0)}%</strong> significa que, de cada 100 veces que
+            abrieras este negocio (con esos márgenes de incertidumbre), en{" "}
+            <strong>~{Math.round(prob * 100)}</strong> ganarías (VAN positivo) y en{" "}
+            <strong>~{100 - Math.round(prob * 100)}</strong> perderías.
+          </div>
+          <div>
+            <strong>Peor caso (P5) = {formatearBolivianos(res.vanP5)}:</strong> en el 5% de
+            los escenarios más malos te iría hasta ahí.{" "}
+            {res.vanP5 < 0
+              ? "Es negativo: hay un riesgo real de perder — fíjate si tu negocio aguantaría esa caída."
+              : "Aun en lo malo sigue positivo: muy sólido."}
+          </div>
+          <div>
+            <strong>Caso típico (P50) = {formatearBolivianos(res.vanP50)}:</strong> la mitad
+            de las veces terminas alrededor de este valor.
+          </div>
+          <div>
+            <strong>Mejor caso (P95) = {formatearBolivianos(res.vanP95)}:</strong> solo en el
+            5% más afortunado llegarías tan alto (no cuentes con esto).
+          </div>
+          <div className="border-t border-border/50 pt-1.5">
+            <strong>Regla práctica:</strong> probabilidad alta (&gt;70%){" "}
+            <em>y</em> un peor caso que tu negocio pueda soportar = proyecto robusto. Si el
+            peor caso te quiebra, ten cuidado aunque la probabilidad sea alta.
+          </div>
+        </div>
       </div>
     </details>
   );
