@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import InputNumero from "../InputNumero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { CostoGeneral } from "@/types/proyecto";
 
@@ -252,7 +253,7 @@ function SeccionGastos({
       {abierto && (
       <div className="space-y-2 p-3">
         {items.length > 0 && (
-          <div className="overflow-x-auto rounded-md border border-border bg-card">
+          <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
             <table className="w-full text-xs">
               <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 <tr className="border-b border-border">
@@ -329,6 +330,69 @@ function SeccionGastos({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* ── Vista MÓVIL: una tarjeta por gasto ─────────────────────────── */}
+        {items.length > 0 && (
+          <div className="space-y-2 md:hidden">
+            {items.map((c) => {
+              const factor = c.unidadMedida === "mes" ? 12 : 1;
+              return (
+                <div key={c.id} className="rounded-md border border-border bg-card p-2">
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="text"
+                      value={c.descripcion}
+                      onChange={(e) => onEditar(c.id, { descripcion: e.target.value })}
+                      onFocus={selectOnFocus}
+                      placeholder={config.placeholderDescripcion}
+                      className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                    />
+                    <button
+                      onClick={() => onEliminar(c.id)}
+                      className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Eliminar gasto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    <label className="text-[9px] text-muted-foreground">
+                      Unidad
+                      <select
+                        value={c.unidadMedida}
+                        onChange={(e) => onEditar(c.id, { unidadMedida: e.target.value as "mes" | "año" })}
+                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                      >
+                        <option value="mes">Mes</option>
+                        <option value="año">Año</option>
+                      </select>
+                    </label>
+                    <label className="text-[9px] text-muted-foreground">
+                      Cantidad
+                      <InputNumero
+                        value={c.cantidad}
+                        onChange={(n) => onEditar(c.id, { cantidad: n })}
+                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                      />
+                    </label>
+                    <label className="text-[9px] text-muted-foreground">
+                      Costo unit.
+                      <InputNumero
+                        value={c.costoUnitario}
+                        onChange={(n) => onEditar(c.id, { costoUnitario: n })}
+                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">
+                    <span className="text-muted-foreground">Total anual:</span>{" "}
+                    <strong>{formatearBolivianos(c.cantidad * c.costoUnitario * factor)}</strong>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
