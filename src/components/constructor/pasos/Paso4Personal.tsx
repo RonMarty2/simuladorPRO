@@ -3,6 +3,7 @@ import { Plus, RotateCcw, Trash2, Users, Receipt } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import InputNumero from "../InputNumero";
+import Recomendacion from "../Recomendacion";
 import {
   APORTES_PATRONALES_BOLIVIA,
   calcularAportesPatronales,
@@ -12,6 +13,39 @@ import { formatearBolivianos, cn } from "@/lib/utils";
 
 const selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
   e.currentTarget.select();
+
+type Aportes = ReturnType<typeof calcularAportesPatronales>;
+type Tasas = ReturnType<typeof obtenerTasasAportes>;
+
+// Texto del desglose del aporte patronal mensual de UN sueldo (para el tooltip).
+function detalleAportes(aportes: Aportes, tasas: Tasas): string {
+  const pct = (t: number) => `${(t * 100).toFixed(2)}%`;
+  const total =
+    tasas.riesgoProfesional +
+    tasas.seguroSalud +
+    tasas.provisionVivienda +
+    tasas.previsionAguinaldo +
+    tasas.previsionIndemnizacion;
+  return (
+    `Aporte patronal mensual = sueldo × ${pct(total)}\n\n` +
+    `• Riesgo profesional ${pct(tasas.riesgoProfesional)} = ${formatearBolivianos(aportes.riesgoProfesional)}\n` +
+    `• Seguro de salud ${pct(tasas.seguroSalud)} = ${formatearBolivianos(aportes.seguroSalud)}\n` +
+    `• Provisión vivienda ${pct(tasas.provisionVivienda)} = ${formatearBolivianos(aportes.provisionVivienda)}\n` +
+    `• Previsión aguinaldo ${pct(tasas.previsionAguinaldo)} = ${formatearBolivianos(aportes.previsionAguinaldo)}\n` +
+    `• Previsión indemnización ${pct(tasas.previsionIndemnizacion)} = ${formatearBolivianos(aportes.previsionIndemnizacion)}\n\n` +
+    `Total = ${formatearBolivianos(aportes.totalAportes)}/mes`
+  );
+}
+
+// Texto del desglose del costo anual total de UN puesto (para el tooltip).
+function detalleCostoAnual(sueldoMensual: number, cantidad: number, aportes: Aportes): string {
+  return (
+    `Costo anual total = (sueldo + aportes) × 12 meses × cantidad\n\n` +
+    `= (${formatearBolivianos(sueldoMensual)} + ${formatearBolivianos(aportes.totalAportes)}) × 12 × ${cantidad}\n` +
+    `= ${formatearBolivianos(aportes.costoTotalAnual)} × ${cantidad}\n` +
+    `= ${formatearBolivianos(aportes.costoTotalAnual * cantidad)}`
+  );
+}
 
 // Mismo patrón visual de Paso 3 (Inversiones): un color por BLOQUE completo.
 // Paso 4 tiene 2 bloques: Personal (azul) y Aportes Patronales (ámbar).
@@ -250,8 +284,18 @@ export default function Paso4Personal() {
                       <th className="p-1.5 text-left w-[32%]">Puesto</th>
                       <th className="p-1.5 text-right w-[12%]">Cantidad</th>
                       <th className="p-1.5 text-right w-[16%]">Sueldo mensual</th>
-                      <th className="p-1.5 text-right w-[15%]">Aportes / mes</th>
-                      <th className="p-1.5 text-right w-[20%]">Costo anual total</th>
+                      <th
+                        className="p-1.5 text-right w-[15%] cursor-help"
+                        title={`Aporte patronal mensual = sueldo × ${(totalTasa * 100).toFixed(2)}% (riesgo + salud + vivienda + aguinaldo + indemnización). Pasa el cursor sobre cada celda para ver el desglose de ese sueldo.`}
+                      >
+                        Aportes / mes <span className="text-[9px]">ⓘ</span>
+                      </th>
+                      <th
+                        className="p-1.5 text-right w-[20%] cursor-help"
+                        title="Costo anual total = (sueldo + aportes patronales) × 12 meses × cantidad de personas."
+                      >
+                        Costo anual total <span className="text-[9px]">ⓘ</span>
+                      </th>
                       <th className="w-8 p-1.5"></th>
                     </tr>
                   </thead>
@@ -290,11 +334,19 @@ export default function Paso4Personal() {
                               className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           </td>
-                          <td className="p-1 text-right text-xs text-muted-foreground">
-                            {formatearBolivianos(aportes.totalAportes)}
+                          <td
+                            className="p-1 text-right text-xs text-muted-foreground cursor-help"
+                            title={detalleAportes(aportes, tasas)}
+                          >
+                            {formatearBolivianos(aportes.totalAportes)}{" "}
+                            <span className="text-[9px]">ⓘ</span>
                           </td>
-                          <td className="p-1 text-right text-xs font-semibold">
-                            {formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}
+                          <td
+                            className="p-1 text-right text-xs font-semibold cursor-help"
+                            title={detalleCostoAnual(p.sueldoMensual, p.cantidad, aportes)}
+                          >
+                            {formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}{" "}
+                            <span className="text-[9px] font-normal">ⓘ</span>
                           </td>
                           <td className="p-1 text-right">
                             <button
@@ -358,11 +410,29 @@ export default function Paso4Personal() {
                         <span><span className="text-muted-foreground">Aportes/mes:</span> {formatearBolivianos(aportes.totalAportes)}</span>
                         <span><span className="text-muted-foreground">Costo anual:</span> <strong>{formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}</strong></span>
                       </div>
+                      <div className="mt-1 text-[9px] leading-snug text-muted-foreground">
+                        Aportes = sueldo × {(totalTasa * 100).toFixed(2)}% · Costo anual = (sueldo + aportes) × 12 × {p.cantidad}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             )}
+
+            <p className="rounded bg-secondary/30 px-2 py-1.5 text-[10px] leading-snug text-muted-foreground">
+              <strong className="text-foreground">¿De dónde sale cada número?</strong>{" "}
+              <strong>Aportes/mes</strong> = sueldo × {(totalTasa * 100).toFixed(2)}% (riesgo{" "}
+              {(tasas.riesgoProfesional * 100).toFixed(2)}% + salud{" "}
+              {(tasas.seguroSalud * 100).toFixed(2)}% + vivienda{" "}
+              {(tasas.provisionVivienda * 100).toFixed(2)}% + aguinaldo{" "}
+              {(tasas.previsionAguinaldo * 100).toFixed(2)}% + indemnización{" "}
+              {(tasas.previsionIndemnizacion * 100).toFixed(2)}%).{" "}
+              <strong>Costo anual total</strong> = (sueldo + aportes) × 12 meses × cantidad.{" "}
+              <span className="hidden md:inline">
+                Pasa el cursor sobre las celdas <em>Aportes/mes</em> o <em>Costo anual</em> para
+                ver el desglose exacto de cada sueldo.
+              </span>
+            </p>
 
             <button
               onClick={() => agregar({ puesto: "Nuevo puesto", cantidad: 1, sueldoMensual: 2500 })}
@@ -375,6 +445,40 @@ export default function Paso4Personal() {
           )}
         </div>
 
+        <Recomendacion titulo="💡 ¿Cómo defino los puestos y sueldos? — buenas prácticas">
+          <p>
+            <strong>Plantilla mínima viable:</strong> arranca solo con los puestos
+            imprescindibles. Cada persona es un <em>costo fijo</em> que sube tu punto de
+            equilibrio (tienes que vender más para cubrirla). Crece el equipo a medida que
+            crece la demanda, no antes.
+          </p>
+          <p>
+            <strong>El sueldo que pones es el BRUTO.</strong> Respeta el{" "}
+            <strong>salario mínimo nacional</strong> vigente (revísalo cada gestión) y
+            compáralo con el mercado de tu rubro. El costo real para la empresa es{" "}
+            <strong>sueldo + {(totalTasa * 100).toFixed(2)}% de aportes patronales</strong> —
+            eso es justo lo que calcula esta tabla.
+          </p>
+          <p>
+            <strong>No confundas con los descuentos al trabajador:</strong> aparte de tus
+            aportes patronales, al empleado se le descuenta ~12,71% (AFP) de su propio sueldo
+            bruto. Eso <em>no</em> es un costo adicional para ti: sale del mismo sueldo, no se
+            suma encima.
+          </p>
+          <p>
+            <strong>Aguinaldo e indemnización ya están provisionados</strong> aquí (8,33% cada
+            uno = 1 sueldo al año). Si en una gestión el Gobierno paga{" "}
+            <strong>segundo aguinaldo "Esfuerzo por Bolivia"</strong> (cuando el PIB crece
+            más de 4,5%), considera el costo extra de ese año.
+          </p>
+          <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+            <strong>⚠ No dupliques la mano de obra:</strong> si ya cargaste a un operario o
+            barista como <em>mano de obra directa por unidad</em> en el Paso 6 (Costos
+            directos), <strong>no lo pongas también aquí</strong> como puesto fijo. Regla:
+            personal fijo (no escala con la producción) va aquí; mano de obra que escala por
+            cada unidad producida va en el Paso 6.
+          </p>
+        </Recomendacion>
       </div>
 
       <FichaPedagogica
