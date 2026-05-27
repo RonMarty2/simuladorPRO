@@ -9,6 +9,7 @@ import {
   calcularLTVSuscripcion,
   proyectarSuscriptores,
   proyectarPublicidad,
+  simularMonteCarlo,
   calcularFlujoInversionista,
   calcularGAF,
   calcularGAO,
@@ -494,6 +495,56 @@ describe("proyectarPublicidad", () => {
       5
     );
     expect(r).toHaveLength(5);
+  });
+});
+
+// ----------------------------------------------------------------------------
+// MONTE CARLO
+// ----------------------------------------------------------------------------
+describe("simularMonteCarlo", () => {
+  // Generador determinista (LCG) para tests reproducibles.
+  function lcg(seed: number) {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+  const base = [-1000, 500, 500, 500];
+  const construir = (fi: number, _fc: number) =>
+    base.map((v, t) => (t === 0 ? v : v * (1 + fi)));
+
+  it("con rng=0.5 (sin variación) todos los escenarios dan el VAN base", () => {
+    const vanBase = calcularVAN(base, 0.1);
+    const r = simularMonteCarlo(construir, 0.1, { iteraciones: 100, rng: () => 0.5 });
+    expect(cerca(r.vanPromedio, vanBase)).toBe(true);
+    expect(cerca(r.vanP50, vanBase)).toBe(true);
+    expect(r.probabilidadVANPositivo).toBe(vanBase > 0 ? 1 : 0);
+  });
+
+  it("probabilidad entre 0 y 1, percentiles ordenados", () => {
+    const r = simularMonteCarlo(construir, 0.1, {
+      iteraciones: 2000,
+      rangoIngreso: 0.3,
+      rangoCosto: 0.2,
+      rng: lcg(42),
+    });
+    expect(r.probabilidadVANPositivo).toBeGreaterThanOrEqual(0);
+    expect(r.probabilidadVANPositivo).toBeLessThanOrEqual(1);
+    expect(r.vanP5).toBeLessThanOrEqual(r.vanP50);
+    expect(r.vanP50).toBeLessThanOrEqual(r.vanP95);
+    expect(r.vanMin).toBeLessThanOrEqual(r.vanMax);
+  });
+
+  it("el histograma cubre todos los escenarios", () => {
+    const iteraciones = 1000;
+    const r = simularMonteCarlo(construir, 0.1, {
+      iteraciones,
+      rangoIngreso: 0.25,
+      rng: lcg(7),
+    });
+    const suma = r.histograma.reduce((a, h) => a + h.conteo, 0);
+    expect(suma).toBe(iteraciones);
   });
 });
 

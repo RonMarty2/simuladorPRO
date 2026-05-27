@@ -3,6 +3,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
@@ -28,6 +29,7 @@ import {
   calcularRBC,
   calcularSensibilidad,
   calcularServicioDeuda,
+  simularMonteCarlo,
   calcularTIR,
   calcularTRC,
   calcularVAN,
@@ -638,7 +640,167 @@ function AnalisisAvanzadoV2({
         </div>
         </div>
       </details>
+
+      {/* Análisis de riesgo Monte Carlo */}
+      <PanelMonteCarlo calc={calc} />
     </div>
+  );
+}
+
+function PanelMonteCarlo({
+  calc,
+}: {
+  calc: ReturnType<typeof construirFlujoCaja>;
+}) {
+  const [rangoIng, setRangoIng] = useState(10); // ±%
+  const [rangoCos, setRangoCos] = useState(15); // ±%
+  const [seed, setSeed] = useState(0); // forzar nueva corrida
+  const tasa = calc.wacc > 0 ? calc.wacc : 0.1;
+
+  const res = useMemo(() => {
+    void seed; // re-corre al cambiar la semilla
+    const flujoMC = (facIngreso: number, facCosto: number): number[] => {
+      const flujos: number[] = [calc.flujoCaja[0]];
+      for (let i = 0; i < 5; i++) {
+        const ing = calc.ingresos[i] * (1 + facIngreso);
+        const costOper =
+          (calc.costosProduccion[i] +
+            calc.gastosAdmin[i] +
+            calc.gastosComerc[i] +
+            calc.personal[i] +
+            calc.imprevistos[i]) *
+          (1 + facCosto);
+        const uOp = ing - costOper - calc.depreciacion[i];
+        const aai = uOp - calc.intereses[i];
+        const neta = aai - Math.max(0, aai) * TASA_IUE;
+        let fc = neta + calc.depreciacion[i] - calc.amortizacion[i];
+        if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
+        flujos.push(fc);
+      }
+      return flujos;
+    };
+    return simularMonteCarlo(flujoMC, tasa, {
+      iteraciones: 1000,
+      rangoIngreso: rangoIng / 100,
+      rangoCosto: rangoCos / 100,
+    });
+  }, [calc, rangoIng, rangoCos, seed, tasa]);
+
+  const prob = res.probabilidadVANPositivo;
+  const colorProb =
+    prob >= 0.7
+      ? "text-emerald-700 dark:text-emerald-400"
+      : prob >= 0.4
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-destructive";
+  const fmtK = (n: number) => `${Math.round(n / 1000)}k`;
+  const dataHist = res.histograma.map((h) => ({
+    etiqueta: fmtK((h.min + h.max) / 2),
+    conteo: h.conteo,
+    perdida: h.perdida,
+  }));
+
+  return (
+    <details className="mt-3 max-w-4xl overflow-hidden rounded-md border border-border bg-card">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3 hover:bg-secondary/40">
+        <span className="text-sm font-semibold">
+          🎲 Análisis de riesgo (Monte Carlo) — ¿qué tan probable es ganar?
+        </span>
+        <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
+      </summary>
+      <div className="p-4 pt-0">
+        <p className="mb-3 text-[11px] leading-snug text-muted-foreground">
+          Corre <strong>1.000 escenarios</strong> variando al azar tus ingresos y costos
+          (alrededor de tu estimación) y mide en cuántos el VAN sale positivo. Te dice la{" "}
+          <strong>probabilidad de que el proyecto sea rentable</strong>, no solo el caso
+          ideal.
+        </p>
+
+        {/* Controles */}
+        <div className="mb-3 flex flex-wrap items-end gap-3">
+          <label className="text-[11px]">
+            <span className="block text-muted-foreground">Incertidumbre ingresos (±)</span>
+            <span className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={rangoIng}
+                onChange={(e) => setRangoIng(Math.max(0, Number(e.target.value) || 0))}
+                className="w-16 rounded border border-input bg-background px-2 py-1 text-right text-xs"
+              />
+              %
+            </span>
+          </label>
+          <label className="text-[11px]">
+            <span className="block text-muted-foreground">Incertidumbre costos (±)</span>
+            <span className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={rangoCos}
+                onChange={(e) => setRangoCos(Math.max(0, Number(e.target.value) || 0))}
+                className="w-16 rounded border border-input bg-background px-2 py-1 text-right text-xs"
+              />
+              %
+            </span>
+          </label>
+          <button
+            onClick={() => setSeed((s) => s + 1)}
+            className="rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium hover:bg-secondary"
+          >
+            🔄 Volver a correr
+          </button>
+        </div>
+
+        {/* Resultado estrella */}
+        <div className="mb-3 flex flex-wrap items-center gap-4 rounded-md bg-secondary/30 p-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Probabilidad de VAN positivo
+            </div>
+            <div className={cn("text-3xl font-bold", colorProb)}>
+              {(prob * 100).toFixed(0)}%
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {prob >= 0.7
+                ? "Riesgo bajo: gana en la mayoría de escenarios."
+                : prob >= 0.4
+                  ? "Riesgo medio: depende mucho de los supuestos."
+                  : "Riesgo alto: pierde en muchos escenarios."}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-x-4 gap-y-1 text-[11px]">
+            <FilaDetalle k="Peor caso (P5)" v={formatearBolivianos(res.vanP5)} />
+            <FilaDetalle k="Caso típico (P50)" v={formatearBolivianos(res.vanP50)} />
+            <FilaDetalle k="Mejor caso (P95)" v={formatearBolivianos(res.vanP95)} />
+          </div>
+        </div>
+
+        {/* Histograma */}
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={dataHist}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis dataKey="etiqueta" tick={{ fontSize: 9 }} interval={1} />
+            <YAxis tick={{ fontSize: 9 }} />
+            <Tooltip
+              formatter={(v: number) => [`${v} escenarios`, "Cantidad"]}
+              labelFormatter={(l) => `VAN ≈ Bs ${l}`}
+            />
+            <Bar dataKey="conteo">
+              {dataHist.map((d, i) => (
+                <Cell key={i} fill={d.perdida ? "#ef4444" : "#10b981"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <div className="mt-1 text-center text-[10px] text-muted-foreground">
+          Cada barra = cuántos de los 1.000 escenarios cayeron en ese rango de VAN.
+          Rojo = pérdida (VAN &lt; 0), verde = ganancia.
+        </div>
+      </div>
+    </details>
   );
 }
 

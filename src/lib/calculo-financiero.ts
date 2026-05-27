@@ -785,6 +785,102 @@ export function calcularCostoCapitalCAPM(
 }
 
 // ----------------------------------------------------------------------------
+// ANÁLISIS DE RIESGO — SIMULACIÓN MONTE CARLO
+// ----------------------------------------------------------------------------
+
+export interface ConfigMonteCarlo {
+  /** Número de escenarios a simular. Default 1000. */
+  iteraciones?: number;
+  /** Variación máxima de los ingresos (±). 0.1 = ±10%. */
+  rangoIngreso?: number;
+  /** Variación máxima de los costos (±). 0.15 = ±15%. */
+  rangoCosto?: number;
+  /** Generador aleatorio (inyectable para tests). Default Math.random. */
+  rng?: () => number;
+}
+
+export interface ResultadoMonteCarlo {
+  iteraciones: number;
+  /** Proporción de escenarios con VAN > 0 (0..1). El indicador estrella. */
+  probabilidadVANPositivo: number;
+  vanPromedio: number;
+  vanP5: number; // peor caso razonable
+  vanP50: number; // mediana (caso típico)
+  vanP95: number; // mejor caso razonable
+  vanMin: number;
+  vanMax: number;
+  histograma: { min: number; max: number; conteo: number; perdida: boolean }[];
+}
+
+/**
+ * Muestra de una distribución triangular en [-rango, +rango] con moda 0.
+ * Refleja que lo "más probable" es el valor base (variación 0) y los extremos
+ * son cada vez menos probables. `u` es un uniforme [0,1).
+ */
+function muestraTriangular(rango: number, u: number): number {
+  if (rango <= 0) return 0;
+  if (u < 0.5) return -rango + rango * Math.sqrt(2 * u);
+  return rango - rango * Math.sqrt(2 * (1 - u));
+}
+
+/**
+ * Simulación Monte Carlo del VAN. Corre `iteraciones` escenarios; en cada uno
+ * varía ingresos y costos al azar (distribución triangular alrededor de la base)
+ * y recalcula el VAN. Devuelve la distribución: probabilidad de éxito (VAN>0),
+ * promedio, percentiles y un histograma. No tiene efectos secundarios.
+ *
+ * @param construirFlujos  (factorIngreso, factorCosto) → flujos del proyecto.
+ *                          factor 0 = caso base; 0.1 = +10%, -0.1 = −10%.
+ */
+export function simularMonteCarlo(
+  construirFlujos: (factorIngreso: number, factorCosto: number) => number[],
+  tasaDescuento: number,
+  config: ConfigMonteCarlo = {}
+): ResultadoMonteCarlo {
+  const n = Math.max(1, Math.floor(config.iteraciones ?? 1000));
+  const rIng = config.rangoIngreso ?? 0.1;
+  const rCos = config.rangoCosto ?? 0.15;
+  const rng = config.rng ?? Math.random;
+
+  const vans: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const fi = muestraTriangular(rIng, rng());
+    const fc = muestraTriangular(rCos, rng());
+    vans.push(calcularVAN(construirFlujos(fi, fc), tasaDescuento));
+  }
+  vans.sort((a, b) => a - b);
+
+  const positivos = vans.filter((v) => v > 0).length;
+  const promedio = vans.reduce((a, b) => a + b, 0) / n;
+  const pct = (p: number) => vans[Math.min(n - 1, Math.floor(p * n))];
+  const min = vans[0];
+  const max = vans[n - 1];
+
+  const bins = 12;
+  const ancho = (max - min) / bins || 1;
+  const histograma = Array.from({ length: bins }, (_, b) => {
+    const lo = min + b * ancho;
+    const hi = b === bins - 1 ? max : min + (b + 1) * ancho;
+    const conteo = vans.filter((v) =>
+      b === bins - 1 ? v >= lo && v <= hi : v >= lo && v < hi
+    ).length;
+    return { min: lo, max: hi, conteo, perdida: hi <= 0 };
+  });
+
+  return {
+    iteraciones: n,
+    probabilidadVANPositivo: positivos / n,
+    vanPromedio: promedio,
+    vanP5: pct(0.05),
+    vanP50: pct(0.5),
+    vanP95: pct(0.95),
+    vanMin: min,
+    vanMax: max,
+    histograma,
+  };
+}
+
+// ----------------------------------------------------------------------------
 // FLUJO DEL INVERSIONISTA — proyecto (FCF) vs accionista (FCFE)
 // ----------------------------------------------------------------------------
 
