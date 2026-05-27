@@ -682,9 +682,20 @@ function ProductoFilas({
       {/* HEADER del producto — clic para expandir/contraer */}
       <tr className={cn("border-t-4 border-border", color.chip.split(" ")[0])}>
         <td className={cn("border-l-4 p-2", color.borde)} colSpan={abierto ? 1 : 2}>
-          <div className="flex min-w-0 items-center gap-1.5">
+          {/* Cuando está colapsado, toda la franja es clickeable para expandir.
+              Cuando está abierto, solo la flecha contrae (el nombre es editable). */}
+          <div
+            onClick={!abierto ? onToggle : undefined}
+            className={cn(
+              "flex min-w-0 items-center gap-1.5",
+              !abierto && "cursor-pointer"
+            )}
+          >
             <button
-              onClick={onToggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
               className="flex-shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
               title={abierto ? "Contraer" : "Expandir para editar"}
             >
@@ -703,7 +714,9 @@ function ProductoFilas({
               Producto {productoIndex + 1}
             </span>
             {!abierto && (
-              <span className="min-w-0 truncate text-xs font-bold">{prod.nombre}</span>
+              <span className="min-w-0 truncate text-xs font-bold hover:underline">
+                {prod.nombre}
+              </span>
             )}
           </div>
           {abierto && (
