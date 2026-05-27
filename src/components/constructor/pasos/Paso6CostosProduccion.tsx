@@ -5,6 +5,7 @@ import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
 import CantidadFraccionInput from "../CantidadFraccionInput";
+import InputNumero from "../InputNumero";
 import type { CategoriaCostoDirecto, CostoDirecto, Sector } from "@/types/proyecto";
 
 interface ConfigSubcat {
@@ -413,7 +414,7 @@ function BloqueProducto({
               </div>
 
               {items.length > 0 && (
-                <div className="overflow-x-auto">
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full min-w-[900px] text-xs">
                     <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       <tr className="border-b border-border">
@@ -529,6 +530,67 @@ function BloqueProducto({
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* ── Vista MÓVIL: una tarjeta por insumo ─────────────────── */}
+              {items.length > 0 && (
+                <div className="space-y-2 p-2 md:hidden">
+                  {items.map((it) => (
+                    <div key={it.id} className="rounded-md border border-border bg-card p-2">
+                      <div className="flex items-start gap-2">
+                        <input
+                          type="text"
+                          value={it.descripcion}
+                          onChange={(e) => onEditar(it.id, { descripcion: e.target.value })}
+                          onFocus={selectOnFocus}
+                          placeholder="Insumo…"
+                          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                        />
+                        <button
+                          onClick={() => onEliminar(it.id)}
+                          className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Eliminar insumo"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        <label className="text-[9px] text-muted-foreground">
+                          Unidad
+                          <input
+                            type="text"
+                            value={it.unidadMedida}
+                            onChange={(e) => onEditar(it.id, { unidadMedida: e.target.value })}
+                            onFocus={selectOnFocus}
+                            placeholder="Lts, kg"
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                          />
+                        </label>
+                        <label className="text-[9px] text-muted-foreground">
+                          Cant./u producto
+                          <CantidadFraccionInput
+                            valorInicial={it.cantidadPorUnidad}
+                            onChange={(n) => onEditar(it.id, { cantidadPorUnidad: n })}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                        <label className="text-[9px] text-muted-foreground">
+                          Costo unit. (Bs)
+                          <InputNumero
+                            value={it.costoUnitario}
+                            step="0.01"
+                            onChange={(n) => onEditar(it.id, { costoUnitario: n })}
+                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">
+                        <span className="text-muted-foreground">Subtotal por unidad:</span>{" "}
+                        <strong>{formatearBolivianos(it.cantidadPorUnidad * it.costoUnitario)}</strong>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
