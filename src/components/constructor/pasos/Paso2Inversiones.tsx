@@ -346,7 +346,7 @@ function SeccionCategoria({
           })()}
 
           {items.length > 0 && (
-            <div className="overflow-x-auto rounded-md border border-border bg-card">
+            <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
               <table className="w-full text-xs">
                 <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b border-border">
@@ -499,6 +499,92 @@ function SeccionCategoria({
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* ── Vista MÓVIL: una tarjeta por ítem ─────────────────────────── */}
+          {items.length > 0 && (
+            <div className="space-y-2 md:hidden">
+              {items.map((it) => {
+                const vr = calcularValorResidualHorizonte(it.costoTotal, it.vidaUtilAnios);
+                return (
+                  <div key={it.id} className="rounded-md border border-border bg-card p-2">
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="text"
+                        value={it.descripcion}
+                        onChange={(e) => onEditar(it.id, { descripcion: e.target.value })}
+                        onFocus={selectOnFocus}
+                        placeholder={config.ejemplo}
+                        className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                      />
+                      <button
+                        onClick={() => onEliminar(it.id)}
+                        className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      <label className="text-[9px] text-muted-foreground">
+                        Unidad
+                        <input
+                          type="text"
+                          value={it.unidadMedida}
+                          onChange={(e) => onEditar(it.id, { unidadMedida: e.target.value })}
+                          onFocus={selectOnFocus}
+                          placeholder="m², und"
+                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                        />
+                      </label>
+                      <label className="text-[9px] text-muted-foreground">
+                        Cantidad
+                        <InputNumero
+                          value={it.cantidad}
+                          onChange={(n) => onEditar(it.id, { cantidad: n })}
+                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                        />
+                      </label>
+                      <label className="text-[9px] text-muted-foreground">
+                        Costo unit. (Bs)
+                        <InputNumero
+                          value={it.costoUnitario}
+                          step="0.01"
+                          onChange={(n) => onEditar(it.id, { costoUnitario: n })}
+                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                        />
+                      </label>
+                    </div>
+                    {!sinDepreciacion && (
+                      <div className="mt-2">
+                        <label className="text-[9px] text-muted-foreground">
+                          Vida útil (años)
+                          <InputNumero
+                            value={it.vidaUtilAnios ?? 0}
+                            onChange={(n) => onEditar(it.id, { vidaUtilAnios: n })}
+                            className={cn(
+                              "mt-0.5 w-full rounded border bg-background px-2 py-1.5 text-right text-xs",
+                              it.vidaUtilAnios !== null &&
+                                it.vidaUtilAnios > 0 &&
+                                it.vidaUtilAnios < ANIOS_PROYECTO
+                                ? "border-amber-400 bg-amber-50/50 dark:bg-amber-950/30"
+                                : "border-input"
+                            )}
+                          />
+                        </label>
+                      </div>
+                    )}
+                    <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-0.5 border-t border-border/50 pt-1.5 text-[11px]">
+                      <span><span className="text-muted-foreground">Total:</span> <strong>{formatearBolivianos(it.costoTotal)}</strong></span>
+                      {!sinDepreciacion && (
+                        <span><span className="text-muted-foreground">Dep./año:</span> {formatearBolivianos(it.depreciacionAnual)}</span>
+                      )}
+                      <span><span className="text-muted-foreground">Residual año 5:</span> {formatearBolivianos(vr)}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
