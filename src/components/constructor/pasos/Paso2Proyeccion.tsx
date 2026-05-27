@@ -322,17 +322,36 @@ export default function Paso2Proyeccion() {
             return (
               <div key={p.id} className={cn("overflow-hidden rounded-md border border-border border-l-4", color.borde)}>
                 <div className={cn("flex items-center justify-between gap-2 p-2", color.chip.split(" ")[0])}>
-                  <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", color.chip)}>
-                    Producto {pi + 1}
-                  </span>
+                  <button
+                    onClick={() => toggleProducto(p.id)}
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                  >
+                    {expandidos[p.id] ? (
+                      <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                    )}
+                    <span className={cn("flex-shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", color.chip)}>
+                      Producto {pi + 1}
+                    </span>
+                    {!expandidos[p.id] && (
+                      <span className="min-w-0 truncate text-xs font-semibold">
+                        {p.nombre || "(sin nombre)"} ·{" "}
+                        <span className="font-normal text-muted-foreground">
+                          {formatearBolivianos(p.cantidades[0] * p.precios[0])}/año 1
+                        </span>
+                      </span>
+                    )}
+                  </button>
                   <button
                     onClick={() => eliminar(p.id)}
-                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     aria-label="Eliminar producto"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
+                {expandidos[p.id] && (
                 <div className="space-y-2 p-2">
                   <div className="grid grid-cols-2 gap-2">
                     <label className="text-[10px] text-muted-foreground">
@@ -386,6 +405,7 @@ export default function Paso2Proyeccion() {
                     </div>
                   ))}
                 </div>
+                )}
               </div>
             );
           })}
