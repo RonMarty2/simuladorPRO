@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -6,9 +7,11 @@ import {
   Hammer,
   LayoutDashboard,
   LogOut,
+  Menu,
   Newspaper,
   PlayCircle,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -33,6 +36,7 @@ export default function RootLayout() {
   const perfil = useAuthStore((s) => s.perfil);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const enlacesBase = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
   const enlaces = perfil?.es_admin
@@ -44,29 +48,57 @@ export default function RootLayout() {
     navigate("/login", { replace: true });
   };
 
+  const navItems = (onClick?: () => void) =>
+    enlaces.map(({ to, label, icon: Icon }) => (
+      <NavLink
+        key={to}
+        to={to}
+        onClick={onClick}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+            isActive
+              ? "bg-primary text-primary-foreground"
+              : "text-foreground/80 hover:bg-accent hover:text-accent-foreground"
+          )
+        }
+      >
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <span>{label}</span>
+      </NavLink>
+    ));
+
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-      <header className="flex h-14 items-center justify-between border-b border-border px-6">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-primary" />
-          <span className="text-sm font-semibold tracking-tight">
+      <header className="flex h-14 items-center justify-between gap-2 border-b border-border px-3 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2">
+          {/* Botón menú — solo móvil */}
+          <button
+            onClick={() => setMenuAbierto(true)}
+            className="-ml-1 rounded-md p-1.5 text-foreground hover:bg-accent md:hidden"
+            aria-label="Abrir menú"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="h-6 w-6 flex-shrink-0 rounded bg-primary" />
+          <span className="truncate text-sm font-semibold tracking-tight">
             Simulador de Proyectos de Inversión
           </span>
-          <span className="ml-2 rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+          <span className="hidden flex-shrink-0 rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground sm:inline">
             Bolivia
           </span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
           {perfil && (
             <button
               onClick={() => navigate("/perfil")}
-              className="rounded-md px-2 py-1 text-right text-xs transition hover:bg-accent"
+              className="hidden rounded-md px-2 py-1 text-right text-xs transition hover:bg-accent sm:block"
               title="Editar mi perfil"
             >
               <div className="font-medium text-foreground">
                 {perfil.nombre} {perfil.apellido}
               </div>
-              <div className="text-muted-foreground capitalize">
+              <div className="capitalize text-muted-foreground">
                 {perfil.rol}
                 {perfil.es_admin && " · 🛡️"}
               </div>
@@ -77,35 +109,55 @@ export default function RootLayout() {
             className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition hover:bg-accent"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Salir
+            <span className="hidden sm:inline">Salir</span>
           </button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-56 shrink-0 border-r border-border bg-secondary/30 p-3">
-          <nav className="flex flex-col gap-1">
-            {enlaces.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground/80 hover:bg-accent hover:text-accent-foreground"
-                  )
-                }
-              >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </nav>
+        {/* Barra lateral — escritorio */}
+        <aside className="hidden w-56 shrink-0 border-r border-border bg-secondary/30 p-3 md:block">
+          <nav className="flex flex-col gap-1">{navItems()}</nav>
         </aside>
 
-        <main className="flex-1 overflow-auto p-6">
+        {/* Menú deslizable — móvil */}
+        {menuAbierto && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setMenuAbierto(false)}
+            />
+            <aside className="absolute left-0 top-0 flex h-full w-64 flex-col border-r border-border bg-background p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-semibold">Menú</span>
+                <button
+                  onClick={() => setMenuAbierto(false)}
+                  className="rounded-md p-1.5 hover:bg-accent"
+                  aria-label="Cerrar menú"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <nav className="flex flex-col gap-1">
+                {navItems(() => setMenuAbierto(false))}
+                {perfil && (
+                  <button
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      navigate("/perfil");
+                    }}
+                    className="mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground/80 hover:bg-accent"
+                  >
+                    <span className="h-4 w-4 flex-shrink-0 text-center">👤</span>
+                    <span>Mi perfil</span>
+                  </button>
+                )}
+              </nav>
+            </aside>
+          </div>
+        )}
+
+        <main className="flex-1 overflow-auto p-3 sm:p-6">
           <Outlet />
         </main>
       </div>
