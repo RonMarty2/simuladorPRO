@@ -16,6 +16,7 @@ import {
 } from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
+import PodioCurso from "@/components/curso/PodioCurso";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
@@ -211,6 +212,17 @@ export default function DashboardEstudiante() {
                   <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
                 </div>
               </div>
+
+              {/* ── 🏆 PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
+              {user && (
+                <div className="mb-3">
+                  <PodioCurso
+                    cursoId={curso.id}
+                    cursoNombre={curso.nombre}
+                    miEstudianteId={user.id}
+                  />
+                </div>
+              )}
 
               {/* ── 1. 🎓 CASO DEL CURSO (emerald) — contraído por defecto ── */}
               <details className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">

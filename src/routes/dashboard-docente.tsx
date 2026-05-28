@@ -16,6 +16,7 @@ import RankingCurso from "@/components/docente/RankingCurso";
 import EntregasCurso from "@/components/docente/EntregasCurso";
 import GruposDocente from "@/components/curso/GruposDocente";
 import CasosCurso from "@/components/curso/CasosCurso";
+import PodioCurso from "@/components/curso/PodioCurso";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
@@ -336,7 +337,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos">("ranking");
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio">("ranking");
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -367,7 +368,7 @@ function CursoCard({
   };
 
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
-  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos";
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio";
   const irA = (tab: Vista) => {
     setVista(tab);
     if (!expandido) onToggle();
@@ -410,6 +411,10 @@ function CursoCard({
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <button onClick={() => irA("podio")} className={claseTab("podio")}>
+            <Trophy className="mr-1 inline h-3 w-3" />
+            Podio
+          </button>
           <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
             <Trophy className="mr-1 inline h-3 w-3" />
             Ranking
@@ -510,6 +515,14 @@ function CursoCard({
           {vista === "grupos" && <GruposDocente curso={curso} />}
 
           {vista === "casos" && <CasosCurso cursoId={curso.id} />}
+
+          {vista === "podio" && (
+            <PodioCurso
+              cursoId={curso.id}
+              cursoNombre={curso.nombre}
+              miEstudianteId={null}
+            />
+          )}
 
           {vista === "ranking" && (
             <RankingCurso
