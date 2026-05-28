@@ -15,9 +15,12 @@ interface Props {
 }
 
 /**
- * Botón "Entregar para revisión" — solo visible si:
- * - El proyecto es tipo='entrega_estudiante' (tomó un caso del curso)
+ * Botón "Entregar para revisión" — visible si:
  * - El usuario es estudiante
+ * - El proyecto es entrega_estudiante (caso del curso), proyecto_grupal o libre
+ *   (los proyectos del docente caso_curso NO se entregan).
+ * El proyecto debe estar asociado a un curso para entregarse (validado por la
+ * función entregarProyecto).
  */
 export default function BotonEntregar({ indicadores }: Props) {
   const perfil = useAuthStore((s) => s.perfil);
@@ -41,26 +44,31 @@ export default function BotonEntregar({ indicadores }: Props) {
 
   if (!proyecto || !perfil) return null;
   if (perfil.rol !== "estudiante") return null;
-  if (proyecto.tipo !== "entrega_estudiante") return null;
+  // Tipos del proyecto que el alumno puede entregar (los caso_curso son
+  // plantillas del docente y no se entregan).
+  const tiposEntregables = ["entrega_estudiante", "proyecto_grupal", "libre"];
+  if (!tiposEntregables.includes(proyecto.tipo ?? "libre")) return null;
+  // Sin curso asignado no se puede entregar (la función backend lo valida).
+  if (!proyecto.curso_id) return null;
 
   const entregar = async () => {
-    if (!proyecto || !proyecto.caso_origen_id) return;
+    if (!proyecto) return;
     setEntregando(true);
     setMensaje(null);
     try {
-      // Cargar indicadores del caso de referencia (del docente)
-      const { data: casoFila } = await supabase
-        .from("proyectos")
-        .select("datos")
-        .eq("id", proyecto.caso_origen_id)
-        .single();
-
-      // Para sacar indicadores del caso de referencia tendríamos que
-      // ejecutar el mismo motor de cálculo. Por ahora le pasamos null
-      // y la sugerencia automática solo aplica reglas duras (VAN>0, TIR>WACC).
-      // TODO en futuro: cachear los indicadores del caso al guardarlo.
+      // Cargar el caso de referencia solo si la entrega proviene de un caso
+      // del curso. Los proyectos libres y los grupales no tienen referencia.
+      if (proyecto.caso_origen_id) {
+        await supabase
+          .from("proyectos")
+          .select("datos")
+          .eq("id", proyecto.caso_origen_id)
+          .single();
+      }
+      // Por ahora la sugerencia automática solo aplica reglas duras (VAN>0,
+      // TIR>WACC). En el futuro acá podríamos comparar contra el caso del
+      // docente cuando haya referencia.
       const referencia = null;
-      void casoFila;
 
       const entrega = await entregarProyecto(proyecto, indicadores, referencia);
       const nuevaLista = [entrega, ...entregas];
