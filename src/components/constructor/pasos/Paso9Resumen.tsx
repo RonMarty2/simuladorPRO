@@ -17,7 +17,6 @@ import { useProyectoStore } from "@/stores/proyecto-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { exportarProyectoExcel } from "@/lib/exportar-excel";
 import FichaPedagogica from "../FichaPedagogica";
-import BotonEntregar from "../BotonEntregar";
 import {
   calcularFlujoInversionista,
   calcularGAF,
@@ -53,20 +52,6 @@ export default function Paso9Resumen() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* "Entregar" solo en proyectos que el alumno entrega (no en plantillas del docente) */}
-      {proyecto.tipo !== "caso_curso" && (
-        <div className="order-1">
-          <BotonEntregar
-            indicadores={{
-              van: calc.indicadores.van,
-              tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
-              wacc: calc.wacc,
-              payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
-            }}
-          />
-        </div>
-      )}
-
       <div className="order-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>

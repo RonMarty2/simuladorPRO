@@ -342,20 +342,23 @@ export interface IndicadoresEntrega {
 export async function entregarProyecto(
   proyecto: Proyecto,
   indicadores: IndicadoresEntrega,
-  referencia: { van: number; tir: number; wacc: number; payback: number } | null
+  referencia: { van: number; tir: number; wacc: number; payback: number } | null,
+  pasoEntregado: number | null = null
 ): Promise<Entrega> {
   if (!proyecto.curso_id) {
     throw new Error("El proyecto no está asociado a un curso. No se puede entregar.");
   }
 
-  // 1. Calcular el próximo número de intento para este proyecto
-  const { data: maxIntento } = await supabase
+  // 1. Calcular el próximo número de intento para este (proyecto, paso).
+  // Cada paso tiene su propia secuencia de intentos.
+  let q = supabase
     .from("entregas")
     .select("numero_intento")
     .eq("proyecto_id", proyecto.id)
     .order("numero_intento", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+  q = pasoEntregado == null ? q.is("paso_entregado", null) : q.eq("paso_entregado", pasoEntregado);
+  const { data: maxIntento } = await q.maybeSingle();
   const proximoIntento = (maxIntento?.numero_intento ?? 0) + 1;
 
   // 2. Calcular sugerencia automática
@@ -367,6 +370,7 @@ export async function entregarProyecto(
     estudiante_id: proyecto.estudiante_id,
     curso_id: proyecto.curso_id,
     numero_intento: proximoIntento,
+    paso_entregado: pasoEntregado,
     estado: "pendiente" as EstadoEntrega,
     snapshot_datos: proyecto,
     van: indicadores.van,

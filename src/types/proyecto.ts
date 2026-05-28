@@ -302,6 +302,8 @@ export interface Entrega {
   estudiante_id: string;
   curso_id: string;
   numero_intento: number;
+  /** Paso (1..9) que se entrega. NULL = entrega del proyecto entero (legacy). */
+  paso_entregado?: number | null;
   estado: EstadoEntrega;
 
   /** Snapshot completo del proyecto al momento de entregar */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
@@ -6,7 +6,9 @@ import { eliminarProyecto, listarMisProyectos, listarProyectosGrupales } from "@
 import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
 import BarraProgreso from "@/components/constructor/BarraProgreso";
+import BotonEntregar from "@/components/constructor/BotonEntregar";
 import { BannerTipoProyecto } from "@/components/constructor/BadgeTipoProyecto";
+import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import SelectorProyecto, {
   guardarProyectoActivo,
   leerProyectoActivo,
@@ -182,6 +184,8 @@ export default function ConstruirProyecto() {
 
       <ContenidoPaso paso={pasoActual} />
 
+      <EntregarPasoActual pasoActual={pasoActual} />
+
       <div className="flex items-center justify-between">
         {pasoActual > 1 ? (
           <button
@@ -251,4 +255,26 @@ function ContenidoPaso({ paso }: { paso: number }) {
     default:
       return null;
   }
+}
+
+// Inserta el BotonEntregar para el paso actual. Computa los indicadores con el
+// motor del flujo de caja (que ya hacen las pantallas internamente).
+function EntregarPasoActual({ pasoActual }: { pasoActual: number }) {
+  const proyecto = useProyectoStore((s) => s.proyecto);
+  const calc = useMemo(() => (proyecto ? construirFlujoCaja(proyecto) : null), [proyecto]);
+  if (!proyecto || !calc) return null;
+  // Las plantillas del docente no se entregan (las propias BotonEntregar igual
+  // lo filtra, pero evitamos hasta computar para no contaminar visualmente).
+  if (proyecto.tipo === "caso_curso") return null;
+  return (
+    <BotonEntregar
+      paso={pasoActual}
+      indicadores={{
+        van: calc.indicadores.van,
+        tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
+        wacc: calc.wacc,
+        payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
+      }}
+    />
+  );
 }

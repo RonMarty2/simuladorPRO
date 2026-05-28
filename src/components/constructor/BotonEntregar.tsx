@@ -12,17 +12,19 @@ import type { Entrega } from "@/types/proyecto";
 
 interface Props {
   indicadores: IndicadoresEntrega;
+  /** Paso (1..9) que se está entregando. Si se omite, es una entrega del
+   *  proyecto entero (legacy). */
+  paso?: number;
 }
 
 /**
- * Botón "Entregar para revisión" — visible si:
+ * Botón "Entregar etapa N para revisión" — visible si:
  * - El usuario es estudiante
  * - El proyecto es entrega_estudiante (caso del curso), proyecto_grupal o libre
  *   (los proyectos del docente caso_curso NO se entregan).
- * El proyecto debe estar asociado a un curso para entregarse (validado por la
- * función entregarProyecto).
+ * El proyecto debe estar asociado a un curso para entregarse.
  */
-export default function BotonEntregar({ indicadores }: Props) {
+export default function BotonEntregar({ indicadores, paso }: Props) {
   const perfil = useAuthStore((s) => s.perfil);
   const proyecto = useProyectoStore((s) => s.proyecto);
 
@@ -37,10 +39,20 @@ export default function BotonEntregar({ indicadores }: Props) {
       return;
     }
     listarMisEntregas(perfil.id)
-      .then((todas) => setEntregas(todas.filter((e) => e.proyecto_id === proyecto.id)))
+      .then((todas) =>
+        setEntregas(
+          todas.filter(
+            (e) =>
+              e.proyecto_id === proyecto.id &&
+              (paso == null
+                ? e.paso_entregado == null
+                : e.paso_entregado === paso)
+          )
+        )
+      )
       .catch(() => {})
       .finally(() => setCargando(false));
-  }, [proyecto?.id, perfil?.id]);
+  }, [proyecto?.id, perfil?.id, paso]);
 
   if (!proyecto || !perfil) return null;
   if (perfil.rol !== "estudiante") return null;
@@ -70,7 +82,7 @@ export default function BotonEntregar({ indicadores }: Props) {
       // docente cuando haya referencia.
       const referencia = null;
 
-      const entrega = await entregarProyecto(proyecto, indicadores, referencia);
+      const entrega = await entregarProyecto(proyecto, indicadores, referencia, paso ?? null);
       const nuevaLista = [entrega, ...entregas];
       setEntregas(nuevaLista);
       setMensaje({
@@ -93,10 +105,13 @@ export default function BotonEntregar({ indicadores }: Props) {
     <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold">📤 Entregar para revisión del docente</h3>
+          <h3 className="text-sm font-semibold">
+            {paso ? `📤 Entregar etapa ${paso} para revisión` : "📤 Entregar para revisión del docente"}
+          </h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             Tu proyecto se guarda como una "foto" y queda esperando que el docente lo revise.
             Si te lo reprueban, puedes corregir y reentregar las veces que quieras.
+            {paso ? " La nota de esta etapa se sumará a tu nota final del proyecto." : null}
           </p>
 
           {cargando ? (
@@ -158,8 +173,8 @@ export default function BotonEntregar({ indicadores }: Props) {
           {pendientes > 0
             ? "Esperando revisión…"
             : yaEntregadas > 0
-            ? "Re-entregar"
-            : "Entregar"}
+            ? paso ? `Re-entregar etapa ${paso}` : "Re-entregar"
+            : paso ? `Entregar etapa ${paso}` : "Entregar"}
         </button>
       </div>
     </div>
