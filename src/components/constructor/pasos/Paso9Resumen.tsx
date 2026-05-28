@@ -953,6 +953,7 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     depreciacion: calc.depreciacion,
     intereses: calc.intereses,
     amortizacion: calc.amortizacion,
+    reinversionPorAnio: calc.reinversionPorAnio,
     tasaImpuesto: TASA_IUE,
     extrasUltimoAnio: calc.valorResidual + calc.capitalTrabajo,
     wacc: tasa,
@@ -983,7 +984,7 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
       const uOp = ing - cVar - cFijo - imprev - calc.depreciacion[i];
       const aai = uOp - calc.intereses[i];
       const neta = aai - Math.max(0, aai) * TASA_IUE;
-      let fc = neta + calc.depreciacion[i] - calc.amortizacion[i];
+      let fc = neta + calc.depreciacion[i] - calc.amortizacion[i] - calc.reinversionPorAnio[i];
       if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
       flujos.push(fc);
     }

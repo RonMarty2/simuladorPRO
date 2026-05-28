@@ -613,4 +613,17 @@ describe("calcularFlujoInversionista", () => {
     expect(cerca(conExtra.flujoProyecto[ult] - sinExtra.flujoProyecto[ult], 5000)).toBe(true);
     expect(cerca(conExtra.flujoProyecto[1], sinExtra.flujoProyecto[1])).toBe(true);
   });
+
+  it("la reposición de activos (reinversión) se resta de ambos flujos en su año", () => {
+    const conReinv = calcularFlujoInversionista({
+      ...params,
+      reinversionPorAnio: [0, 8000, 0],
+    });
+    const sinReinv = calcularFlujoInversionista(params);
+    // Año 2 (índice 2): ambos flujos bajan exactamente 8000 respecto al caso sin reposición.
+    expect(cerca(sinReinv.flujoProyecto[2] - conReinv.flujoProyecto[2], 8000)).toBe(true);
+    expect(cerca(sinReinv.flujoAccionista[2] - conReinv.flujoAccionista[2], 8000)).toBe(true);
+    // Años sin reposición no cambian.
+    expect(cerca(conReinv.flujoProyecto[1], sinReinv.flujoProyecto[1])).toBe(true);
+  });
 });

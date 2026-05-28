@@ -897,6 +897,8 @@ export interface ParamsFlujoInversionista {
   intereses: number[];
   /** Amortización de capital de la deuda por año. */
   amortizacion: number[];
+  /** Reposición de activos de vida corta por año (capex de reemplazo). Opcional. */
+  reinversionPorAnio?: number[];
   /** Tasa de impuesto (IUE, típicamente 0.25). */
   tasaImpuesto: number;
   /** Extras del último año (valor residual + recuperación capital trabajo). */
@@ -943,17 +945,19 @@ export function calcularFlujoInversionista(
 
   for (let i = 0; i < n; i++) {
     const extra = i === n - 1 ? extras : 0;
+    // Capex de reemplazo del año (reposición de activos de vida corta).
+    const reinversion = p.reinversionPorAnio?.[i] ?? 0;
 
     // Flujo del proyecto (sin deuda): impuestos sobre EBIT completo.
     const impuestoProyecto = Math.max(0, p.ebit[i]) * p.tasaImpuesto;
-    const fcf = p.ebit[i] - impuestoProyecto + p.depreciacion[i] + extra;
+    const fcf = p.ebit[i] - impuestoProyecto + p.depreciacion[i] - reinversion + extra;
     flujoProyecto.push(fcf);
 
     // Flujo del accionista (con deuda): impuestos sobre utilidad tras intereses.
     const utilidadAntesImpuestos = p.ebit[i] - p.intereses[i];
     const impuestoAccionista = Math.max(0, utilidadAntesImpuestos) * p.tasaImpuesto;
     const utilidadNeta = utilidadAntesImpuestos - impuestoAccionista;
-    const fcfe = utilidadNeta + p.depreciacion[i] - p.amortizacion[i] + extra;
+    const fcfe = utilidadNeta + p.depreciacion[i] - p.amortizacion[i] - reinversion + extra;
     flujoAccionista.push(fcfe);
   }
 
