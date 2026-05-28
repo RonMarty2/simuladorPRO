@@ -13,6 +13,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import {
   borrarCursoComoAdmin,
   cambiarRolUsuario,
+  clonarProyectoAMiCuenta,
   listarTodosLosCursos,
   listarTodosLosProyectos,
   listarTodosLosUsuarios,
@@ -333,8 +334,11 @@ function TabCursos() {
 // ════════════════════════════════════════════════════════════════════════════
 
 function TabProyectos() {
+  const user = useAuthStore((s) => s.user);
   const [proyectos, setProyectos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [clonandoId, setClonandoId] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -346,12 +350,33 @@ function TabProyectos() {
     })();
   }, []);
 
+  const traerAMisProyectos = async (p: any) => {
+    if (!user) return;
+    if (!confirm(`¿Traer una copia de "${p.nombre}" a tus proyectos? El original no se toca.`)) return;
+    setClonandoId(p.id);
+    setAviso(null);
+    try {
+      await clonarProyectoAMiCuenta(p.id, user.id);
+      setAviso(`Copia de "${p.nombre}" creada en tus proyectos. La verás en el selector de "Construir proyecto".`);
+    } catch (e: any) {
+      setAviso(`Error: ${e?.message ?? String(e)}`);
+    } finally {
+      setClonandoId(null);
+    }
+  };
+
   return (
     <div className="space-y-3 rounded-lg border border-border bg-card p-4">
       <h2 className="text-sm font-semibold">
         <UserCheck className="mr-1 inline h-4 w-4" />
         Proyectos ({proyectos.length})
       </h2>
+
+      {aviso && (
+        <div className="rounded-md border border-border bg-secondary/30 px-3 py-2 text-[11px]">
+          {aviso}
+        </div>
+      )}
 
       {cargando ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -369,6 +394,7 @@ function TabProyectos() {
                 <th className="p-2 text-left">Curso (id)</th>
                 <th className="p-2 text-center">Estado</th>
                 <th className="p-2 text-right">Actualizado</th>
+                <th className="p-2 text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -385,6 +411,15 @@ function TabProyectos() {
                     {p.actualizado_en
                       ? new Date(p.actualizado_en).toLocaleDateString("es-BO")
                       : "—"}
+                  </td>
+                  <td className="p-2 text-right">
+                    <button
+                      onClick={() => traerAMisProyectos(p)}
+                      disabled={clonandoId === p.id}
+                      className="rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[10px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                    >
+                      {clonandoId === p.id ? "Copiando…" : "📥 Traer a los míos"}
+                    </button>
                   </td>
                 </tr>
               ))}

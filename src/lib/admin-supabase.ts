@@ -99,6 +99,38 @@ export async function reasignarProyecto(proyectoId: string, nuevoUsuarioId: stri
   if (error) throw error;
 }
 
+/**
+ * Clona CUALQUIER proyecto del sistema a la cuenta del admin como proyecto
+ * LIBRE (deja el original intacto en su dueño). Útil para que el admin se
+ * "traiga" el proyecto de otro docente y lo use/adapte sin afectar al original.
+ */
+export async function clonarProyectoAMiCuenta(
+  proyectoId: string,
+  miUserId: string
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("proyectos")
+    .select("*")
+    .eq("id", proyectoId)
+    .single();
+  if (error) throw error;
+  const ahora = new Date().toISOString();
+  const nuevaFila = {
+    id: crypto.randomUUID(),
+    estudiante_id: miUserId,
+    curso_id: null,
+    grupo_id: null,
+    nombre: `${(data as any).nombre} (copia)`,
+    estado: "construyendo",
+    tipo: "libre",
+    caso_origen_id: null,
+    paso_inicio_estudiante: null,
+    datos: { ...((data as any).datos ?? {}), creado_en: ahora, actualizado_en: ahora },
+  };
+  const { error: e2 } = await supabase.from("proyectos").insert(nuevaFila);
+  if (e2) throw e2;
+}
+
 /** Borra un curso (cascade: inscripciones, proyectos y entregas asociados). */
 export async function borrarCursoComoAdmin(cursoId: string): Promise<void> {
   const { error } = await supabase.from("cursos").delete().eq("id", cursoId);
