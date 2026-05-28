@@ -37,12 +37,13 @@ export default function Paso9Resumen() {
 
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
 
-  // Colapso por sección del flujo de caja (todas abiertas por defecto).
+  // Colapso por sección del flujo de caja (todas CONTRAÍDAS por defecto; el
+  // usuario expande la que quiera ver).
   const [secAbierta, setSecAbierta] = useState<Record<string, boolean>>({
-    emerald: true,
-    rose: true,
-    violet: true,
-    sky: true,
+    emerald: false,
+    rose: false,
+    violet: false,
+    sky: false,
   });
   const toggleSeccion = (k: string) =>
     setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
@@ -206,9 +207,6 @@ export default function Paso9Resumen() {
         </div>
       </div>
 
-      {/* ANÁLISIS AVANZADO V2 — solo si el proyecto es versión extendida */}
-      {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
-
       {/* TABLA FLUJO DE CAJA — cada sección de color se contrae/expande */}
       <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
         <h3 className="mb-1 text-sm font-semibold">
@@ -326,6 +324,9 @@ export default function Paso9Resumen() {
         </div>
       </div>
 
+      {/* ANÁLISIS AVANZADO V2 — debajo del flujo, contraído por defecto */}
+      {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
+
       {/* Gráficos */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-4">
@@ -408,15 +409,30 @@ function AnalisisAvanzadoV2({
   const fmtPct = (n: number) =>
     isFinite(n) ? `${(n * 100).toFixed(2)}%` : "—";
 
+  // Contraído por defecto: el usuario lo abre cuando quiere ver el detalle.
+  const [abierto, setAbierto] = useState(false);
+
   return (
-    <div className="rounded-lg border-2 border-indigo-300 bg-indigo-50/40 p-6 dark:border-indigo-800 dark:bg-indigo-950/20">
-      <div className="flex items-center gap-2">
+    <div className="rounded-lg border-2 border-indigo-300 bg-indigo-50/40 p-4 dark:border-indigo-800 dark:bg-indigo-950/20">
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={abierto}
+      >
+        <span className="text-xs text-indigo-600">{abierto ? "▾" : "▸"}</span>
         <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
           V2
         </span>
         <h3 className="text-base font-semibold tracking-tight">Análisis avanzado</h3>
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">
+        <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+          {abierto ? "ocultar" : "PE · payback desc. · apalancamiento · sensibilidad · Monte Carlo"}
+        </span>
+      </button>
+
+      {abierto && (
+        <>
+      <p className="mt-3 text-xs text-muted-foreground">
         Indicadores adicionales de la versión extendida. No reemplazan a los de
         arriba: los complementan.
       </p>
@@ -640,6 +656,8 @@ function AnalisisAvanzadoV2({
 
       {/* Análisis de riesgo Monte Carlo */}
       <PanelMonteCarlo calc={calc} />
+        </>
+      )}
     </div>
   );
 }
