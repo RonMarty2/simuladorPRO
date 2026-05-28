@@ -12,6 +12,7 @@ import {
 } from "@/lib/grupos-supabase";
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import type { VersionProyecto } from "@/types/proyecto";
+import InputNumero from "@/components/constructor/InputNumero";
 
 export default function GruposDocente({ curso }: { curso: Curso }) {
   const user = useAuthStore((s) => s.user)!;
@@ -161,12 +162,11 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-[11px]">
             Cupo máx. por grupo
-            <input
-              type="number"
+            <InputNumero
+              value={cupo}
+              onChange={(n) => setCupo(n)}
               min={1}
               max={50}
-              value={cupo}
-              onChange={(e) => setCupo(Number(e.target.value) || 1)}
               disabled={!habilitado}
               className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs disabled:opacity-60"
             />
