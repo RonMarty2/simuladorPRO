@@ -173,8 +173,12 @@ export default function DashboardEstudiante() {
           const delCurso = proyectos.filter(
             (p) => p.curso_id === curso.id && p.tipo !== "proyecto_grupal"
           );
-          // Casos publicados por el docente: la copia del estudiante (entrega) la
-          // identifico por caso_origen_id; los demás casos están "disponibles".
+          // Sub-divisiones del individual:
+          //  - casosTomados: copias que el alumno hizo de un caso del docente.
+          //  - proyectosLibres: proyectos propios que el alumno creó libremente.
+          const casosTomados = delCurso.filter((p) => !!p.caso_origen_id);
+          const proyectosLibres = delCurso.filter((p) => !p.caso_origen_id);
+          // Casos publicados por el docente disponibles (sin tomar todavía).
           const casosDelDocente = casosPorCurso[curso.id] ?? [];
           const yaTomados = new Set(
             proyectos.filter((p) => p.caso_origen_id).map((p) => p.caso_origen_id!)
@@ -207,109 +211,149 @@ export default function DashboardEstudiante() {
                 </div>
               </div>
 
-              {/* ── Sub-tarjeta: Proyecto INDIVIDUAL (acento sky) ────────── */}
-              <div className="overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
-                <div className="border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-sky-900 dark:text-sky-100">
-                    <span className="text-base">📁</span>
-                    <span>Tu proyecto individual</span>
+              {/* ── 1. 🎓 CASO DEL CURSO (emerald) ──────────────────────── */}
+              <details open className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-100/60 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-900/30">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                      <span className="text-base">🎓</span>
+                      <span>Caso del curso</span>
+                      {(casosDisponibles.length + casosTomados.length) > 0 && (
+                        <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">
+                          {casosDisponibles.length + casosTomados.length}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-emerald-900/70 dark:text-emerald-200/70">
+                      Los proyectos que el docente publicó para tomar y trabajar.
+                    </div>
                   </div>
-                  <div className="text-[11px] text-sky-900/70 dark:text-sky-200/70">
-                    Tu propio proyecto del curso — lo armas tú y lo entregas para nota.
-                  </div>
-                </div>
-                <div className="space-y-3 p-3">
-                  {/* Casos publicados por el docente, disponibles para tomar */}
-                  {casosDisponibles.length > 0 && (
-                    <div className="rounded-md border border-emerald-300 bg-emerald-50/60 p-2 dark:border-emerald-800 dark:bg-emerald-950/20">
-                      <div className="mb-1.5 text-[11px] font-semibold text-emerald-900 dark:text-emerald-200">
-                        🎓 Casos del docente disponibles para ti
-                      </div>
-                      <div className="space-y-1.5">
-                        {casosDisponibles.map((c) => {
-                          const pasoInicio = c.paso_inicio_estudiante ?? 1;
-                          return (
-                            <div
-                              key={c.id}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-200 bg-card p-2 dark:border-emerald-900"
-                            >
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold">{c.nombre}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  {pasoInicio === 1
-                                    ? "Lo armas desde cero (el docente solo dio el contexto)."
-                                    : pasoInicio === 9
-                                      ? "Lo recibes COMPLETO (sirve de ejemplo / para simular)."
-                                      : `Recibes los pasos 1 a ${pasoInicio - 1} ya armados; completas del ${pasoInicio} en adelante.`}
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => tomarCaso(c.id)}
-                                disabled={tomandoCaso === c.id}
-                                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                              >
-                                {tomandoCaso === c.id ? "Tomando…" : "Tomar este caso"}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    <span className="group-open:hidden">▸ ver</span>
+                    <span className="hidden group-open:inline">▾ ocultar</span>
+                  </span>
+                </summary>
+                <div className="space-y-2 p-3">
+                  {casosDisponibles.length === 0 && casosTomados.length === 0 && (
+                    <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
+                      Tu docente aún no publicó casos en este curso.
                     </div>
                   )}
-
-                  {delCurso.length === 0 ? (
-                    casosDisponibles.length === 0 && (
-                      <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
-                        Aún no tienes un proyecto individual en este curso.
-                        {curso.permite_proyecto_libre !== false && (
-                          <div className="mt-2 flex justify-center">
-                            <button
-                              onClick={() => setCrearEnCurso(curso)}
-                              className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Crear mi proyecto
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  ) : (
+                  {casosTomados.length > 0 && (
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {delCurso.map((p) => (
+                      {casosTomados.map((p) => (
                         <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
                       ))}
                     </div>
                   )}
+                  {casosDisponibles.length > 0 && (
+                    <div className="space-y-1.5">
+                      {casosTomados.length > 0 && (
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          Disponibles para tomar
+                        </div>
+                      )}
+                      {casosDisponibles.map((c) => {
+                        const pasoInicio = c.paso_inicio_estudiante ?? 1;
+                        return (
+                          <div
+                            key={c.id}
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-200 bg-card p-2 dark:border-emerald-900"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-semibold">{c.nombre}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {pasoInicio === 1
+                                  ? "Lo armas desde cero (el docente solo dio el contexto)."
+                                  : pasoInicio === 9
+                                    ? "Lo recibes COMPLETO (sirve de ejemplo / para simular)."
+                                    : `Recibes los pasos 1 a ${pasoInicio - 1} ya armados; completas del ${pasoInicio} en adelante.`}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => tomarCaso(c.id)}
+                              disabled={tomandoCaso === c.id}
+                              className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              {tomandoCaso === c.id ? "Tomando…" : "Tomar este caso"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </details>
 
-                  {/* Botón secundario: crear mi propio proyecto, si el docente lo permite y ya hay actividad */}
-                  {curso.permite_proyecto_libre !== false && (delCurso.length > 0 || casosDisponibles.length > 0) && (
+              {/* ── 2. 📁 CASO INDIVIDUAL (sky) ─────────────────────────── */}
+              <details open className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-sky-900 dark:text-sky-100">
+                      <span className="text-base">📁</span>
+                      <span>Caso individual</span>
+                      {proyectosLibres.length > 0 && (
+                        <span className="rounded bg-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-900 dark:bg-sky-800 dark:text-sky-100">
+                          {proyectosLibres.length}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-sky-900/70 dark:text-sky-200/70">
+                      Tu propio proyecto del curso — lo armas tú desde cero.
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    <span className="group-open:hidden">▸ ver</span>
+                    <span className="hidden group-open:inline">▾ ocultar</span>
+                  </span>
+                </summary>
+                <div className="space-y-2 p-3">
+                  {proyectosLibres.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
+                      {curso.permite_proyecto_libre !== false
+                        ? "Aún no creaste tu proyecto individual."
+                        : "Tu docente no habilitó la creación de proyectos individuales en este curso."}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {proyectosLibres.map((p) => (
+                        <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
+                      ))}
+                    </div>
+                  )}
+                  {curso.permite_proyecto_libre !== false && (
                     <button
                       onClick={() => setCrearEnCurso(curso)}
-                      className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/10"
+                      className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
                     >
                       <Plus className="h-3 w-3" />
-                      Crear mi propio proyecto (además)
+                      Crear mi proyecto
                     </button>
                   )}
                 </div>
-              </div>
+              </details>
 
-              {/* ── Sub-tarjeta: Proyecto GRUPAL (acento violet) ─────────── */}
-              <div className="mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
-                <div className="border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
-                    <span className="text-base">🤝</span>
-                    <span>Proyecto grupal</span>
+              {/* ── 3. 🤝 CASO GRUPAL (violet) ──────────────────────────── */}
+              <details open className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
+                      <span className="text-base">🤝</span>
+                      <span>Caso grupal</span>
+                    </div>
+                    <div className="text-[11px] text-violet-900/70 dark:text-violet-200/70">
+                      Trabajen en equipo sobre un mismo proyecto.
+                    </div>
                   </div>
-                  <div className="text-[11px] text-violet-900/70 dark:text-violet-200/70">
-                    Trabajen en equipo sobre un mismo proyecto.
-                  </div>
-                </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    <span className="group-open:hidden">▸ ver</span>
+                    <span className="hidden group-open:inline">▾ ocultar</span>
+                  </span>
+                </summary>
                 <div className="p-3">
                   {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
                 </div>
-              </div>
+              </details>
             </section>
           );
         })}
