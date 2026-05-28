@@ -196,13 +196,21 @@ function FormCrearCurso({
           tan resistente es su proyecto ante la realidad, no solo en el papel.
         </p>
         <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
-          <strong>Frecuencia de turnos</strong> = cada cuánto avanza y decide:
+          <strong>Frecuencia de turnos</strong> = en cuántos pedazos se parten los 5 años{" "}
+          <em>simulados del proyecto</em>. <strong>No es tu calendario de clases</strong>: los
+          5 años son la vida del negocio (lo que proyecta tu flujo de caja), no la duración del
+          curso. Un alumno puede jugar todos los turnos en una sola tarde.
         </p>
         <ul className="ml-4 list-disc space-y-0.5">
-          <li><strong>Mensual</strong> (60 turnos): más realista y detallado, más trabajo para el alumno.</li>
-          <li><strong>Trimestral</strong> (20 turnos): equilibrio entre detalle y ritmo.</li>
-          <li><strong>Semestral</strong> (10 turnos): vista rápida, ideal si el foco es la construcción del proyecto.</li>
+          <li><strong>Mensual</strong> — cada turno = 1 mes → <strong>60 turnos</strong>: más detalle y decisiones.</li>
+          <li><strong>Trimestral</strong> — cada turno = 3 meses → <strong>20 turnos</strong>: equilibrio.</li>
+          <li><strong>Semestral</strong> — cada turno = 6 meses → <strong>10 turnos</strong>: rápido, si el foco es construir el proyecto.</li>
         </ul>
+        <p className="text-muted-foreground">
+          Si querés <strong>acompañar tu ritmo de clase</strong> (≈1 turno por clase, sobre todo
+          en modo «Docente dispara»): una vez por semana ~5 meses → <strong>Trimestral (20)</strong>;
+          clase diaria por pocas semanas → <strong>Mensual (60)</strong>. Igual es opcional.
+        </p>
         <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
           <strong>Modo de simulación</strong> = quién decide cuándo caen los eventos:
         </p>
