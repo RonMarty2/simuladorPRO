@@ -309,6 +309,10 @@ export interface FilaRanking {
   tiene_proyecto: boolean;
   nombre_proyecto: string | null;
   estado_proyecto: string | null;
+  /** Última edición del proyecto del estudiante (o null si no tiene proyecto). */
+  ultima_actividad_en: string | null;
+  /** Fecha de inscripción al curso (fallback cuando no hay actividad de proyecto). */
+  inscrito_en: string;
   // Simulación
   tiene_simulacion: boolean;
   turno_actual: number;
@@ -331,10 +335,11 @@ export async function obtenerRankingCurso(cursoId: string): Promise<FilaRanking[
 
   const estudianteIds = inscritos.map((i) => i.estudiante_id);
 
-  // 2. Proyectos de esos estudiantes para este curso (o sin curso)
+  // 2. Proyectos de esos estudiantes para este curso (o sin curso). Traemos
+  // actualizado_en para mostrar "última actividad" en el ranking.
   const { data: proyectos, error: errProyectos } = await supabase
     .from("proyectos")
-    .select("id, estudiante_id, nombre, estado")
+    .select("id, estudiante_id, nombre, estado, actualizado_en")
     .in("estudiante_id", estudianteIds);
   if (errProyectos) throw errProyectos;
 
@@ -365,6 +370,8 @@ export async function obtenerRankingCurso(cursoId: string): Promise<FilaRanking[
       tiene_proyecto: !!proyecto,
       nombre_proyecto: proyecto?.nombre ?? null,
       estado_proyecto: proyecto?.estado ?? null,
+      ultima_actividad_en: proyecto?.actualizado_en ?? null,
+      inscrito_en: insc.inscrito_en,
       tiene_simulacion: !!simulacion,
       turno_actual: simulacion?.turno_actual ?? 0,
       turnos_totales: simulacion?.turnos_totales ?? 0,

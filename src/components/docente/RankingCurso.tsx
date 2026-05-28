@@ -147,6 +147,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                 />
               </th>
               <th className="p-2 text-center">Estado</th>
+              <th className="p-2 text-left">Última actividad</th>
               <th className="p-2"></th>
             </tr>
           </thead>
@@ -223,6 +224,12 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                     estado={f.estado_simulacion}
                   />
                 </td>
+                <td className="p-2">
+                  <UltimaActividadCell
+                    fecha={f.ultima_actividad_en}
+                    inscritoEn={f.inscrito_en}
+                  />
+                </td>
                 <td className="p-2 text-right">
                   {f.tiene_proyecto && (
                     <button
@@ -240,7 +247,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
               </tr>
               {expandido === f.estudiante_id && (
                 <tr className="border-t border-border bg-secondary/10">
-                  <td colSpan={9} className="p-3">
+                  <td colSpan={10} className="p-3">
                     <DetalleEstudiante
                       cursoId={cursoId}
                       estudianteId={f.estudiante_id}
@@ -284,6 +291,65 @@ function BotonOrden({
     >
       {label} {activo && "↓"}
     </button>
+  );
+}
+
+// Última actividad del estudiante: muestra cuándo fue (relativo + fecha) con un
+// código de color para detectar rápido a los que no están trabajando.
+//   • verde  → última edición hace < 1 día
+//   • ámbar  → entre 1 y 7 días
+//   • rojo   → > 7 días o nunca abrió un proyecto
+function UltimaActividadCell({
+  fecha,
+  inscritoEn,
+}: {
+  fecha: string | null;
+  inscritoEn: string;
+}) {
+  const ahora = Date.now();
+  if (!fecha) {
+    const diasDesdeInscripcion = (ahora - new Date(inscritoEn).getTime()) / (1000 * 60 * 60 * 24);
+    return (
+      <div className="flex flex-col">
+        <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+          ✗ sin actividad
+        </span>
+        <span className="mt-0.5 text-[9px] text-muted-foreground">
+          inscrito hace {Math.round(diasDesdeInscripcion)}d
+        </span>
+      </div>
+    );
+  }
+  const t = new Date(fecha).getTime();
+  const minutos = (ahora - t) / (1000 * 60);
+  const horas = minutos / 60;
+  const dias = horas / 24;
+
+  let relativo: string;
+  if (minutos < 60) relativo = `hace ${Math.max(1, Math.round(minutos))} min`;
+  else if (horas < 24) relativo = `hace ${Math.round(horas)} h`;
+  else if (dias < 30) relativo = `hace ${Math.round(dias)} d`;
+  else relativo = `hace ${Math.round(dias / 30)} m`;
+
+  const clase =
+    dias < 1
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+      : dias < 7
+        ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+        : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300";
+
+  const fechaFmt = new Date(fecha).toLocaleString("es-BO", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+
+  return (
+    <div className="flex flex-col">
+      <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", clase)}>
+        {relativo}
+      </span>
+      <span className="mt-0.5 text-[9px] text-muted-foreground">{fechaFmt}</span>
+    </div>
   );
 }
 
