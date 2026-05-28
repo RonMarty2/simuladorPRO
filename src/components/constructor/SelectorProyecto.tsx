@@ -3,7 +3,7 @@ import { ChevronDown, FolderOpen, Loader2, Plus, Sparkles, Trash2, X } from "luc
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto, listarMisProyectos, eliminarProyecto } from "@/lib/proyecto-supabase";
-import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
+import { listarMisInscripciones, listarMisCursos, type Curso } from "@/lib/cursos-supabase";
 import { calcularCapitalTrabajoBase } from "@/lib/flujo-proyecto";
 import {
   crearProyectoEjemploCafeteriaV2,
@@ -231,12 +231,14 @@ function ModalNuevoProyecto({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cursos del estudiante, para asignar el proyecto a uno de ellos al crearlo.
+  // Cursos para asignar el proyecto: el docente ve los que DICTA; el estudiante,
+  // aquellos en los que está INSCRITO.
   useEffect(() => {
-    listarMisInscripciones(userId)
-      .then((insc) => setCursos(insc.map((i) => i.curso)))
-      .catch(() => {});
-  }, [userId]);
+    const cargar = esDocente
+      ? listarMisCursos(userId)
+      : listarMisInscripciones(userId).then((insc) => insc.map((i) => i.curso));
+    cargar.then(setCursos).catch(() => {});
+  }, [userId, esDocente]);
 
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
