@@ -148,7 +148,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
           <div className="absolute left-0 top-full z-40 mt-1 max-h-80 w-80 overflow-y-auto rounded-md border border-border bg-card p-1 shadow-lg">
             {proyectosVisibles.length === 0 ? (
               <div className="p-3 text-center text-xs text-muted-foreground">
-                Aún no tenés proyectos. Crea uno con el botón "+ Nuevo proyecto".
+                Aún no tienes proyectos. Crea uno con el botón "+ Nuevo proyecto".
               </div>
             ) : (
               proyectosVisibles.map((p) => {

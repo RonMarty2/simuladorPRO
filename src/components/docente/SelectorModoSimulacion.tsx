@@ -21,13 +21,13 @@ const MODOS: Array<{ valor: ModoSimulacion; titulo: string; desc: string; icon: 
   {
     valor: "docente_dispara",
     titulo: "Docente dispara cada evento",
-    desc: "Vos lanzás los eventos manualmente desde tu panel cuando lo decidas. Ideal para clase presencial sincronizada.",
+    desc: "Tú lanzas los eventos manualmente desde tu panel cuando lo decidas. Ideal para clase presencial sincronizada.",
     icon: "🎯",
   },
   {
     valor: "curado",
     titulo: "Eventos curados por el docente",
-    desc: "Vos elegís de los 50 eventos cuáles enfrentarán tus estudiantes. Ideal para examen con intención pedagógica clara.",
+    desc: "Tú eliges de los 50 eventos cuáles enfrentarán tus estudiantes. Ideal para examen con intención pedagógica clara.",
     icon: "📋",
   },
 ];

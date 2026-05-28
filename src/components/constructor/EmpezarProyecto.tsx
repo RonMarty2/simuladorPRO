@@ -97,7 +97,7 @@ export default function EmpezarProyecto() {
         casosDisponibles.length === 0 && (
           <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-center text-xs text-muted-foreground">
             Tu docente todavía no publicó un proyecto individual para tu curso. Mientras tanto,
-            podés trabajar el <strong>proyecto grupal</strong> desde tu panel (si tu curso tiene
+            puedes trabajar el <strong>proyecto grupal</strong> desde tu panel (si tu curso tiene
             grupos). Cuando el docente publique un caso, aparecerá acá.
           </div>
         )

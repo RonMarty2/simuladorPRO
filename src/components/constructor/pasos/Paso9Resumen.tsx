@@ -391,7 +391,7 @@ export default function Paso9Resumen() {
             inversión.
             <br />
             <span className="text-amber-800/80 dark:text-amber-300/80">
-              Recordá: estos son tus números <em>proyectados</em>. La simulación de 60
+              Recuerda: estos son tus números <em>proyectados</em>. La simulación de 60
               turnos con eventos económicos bolivianos te mostrará cuánto puede mover
               estos valores la realidad.
             </span>

@@ -24,7 +24,7 @@ const SUBCATEGORIAS_POR_SECTOR: Record<Sector, ConfigSubcat[]> = {
     { valor: "mano_obra", label: "Mano de obra directa", ejemplos: "Operarios cuyo costo escala con cada unidad producida." },
   ],
   comercio: [
-    { valor: "mercaderia", label: "Mercadería", ejemplos: "Productos que comprás para revender." },
+    { valor: "mercaderia", label: "Mercadería", ejemplos: "Productos que compras para revender." },
     { valor: "empaque", label: "Empaque", ejemplos: "Bolsas, papel, etiquetas, cajas de entrega." },
     { valor: "comision_venta", label: "Comisiones de venta", ejemplos: "% al vendedor por cada venta." },
   ],

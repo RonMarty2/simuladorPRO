@@ -59,15 +59,15 @@ export default function CasosCurso({ cursoId }: { cursoId: string }) {
     <div className="space-y-3">
       <div className="rounded-md border border-border bg-secondary/20 p-3 text-[11px] text-muted-foreground">
         <strong className="text-foreground">¿Qué es un caso del curso?</strong> Un proyecto que
-        vos armás y publicás como <em>plantilla</em>: todos los estudiantes inscritos pueden
+        tú armas y publicas como <em>plantilla</em>: todos los estudiantes inscritos pueden
         tomarlo (se hace una copia para cada uno) y trabajar sobre tu base. Es distinto del
         proyecto grupal (que arman los estudiantes) y del proyecto individual libre (que cada
-        alumno crea si lo habilitás).
+        alumno crea si lo habilitas).
         <br />
         <span className="mt-1 block">
-          <strong className="text-foreground">Cómo publicar un caso:</strong> tocá{" "}
-          <em>"+ Crear caso ahora"</em>, llenalo (todo o solo los primeros pasos), y al final
-          desde el constructor usá el botón <strong>"Guardar como caso del curso"</strong>.
+          <strong className="text-foreground">Cómo publicar un caso:</strong> toca{" "}
+          <em>"+ Crear caso ahora"</em>, llénalo (todo o solo los primeros pasos), y al final
+          desde el constructor usa el botón <strong>"Guardar como caso del curso"</strong>.
         </span>
       </div>
 

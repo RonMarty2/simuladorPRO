@@ -8,7 +8,12 @@ import {
   listarMisInscripciones,
   type Curso,
 } from "@/lib/cursos-supabase";
-import { guardarProyecto, listarMisProyectos } from "@/lib/proyecto-supabase";
+import {
+  guardarProyecto,
+  listarCasosDelCurso,
+  listarMisProyectos,
+  tomarCasoDelCurso,
+} from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
@@ -45,13 +50,27 @@ export default function DashboardEstudiante() {
   const [error, setError] = useState<string | null>(null);
   const [inscribiendo, setInscribiendo] = useState(false);
   const [crearEnCurso, setCrearEnCurso] = useState<Curso | null>(null);
+  const [casosPorCurso, setCasosPorCurso] = useState<Record<string, Proyecto[]>>({});
+  const [tomandoCaso, setTomandoCaso] = useState<string | null>(null);
 
   const recargar = () => {
     if (!user) return;
     Promise.all([listarMisInscripciones(user.id), listarMisProyectos(user.id)])
-      .then(([insc, proy]) => {
+      .then(async ([insc, proy]) => {
         setInscripciones(insc);
         setProyectos(proy);
+        // Casos disponibles del docente por curso (todos en paralelo)
+        const casosEntries = await Promise.all(
+          insc.map(async ({ curso }) => {
+            try {
+              const casos = await listarCasosDelCurso(curso.id);
+              return [curso.id, casos] as const;
+            } catch {
+              return [curso.id, []] as const;
+            }
+          })
+        );
+        setCasosPorCurso(Object.fromEntries(casosEntries));
       })
       .catch(() => {})
       .finally(() => setCargando(false));
@@ -107,6 +126,23 @@ export default function DashboardEstudiante() {
   const idsCursos = new Set(inscripciones.map((i) => i.curso.id));
   const libres = proyectos.filter((p) => !p.curso_id || !idsCursos.has(p.curso_id));
 
+  // El estudiante toma un caso publicado por el docente: se hace una copia
+  // personal (entrega_estudiante) y aparece en su lista de proyectos.
+  const tomarCaso = async (casoId: string) => {
+    if (!user) return;
+    setTomandoCaso(casoId);
+    setError(null);
+    try {
+      const copia = await tomarCasoDelCurso(casoId, user.id);
+      // Marcar el activo y abrirlo en el constructor.
+      guardarProyectoActivo(user.id, copia.id);
+      navigate("/construir");
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+      setTomandoCaso(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
@@ -132,7 +168,18 @@ export default function DashboardEstudiante() {
       {/* Un bloque por curso inscrito */}
       {!cargando &&
         inscripciones.map(({ curso }) => {
-          const delCurso = proyectos.filter((p) => p.curso_id === curso.id);
+          // Sólo proyectos INDIVIDUALES del estudiante en este curso (excluye el
+          // proyecto compartido del grupo, que tiene tipo='proyecto_grupal').
+          const delCurso = proyectos.filter(
+            (p) => p.curso_id === curso.id && p.tipo !== "proyecto_grupal"
+          );
+          // Casos publicados por el docente: la copia del estudiante (entrega) la
+          // identifico por caso_origen_id; los demás casos están "disponibles".
+          const casosDelDocente = casosPorCurso[curso.id] ?? [];
+          const yaTomados = new Set(
+            proyectos.filter((p) => p.caso_origen_id).map((p) => p.caso_origen_id!)
+          );
+          const casosDisponibles = casosDelDocente.filter((c) => !yaTomados.has(c.id));
           return (
             <section key={curso.id} className="rounded-lg border border-border bg-card p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
@@ -168,37 +215,82 @@ export default function DashboardEstudiante() {
                     <span>Tu proyecto individual</span>
                   </div>
                   <div className="text-[11px] text-sky-900/70 dark:text-sky-200/70">
-                    Tu propio proyecto del curso — lo armás vos y lo entregás para nota.
+                    Tu propio proyecto del curso — lo armas tú y lo entregas para nota.
                   </div>
                 </div>
-                <div className="p-3">
-                  {delCurso.length === 0 ? (
-                    <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
-                      Aún no tienes un proyecto individual en este curso.
-                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                        {curso.permite_proyecto_libre !== false && (
-                          <button
-                            onClick={() => setCrearEnCurso(curso)}
-                            className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Crear mi proyecto
-                          </button>
-                        )}
-                        <button
-                          onClick={() => navigate("/construir")}
-                          className="rounded-md border border-border px-2.5 py-1 text-[11px] hover:bg-secondary"
-                        >
-                          Tomar un caso del docente
-                        </button>
+                <div className="space-y-3 p-3">
+                  {/* Casos publicados por el docente, disponibles para tomar */}
+                  {casosDisponibles.length > 0 && (
+                    <div className="rounded-md border border-emerald-300 bg-emerald-50/60 p-2 dark:border-emerald-800 dark:bg-emerald-950/20">
+                      <div className="mb-1.5 text-[11px] font-semibold text-emerald-900 dark:text-emerald-200">
+                        🎓 Casos del docente disponibles para ti
+                      </div>
+                      <div className="space-y-1.5">
+                        {casosDisponibles.map((c) => {
+                          const pasoInicio = c.paso_inicio_estudiante ?? 1;
+                          return (
+                            <div
+                              key={c.id}
+                              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-200 bg-card p-2 dark:border-emerald-900"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold">{c.nombre}</div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  {pasoInicio === 1
+                                    ? "Lo armas desde cero (el docente solo dio el contexto)."
+                                    : pasoInicio === 9
+                                      ? "Lo recibes COMPLETO (sirve de ejemplo / para simular)."
+                                      : `Recibes los pasos 1 a ${pasoInicio - 1} ya armados; completas del ${pasoInicio} en adelante.`}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => tomarCaso(c.id)}
+                                disabled={tomandoCaso === c.id}
+                                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                              >
+                                {tomandoCaso === c.id ? "Tomando…" : "Tomar este caso"}
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
+                  )}
+
+                  {delCurso.length === 0 ? (
+                    casosDisponibles.length === 0 && (
+                      <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
+                        Aún no tienes un proyecto individual en este curso.
+                        {curso.permite_proyecto_libre !== false && (
+                          <div className="mt-2 flex justify-center">
+                            <button
+                              onClick={() => setCrearEnCurso(curso)}
+                              className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Crear mi proyecto
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
                   ) : (
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {delCurso.map((p) => (
                         <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
                       ))}
                     </div>
+                  )}
+
+                  {/* Botón secundario: crear mi propio proyecto, si el docente lo permite y ya hay actividad */}
+                  {curso.permite_proyecto_libre !== false && (delCurso.length > 0 || casosDisponibles.length > 0) && (
+                    <button
+                      onClick={() => setCrearEnCurso(curso)}
+                      className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Crear mi propio proyecto (además)
+                    </button>
                   )}
                 </div>
               </div>

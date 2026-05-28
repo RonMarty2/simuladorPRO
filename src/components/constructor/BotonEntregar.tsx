@@ -88,7 +88,7 @@ export default function BotonEntregar({ indicadores }: Props) {
           <h3 className="text-sm font-semibold">📤 Entregar para revisión del docente</h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             Tu proyecto se guarda como una "foto" y queda esperando que el docente lo revise.
-            Si te lo reprueban, podés corregir y reentregar las veces que quieras.
+            Si te lo reprueban, puedes corregir y reentregar las veces que quieras.
           </p>
 
           {cargando ? (

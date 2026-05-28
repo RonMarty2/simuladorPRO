@@ -210,7 +210,7 @@ function FormCrearCurso({
           <li><strong>Semestral</strong> — cada turno = 6 meses → <strong>10 turnos</strong>: rápido, si el foco es construir el proyecto.</li>
         </ul>
         <p className="text-muted-foreground">
-          Si querés <strong>acompañar tu ritmo de clase</strong> (≈1 turno por clase, sobre todo
+          Si quieres <strong>acompañar tu ritmo de clase</strong> (≈1 turno por clase, sobre todo
           en modo «Docente dispara»): una vez por semana ~5 meses → <strong>Trimestral (20)</strong>;
           clase diaria por pocas semanas → <strong>Mensual (60)</strong>. Igual es opcional.
         </p>
@@ -224,12 +224,12 @@ function FormCrearCurso({
             <em>Úsalo para tarea/práctica en casa.</em>
           </li>
           <li>
-            <strong>Docente dispara cada evento:</strong> vos, desde tu panel, lanzás el evento
-            cuando querés y a todos a la vez (ej. en la clase decís «ahora a todos les sube la
+            <strong>Docente dispara cada evento:</strong> tú, desde tu panel, lanzas el evento
+            cuando quieres y a todos a la vez (ej. en la clase dices «ahora a todos les sube la
             inflación»). <em>Ideal para clase presencial sincronizada.</em>
           </li>
           <li>
-            <strong>Eventos curados:</strong> vos elegís de antemano cuáles de los ~50 eventos
+            <strong>Eventos curados:</strong> tú eliges de antemano cuáles de los ~50 eventos
             van a enfrentar (ej. solo devaluación + sequía). <em>Ideal para un examen con una
             intención pedagógica clara.</em>
           </li>
@@ -253,8 +253,8 @@ function FormCrearCurso({
             <strong>Dejar que cada estudiante elija y arme su propio proyecto</strong> (V1/V2 y
             modelo de ingreso). Recomendado: cada alumno trae una idea distinta.
             <span className="mt-0.5 block text-[11px] text-muted-foreground">
-              Si lo desmarcás, los estudiantes solo trabajan el <strong>caso</strong> que vos
-              publiques o el <strong>proyecto grupal</strong>. Lo podés cambiar después.
+              Si lo desmarcas, los estudiantes solo trabajan el <strong>caso</strong> que tú
+              publiques o el <strong>proyecto grupal</strong>. Lo puedes cambiar después.
             </span>
           </span>
         </label>

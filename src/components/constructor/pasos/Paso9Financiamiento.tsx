@@ -103,7 +103,7 @@ export default function Paso9Financiamiento() {
           totalNecesario={capitalOperativo}
           cfg={capital}
           onChange={setCapital}
-          msgVacio="Todavía no calculaste el capital de trabajo en el Paso 8. Volvé y elegí los meses de buffer."
+          msgVacio="Todavía no calculaste el capital de trabajo en el Paso 8. Vuelve y elige los meses de buffer."
         />
 
         {/* CAPM (solo V2) — calcula el costo del capital propio (Ke) */}
