@@ -14,6 +14,8 @@ import {
   YAxis,
 } from "recharts";
 import { useProyectoStore } from "@/stores/proyecto-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { exportarProyectoExcel } from "@/lib/exportar-excel";
 import FichaPedagogica from "../FichaPedagogica";
 import BotonEntregar from "../BotonEntregar";
 import {
@@ -62,12 +64,15 @@ export default function Paso9Resumen() {
         />
       </div>
 
-      <div className="order-2">
-        <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Consolidación de todos los pasos anteriores. Si quieres cambiar algo, vuelve al
-          paso correspondiente — esta vista se recalcula sola.
-        </p>
+      <div className="order-2 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Consolidación de todos los pasos anteriores. Si quieres cambiar algo, vuelve al
+            paso correspondiente — esta vista se recalcula sola.
+          </p>
+        </div>
+        <BotonExportarExcelAdmin proyecto={proyecto} />
       </div>
 
       {/* Indicadores principales — debajo del flujo */}
@@ -1329,3 +1334,20 @@ function FilaFlujo({
   );
 }
 
+
+// Botón de exportación a Excel — gateado por es_admin para pruebas internas.
+// Una vez verificado, se puede quitar la condición para exponerlo a todos.
+function BotonExportarExcelAdmin({ proyecto }: { proyecto: any }) {
+  const esAdmin = useAuthStore((s) => s.perfil?.es_admin === true);
+  if (!esAdmin) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => exportarProyectoExcel(proyecto)}
+      title="Descarga el proyecto en .xlsx con todas las etapas y fórmulas Excel. (Visible solo para admin durante pruebas.)"
+      className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-emerald-400/60 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
+    >
+      📊 Exportar a Excel <span className="rounded bg-emerald-200 px-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">admin</span>
+    </button>
+  );
+}
