@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, FolderOpen, Loader2, Plus, Sparkles, X } from "lucide-react";
+import { ChevronDown, FolderOpen, Loader2, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
-import { guardarProyecto } from "@/lib/proyecto-supabase";
+import { guardarProyecto, listarMisProyectos, eliminarProyecto } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
+import { calcularCapitalTrabajoBase } from "@/lib/flujo-proyecto";
 import {
   crearProyectoEjemploCafeteriaV2,
   crearProyectoEjemploPanaderiaV2,
@@ -15,6 +16,16 @@ import {
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+
+// Las 6 fábricas de ejemplo, una por cada tipo de proyecto.
+const FABRICAS_EJEMPLO: ((p: { estudiante_id: string }) => Proyecto)[] = [
+  crearProyectoEjemploCafeteriaV2,
+  crearProyectoEjemploPanaderiaV2,
+  crearProyectoEjemploTiendaV2,
+  crearProyectoEjemploPodcastV2,
+  crearProyectoEjemploPublicidadV2,
+  crearProyectoEjemploPlanMarketingV2,
+];
 
 const LS_KEY_PROYECTO_ACTIVO = "simulador.proyectoActivo";
 
@@ -241,6 +252,8 @@ function ModalNuevoProyecto({
     }
   };
 
+  const [reiniciando, setReiniciando] = useState(false);
+
   const cargarEjemplo = async (
     factory: (p: { estudiante_id: string; nombre?: string }) => Proyecto
   ) => {
@@ -248,12 +261,43 @@ function ModalNuevoProyecto({
     setError(null);
     try {
       const p = factory({ estudiante_id: userId });
+      // Capital de trabajo recalculado con la fórmula vigente (operativos del
+      // año 1, sin la cuota del préstamo), para que el ejemplo quede correcto.
+      p.capitalTrabajo = calcularCapitalTrabajoBase(p);
       cargar(p);
       await guardarProyecto(p);
       onCerrar(p.id);
     } catch (e: any) {
       setError(e?.message ?? String(e));
       setGuardando(false);
+    }
+  };
+
+  // Docente: borra TODOS sus proyectos y deja los 6 ejemplos completos (uno por
+  // tipo). Pide doble confirmación porque es destructivo.
+  const reiniciarEjemplos = async () => {
+    setError(null);
+    setGuardando(true);
+    try {
+      const mios = await listarMisProyectos(userId);
+      for (const p of mios) {
+        await eliminarProyecto(p.id);
+      }
+      let primero: string | null = null;
+      for (const fabrica of FABRICAS_EJEMPLO) {
+        const p = fabrica({ estudiante_id: userId });
+        p.capitalTrabajo = calcularCapitalTrabajoBase(p);
+        await guardarProyecto(p);
+        if (!primero) {
+          primero = p.id;
+          cargar(p);
+        }
+      }
+      onCerrar(primero);
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+      setGuardando(false);
+      setReiniciando(false);
     }
   };
 
@@ -365,6 +409,48 @@ function ModalNuevoProyecto({
                 <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPodcastV2)} disabled={guardando} titulo="🎙️ Podcast" sub="Suscripción" />
                 <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPublicidadV2)} disabled={guardando} titulo="📺 Canal" sub="Publicidad · CPM" />
                 <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPlanMarketingV2)} disabled={guardando} titulo="📣 Plan mkt" sub="Costo-beneficio" />
+              </div>
+
+              {/* Reinicio: deja la plataforma limpia con solo los 6 ejemplos */}
+              <div className="mt-2 border-t border-indigo-200 pt-2 dark:border-indigo-900">
+                {!reiniciando ? (
+                  <button
+                    type="button"
+                    onClick={() => setReiniciando(true)}
+                    disabled={guardando}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/5 px-2 py-1.5 text-[11px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Reiniciar: borrar todos mis proyectos y dejar solo estos 6
+                  </button>
+                ) : (
+                  <div className="rounded-md border border-destructive/50 bg-destructive/10 p-2">
+                    <p className="text-[11px] text-destructive">
+                      <strong>¿Seguro?</strong> Esto borra <strong>TODOS</strong> tus proyectos
+                      (incluidos casos de curso y borradores) y crea los 6 ejemplos completos
+                      desde cero. No se puede deshacer.
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={reiniciarEjemplos}
+                        disabled={guardando}
+                        className="flex items-center gap-1.5 rounded-md bg-destructive px-2.5 py-1.5 text-[11px] font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+                      >
+                        {guardando && <Loader2 className="h-3 w-3 animate-spin" />}
+                        Sí, borrar todo y recrear los 6
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReiniciando(false)}
+                        disabled={guardando}
+                        className="rounded-md border border-border px-2.5 py-1.5 text-[11px] hover:bg-secondary disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

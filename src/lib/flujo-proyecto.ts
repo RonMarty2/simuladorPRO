@@ -294,3 +294,23 @@ export function construirFlujoCaja(proyecto: any) {
 }
 
 export type FlujoCajaProyecto = ReturnType<typeof construirFlujoCaja>;
+
+/**
+ * Capital de trabajo "base" = costos operativos del año 1 (producción +
+ * personal + admin + comercialización + imprevistos) × meses de buffer / 12.
+ *
+ * NO incluye la cuota del préstamo (eso es financiamiento, se paga con el flujo
+ * de cada año). Reutiliza los componentes del año 1 del propio motor para que
+ * coincida EXACTAMENTE con lo que muestra el Paso 8 y con lo que entra al flujo.
+ */
+export function calcularCapitalTrabajoBase(proyecto: any): number {
+  const meses = proyecto.mesesBufferCapitalTrabajo ?? 3;
+  const c = construirFlujoCaja(proyecto);
+  const operativoAnio1 =
+    c.costosProduccion[0] +
+    c.personal[0] +
+    c.gastosAdmin[0] +
+    c.gastosComerc[0] +
+    c.imprevistos[0];
+  return Math.round((operativoAnio1 * meses) / 12);
+}
