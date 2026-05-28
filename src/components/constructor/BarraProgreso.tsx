@@ -1,13 +1,15 @@
 import { Check, Save } from "lucide-react";
 import type { EstadoGuardado } from "@/hooks/useAutoGuardado";
-import type { VersionProyecto } from "@/types/proyecto";
+import type { TipoProyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+import BadgeTipoProyecto from "./BadgeTipoProyecto";
 
 interface Props {
   pasoActual: number;
   totalPasos: number;
   nombreProyecto: string;
   version?: VersionProyecto;
+  tipo?: TipoProyecto | null;
   estadoGuardado: EstadoGuardado;
   onCambiarPaso: (paso: number) => void;
   titulos: Record<number, string>;
@@ -19,6 +21,7 @@ export default function BarraProgreso({
   totalPasos,
   nombreProyecto,
   version,
+  tipo,
   estadoGuardado,
   onCambiarPaso,
   titulos,
@@ -29,10 +32,13 @@ export default function BarraProgreso({
       {/* Header con nombre + estado guardado */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Proyecto
-          </div>
           <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Proyecto
+            </span>
+            <BadgeTipoProyecto tipo={tipo} tamaño="sm" />
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
             <div className="truncate text-base font-semibold tracking-tight">
               {nombreProyecto}
             </div>
@@ -67,7 +73,7 @@ export default function BarraProgreso({
                 <div className="flex items-center gap-1.5">
                   <span
                     className={cn(
-                      "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                      "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold",
                       actual
                         ? "bg-primary-foreground text-primary"
                         : completado
@@ -75,7 +81,14 @@ export default function BarraProgreso({
                           : "bg-secondary text-foreground"
                     )}
                   >
-                    {completado ? <Check className="h-3 w-3" /> : n}
+                    {completado ? (
+                      <span className="flex items-center gap-0.5">
+                        <Check className="h-2.5 w-2.5" />
+                        <span>{n}</span>
+                      </span>
+                    ) : (
+                      n
+                    )}
                   </span>
                 </div>
                 <div className="text-[10px] font-medium leading-tight text-center">

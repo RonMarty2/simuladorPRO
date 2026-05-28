@@ -16,6 +16,7 @@ import {
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+import BadgeTipoProyecto from "./BadgeTipoProyecto";
 
 // Las 6 fábricas de ejemplo, una por cada tipo de proyecto.
 const FABRICAS_EJEMPLO: ((p: { estudiante_id: string }) => Proyecto)[] = [
@@ -167,15 +168,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
                   >
                     <div className="flex w-full items-center justify-between gap-2">
                       <span className="truncate font-medium">{p.nombre}</span>
-                      <span className="flex-shrink-0 text-[9px] uppercase tracking-wide opacity-60">
-                        {p.tipo === "caso_curso"
-                          ? "🎓 caso"
-                          : p.tipo === "entrega_estudiante"
-                          ? "📝 entrega"
-                          : p.tipo === "proyecto_grupal"
-                          ? "🤝 grupal"
-                          : "📁 libre"}
-                      </span>
+                      <BadgeTipoProyecto tipo={p.tipo} tamaño="sm" />
                     </div>
                     <span className="text-[10px] text-muted-foreground">
                       Última edición:{" "}

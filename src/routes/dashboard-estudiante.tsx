@@ -16,6 +16,7 @@ import {
 } from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
+import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
@@ -563,6 +564,7 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
       onClick={onClick}
       className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 text-left transition hover:border-primary hover:shadow-sm"
     >
+      <BadgeTipoProyecto tipo={proyecto.tipo} tamaño="sm" className="self-start" />
       <div className="truncate text-sm font-semibold">{proyecto.nombre}</div>
       <div className="flex flex-wrap items-center gap-1">
         <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>

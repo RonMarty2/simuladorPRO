@@ -1,32 +1,173 @@
 /**
- * Exportación del proyecto a Excel (.xlsx) — académicamente útil:
- *  - Una hoja por etapa (Datos, Inversiones, Personal, Demanda, Costos
- *    directos, Gastos operativos, Capital + Financiamiento, Flujo de caja,
- *    Indicadores, Interpretación).
- *  - En "Flujo de caja", las filas de Utilidad antes de impuestos, Impuestos,
- *    Utilidad neta y Flujo neto usan FÓRMULAS Excel reales (=SUMA, =MAX),
- *    así si el alumno toca un valor de entrada Excel recalcula sola.
- *  - En "Indicadores", VAN, TIR e IR usan =NPV / =IRR referenciando la fila
- *    del Flujo neto. Coinciden con la app cuando los inputs no cambian.
+ * Exportación del proyecto a Excel (.xlsx) con estilos académicos:
+ *  - Hojas separadas por etapa, con título de portada, encabezados de columna
+ *    y formato de moneda Bs / porcentaje.
+ *  - "Flujo de caja" usa fórmulas Excel reales (=MAX, =SUMA implícita) en las
+ *    filas de Utilidad antes de impuestos, Impuestos, Utilidad neta y Flujo
+ *    neto, así si el alumno cambia un valor de entrada el resto se recalcula.
+ *  - "Indicadores" usa =NPV y =IRR referenciando el flujo neto.
+ *  - Una hoja final con interpretación de cada indicador para anexo de tesis.
  *
- * Pensado para ser entregable: hoja de portada con datos del proyecto, una
- * hoja final con interpretación de cada indicador. Ideal para anexo de tesis.
+ * Usa xlsx-js-style (fork de SheetJS con soporte de estilos) para que el .xlsx
+ * salga con colores, negritas y bordes, no como un volcado plano.
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { calcularAportesPatronales, obtenerTasasAportes, TASA_IUE } from "./calculo-financiero";
 import type { Proyecto } from "@/types/proyecto";
 
 const FECHA_HOY = () => new Date().toLocaleDateString("es-BO");
-
 const ANIOS = ["Año 0", "Año 1", "Año 2", "Año 3", "Año 4", "Año 5"];
+const SH_FLUJO = "8. Flujo de caja";
 
-// Nombre de hoja con la que armamos las referencias cruzadas.
-const SH_FLUJO = "Flujo de caja";
+// ────────────────────────────────────────────────────────────────────────────
+// Paleta y presets de estilo
+// ────────────────────────────────────────────────────────────────────────────
 
-/**
- * Punto de entrada: genera y descarga el .xlsx del proyecto.
- */
+const C = {
+  textoOscuro: "1E293B", // slate-800
+  textoClaro: "FFFFFF",
+  fondoTitulo: "0F172A", // slate-900
+  fondoSeccion: "0EA5E9", // sky-500
+  fondoSeccionAlt: "059669", // emerald-600
+  fondoHeader: "E2E8F0", // slate-200
+  fondoTotal: "F1F5F9", // slate-100
+  bordeSuave: "CBD5E1", // slate-300
+  bordeFuerte: "475569", // slate-600
+};
+
+const bordeSuave = { style: "thin", color: { rgb: C.bordeSuave } };
+const bordeFuerte = { style: "medium", color: { rgb: C.bordeFuerte } };
+const todosBordes = { top: bordeSuave, bottom: bordeSuave, left: bordeSuave, right: bordeSuave };
+
+const ST = {
+  // Título grande (fila 1 de cada hoja)
+  titulo: {
+    font: { bold: true, sz: 14, color: { rgb: C.textoClaro } },
+    fill: { fgColor: { rgb: C.fondoTitulo } },
+    alignment: { horizontal: "left", vertical: "center" },
+  } as any,
+  subtitulo: {
+    font: { italic: true, sz: 10, color: { rgb: "64748B" } },
+    alignment: { horizontal: "left" },
+  } as any,
+  // Encabezado de sección (fila ⓘ INGRESOS, etc.)
+  seccion: {
+    font: { bold: true, sz: 11, color: { rgb: C.textoClaro } },
+    fill: { fgColor: { rgb: C.fondoSeccion } },
+    alignment: { horizontal: "left" },
+  } as any,
+  seccionAlt: {
+    font: { bold: true, sz: 11, color: { rgb: C.textoClaro } },
+    fill: { fgColor: { rgb: C.fondoSeccionAlt } },
+    alignment: { horizontal: "left" },
+  } as any,
+  // Encabezado de columna (fila de "Concepto | Año 0 | Año 1 ...")
+  colHeader: {
+    font: { bold: true, sz: 10 },
+    fill: { fgColor: { rgb: C.fondoHeader } },
+    alignment: { horizontal: "center", wrapText: true },
+    border: todosBordes,
+  } as any,
+  // Etiqueta de fila (primera columna de datos)
+  label: {
+    font: { sz: 10 },
+    alignment: { horizontal: "left" },
+    border: todosBordes,
+  } as any,
+  labelBold: {
+    font: { sz: 10, bold: true },
+    alignment: { horizontal: "left" },
+    border: todosBordes,
+  } as any,
+  // Celda numérica común
+  num: {
+    font: { sz: 10 },
+    alignment: { horizontal: "right" },
+    border: todosBordes,
+  } as any,
+  // Moneda Bs
+  money: {
+    font: { sz: 10 },
+    alignment: { horizontal: "right" },
+    numFmt: '"Bs "#,##0.00;[Red]"-Bs "#,##0.00',
+    border: todosBordes,
+  } as any,
+  moneyBold: {
+    font: { sz: 10, bold: true },
+    alignment: { horizontal: "right" },
+    numFmt: '"Bs "#,##0.00;[Red]"-Bs "#,##0.00',
+    border: todosBordes,
+  } as any,
+  // Porcentaje
+  percent: {
+    font: { sz: 10 },
+    alignment: { horizontal: "right" },
+    numFmt: "0.00%",
+    border: todosBordes,
+  } as any,
+  // Fila total / formulada
+  totalBg: {
+    font: { sz: 10, bold: true },
+    alignment: { horizontal: "right" },
+    fill: { fgColor: { rgb: C.fondoTotal } },
+    numFmt: '"Bs "#,##0.00;[Red]"-Bs "#,##0.00',
+    border: { ...todosBordes, top: bordeFuerte },
+  } as any,
+  totalLabel: {
+    font: { sz: 10, bold: true },
+    alignment: { horizontal: "left" },
+    fill: { fgColor: { rgb: C.fondoTotal } },
+    border: { ...todosBordes, top: bordeFuerte },
+  } as any,
+};
+
+// Constructores de celda — para usar dentro de los AOA
+const ti = (v: string) => ({ v, t: "s", s: ST.titulo });
+const sub = (v: string) => ({ v, t: "s", s: ST.subtitulo });
+const sec = (v: string, alt = false) => ({ v, t: "s", s: alt ? ST.seccionAlt : ST.seccion });
+const ch = (v: string) => ({ v, t: "s", s: ST.colHeader });
+const lbl = (v: string) => ({ v, t: "s", s: ST.label });
+const lblB = (v: string) => ({ v, t: "s", s: ST.labelBold });
+const M = (v: number) => ({ v, t: "n", s: ST.money });
+const MB = (v: number) => ({ v, t: "n", s: ST.moneyBold });
+const P = (v: number) => ({ v, t: "n", s: ST.percent });
+const N = (v: number) => ({ v, t: "n", s: ST.num });
+const totL = (v: string) => ({ v, t: "s", s: ST.totalLabel });
+const totV = (v: number) => ({ v, t: "n", s: ST.totalBg });
+const fMoney = (f: string) => ({ f, t: "n", s: ST.money });
+const fMoneyBold = (f: string) => ({ f, t: "n", s: ST.moneyBold });
+const fPercent = (f: string) => ({ f, t: "n", s: ST.percent });
+const fTotal = (f: string) => ({ f, t: "n", s: ST.totalBg });
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers de hoja
+// ────────────────────────────────────────────────────────────────────────────
+
+function addSheet(
+  wb: XLSX.WorkBook,
+  name: string,
+  aoa: any[][],
+  opts: { anchos?: number[]; merges?: { s: { r: number; c: number }; e: { r: number; c: number } }[] } = {}
+) {
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = (opts.anchos ?? aoa[0]?.map((_, i) => (i === 0 ? 38 : 18)) ?? []).map((wch) => ({ wch }));
+  if (opts.merges) ws["!merges"] = opts.merges;
+  // Altura de la fila de título
+  ws["!rows"] = [{ hpt: 22 }];
+  XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+}
+
+// Merge horizontal en una fila (0-indexed row, fromCol..toCol)
+const mergeRow = (r: number, c0: number, c1: number) => ({
+  s: { r, c: c0 },
+  e: { r, c: c1 },
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Punto de entrada
+// ────────────────────────────────────────────────────────────────────────────
+
 export function exportarProyectoExcel(proyecto: Proyecto): void {
   const calc = construirFlujoCaja(proyecto);
   const wb = XLSX.utils.book_new();
@@ -50,20 +191,6 @@ export function exportarProyectoExcel(proyecto: Proyecto): void {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Helpers de hojas
-// ────────────────────────────────────────────────────────────────────────────
-
-function addSheet(wb: XLSX.WorkBook, name: string, aoa: any[][]) {
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  // Ancho de columnas razonable.
-  const colWidths = aoa[0]?.map((_, i) => ({
-    wch: i === 0 ? 38 : 16,
-  })) ?? [];
-  ws["!cols"] = colWidths;
-  XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 // Hojas
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -73,75 +200,80 @@ function agregarPortada(
   calc: ReturnType<typeof construirFlujoCaja>
 ) {
   const aoa: any[][] = [
-    ["SIMULADOR DE PROYECTOS DE INVERSIÓN"],
-    [`Proyecto: ${p.nombre}`],
-    [`Generado: ${FECHA_HOY()}`],
+    [ti("SIMULADOR DE PROYECTOS DE INVERSIÓN — REPORTE")],
+    [sub(`Proyecto: ${p.nombre}   ·   Generado: ${FECHA_HOY()}`)],
     [],
-    ["INDICADORES PRINCIPALES"],
-    ["VAN (Bs)", calc.indicadores.van],
-    ["TIR", calc.indicadores.tir],
-    ["WACC", calc.wacc],
-    ["Payback (años)", calc.indicadores.payback],
-    ["IR", calc.indicadores.ir],
-    ["RBC", calc.indicadores.rbc],
-    ["TRC", calc.indicadores.trc],
-    ["Cobertura de deuda (SD)", calc.indicadores.sd],
+    [sec("INDICADORES PRINCIPALES")],
+    [lbl("VAN (Bs)"), M(calc.indicadores.van)],
+    [lbl("TIR"), P(calc.indicadores.tir)],
+    [lbl("WACC"), P(calc.wacc)],
+    [lbl("Payback (años)"), N(calc.indicadores.payback)],
+    [lbl("IR (Índice de Rentabilidad)"), N(calc.indicadores.ir)],
+    [lbl("RBC (Relación Beneficio/Costo)"), N(calc.indicadores.rbc)],
+    [lbl("TRC (Tasa de Retorno Contable)"), P(calc.indicadores.trc)],
+    [lbl("SD (Cobertura de Deuda)"), N(calc.indicadores.sd)],
     [],
-    ["HOJAS"],
-    ["1.", "Datos del proyecto"],
-    ["2.", "Inversiones"],
-    ["3.", "Personal"],
-    ["4.", "Demanda y precios"],
-    ["5.", "Costos directos"],
-    ["6.", "Gastos operativos"],
-    ["7.", "Capital y Financiamiento"],
-    ["8.", "Flujo de caja"],
-    ["9.", "Indicadores"],
-    ["10.", "Interpretación"],
+    [sec("CONTENIDO DEL LIBRO", true)],
+    [lbl("1."), lbl("Datos del proyecto")],
+    [lbl("2."), lbl("Inversiones")],
+    [lbl("3."), lbl("Personal")],
+    [lbl("4."), lbl("Demanda y precios")],
+    [lbl("5."), lbl("Costos directos")],
+    [lbl("6."), lbl("Gastos operativos")],
+    [lbl("7."), lbl("Capital y Financiamiento")],
+    [lbl("8."), lbl("Flujo de caja (con fórmulas)")],
+    [lbl("9."), lbl("Indicadores (con NPV / IRR)")],
+    [lbl("10."), lbl("Interpretación")],
   ];
-  addSheet(wb, "Portada", aoa);
+  addSheet(wb, "Portada", aoa, {
+    anchos: [42, 22],
+    merges: [mergeRow(0, 0, 1), mergeRow(1, 0, 1), mergeRow(3, 0, 1), mergeRow(13, 0, 1)],
+  });
 }
 
 function agregarDatos(wb: XLSX.WorkBook, p: Proyecto) {
   const aoa: any[][] = [
-    ["DATOS DEL PROYECTO"],
+    [ti("1. DATOS DEL PROYECTO")],
     [],
-    ["Nombre", p.nombre],
-    ["Ubicación", p.ubicacion],
-    ["Sector", p.sector],
-    ["Descripción", p.descripcion],
-    ["Versión de análisis", p.version === "v2" ? "Con análisis de riesgo" : "Clásico"],
-    ["Modelo de ingreso", p.modeloIngreso ?? "unidades"],
+    [lblB("Nombre"), lbl(p.nombre)],
+    [lblB("Ubicación"), lbl(p.ubicacion || "—")],
+    [lblB("Sector"), lbl(p.sector)],
+    [lblB("Descripción"), lbl(p.descripcion || "—")],
+    [lblB("Versión de análisis"), lbl(p.version === "v2" ? "Con análisis de riesgo" : "Clásico")],
+    [lblB("Modelo de ingreso"), lbl(p.modeloIngreso ?? "unidades")],
   ];
-  addSheet(wb, "1. Datos", aoa);
+  addSheet(wb, "1. Datos", aoa, { anchos: [22, 60], merges: [mergeRow(0, 0, 1)] });
 }
 
 function agregarInversiones(wb: XLSX.WorkBook, p: Proyecto) {
+  const headers = ["Categoría", "Ítem", "Unidad", "Cantidad", "Costo unit. (Bs)", "Costo total (Bs)", "Vida útil (años)", "Depreciación anual (Bs)"];
   const aoa: any[][] = [
-    ["INVERSIONES EN ACTIVO FIJO"],
+    [ti("2. INVERSIONES EN ACTIVO FIJO")],
     [],
-    ["Categoría", "Ítem", "Unidad", "Cantidad", "Costo unit. (Bs)", "Costo total (Bs)", "Vida útil (años)", "Depreciación anual (Bs)"],
+    headers.map(ch),
   ];
   let total = 0;
   for (const [cat, items] of Object.entries(p.inversiones ?? {})) {
     for (const it of items as any[]) {
       const dep = it.vidaUtilAnios > 0 ? it.costoTotal / it.vidaUtilAnios : 0;
       aoa.push([
-        cat,
-        it.descripcion,
-        it.unidad ?? "",
-        it.cantidad ?? 1,
-        it.costoUnitario ?? it.costoTotal,
-        it.costoTotal,
-        it.vidaUtilAnios ?? 0,
-        dep,
+        lbl(cat),
+        lbl(it.descripcion),
+        lbl(it.unidad ?? ""),
+        N(it.cantidad ?? 1),
+        M(it.costoUnitario ?? it.costoTotal),
+        M(it.costoTotal),
+        N(it.vidaUtilAnios ?? 0),
+        M(dep),
       ]);
       total += it.costoTotal;
     }
   }
-  aoa.push([]);
-  aoa.push(["TOTAL INVERSIÓN FIJA", "", "", "", "", total]);
-  addSheet(wb, "2. Inversiones", aoa);
+  aoa.push([totL("TOTAL INVERSIÓN FIJA"), lbl(""), lbl(""), lbl(""), lbl(""), totV(total), lbl(""), lbl("")]);
+  addSheet(wb, "2. Inversiones", aoa, {
+    anchos: [18, 36, 12, 12, 18, 20, 12, 22],
+    merges: [mergeRow(0, 0, 7)],
+  });
 }
 
 function agregarPersonal(wb: XLSX.WorkBook, p: Proyecto) {
@@ -149,80 +281,93 @@ function agregarPersonal(wb: XLSX.WorkBook, p: Proyecto) {
   const totalTasa =
     tasas.riesgoProfesional + tasas.seguroSalud + tasas.provisionVivienda +
     tasas.previsionAguinaldo + tasas.previsionIndemnizacion;
+  const headers = ["Puesto", "Cantidad", "Sueldo mensual (Bs)", "Aportes / mes (Bs)", "Costo anual / persona (Bs)", "Costo anual total (Bs)"];
   const aoa: any[][] = [
-    ["PERSONAL (con aportes patronales de Bolivia)"],
-    [`Aportes patronales totales: ${(totalTasa * 100).toFixed(2)}%`],
+    [ti("3. PERSONAL — con aportes patronales de Bolivia")],
+    [sub(`Aportes patronales totales: ${(totalTasa * 100).toFixed(2)}%`)],
     [],
-    ["Puesto", "Cantidad", "Sueldo mensual (Bs)", "Aportes / mes (Bs)", "Costo anual / persona (Bs)", "Costo anual total (Bs)"],
+    headers.map(ch),
   ];
   let total = 0;
   for (const x of p.personal ?? []) {
     const ap = calcularAportesPatronales(x.sueldoMensual, tasas);
-    const totalPuesto = ap.costoTotalAnual * x.cantidad;
-    aoa.push([x.puesto, x.cantidad, x.sueldoMensual, ap.totalAportes, ap.costoTotalAnual, totalPuesto]);
-    total += totalPuesto;
+    const tot = ap.costoTotalAnual * x.cantidad;
+    aoa.push([lbl(x.puesto), N(x.cantidad), M(x.sueldoMensual), M(ap.totalAportes), M(ap.costoTotalAnual), MB(tot)]);
+    total += tot;
   }
-  aoa.push([]);
-  aoa.push(["TOTAL ANUAL PERSONAL", "", "", "", "", total]);
-  addSheet(wb, "3. Personal", aoa);
+  aoa.push([totL("TOTAL ANUAL PERSONAL"), lbl(""), lbl(""), lbl(""), lbl(""), totV(total)]);
+  addSheet(wb, "3. Personal", aoa, {
+    anchos: [30, 12, 22, 22, 26, 24],
+    merges: [mergeRow(0, 0, 5), mergeRow(1, 0, 5)],
+  });
 }
 
 function agregarDemanda(wb: XLSX.WorkBook, p: Proyecto) {
+  const headers = ["Producto", "Unidad", "", ...ANIOS.slice(1)];
   const aoa: any[][] = [
-    ["DEMANDA Y PRECIOS POR AÑO"],
+    [ti("4. DEMANDA Y PRECIOS POR AÑO")],
     [],
-    ["Producto", "Unidad", "", ...ANIOS.slice(1)],
+    headers.map(ch),
   ];
   for (const prod of p.productos ?? []) {
-    aoa.push([prod.nombre, prod.unidadMedida, "Cantidad", ...prod.cantidades]);
-    aoa.push(["", "", "Precio (Bs)", ...prod.precios]);
-    aoa.push(["", "", "Ingreso (Bs)",
-      ...prod.cantidades.map((c, i) => c * prod.precios[i]),
-    ]);
+    aoa.push([lblB(prod.nombre), lbl(prod.unidadMedida), lbl("Cantidad"), ...prod.cantidades.map(N)]);
+    aoa.push([lbl(""), lbl(""), lbl("Precio (Bs)"), ...prod.precios.map(M)]);
+    aoa.push([lbl(""), lbl(""), lbl("Ingreso (Bs)"), ...prod.cantidades.map((c, i) => M(c * prod.precios[i]))]);
     aoa.push([]);
   }
-  addSheet(wb, "4. Demanda", aoa);
+  addSheet(wb, "4. Demanda", aoa, {
+    anchos: [28, 12, 16, 16, 16, 16, 16, 16],
+    merges: [mergeRow(0, 0, 7)],
+  });
 }
 
 function agregarCostosDirectos(wb: XLSX.WorkBook, p: Proyecto) {
+  const headers = ["Producto", "Categoría", "Descripción", "Unidad", "Cant. / u producto", "Costo unit. (Bs)", "Subtotal por unidad"];
   const aoa: any[][] = [
-    ["COSTOS DIRECTOS DE PRODUCCIÓN (por unidad)"],
+    [ti("5. COSTOS DIRECTOS DE PRODUCCIÓN (por unidad)")],
     [],
-    ["Producto", "Categoría", "Descripción", "Unidad", "Cant. / u producto", "Costo unit. (Bs)", "Subtotal por unidad"],
+    headers.map(ch),
   ];
   for (const prod of p.productos ?? []) {
     const items = (p.costosDirectos ?? []).filter((c) => c.productoId === prod.id);
     for (const it of items) {
       aoa.push([
-        prod.nombre,
-        it.categoria,
-        it.descripcion,
-        it.unidadMedida,
-        it.cantidadPorUnidad,
-        it.costoUnitario,
-        it.cantidadPorUnidad * it.costoUnitario,
+        lbl(prod.nombre),
+        lbl(it.categoria),
+        lbl(it.descripcion),
+        lbl(it.unidadMedida),
+        N(it.cantidadPorUnidad),
+        M(it.costoUnitario),
+        M(it.cantidadPorUnidad * it.costoUnitario),
       ]);
     }
   }
-  addSheet(wb, "5. Costos directos", aoa);
+  addSheet(wb, "5. Costos directos", aoa, {
+    anchos: [24, 18, 32, 12, 18, 18, 20],
+    merges: [mergeRow(0, 0, 6)],
+  });
 }
 
 function agregarGastosOp(wb: XLSX.WorkBook, p: Proyecto) {
+  const headers = ["Tipo", "Descripción", "Unidad", "Cantidad", "Costo unit. (Bs)", "Total anual (Bs)"];
   const aoa: any[][] = [
-    ["GASTOS ADMINISTRATIVOS Y DE COMERCIALIZACIÓN"],
-    [`Crecimiento anual: ${((p.crecimientoCostosAnual ?? 0) * 100).toFixed(1)}%`],
+    [ti("6. GASTOS ADMINISTRATIVOS Y DE COMERCIALIZACIÓN")],
+    [sub(`Crecimiento anual: ${((p.crecimientoCostosAnual ?? 0) * 100).toFixed(1)}%`)],
     [],
-    ["Tipo", "Descripción", "Unidad", "Cantidad", "Costo unit. (Bs)", "Total anual (Bs)"],
+    headers.map(ch),
   ];
   for (const c of p.costosAdministracion ?? []) {
     const factor = c.unidadMedida === "mes" ? 12 : 1;
-    aoa.push(["Administrativos", c.descripcion, c.unidadMedida, c.cantidad, c.costoUnitario, c.cantidad * c.costoUnitario * factor]);
+    aoa.push([lbl("Administrativos"), lbl(c.descripcion), lbl(c.unidadMedida), N(c.cantidad), M(c.costoUnitario), M(c.cantidad * c.costoUnitario * factor)]);
   }
   for (const c of p.costosComercializacion ?? []) {
     const factor = c.unidadMedida === "mes" ? 12 : 1;
-    aoa.push(["Comercialización", c.descripcion, c.unidadMedida, c.cantidad, c.costoUnitario, c.cantidad * c.costoUnitario * factor]);
+    aoa.push([lbl("Comercialización"), lbl(c.descripcion), lbl(c.unidadMedida), N(c.cantidad), M(c.costoUnitario), M(c.cantidad * c.costoUnitario * factor)]);
   }
-  addSheet(wb, "6. Gastos op", aoa);
+  addSheet(wb, "6. Gastos op", aoa, {
+    anchos: [20, 36, 12, 12, 18, 22],
+    merges: [mergeRow(0, 0, 5), mergeRow(1, 0, 5)],
+  });
 }
 
 function agregarCapitalYFinanciamiento(
@@ -233,41 +378,51 @@ function agregarCapitalYFinanciamiento(
   const fin = p.financiamiento;
   const cw = fin?.prestamoCapitalTrabajo;
   const aoa: any[][] = [
-    ["CAPITAL DE TRABAJO Y FINANCIAMIENTO"],
+    [ti("7. CAPITAL DE TRABAJO Y FINANCIAMIENTO")],
     [],
-    ["Capital de trabajo (Bs)", p.capitalTrabajo],
-    ["Meses de buffer", p.mesesBufferCapitalTrabajo ?? 3],
+    [lblB("Capital de trabajo (Bs)"), M(p.capitalTrabajo)],
+    [lblB("Meses de buffer"), N(p.mesesBufferCapitalTrabajo ?? 3)],
     [],
-    ["PRÉSTAMO ACTIVO FIJO"],
-    ["% Propio", fin?.porcentajePropio ?? 1],
-    ["% Préstamo", fin?.porcentajePrestamo ?? 0],
-    ["Tasa interés anual", fin?.tasaInteresAnual ?? 0],
-    ["Plazo (meses)", fin?.plazoMeses ?? 0],
+    [sec("PRÉSTAMO ACTIVO FIJO")],
+    [lbl("% Propio"), P(fin?.porcentajePropio ?? 1)],
+    [lbl("% Préstamo"), P(fin?.porcentajePrestamo ?? 0)],
+    [lbl("Tasa interés anual"), P(fin?.tasaInteresAnual ?? 0)],
+    [lbl("Plazo (meses)"), N(fin?.plazoMeses ?? 0)],
     [],
-    ["PRÉSTAMO CAPITAL DE TRABAJO"],
-    ["% Propio", cw?.porcentajePropio ?? 1],
-    ["% Préstamo", cw?.porcentajePrestamo ?? 0],
-    ["Tasa interés anual", cw?.tasaInteresAnual ?? 0],
-    ["Plazo (meses)", cw?.plazoMeses ?? 0],
+    [sec("PRÉSTAMO CAPITAL DE TRABAJO", true)],
+    [lbl("% Propio"), P(cw?.porcentajePropio ?? 1)],
+    [lbl("% Préstamo"), P(cw?.porcentajePrestamo ?? 0)],
+    [lbl("Tasa interés anual"), P(cw?.tasaInteresAnual ?? 0)],
+    [lbl("Plazo (meses)"), N(cw?.plazoMeses ?? 0)],
     [],
-    ["WACC", calc.wacc],
-    ["Ke (costo de oportunidad)", fin?.costoOportunidadAccionista ?? 0],
-    ["Monto préstamo total (Bs)", calc.montoPrestamo],
-    ["Cuota anual total (Bs)", calc.indicadores.cuotaAnualTotal],
+    [sec("WACC Y RESUMEN")],
+    [lbl("WACC"), P(calc.wacc)],
+    [lbl("Ke (costo de oportunidad del accionista)"), P(fin?.costoOportunidadAccionista ?? 0)],
+    [lbl("Monto préstamo total (Bs)"), M(calc.montoPrestamo)],
+    [lbl("Cuota anual total (Bs)"), M(calc.indicadores.cuotaAnualTotal)],
   ];
-  addSheet(wb, "7. Cap+Financiamiento", aoa);
+  addSheet(wb, "7. Cap+Financ", aoa, {
+    anchos: [42, 22],
+    merges: [
+      mergeRow(0, 0, 1),
+      mergeRow(5, 0, 1),
+      mergeRow(11, 0, 1),
+      mergeRow(17, 0, 1),
+    ],
+  });
 }
 
 function agregarFlujoCaja(
   wb: XLSX.WorkBook,
   calc: ReturnType<typeof construirFlujoCaja>
 ) {
-  // Layout: A=Concepto, B=Año 0, C..G=Años 1..5
-  // Filas en Excel (1-indexadas): definimos sus números para usar en fórmulas.
+  // Filas (1-indexadas Excel) que usaremos en las fórmulas
   const R = {
     title: 1,
     header: 3,
+    secIngresos: 4,
     ingresos: 5,
+    secCostos: 6,
     costosProd: 7,
     gastosAdmin: 8,
     gastosComerc: 9,
@@ -275,9 +430,11 @@ function agregarFlujoCaja(
     deprec: 11,
     imprev: 12,
     intereses: 13,
+    secResultado: 14,
     uai: 15,
     impuestos: 16,
     un: 17,
+    secAjustes: 18,
     depRein: 19,
     invIni: 20,
     capTra: 21,
@@ -288,174 +445,165 @@ function agregarFlujoCaja(
     recupCT: 26,
     flujo: 27,
   };
-
-  const aoa: any[][] = [];
-  // Helpers para construir filas
-  const fila = (concepto: string, valores: number[]) =>
-    [concepto, ...valores] as any[];
-  const filaFormula = (concepto: string, formulas: string[]) =>
-    [concepto, ...formulas.map((f) => ({ f })) as any[]] as any[];
-
-  // Año 0 + Años 1..5 (índices 0..5 en el array)
   const cols = ["B", "C", "D", "E", "F", "G"];
 
-  // R1
-  aoa.push(["FLUJO DE CAJA PROYECTADO (Bs)"]);
-  // R2
+  const aoa: any[][] = [];
+  const filaValor = (c: any, vs: number[]) => [c, ...vs.map(M)];
+  const filaFormula = (c: any, fs: string[]) => [c, ...fs.map(fMoney)];
+  const filaTotalFormula = (c: any, fs: string[]) => [c, ...fs.map(fTotal)];
+
+  // R1 título
+  aoa.push([ti("8. FLUJO DE CAJA PROYECTADO (Bs)")]);
+  // R2 vacío
   aoa.push([]);
   // R3 header
-  aoa.push(["Concepto", ...ANIOS]);
-  // R4 sección INGRESOS
-  aoa.push(["① INGRESOS"]);
+  aoa.push([ch("Concepto"), ...ANIOS.map(ch)]);
+  // R4 sección
+  aoa.push([sec("1 · INGRESOS")]);
   // R5
-  aoa.push(fila("(+) Ingresos por ventas", [0, ...calc.ingresos]));
-  // R6 sección COSTOS
-  aoa.push(["② COSTOS Y GASTOS OPERATIVOS"]);
+  aoa.push(filaValor(lbl("(+) Ingresos por ventas"), [0, ...calc.ingresos]));
+  // R6 sección
+  aoa.push([sec("2 · COSTOS Y GASTOS OPERATIVOS")]);
   // R7..R13
-  aoa.push(fila("(-) Costos de producción", [0, ...calc.costosProduccion]));
-  aoa.push(fila("(-) Gastos administrativos", [0, ...calc.gastosAdmin]));
-  aoa.push(fila("(-) Gastos comercialización", [0, ...calc.gastosComerc]));
-  aoa.push(fila("(-) Personal (con aportes)", [0, ...calc.personal]));
-  aoa.push(fila("(-) Depreciación", [0, ...calc.depreciacion]));
-  aoa.push(fila("(-) Imprevistos", [0, ...calc.imprevistos]));
-  aoa.push(fila("(-) Intereses de la deuda", [0, ...calc.intereses]));
-  // R14 sección RESULTADO
-  aoa.push(["③ RESULTADO E IMPUESTOS"]);
-  // R15 UAI = ingresos - costos - intereses (con fórmula por columna)
-  aoa.push(
-    filaFormula(
-      "= Utilidad antes de impuestos",
-      cols.map(
-        (c) =>
-          `=${c}${R.ingresos}-${c}${R.costosProd}-${c}${R.gastosAdmin}-${c}${R.gastosComerc}-${c}${R.personal}-${c}${R.deprec}-${c}${R.imprev}-${c}${R.intereses}`
-      )
+  aoa.push(filaValor(lbl("(-) Costos de producción"), [0, ...calc.costosProduccion]));
+  aoa.push(filaValor(lbl("(-) Gastos administrativos"), [0, ...calc.gastosAdmin]));
+  aoa.push(filaValor(lbl("(-) Gastos comercialización"), [0, ...calc.gastosComerc]));
+  aoa.push(filaValor(lbl("(-) Personal (con aportes)"), [0, ...calc.personal]));
+  aoa.push(filaValor(lbl("(-) Depreciación"), [0, ...calc.depreciacion]));
+  aoa.push(filaValor(lbl("(-) Imprevistos"), [0, ...calc.imprevistos]));
+  aoa.push(filaValor(lbl("(-) Intereses de la deuda"), [0, ...calc.intereses]));
+  // R14 sección
+  aoa.push([sec("3 · RESULTADO E IMPUESTOS")]);
+  // R15 UAI (fórmula)
+  aoa.push(filaFormula(
+    lblB("= Utilidad antes de impuestos"),
+    cols.map(
+      (c) =>
+        `=${c}${R.ingresos}-${c}${R.costosProd}-${c}${R.gastosAdmin}-${c}${R.gastosComerc}-${c}${R.personal}-${c}${R.deprec}-${c}${R.imprev}-${c}${R.intereses}`
     )
-  );
-  // R16 Impuestos = MAX(0, UAI) * IUE
-  aoa.push(
-    filaFormula(
-      `(-) Impuestos (IUE ${(TASA_IUE * 100).toFixed(0)}%)`,
-      cols.map((c) => `=MAX(0,${c}${R.uai})*${TASA_IUE}`)
+  ));
+  // R16 Impuestos
+  aoa.push(filaFormula(
+    lbl(`(-) Impuestos (IUE ${(TASA_IUE * 100).toFixed(0)}%)`),
+    cols.map((c) => `=MAX(0,${c}${R.uai})*${TASA_IUE}`)
+  ));
+  // R17 Utilidad neta
+  aoa.push(filaFormula(
+    lblB("= Utilidad neta"),
+    cols.map((c) => `=${c}${R.uai}-${c}${R.impuestos}`)
+  ));
+  // R18 sección
+  aoa.push([sec("4 · AJUSTES A FLUJO DE CAJA", true)]);
+  // R19 Depreciación reincorporada
+  aoa.push(filaFormula(lbl("(+) Depreciación (no es salida de caja)"), cols.map((c) => `=${c}${R.deprec}`)));
+  // R20..R26 valores
+  aoa.push(filaValor(lbl("(-) Inversión inicial (activos fijos)"), [calc.inversionInicial, 0, 0, 0, 0, 0]));
+  aoa.push(filaValor(lbl("(-) Capital de trabajo"), [calc.capitalTrabajo, 0, 0, 0, 0, 0]));
+  aoa.push(filaValor(lbl("(+) Préstamo recibido"), [calc.montoPrestamo, 0, 0, 0, 0, 0]));
+  aoa.push(filaValor(lbl("(-) Amortización de la deuda"), [0, ...calc.amortizacion]));
+  aoa.push(filaValor(lbl("(-) Reinversión (reposición de activos)"), [0, ...calc.reinversionPorAnio]));
+  aoa.push(filaValor(lbl("(+) Valor residual (año 5)"), [0, 0, 0, 0, 0, calc.valorResidual]));
+  aoa.push(filaValor(lbl("(+) Recuperación capital de trabajo (año 5)"), [0, 0, 0, 0, 0, calc.capitalTrabajo]));
+  // R27 FLUJO NETO (fórmula con fondo destacado)
+  aoa.push(filaTotalFormula(
+    totL("5 · FLUJO DE CAJA NETO"),
+    cols.map(
+      (c) =>
+        `=${c}${R.un}+${c}${R.depRein}-${c}${R.invIni}-${c}${R.capTra}+${c}${R.prestamo}-${c}${R.amort}-${c}${R.reinv}+${c}${R.residual}+${c}${R.recupCT}`
     )
-  );
-  // R17 Utilidad neta = UAI - Impuestos
-  aoa.push(
-    filaFormula(
-      "= Utilidad neta",
-      cols.map((c) => `=${c}${R.uai}-${c}${R.impuestos}`)
-    )
-  );
-  // R18 sección AJUSTES
-  aoa.push(["④ AJUSTES A FLUJO DE CAJA"]);
-  // R19 Depreciación reincorporada (referencia a R11 — se re-suma porque no es salida de caja)
-  aoa.push(
-    filaFormula(
-      "(+) Depreciación (no es salida de caja)",
-      cols.map((c) => `=${c}${R.deprec}`)
-    )
-  );
-  // R20 Inversión inicial (positiva en columna; el signo lo da la fórmula final)
-  aoa.push(fila("(-) Inversión inicial (activos fijos)", [calc.inversionInicial, 0, 0, 0, 0, 0]));
-  // R21 Capital de trabajo
-  aoa.push(fila("(-) Capital de trabajo", [calc.capitalTrabajo, 0, 0, 0, 0, 0]));
-  // R22 Préstamo recibido (inflow t=0)
-  aoa.push(fila("(+) Préstamo recibido", [calc.montoPrestamo, 0, 0, 0, 0, 0]));
-  // R23 Amortización
-  aoa.push(fila("(-) Amortización de la deuda", [0, ...calc.amortizacion]));
-  // R24 Reinversión
-  aoa.push(fila("(-) Reinversión (reposición de activos)", [0, ...calc.reinversionPorAnio]));
-  // R25 Valor residual (año 5)
-  aoa.push(fila("(+) Valor residual (año 5)", [0, 0, 0, 0, 0, calc.valorResidual]));
-  // R26 Recuperación capital trabajo (año 5)
-  aoa.push(fila("(+) Recuperación capital de trabajo (año 5)", [0, 0, 0, 0, 0, calc.capitalTrabajo]));
-  // R27 FLUJO NETO = UN + Dep - Inv - CT + Préstamo - Amort - Reinv + Residual + RecupCT
-  aoa.push(
-    filaFormula(
-      "⑤ FLUJO DE CAJA NETO",
-      cols.map(
-        (c) =>
-          `=${c}${R.un}+${c}${R.depRein}-${c}${R.invIni}-${c}${R.capTra}+${c}${R.prestamo}-${c}${R.amort}-${c}${R.reinv}+${c}${R.residual}+${c}${R.recupCT}`
-      )
-    )
-  );
+  ));
 
-  addSheet(wb, SH_FLUJO, aoa);
+  addSheet(wb, SH_FLUJO, aoa, {
+    anchos: [42, 18, 18, 18, 18, 18, 18],
+    merges: [
+      mergeRow(0, 0, 6),
+      mergeRow(R.secIngresos - 1, 0, 6),
+      mergeRow(R.secCostos - 1, 0, 6),
+      mergeRow(R.secResultado - 1, 0, 6),
+      mergeRow(R.secAjustes - 1, 0, 6),
+    ],
+  });
 }
 
 function agregarIndicadores(
   wb: XLSX.WorkBook,
   calc: ReturnType<typeof construirFlujoCaja>
 ) {
-  // Filas: WACC en B3, VAN en B4, TIR en B5...
-  // Referencia al flujo: 'Flujo de caja'!B27 año 0, !C27:G27 años 1..5.
-  const RF = 27; // fila del flujo neto en la hoja Flujo de caja
-  const flujoRef = (col: string) => `'${SH_FLUJO}'!${col}${RF}`;
+  // Flujo neto: 'SH_FLUJO'!B27 (año 0) y C27:G27 (años 1..5)
+  const RF = 27;
+  const refAno0 = `'${SH_FLUJO}'!B${RF}`;
   const rangoAnios = `'${SH_FLUJO}'!C${RF}:G${RF}`;
-  const wacc = calc.wacc;
+  const rangoCompleto = `'${SH_FLUJO}'!B${RF}:G${RF}`;
 
   const aoa: any[][] = [
-    ["INDICADORES DE EVALUACIÓN"],
+    [ti("9. INDICADORES DE EVALUACIÓN")],
+    [sub("VAN, TIR e IR están vinculados al Flujo de caja (cambian si tocas un valor de entrada).")],
     [],
-    ["WACC (tasa de descuento)", wacc],
-    ["VAN (Bs)", { f: `=NPV(B3,${rangoAnios})+${flujoRef("B")}` }],
-    ["TIR", { f: `=IRR('${SH_FLUJO}'!B${RF}:G${RF})` }],
-    ["Payback (años, valor de la app)", calc.indicadores.payback],
-    ["IR (Índice de Rentabilidad)", { f: `=NPV(B3,${rangoAnios})/(-${flujoRef("B")})` }],
-    ["RBC (valor de la app)", calc.indicadores.rbc],
-    ["TRC (valor de la app)", calc.indicadores.trc],
-    ["Cobertura de deuda SD (valor de la app)", calc.indicadores.sd],
+    [lblB("WACC (tasa de descuento)"), P(calc.wacc)],
+    [lblB("VAN (Bs)"), fMoneyBold(`=NPV(B4,${rangoAnios})+${refAno0}`)],
+    [lblB("TIR"), fPercent(`=IRR(${rangoCompleto})`)],
+    [lblB("Payback (años)"), N(calc.indicadores.payback)],
+    [lblB("IR — Índice de Rentabilidad"), { f: `=NPV(B4,${rangoAnios})/(-${refAno0})`, t: "n", s: { ...ST.num, font: { sz: 10, bold: true } } } as any],
+    [lblB("RBC — Relación Beneficio/Costo"), N(calc.indicadores.rbc)],
+    [lblB("TRC — Tasa de Retorno Contable"), P(calc.indicadores.trc)],
+    [lblB("SD — Cobertura del Servicio de Deuda"), N(calc.indicadores.sd)],
     [],
-    ["Notas:"],
-    ["VAN, TIR, IR están vinculados al Flujo de caja (cambian si tocas un valor)."],
-    ["Payback, RBC, TRC y SD se exportan como valores calculados por la app."],
+    [sub("Payback, RBC, TRC y SD se exportan como valores calculados por la app.")],
   ];
-  addSheet(wb, "9. Indicadores", aoa);
+  addSheet(wb, "9. Indicadores", aoa, {
+    anchos: [44, 22],
+    merges: [mergeRow(0, 0, 1), mergeRow(1, 0, 1), mergeRow(12, 0, 1)],
+  });
 }
 
 function agregarInterpretacion(wb: XLSX.WorkBook) {
-  const aoa: any[][] = [
-    ["INTERPRETACIÓN DE LOS INDICADORES"],
-    [],
-    ["VAN — Valor Actual Neto",
-      "Suma todos los flujos del proyecto traídos a valor de hoy, descontados al WACC. VAN > 0: el proyecto crea valor por encima del mínimo exigido. VAN < 0: destruye valor.",
-    ],
-    ["TIR — Tasa Interna de Retorno",
-      "Rendimiento promedio anual del proyecto. Se compara con el WACC: si TIR > WACC, conviene; si TIR < WACC, no.",
-    ],
-    ["WACC — Costo Promedio Ponderado de Capital",
-      "Mezcla del costo de la deuda (banco, después de impuestos) y del costo del capital propio, ponderada por cuánto pones de cada uno. Es la 'vara' mínima que la TIR debe superar.",
-    ],
-    ["Payback",
-      "Cuántos años tarda el proyecto en devolverte la inversión inicial sumando flujos sin descontar. Mientras más corto, menor el riesgo de tiempo expuesto.",
-    ],
-    ["Payback descontado",
-      "Igual al payback pero descontando los flujos al WACC. Siempre es más largo que el payback simple.",
-    ],
-    ["IR — Índice de Rentabilidad",
-      "VP(flujos futuros) ÷ |inversión inicial|. Si IR > 1, por cada Bs invertido recuperas más de un Bs.",
-    ],
-    ["RBC — Relación Beneficio/Costo",
-      "VP(ingresos totales: ventas + préstamo + residual + CT) ÷ VP(costos totales: inversión + operación + intereses + impuestos + amortización). RBC > 1 conviene; coincide con VAN > 0.",
-    ],
-    ["TRC — Tasa de Retorno Contable",
-      "Promedio anual de utilidad neta ÷ inversión inicial. No considera el valor del dinero en el tiempo; es un indicador contable.",
-    ],
-    ["SD / DSCR — Cobertura del Servicio de la Deuda",
-      "Cuántas veces el flujo de caja operativo del proyecto cubre la cuota anual de los préstamos. SD > 1.5 es cómodo; SD < 1 no alcanza.",
-    ],
-    ["Punto de equilibrio",
-      "Cuántas unidades hay que vender para cubrir todos los costos (sin ganar ni perder). Por encima de ese número, se gana; por debajo, se pierde.",
-    ],
-    ["Apalancamiento (GAO/GAF/GAT)",
-      "GAO mide cómo los costos fijos amplifican el efecto de las ventas sobre la utilidad operativa; GAF mide cómo la deuda amplifica el efecto sobre la utilidad del dueño; GAT = GAO × GAF.",
-    ],
-    [],
-    ["Cómo leer este libro:"],
-    ["La hoja 'Flujo de caja' contiene la matriz del proyecto. Las filas de Utilidad antes de impuestos, Impuestos, Utilidad neta y Flujo de caja neto son fórmulas que dependen de las filas de arriba: si cambias un valor de entrada, Excel recalcula automáticamente."],
-    ["La hoja 'Indicadores' usa fórmulas NPV e IRR de Excel referenciando el Flujo neto, así VAN, TIR e IR siempre coinciden con la matriz."],
+  const item = (titulo: string, texto: string) => [
+    { v: titulo, t: "s", s: { ...ST.labelBold, alignment: { vertical: "top", wrapText: true } } },
+    { v: texto, t: "s", s: { ...ST.label, alignment: { wrapText: true, vertical: "top" } } },
   ];
-  // Columnas más anchas para texto
+  const aoa: any[][] = [
+    [ti("10. INTERPRETACIÓN DE LOS INDICADORES")],
+    [],
+    [ch("Indicador"), ch("Qué significa y cómo se lee")],
+    item("VAN — Valor Actual Neto",
+      "Suma todos los flujos del proyecto traídos a valor de hoy, descontados al WACC. VAN > 0: el proyecto crea valor por encima del mínimo exigido. VAN < 0: destruye valor."
+    ),
+    item("TIR — Tasa Interna de Retorno",
+      "Rendimiento promedio anual del proyecto. Se compara con el WACC: si TIR > WACC, conviene; si TIR < WACC, no."
+    ),
+    item("WACC — Costo Promedio Ponderado de Capital",
+      "Mezcla del costo de la deuda (banco, después de impuestos) y del costo del capital propio, ponderada por cuánto pones de cada uno. Es la 'vara' mínima que la TIR debe superar."
+    ),
+    item("Payback",
+      "Cuántos años tarda el proyecto en devolverte la inversión inicial sumando flujos sin descontar. Mientras más corto, menor el riesgo de tiempo expuesto."
+    ),
+    item("Payback descontado",
+      "Igual al payback pero descontando los flujos al WACC. Siempre es más largo que el payback simple."
+    ),
+    item("IR — Índice de Rentabilidad",
+      "VP(flujos futuros) ÷ |inversión inicial|. Si IR > 1, por cada Bs invertido recuperas más de un Bs."
+    ),
+    item("RBC — Relación Beneficio/Costo",
+      "VP(ingresos totales: ventas + préstamo + residual + CT) ÷ VP(costos totales). RBC > 1 conviene; coincide con VAN > 0."
+    ),
+    item("TRC — Tasa de Retorno Contable",
+      "Promedio anual de utilidad neta ÷ inversión inicial. No considera el valor del dinero en el tiempo; es un indicador contable."
+    ),
+    item("SD / DSCR — Cobertura del Servicio de la Deuda",
+      "Cuántas veces el flujo de caja operativo cubre la cuota anual de los préstamos. SD > 1.5 es cómodo; SD < 1 no alcanza."
+    ),
+    item("Punto de equilibrio",
+      "Cuántas unidades hay que vender para cubrir todos los costos (sin ganar ni perder). Por encima de ese número, se gana; por debajo, se pierde."
+    ),
+    item("Apalancamiento (GAO/GAF/GAT)",
+      "GAO mide cómo los costos fijos amplifican el efecto de las ventas sobre la utilidad operativa; GAF mide cómo la deuda amplifica el efecto sobre la utilidad del dueño; GAT = GAO × GAF."
+    ),
+    [],
+    [sub("Generado automáticamente por el Simulador de Proyectos de Inversión.")],
+  ];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"] = [{ wch: 40 }, { wch: 90 }];
+  ws["!cols"] = [{ wch: 42 }, { wch: 90 }];
+  ws["!rows"] = [{ hpt: 22 }];
+  ws["!merges"] = [mergeRow(0, 0, 1)];
   XLSX.utils.book_append_sheet(wb, ws, "10. Interpretación");
 }

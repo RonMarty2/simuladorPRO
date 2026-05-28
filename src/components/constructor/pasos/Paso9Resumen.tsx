@@ -53,16 +53,19 @@ export default function Paso9Resumen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="order-1">
-        <BotonEntregar
-          indicadores={{
-            van: calc.indicadores.van,
-            tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
-            wacc: calc.wacc,
-            payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
-          }}
-        />
-      </div>
+      {/* "Entregar" solo en proyectos que el alumno entrega (no en plantillas del docente) */}
+      {proyecto.tipo !== "caso_curso" && (
+        <div className="order-1">
+          <BotonEntregar
+            indicadores={{
+              van: calc.indicadores.van,
+              tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
+              wacc: calc.wacc,
+              payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
+            }}
+          />
+        </div>
+      )}
 
       <div className="order-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -241,7 +244,7 @@ export default function Paso9Resumen() {
           <tbody>
             {/* ── 1. INGRESOS (verde) ─────────────────────────────────── */}
             <FilaSeccion
-              label="① INGRESOS"
+              label="1 · INGRESOS"
               color="emerald"
               abierta={secAbierta.emerald}
               onToggle={() => toggleSeccion("emerald")}
@@ -257,7 +260,7 @@ export default function Paso9Resumen() {
 
             {/* ── 2. COSTOS Y GASTOS OPERATIVOS (rojo) ───────────────── */}
             <FilaSeccion
-              label="② COSTOS Y GASTOS OPERATIVOS"
+              label="2 · COSTOS Y GASTOS OPERATIVOS"
               color="rose"
               abierta={secAbierta.rose}
               onToggle={() => toggleSeccion("rose")}
@@ -276,7 +279,7 @@ export default function Paso9Resumen() {
 
             {/* ── 3. RESULTADO ANTES DE IMPUESTOS Y NETO (violeta) ──── */}
             <FilaSeccion
-              label="③ RESULTADO E IMPUESTOS"
+              label="3 · RESULTADO E IMPUESTOS"
               color="violet"
               abierta={secAbierta.violet}
               onToggle={() => toggleSeccion("violet")}
@@ -291,7 +294,7 @@ export default function Paso9Resumen() {
 
             {/* ── 4. AJUSTES A FLUJO DE CAJA (gris/azul) ─────────────── */}
             <FilaSeccion
-              label="④ AJUSTES A FLUJO DE CAJA"
+              label="4 · AJUSTES A FLUJO DE CAJA"
               color="sky"
               abierta={secAbierta.sky}
               onToggle={() => toggleSeccion("sky")}
@@ -312,7 +315,7 @@ export default function Paso9Resumen() {
             )}
 
             {/* ── 5. FLUJO DE CAJA TOTAL (siempre visible) ───────────── */}
-            <FilaSeccion label="⑤ FLUJO DE CAJA NETO" color="primary" />
+            <FilaSeccion label="5 · FLUJO DE CAJA NETO" color="primary" />
             <FilaFlujo
               label="FLUJO DE CAJA"
               valores={calc.flujoCaja}
@@ -326,11 +329,11 @@ export default function Paso9Resumen() {
         {/* Leyenda de colores */}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
           <span className="font-semibold">Leyenda:</span>
-          <LeyendaColor color="emerald" texto="① Ingresos" />
-          <LeyendaColor color="rose" texto="② Costos operativos" />
-          <LeyendaColor color="violet" texto="③ Resultado e impuestos" />
-          <LeyendaColor color="sky" texto="④ Ajustes de caja" />
-          <LeyendaColor color="primary" texto="⑤ Flujo de caja neto" />
+          <LeyendaColor color="emerald" texto="1 · Ingresos" />
+          <LeyendaColor color="rose" texto="2 · Costos operativos" />
+          <LeyendaColor color="violet" texto="3 · Resultado e impuestos" />
+          <LeyendaColor color="sky" texto="4 · Ajustes de caja" />
+          <LeyendaColor color="primary" texto="5 · Flujo de caja neto" />
         </div>
       </div>
 
