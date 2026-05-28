@@ -114,6 +114,7 @@ function FormCrearCurso({
   const [frecuencia, setFrecuencia] = useState<FrecuenciaCurso>("mensual");
   const [modo, setModo] = useState<ModoSimulacion>("automatico");
   const [eventosCurados, setEventosCurados] = useState<string[]>([]);
+  const [permiteLibre, setPermiteLibre] = useState(true);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -134,6 +135,7 @@ function FormCrearCurso({
         frecuencia_turnos: frecuencia,
         modo_simulacion: modo,
         eventos_curados: modo === "curado" ? eventosCurados : undefined,
+        permite_proyecto_libre: permiteLibre,
       });
       onCreado(curso);
     } catch (e) {
@@ -236,6 +238,26 @@ function FormCrearCurso({
           <strong>Automático</strong>.
         </p>
       </Recomendacion>
+
+      {/* Proyecto individual del estudiante */}
+      <div className="rounded-md border border-border bg-secondary/20 p-3">
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={permiteLibre}
+            onChange={(e) => setPermiteLibre(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-xs">
+            <strong>Dejar que cada estudiante elija y arme su propio proyecto</strong> (V1/V2 y
+            modelo de ingreso). Recomendado: cada alumno trae una idea distinta.
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              Si lo desmarcás, los estudiantes solo trabajan el <strong>caso</strong> que vos
+              publiques o el <strong>proyecto grupal</strong>. Lo podés cambiar después.
+            </span>
+          </span>
+        </label>
+      </div>
 
       {/* Selector de modo de simulación (incluye eventos curados si aplica) */}
       <SelectorModoSimulacion

@@ -27,7 +27,22 @@ export interface Curso {
   peso_individual?: number;
   /** Peso (0..1) de la nota grupal en la nota final. Default 0.5. */
   peso_grupal?: number;
+  /** Si TRUE, el estudiante puede crear su propio proyecto individual en el curso. */
+  permite_proyecto_libre?: boolean;
   creado_en: string;
+}
+
+/** Habilita/deshabilita que los estudiantes creen su propio proyecto en el curso. */
+export async function actualizarPermiteProyectoLibre(
+  cursoId: string,
+  permite: boolean
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").update({ permite_proyecto_libre: permite }).eq("id", cursoId),
+    10000,
+    "guardando la opción de proyecto del estudiante"
+  );
+  if (error) throw error;
 }
 
 /** Actualiza los pesos de ponderación de la nota final del curso. */
@@ -120,6 +135,7 @@ export async function crearCurso(params: {
   duracion_anios?: number;
   modo_simulacion?: ModoSimulacion;
   eventos_curados?: string[];
+  permite_proyecto_libre?: boolean;
 }): Promise<Curso> {
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
   for (let intento = 0; intento < 5; intento++) {
@@ -136,6 +152,7 @@ export async function crearCurso(params: {
           duracion_anios: params.duracion_anios ?? 5,
           modo_simulacion: params.modo_simulacion ?? "automatico",
           eventos_curados: params.eventos_curados ?? null,
+          permite_proyecto_libre: params.permite_proyecto_libre ?? true,
           codigo,
         })
         .select()

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { FolderOpen, GraduationCap, KeyRound, Plus } from "lucide-react";
+import { FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   buscarCursoPorCodigo,
@@ -8,10 +8,11 @@ import {
   listarMisInscripciones,
   type Curso,
 } from "@/lib/cursos-supabase";
-import { listarMisProyectos } from "@/lib/proyecto-supabase";
+import { guardarProyecto, listarMisProyectos } from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
-import type { Proyecto } from "@/types/proyecto";
+import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
+import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 
 const ESTADO_LABEL: Record<string, { txt: string; clase: string }> = {
@@ -43,6 +44,7 @@ export default function DashboardEstudiante() {
   const [codigoInscripcion, setCodigoInscripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [inscribiendo, setInscribiendo] = useState(false);
+  const [crearEnCurso, setCrearEnCurso] = useState<Curso | null>(null);
 
   const recargar = () => {
     if (!user) return;
@@ -163,13 +165,24 @@ export default function DashboardEstudiante() {
               </div>
               {delCurso.length === 0 ? (
                 <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                  Aún no tienes un proyecto individual en este curso.{" "}
-                  <button
-                    onClick={() => navigate("/construir")}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Tomar el proyecto del curso
-                  </button>
+                  Aún no tienes un proyecto individual en este curso.
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                    {curso.permite_proyecto_libre !== false && (
+                      <button
+                        onClick={() => setCrearEnCurso(curso)}
+                        className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Crear mi proyecto
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate("/construir")}
+                      className="rounded-md border border-border px-2.5 py-1 text-[11px] hover:bg-secondary"
+                    >
+                      Tomar un caso del docente
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -242,6 +255,144 @@ export default function DashboardEstudiante() {
           </div>
         )}
       </form>
+
+      {crearEnCurso && user && (
+        <ModalCrearMiProyecto
+          curso={crearEnCurso}
+          userId={user.id}
+          onCerrar={() => setCrearEnCurso(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Modal: el estudiante crea SU PROPIO proyecto individual dentro de un curso
+// (eligiendo V1/V2 y modelo de ingreso). Solo aparece si el curso lo permite.
+function ModalCrearMiProyecto({
+  curso,
+  userId,
+  onCerrar,
+}: {
+  curso: Curso;
+  userId: string;
+  onCerrar: () => void;
+}) {
+  const navigate = useNavigate();
+  const [nombre, setNombre] = useState("");
+  const [version, setVersion] = useState<VersionProyecto>("v2");
+  const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
+  const [creando, setCreando] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const modelos: { v: ModeloIngreso; t: string; d: string }[] = [
+    { v: "unidades", t: "Unidades × precio", d: "Vendés productos o servicios por unidad." },
+    { v: "suscripcion", t: "Suscripción", d: "Clientes recurrentes (altas y churn)." },
+    { v: "publicidad", t: "Publicidad", d: "Ingreso por audiencia × CPM." },
+    { v: "costo_beneficio", t: "Costo-beneficio", d: "No vende; se evalúa por el beneficio." },
+  ];
+
+  const crear = async () => {
+    if (!nombre.trim()) return;
+    setCreando(true);
+    setErr(null);
+    try {
+      const p = crearProyectoVacio({
+        estudiante_id: userId,
+        nombre: nombre.trim(),
+        curso_id: curso.id,
+        version,
+        modeloIngreso: modelo,
+      });
+      await guardarProyecto(p);
+      guardarProyectoActivo(userId, p.id);
+      navigate("/construir");
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+      setCreando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-lg bg-card p-5 shadow-xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Crear mi proyecto · {curso.nombre}</h2>
+          <button onClick={onCerrar} disabled={creando} className="rounded-md p-1 hover:bg-secondary disabled:opacity-50">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Nombre del proyecto
+        </label>
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Ej: Cafetería, Tienda de mascotas…"
+          autoFocus
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+
+        <div className="mt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Tipo de análisis
+        </div>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          {(["v2", "v1"] as VersionProyecto[]).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setVersion(v)}
+              className={cn(
+                "rounded-md border p-2 text-left text-xs",
+                version === v ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
+              )}
+            >
+              <div className="font-semibold">{v === "v2" ? "Extendido (V2)" : "Clásico (V1)"}</div>
+              <div className="text-[10px] text-muted-foreground">
+                {v === "v2" ? "VAN/TIR + equilibrio, sensibilidad, etc." : "VAN, TIR, payback, etc."}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          ¿Cómo entra la plata?
+        </div>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          {modelos.map((m) => (
+            <button
+              key={m.v}
+              type="button"
+              onClick={() => setModelo(m.v)}
+              className={cn(
+                "rounded-md border p-2 text-left text-xs",
+                modelo === m.v ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
+              )}
+            >
+              <div className="font-semibold">{m.t}</div>
+              <div className="text-[10px] leading-snug text-muted-foreground">{m.d}</div>
+            </button>
+          ))}
+        </div>
+
+        {err && <div className="mt-2 text-xs text-destructive">{err}</div>}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onCerrar} disabled={creando} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-secondary disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            onClick={crear}
+            disabled={creando || !nombre.trim()}
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {creando && <Loader2 className="h-3 w-3 animate-spin" />}
+            Crear y empezar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
