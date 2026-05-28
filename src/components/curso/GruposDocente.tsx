@@ -193,8 +193,8 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
               disabled={!habilitado}
               className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs disabled:opacity-60"
             >
-              <option value="v2">Extendido (V2)</option>
-              <option value="v1">Clásico (V1)</option>
+              <option value="v2">Con análisis de riesgo</option>
+              <option value="v1">Clásico</option>
             </select>
           </label>
           <label className="text-[11px] sm:col-span-2 lg:col-span-1">

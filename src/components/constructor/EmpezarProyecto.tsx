@@ -292,14 +292,14 @@ function FormularioProyectoLibre({
             <OpcionVersion
               activa={version === "v1"}
               onClick={() => setVersion("v1")}
-              titulo="Clásico (V1)"
-              descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC. Igual que siempre."
+              titulo="Clásico"
+              descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC."
             />
             <OpcionVersion
               activa={version === "v2"}
               onClick={() => setVersion("v2")}
-              titulo="Extendido (V2)"
-              descripcion="Todo lo de V1 + punto de equilibrio, payback descontado, sensibilidad y apalancamiento."
+              titulo="Con análisis de riesgo"
+              descripcion="Todo lo del clásico + punto de equilibrio, payback descontado, sensibilidad, apalancamiento y Monte Carlo."
             />
           </div>
         </div>

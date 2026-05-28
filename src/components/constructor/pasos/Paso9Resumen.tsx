@@ -433,7 +433,7 @@ function AnalisisAvanzadoV2({
       >
         <span className="text-xs text-indigo-600">{abierto ? "▾" : "▸"}</span>
         <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-          V2
+          + Riesgo
         </span>
         <h3 className="text-base font-semibold tracking-tight">Análisis avanzado</h3>
         <span className="ml-auto text-[10px] font-normal text-muted-foreground">

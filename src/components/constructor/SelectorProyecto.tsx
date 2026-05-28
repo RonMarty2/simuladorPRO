@@ -374,14 +374,14 @@ function ModalNuevoProyecto({
               <OpcionVersionModal
                 activa={version === "v1"}
                 onClick={() => setVersion("v1")}
-                titulo="Clásico (V1)"
+                titulo="Clásico"
                 descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC."
               />
               <OpcionVersionModal
                 activa={version === "v2"}
                 onClick={() => setVersion("v2")}
-                titulo="Extendido (V2)"
-                descripcion="Todo V1 + punto de equilibrio, payback descontado, sensibilidad y apalancamiento."
+                titulo="Con análisis de riesgo"
+                descripcion="Todo lo del clásico + punto de equilibrio, payback descontado, sensibilidad, apalancamiento y Monte Carlo."
               />
             </div>
           </div>
@@ -412,7 +412,7 @@ function ModalNuevoProyecto({
             <div className="rounded-md border border-indigo-300 bg-indigo-50/50 p-2 dark:border-indigo-800 dark:bg-indigo-950/20">
               <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
                 <Sparkles className="h-3.5 w-3.5" />
-                Docente: carga un ejemplo completo (V2) para ver y entender:
+                Docente: carga un ejemplo completo para ver y entender:
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploCafeteriaV2)} disabled={guardando} titulo="☕ Cafetería" sub="Servicios · unidades" />

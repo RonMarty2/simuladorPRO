@@ -113,11 +113,11 @@ function BadgeVersion({ version }: { version?: VersionProyecto }) {
       )}
       title={
         esV2
-          ? "Versión extendida: incluye análisis avanzado en el Paso 9"
-          : "Versión clásica: indicadores estándar"
+          ? "Con análisis de riesgo: incluye punto de equilibrio, sensibilidad, apalancamiento, Monte Carlo"
+          : "Indicadores clásicos: VAN, TIR, Payback, IR, TRC, SD, RBC, WACC"
       }
     >
-      {esV2 ? "V2 · Extendido" : "V1 · Clásico"}
+      {esV2 ? "+ Riesgo" : "Clásico"}
     </span>
   );
 }

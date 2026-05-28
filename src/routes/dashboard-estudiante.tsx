@@ -349,7 +349,7 @@ function ModalCrearMiProyecto({
                 version === v ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
               )}
             >
-              <div className="font-semibold">{v === "v2" ? "Extendido (V2)" : "Clásico (V1)"}</div>
+              <div className="font-semibold">{v === "v2" ? "Con análisis de riesgo" : "Clásico"}</div>
               <div className="text-[10px] text-muted-foreground">
                 {v === "v2" ? "VAN/TIR + equilibrio, sensibilidad, etc." : "VAN, TIR, payback, etc."}
               </div>
@@ -409,7 +409,7 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
       <div className="truncate text-sm font-semibold">{proyecto.nombre}</div>
       <div className="flex flex-wrap items-center gap-1">
         <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>
-          {esV2 ? "V2" : "V1"}
+          {esV2 ? "+ Riesgo" : "Clásico"}
         </span>
         <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">{modelo}</span>
         <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium", estado.clase)}>{estado.txt}</span>
