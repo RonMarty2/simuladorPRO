@@ -7,6 +7,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -49,25 +50,29 @@ export default function Paso9Resumen() {
     setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
 
   return (
-    <div className="space-y-4">
-      <BotonEntregar
-        indicadores={{
-          van: calc.indicadores.van,
-          tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
-          wacc: calc.wacc,
-          payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
-        }}
-      />
+    <div className="flex flex-col gap-4">
+      <div className="order-1">
+        <BotonEntregar
+          indicadores={{
+            van: calc.indicadores.van,
+            tir: isFinite(calc.indicadores.tir) ? calc.indicadores.tir : 0,
+            wacc: calc.wacc,
+            payback: isFinite(calc.indicadores.payback) ? calc.indicadores.payback : 0,
+          }}
+        />
+      </div>
 
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="order-2">
         <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Consolidación de todos los pasos anteriores. Si quieres cambiar algo, vuelve al
           paso correspondiente — esta vista se recalcula sola.
         </p>
+      </div>
 
-        {/* Indicadores principales */}
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Indicadores principales — debajo del flujo */}
+      <div className="order-4 rounded-lg border border-border bg-card p-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <CardIndicador
             sigla="VAN"
             nombre="Valor Actual Neto"
@@ -208,7 +213,7 @@ export default function Paso9Resumen() {
       </div>
 
       {/* TABLA FLUJO DE CAJA — cada sección de color se contrae/expande */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-card p-4">
+      <div className="order-3 overflow-x-auto rounded-lg border border-border bg-card p-4">
         <h3 className="mb-1 text-sm font-semibold">
           Flujo de caja proyectado (Bs){" "}
           <span className="font-normal text-[10px] text-muted-foreground">
@@ -325,10 +330,14 @@ export default function Paso9Resumen() {
       </div>
 
       {/* ANÁLISIS AVANZADO V2 — debajo del flujo, contraído por defecto */}
-      {proyecto.version === "v2" && <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />}
+      {proyecto.version === "v2" && (
+        <div className="order-5">
+          <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />
+        </div>
+      )}
 
       {/* Gráficos */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="order-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-4">
           <h3 className="mb-2 text-sm font-medium">Flujo de caja por año</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -371,6 +380,7 @@ export default function Paso9Resumen() {
         </div>
       </div>
 
+      <div className="order-7">
       <FichaPedagogica
         titulo="Indicadores de evaluación"
         contenido={
@@ -388,6 +398,7 @@ export default function Paso9Resumen() {
           </>
         }
       />
+      </div>
     </div>
   );
 }
@@ -500,6 +511,15 @@ function AnalisisAvanzadoV2({
                 ? "✓ Vendes más que el punto de equilibrio → ganas."
                 : "⚠ Vendes menos que el punto de equilibrio → pierdes."}
           </div>
+          {isFinite(v2.puntoEquilibrio.unidades) && v2.precioPromedio > 0 && (
+            <GraficoEquilibrio
+              precio={v2.precioPromedio}
+              cvu={v2.costoVariableUnitProm}
+              costosFijos={v2.costosFijosAnio1}
+              pe={v2.puntoEquilibrio.unidades}
+              ventaAnio1={v2.unidadesAnio1}
+            />
+          )}
         </V2Card>
 
         <V2Card
@@ -658,6 +678,73 @@ function AnalisisAvanzadoV2({
       <PanelMonteCarlo calc={calc} />
         </>
       )}
+    </div>
+  );
+}
+
+// Gráfico de punto de equilibrio: línea de ingresos vs costo total. Se cruzan
+// en el punto de equilibrio. Marca dónde estás (venta del año 1).
+function GraficoEquilibrio({
+  precio,
+  cvu,
+  costosFijos,
+  pe,
+  ventaAnio1,
+}: {
+  precio: number;
+  cvu: number;
+  costosFijos: number;
+  pe: number;
+  ventaAnio1: number;
+}) {
+  const qMax = Math.max(pe, ventaAnio1, 1) * 1.25;
+  const N = 8;
+  const data = Array.from({ length: N + 1 }, (_, i) => {
+    const q = Math.round((qMax * i) / N);
+    return { q, Ingresos: precio * q, "Costo total": costosFijos + cvu * q };
+  });
+  return (
+    <div className="mt-2 border-t border-border/50 pt-2">
+      <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
+        Gráfico de equilibrio (ingresos vs costo total)
+      </div>
+      <ResponsiveContainer width="100%" height={190}>
+        <LineChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -12 }}>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+          <XAxis
+            dataKey="q"
+            type="number"
+            domain={[0, Math.round(qMax)]}
+            tick={{ fontSize: 9 }}
+            tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`)}
+          />
+          <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+          <Tooltip
+            formatter={(v: number) => formatearBolivianos(v)}
+            labelFormatter={(l) => `${Number(l).toLocaleString("es-BO")} u`}
+          />
+          <Legend wrapperStyle={{ fontSize: 10 }} />
+          <ReferenceLine
+            x={Math.round(pe)}
+            stroke="#6366f1"
+            strokeDasharray="4 2"
+            label={{ value: "Equilibrio", fontSize: 9, fill: "#6366f1", position: "top" }}
+          />
+          <ReferenceLine
+            x={Math.round(ventaAnio1)}
+            stroke="#10b981"
+            strokeDasharray="2 2"
+            label={{ value: "Tu venta", fontSize: 9, fill: "#10b981", position: "insideTopRight" }}
+          />
+          <Line type="monotone" dataKey="Ingresos" stroke="#10b981" dot={false} strokeWidth={2} />
+          <Line type="monotone" dataKey="Costo total" stroke="#ef4444" dot={false} strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+      <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+        Donde la línea verde (ingresos) cruza la roja (costo total) está el{" "}
+        <strong>punto de equilibrio</strong>: a la izquierda pierdes, a la derecha ganas. La
+        marca <em>"Tu venta"</em> muestra dónde estás el año 1.
+      </p>
     </div>
   );
 }
@@ -1037,6 +1124,8 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     costosFijosAnio1,
     costosVariablesAnio1,
     unidadesAnio1,
+    precioPromedio,
+    costoVariableUnitProm,
     paybackDescontado,
     gao,
     gaf,
