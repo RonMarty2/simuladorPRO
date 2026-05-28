@@ -3,11 +3,24 @@ import { CheckCircle2, ChevronRight, Clock, Loader2, Users, User, XCircle } from
 import { listarEntregasDelCurso } from "@/lib/proyecto-supabase";
 import { listarGruposDeCurso, type GrupoConMiembros } from "@/lib/grupos-supabase";
 import type { Entrega } from "@/types/proyecto";
-import { formatearBolivianos, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import ModalRevisarEntrega from "./ModalRevisarEntrega";
 
 type Vista = "individuales" | "grupales";
 type Filtro = "todas" | "pendiente" | "aprobada" | "reprobada";
+
+interface Agrupado {
+  // Identificador único (estudiante+proyecto para individuales; proyecto para grupales)
+  key: string;
+  nombreTitular: string;     // estudiante o nombre del grupo
+  nombreProyecto: string;
+  metaSecundaria?: string;    // ej. "5 integrantes"
+  entregas: Entrega[];
+  pendientes: number;
+  aprobadas: number;
+  reprobadas: number;
+  promedio: number | null;
+}
 
 export default function EntregasCurso({ cursoId }: { cursoId: string }) {
   const [entregas, setEntregas] = useState<Entrega[]>([]);
@@ -35,7 +48,6 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
     cargar();
   }, [cursoId]);
 
-  // Mapa proyecto_id -> grupo (para identificar entregas grupales y su nombre)
   const grupoPorProyecto = useMemo(() => {
     const m = new Map<string, GrupoConMiembros>();
     for (const g of grupos) {
@@ -44,24 +56,66 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
     return m;
   }, [grupos]);
 
-  // Detección de entrega grupal: el snapshot del proyecto trae grupo_id seteado.
-  const esGrupal = (e: Entrega): boolean => {
-    const s = e.snapshot_datos ?? {};
-    return !!s.grupo_id;
-  };
+  const esGrupal = (e: Entrega): boolean => !!(e.snapshot_datos ?? {}).grupo_id;
 
   const individuales = entregas.filter((e) => !esGrupal(e));
   const grupales = entregas.filter((e) => esGrupal(e));
 
-  const fuente = vista === "individuales" ? individuales : grupales;
-  const filtradas = fuente.filter((e) => filtro === "todas" || e.estado === filtro);
+  // Agrupar para la vista actual
+  const agrupadas = useMemo<Agrupado[]>(() => {
+    const fuente = vista === "individuales" ? individuales : grupales;
+    const map = new Map<string, Entrega[]>();
+    for (const e of fuente) {
+      const key =
+        vista === "grupales"
+          ? e.proyecto_id
+          : `${e.estudiante_id}|${e.proyecto_id}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(e);
+    }
+    return Array.from(map.entries()).map(([key, es]) => {
+      es.sort((a, b) => (a.paso_entregado ?? 999) - (b.paso_entregado ?? 999));
+      const primera = es[0];
+      const grupo = grupoPorProyecto.get(primera.proyecto_id) ?? null;
+      const notas = es.filter((e) => e.nota != null).map((e) => e.nota as number);
+      const promedio =
+        notas.length > 0 ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 100) / 100 : null;
+      return {
+        key,
+        nombreTitular:
+          vista === "grupales"
+            ? grupo?.nombre ?? (primera.snapshot_datos?.nombre ?? "(grupo)")
+            : `Estudiante ${primera.estudiante_id.slice(0, 6)}`,
+        nombreProyecto: primera.snapshot_datos?.nombre ?? "",
+        metaSecundaria:
+          vista === "grupales" && grupo
+            ? `${grupo.miembros.length} integrante${grupo.miembros.length === 1 ? "" : "s"}`
+            : undefined,
+        entregas: es,
+        pendientes: es.filter((e) => e.estado === "pendiente").length,
+        aprobadas: es.filter((e) => e.estado === "aprobada").length,
+        reprobadas: es.filter((e) => e.estado === "reprobada").length,
+        promedio,
+      };
+    });
+  }, [vista, individuales, grupales, grupoPorProyecto]);
 
-  const contadores = (lista: Entrega[]) => ({
-    pendiente: lista.filter((e) => e.estado === "pendiente").length,
-    aprobada: lista.filter((e) => e.estado === "aprobada").length,
-    reprobada: lista.filter((e) => e.estado === "reprobada").length,
-  });
-  const ct = contadores(fuente);
+  // Filtrar grupos según el estado de sus entregas
+  const filtrados = useMemo(() => {
+    if (filtro === "todas") return agrupadas;
+    return agrupadas
+      .map((a) => ({
+        ...a,
+        entregas: a.entregas.filter((e) => e.estado === filtro),
+      }))
+      .filter((a) => a.entregas.length > 0);
+  }, [agrupadas, filtro]);
+
+  const ctVista = {
+    pendiente: (vista === "individuales" ? individuales : grupales).filter((e) => e.estado === "pendiente").length,
+    aprobada: (vista === "individuales" ? individuales : grupales).filter((e) => e.estado === "aprobada").length,
+    reprobada: (vista === "individuales" ? individuales : grupales).filter((e) => e.estado === "reprobada").length,
+  };
 
   return (
     <div className="space-y-3">
@@ -99,7 +153,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         </button>
       </div>
 
-      {/* Filtros estado */}
+      {/* Filtros de estado */}
       <div className="flex flex-wrap gap-1.5 text-xs">
         {(["pendiente", "aprobada", "reprobada", "todas"] as const).map((f) => (
           <button
@@ -116,17 +170,15 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
             {f === "aprobada" && <CheckCircle2 className="mr-1 inline h-3 w-3" />}
             {f === "reprobada" && <XCircle className="mr-1 inline h-3 w-3" />}
             {f.charAt(0).toUpperCase() + f.slice(1)}
-            {f !== "todas" && (
-              <span className="ml-1 opacity-75">({ct[f]})</span>
-            )}
+            {f !== "todas" && <span className="ml-1 opacity-75">({ctVista[f]})</span>}
           </button>
         ))}
       </div>
 
       {vista === "grupales" && (
         <p className="text-[11px] text-violet-700 dark:text-violet-300">
-          Cuando calificas una entrega grupal, la nota se acredita automáticamente al
-          promedio individual de TODOS los miembros del grupo.
+          Cuando calificas una entrega grupal, la nota se acredita al promedio individual de
+          TODOS los miembros del grupo.
         </p>
       )}
 
@@ -135,7 +187,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
           <Loader2 className="h-3 w-3 animate-spin" />
           Cargando entregas…
         </div>
-      ) : filtradas.length === 0 ? (
+      ) : filtrados.length === 0 ? (
         <div className="rounded-md border border-dashed border-border bg-secondary/30 p-4 text-center text-xs text-muted-foreground">
           {vista === "grupales"
             ? filtro === "pendiente"
@@ -146,35 +198,15 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
               : "Sin entregas individuales en este filtro."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-border">
-          <table className="w-full text-xs">
-            <thead className="bg-secondary/30 text-[10px] uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="p-2 text-left">
-                  {vista === "grupales" ? "Grupo" : "Estudiante"}
-                </th>
-                <th className="p-2 text-center">Etapa</th>
-                <th className="p-2 text-center">Intento</th>
-                <th className="p-2 text-right">VAN</th>
-                <th className="p-2 text-right">TIR</th>
-                <th className="p-2 text-center">Sugerencia</th>
-                <th className="p-2 text-center">Estado</th>
-                <th className="p-2 text-right">Nota</th>
-                <th className="p-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtradas.map((e) => (
-                <FilaEntrega
-                  key={e.id}
-                  entrega={e}
-                  vista={vista}
-                  grupo={grupoPorProyecto.get(e.proyecto_id) ?? null}
-                  onRevisar={() => setEntregaActiva(e)}
-                />
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-2">
+          {filtrados.map((g) => (
+            <TarjetaAgrupada
+              key={g.key}
+              grupo={g}
+              vista={vista}
+              onRevisar={(e) => setEntregaActiva(e)}
+            />
+          ))}
         </div>
       )}
 
@@ -183,9 +215,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
           entrega={entregaActiva}
           onCerrar={(actualizada) => {
             setEntregaActiva(null);
-            if (actualizada) {
-              cargar();
-            }
+            if (actualizada) cargar();
           }}
         />
       )}
@@ -193,98 +223,95 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
   );
 }
 
-function FilaEntrega({
-  entrega,
-  vista,
+function TarjetaAgrupada({
   grupo,
+  vista,
   onRevisar,
 }: {
-  entrega: Entrega;
+  grupo: Agrupado;
   vista: Vista;
-  grupo: GrupoConMiembros | null;
-  onRevisar: () => void;
+  onRevisar: (e: Entrega) => void;
 }) {
-  const datos = entrega.snapshot_datos ?? {};
-  const nombreEstu = `Estudiante ${entrega.estudiante_id.slice(0, 6)}`;
-  // Nombre del grupo (cuando es grupal). Si no encontramos el grupo (porque
-  // fue borrado), mostramos el nombre del proyecto como fallback.
-  const nombreGrupo = grupo?.nombre ?? datos.nombre ?? "(grupo)";
-  const cantidadMiembros = grupo?.miembros?.length ?? 0;
-
-  const colorEstado =
-    entrega.estado === "aprobada"
-      ? "text-emerald-700 dark:text-emerald-400"
-      : entrega.estado === "reprobada"
-      ? "text-destructive"
-      : "text-amber-700 dark:text-amber-400";
-
-  const iconoSug =
-    entrega.sugerencia_automatica === "aprobar"
-      ? "👍"
-      : entrega.sugerencia_automatica === "reprobar"
-      ? "👎"
-      : entrega.sugerencia_automatica === "duda"
-      ? "🤔"
-      : "—";
-
   return (
-    <tr className="border-t border-border/40 hover:bg-secondary/20">
-      <td className="p-2">
-        {vista === "grupales" ? (
-          <>
-            <div className="flex items-center gap-1.5 font-medium">
-              <Users className="h-3 w-3 text-violet-600" />
-              {nombreGrupo}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {cantidadMiembros} integrante{cantidadMiembros === 1 ? "" : "s"}
-              {" · "}entregado por: {entrega.estudiante_id.slice(0, 6)}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="font-medium">{nombreEstu}</div>
-            <div className="text-[10px] text-muted-foreground">{datos.nombre}</div>
-          </>
-        )}
-      </td>
-      <td className="p-2 text-center">
-        {entrega.paso_entregado ? (
-          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-semibold">
-            Etapa {entrega.paso_entregado}
+    <div className="rounded-md border border-border bg-card p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-sm font-semibold">
+            {vista === "grupales" ? (
+              <Users className="h-3.5 w-3.5 text-violet-600" />
+            ) : (
+              <User className="h-3.5 w-3.5 text-sky-600" />
+            )}
+            {grupo.nombreTitular}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {grupo.nombreProyecto}
+            {grupo.metaSecundaria ? ` · ${grupo.metaSecundaria}` : ""}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+          <span className="rounded-full bg-secondary px-2 py-0.5">
+            Entregas: <strong>{grupo.entregas.length}</strong>
           </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="p-2 text-center">#{entrega.numero_intento}</td>
-      <td className="p-2 text-right tabular-nums">
-        {entrega.van !== null ? formatearBolivianos(entrega.van) : "—"}
-      </td>
-      <td className="p-2 text-right tabular-nums">
-        {entrega.tir !== null ? `${(entrega.tir * 100).toFixed(1)}%` : "—"}
-      </td>
-      <td className="p-2 text-center">
-        <span title={(entrega.sugerencia_razones ?? []).join("\n")}>{iconoSug}</span>
-        {entrega.sugerencia_nota !== null && (
-          <div className="text-[10px] text-muted-foreground">{entrega.sugerencia_nota}</div>
-        )}
-      </td>
-      <td className={cn("p-2 text-center font-medium capitalize", colorEstado)}>
-        {entrega.estado}
-      </td>
-      <td className="p-2 text-right">
-        {entrega.nota !== null ? <strong>{entrega.nota}</strong> : "—"}
-      </td>
-      <td className="p-2">
-        <button
-          onClick={onRevisar}
-          className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[10px] font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          {entrega.estado === "pendiente" ? "Revisar" : "Ver"}
-          <ChevronRight className="h-3 w-3" />
-        </button>
-      </td>
-    </tr>
+          {grupo.pendientes > 0 && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              {grupo.pendientes} pendiente{grupo.pendientes === 1 ? "" : "s"}
+            </span>
+          )}
+          {grupo.aprobadas > 0 && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+              {grupo.aprobadas} aprobada{grupo.aprobadas === 1 ? "" : "s"}
+            </span>
+          )}
+          {grupo.reprobadas > 0 && (
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
+              {grupo.reprobadas} reprobada{grupo.reprobadas === 1 ? "" : "s"}
+            </span>
+          )}
+          {grupo.promedio != null && (
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 font-bold text-primary">
+              Promedio: {grupo.promedio}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border/50 pt-2">
+        {grupo.entregas.map((e) => (
+          <ChipEtapa key={e.id} entrega={e} onClick={() => onRevisar(e)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChipEtapa({ entrega, onClick }: { entrega: Entrega; onClick: () => void }) {
+  const etapa = entrega.paso_entregado;
+  const estiloEstado =
+    entrega.estado === "aprobada"
+      ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-100"
+      : entrega.estado === "reprobada"
+        ? "border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-100"
+        : "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100";
+  return (
+    <button
+      onClick={onClick}
+      title={`Intento #${entrega.numero_intento} — ${entrega.estado}${entrega.nota != null ? ` · Nota ${entrega.nota}` : ""}`}
+      className={cn(
+        "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition hover:brightness-95",
+        estiloEstado
+      )}
+    >
+      <span>
+        {etapa ? `Etapa ${etapa}` : "Proyecto"}
+        {entrega.numero_intento > 1 ? ` · #${entrega.numero_intento}` : ""}
+      </span>
+      {entrega.nota != null ? (
+        <span className="rounded bg-white/60 px-1 font-bold dark:bg-black/40">{entrega.nota}</span>
+      ) : (
+        <span className="opacity-70">·</span>
+      )}
+      <ChevronRight className="h-3 w-3" />
+    </button>
   );
 }
