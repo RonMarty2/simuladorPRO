@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, X, XCircle } from "lucide-react";
 import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
+import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
 
 export default function ModalRevisarEntrega({
   entrega,
@@ -117,40 +118,11 @@ export default function ModalRevisarEntrega({
             </div>
           )}
 
-          {/* Snapshot resumen del proyecto */}
-          <details className="rounded-md border border-border p-3">
-            <summary className="cursor-pointer text-xs font-semibold">
-              📂 Ver detalles del proyecto entregado
-            </summary>
-            <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-              <div>
-                <strong>Sector:</strong> {datos.sector} · <strong>Ubicación:</strong>{" "}
-                {datos.ubicacion}
-              </div>
-              <div>
-                <strong>Productos:</strong> {datos.productos?.length ?? 0}
-              </div>
-              <div>
-                <strong>Inversiones fijas:</strong>{" "}
-                {Object.values(datos.inversiones ?? {}).flat().length} items
-              </div>
-              <div>
-                <strong>Personal:</strong> {datos.personal?.length ?? 0} puestos
-              </div>
-              <div>
-                <strong>Costos directos:</strong> {datos.costosDirectos?.length ?? 0} items
-              </div>
-              <div>
-                <strong>Capital de trabajo:</strong>{" "}
-                {formatearBolivianos(datos.capitalTrabajo ?? 0)} (
-                {datos.mesesBufferCapitalTrabajo ?? 0} meses)
-              </div>
-              <div>
-                <strong>% financiamiento activo:</strong>{" "}
-                {((datos.financiamiento?.porcentajePrestamo ?? 0) * 100).toFixed(1)}%
-              </div>
-            </div>
-          </details>
+          {/* Detalle paso a paso: TODO lo que llenó el estudiante */}
+          <DetalleEntregaPasoAPaso
+            proyecto={datos}
+            pasoEntregado={entrega.paso_entregado ?? null}
+          />
 
           {/* Formulario de decisión */}
           <div className="space-y-3 rounded-md border-2 border-primary/40 bg-primary/5 p-3">
