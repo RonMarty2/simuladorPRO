@@ -43,25 +43,29 @@ export default function BadgeTipoProyecto({
   className,
 }: {
   tipo?: TipoProyecto | null;
-  tamaño?: "sm" | "md";
+  tamaño?: "sm" | "md" | "lg";
   className?: string;
 }) {
   const c = CFG[tipo ?? "libre"] ?? CFG.libre;
   const sizeCls =
     tamaño === "sm"
-      ? "px-1.5 py-0.5 text-[9px]"
-      : "px-2 py-0.5 text-[10px]";
+      ? "px-1.5 py-0.5 text-[9px] gap-1"
+      : tamaño === "lg"
+        ? "px-3 py-1 text-xs gap-1.5"
+        : "px-2 py-0.5 text-[10px] gap-1";
   return (
     <span
       className={cn(
-        "inline-flex flex-shrink-0 items-center gap-1 rounded-md border font-bold uppercase tracking-wider",
+        "inline-flex flex-shrink-0 items-center rounded-md border font-bold uppercase tracking-wider",
         sizeCls,
         c.clase,
         className
       )}
       title={c.label}
     >
-      <span aria-hidden>{c.icono}</span>
+      <span aria-hidden className={tamaño === "lg" ? "text-sm" : undefined}>
+        {c.icono}
+      </span>
       <span>{c.label}</span>
     </span>
   );
