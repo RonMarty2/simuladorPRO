@@ -160,43 +160,64 @@ export default function DashboardEstudiante() {
                 </div>
               </div>
 
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Proyecto individual
-              </div>
-              {delCurso.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                  Aún no tienes un proyecto individual en este curso.
-                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    {curso.permite_proyecto_libre !== false && (
-                      <button
-                        onClick={() => setCrearEnCurso(curso)}
-                        className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Crear mi proyecto
-                      </button>
-                    )}
-                    <button
-                      onClick={() => navigate("/construir")}
-                      className="rounded-md border border-border px-2.5 py-1 text-[11px] hover:bg-secondary"
-                    >
-                      Tomar un caso del docente
-                    </button>
+              {/* ── Sub-tarjeta: Proyecto INDIVIDUAL (acento sky) ────────── */}
+              <div className="overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
+                <div className="border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-sky-900 dark:text-sky-100">
+                    <span className="text-base">📁</span>
+                    <span>Tu proyecto individual</span>
+                  </div>
+                  <div className="text-[11px] text-sky-900/70 dark:text-sky-200/70">
+                    Tu propio proyecto del curso — lo armás vos y lo entregás para nota.
                   </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {delCurso.map((p) => (
-                    <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
-                  ))}
+                <div className="p-3">
+                  {delCurso.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-border bg-card p-3 text-center text-xs text-muted-foreground">
+                      Aún no tienes un proyecto individual en este curso.
+                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                        {curso.permite_proyecto_libre !== false && (
+                          <button
+                            onClick={() => setCrearEnCurso(curso)}
+                            className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Crear mi proyecto
+                          </button>
+                        )}
+                        <button
+                          onClick={() => navigate("/construir")}
+                          className="rounded-md border border-border px-2.5 py-1 text-[11px] hover:bg-secondary"
+                        >
+                          Tomar un caso del docente
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {delCurso.map((p) => (
+                        <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {/* Proyecto grupal del curso */}
-              <div className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Proyecto grupal
               </div>
-              {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
+
+              {/* ── Sub-tarjeta: Proyecto GRUPAL (acento violet) ─────────── */}
+              <div className="mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
+                <div className="border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
+                    <span className="text-base">🤝</span>
+                    <span>Proyecto grupal</span>
+                  </div>
+                  <div className="text-[11px] text-violet-900/70 dark:text-violet-200/70">
+                    Trabajen en equipo sobre un mismo proyecto.
+                  </div>
+                </div>
+                <div className="p-3">
+                  {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
+                </div>
+              </div>
             </section>
           );
         })}
