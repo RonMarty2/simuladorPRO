@@ -147,7 +147,7 @@ export default function Paso6CostosProduccion() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">
-              Paso 6 · Costos directos de producción
+              Paso 5 · Costos directos de producción
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Por cada producto, define qué le cuesta producir/atender 1 unidad.

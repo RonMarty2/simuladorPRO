@@ -148,11 +148,13 @@ export default function Paso3Capital() {
     (inversionesFijas > 0 && (fin?.porcentajePrestamo ?? 0) > 0) ||
     (capitalTrabajoBase > 0 && (cwCfg?.porcentajePrestamo ?? 0) > 0);
 
-  // TOTAL anual = operativos + imprevistos + cuotas (deuda activo + deuda capital)
-  const totalAnual = totalOperativoAnual + cuotaAnualPrestamo;
+  // Capital de trabajo = costos operativos + imprevistos. NO incluye la cuota del
+  // préstamo: la deuda es un flujo de FINANCIAMIENTO que se paga con el flujo de
+  // cada año (amortización + interés en el Paso 9), no se pre-financia como capital
+  // de trabajo. Así el cálculo queda idéntico al Paso 7/Paso 9 y al motor del flujo,
+  // y desaparece la dependencia circular con el préstamo de capital operativo.
+  const totalAnual = totalOperativoAnual;
   const totalMensual = totalAnual / 12;
-
-  // Capital de trabajo FINAL = total × meses/12. Se sincroniza con el store.
   const capitalTrabajoCalculado = Math.round((totalAnual * mesesBuffer) / 12);
 
   // Sincroniza el valor derivado con el store si cambió
@@ -389,60 +391,67 @@ export default function Paso3Capital() {
             }
           />
 
-          <FilaGastoDetalle
-            n={6}
-            label="Cuota anual de los préstamos (capital + interés)"
-            origen="Paso 3 — Inversiones · Paso 7 — Financiamiento (los dos préstamos)"
-            valor={cuotaAnualPrestamo}
-            formula="cuota_activo_anual + cuota_capital_operativo_anual"
-            color="violet"
-            vacioMsg="Define tu financiamiento en el Paso 7 (los dos préstamos: activo fijo y capital operativo)."
-            detalle={
-              financiamientoConfigurado && (
-                <table className="w-full text-[11px]">
-                  <thead className="border-b border-border text-muted-foreground">
-                    <tr>
-                      <th className="px-2 py-1 text-left">Préstamo</th>
-                      <th className="px-2 py-1 text-right">Monto financiado</th>
-                      <th className="px-2 py-1 text-right">Tasa · plazo</th>
-                      <th className="px-2 py-1 text-right">Cuota mensual</th>
-                      <th className="px-2 py-1 text-right">Cuota anual</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">Activo fijo (base: inversiones {formatearBolivianos(inversionesFijas)})</td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestActivo)}</td>
-                      <td className="px-2 py-1 text-right">
-                        {((fin?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {fin?.plazoMeses ?? 0}m
-                      </td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualActivo)}</td>
-                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualActivo)}</td>
-                    </tr>
-                    <tr className="border-b border-border/30">
-                      <td className="px-2 py-1">Capital operativo (base: cap. trabajo {formatearBolivianos(baseCapitalOperativo)})</td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestCapital)}</td>
-                      <td className="px-2 py-1 text-right">
-                        {((cwCfg?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {cwCfg?.plazoMeses ?? 0}m
-                      </td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualCapital)}</td>
-                      <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualCapital)}</td>
-                    </tr>
-                    <tr className="bg-secondary/40 font-semibold">
-                      <td className="px-2 py-1" colSpan={4}>TOTAL cuota anual préstamos</td>
-                      <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaAnualPrestamo)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              )
-            }
-          />
-
           <div className="flex items-center justify-between border-t-2 border-border bg-secondary/50 px-3 py-2">
-            <span className="text-xs font-bold uppercase tracking-wide">TOTAL ANUAL</span>
+            <span className="text-xs font-bold uppercase tracking-wide">
+              TOTAL OPERATIVO ANUAL
+            </span>
             <span className="text-sm font-bold">{formatearBolivianos(totalAnual)}</span>
           </div>
         </div>
+
+        {/* Cuotas de préstamo — informativo: NO es capital de trabajo */}
+        {financiamientoConfigurado && (
+          <div className="rounded-md border border-violet-300 bg-violet-50/50 p-3 dark:border-violet-800 dark:bg-violet-950/20">
+            <div className="flex items-start gap-2 text-[11px] text-foreground/90">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-violet-600" />
+              <div className="min-w-0 flex-1">
+                <strong>
+                  Cuota anual de los préstamos: {formatearBolivianos(cuotaAnualPrestamo)}
+                </strong>{" "}
+                (capital + interés). <strong>No</strong> forma parte del capital de trabajo: la
+                deuda se paga con el flujo de cada año y ya está contemplada en el{" "}
+                <strong>Paso 7 · Financiamiento</strong> y en el flujo del Paso 9.
+                <div className="mt-2 overflow-x-auto rounded-md border border-violet-200 bg-card dark:border-violet-900">
+                  <table className="w-full text-[11px]">
+                    <thead className="border-b border-border text-muted-foreground">
+                      <tr>
+                        <th className="px-2 py-1 text-left">Préstamo</th>
+                        <th className="px-2 py-1 text-right">Monto financiado</th>
+                        <th className="px-2 py-1 text-right">Tasa · plazo</th>
+                        <th className="px-2 py-1 text-right">Cuota mensual</th>
+                        <th className="px-2 py-1 text-right">Cuota anual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-border/30">
+                        <td className="px-2 py-1">Activo fijo (base: inversiones {formatearBolivianos(inversionesFijas)})</td>
+                        <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestActivo)}</td>
+                        <td className="px-2 py-1 text-right">
+                          {((fin?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {fin?.plazoMeses ?? 0}m
+                        </td>
+                        <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualActivo)}</td>
+                        <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualActivo)}</td>
+                      </tr>
+                      <tr className="border-b border-border/30">
+                        <td className="px-2 py-1">Capital operativo (base: cap. trabajo {formatearBolivianos(baseCapitalOperativo)})</td>
+                        <td className="px-2 py-1 text-right">{formatearBolivianos(montoPrestCapital)}</td>
+                        <td className="px-2 py-1 text-right">
+                          {((cwCfg?.tasaInteresAnual ?? 0) * 100).toFixed(2)}% · {cwCfg?.plazoMeses ?? 0}m
+                        </td>
+                        <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaMensualCapital)}</td>
+                        <td className="px-2 py-1 text-right font-semibold">{formatearBolivianos(cuotaAnualCapital)}</td>
+                      </tr>
+                      <tr className="bg-secondary/40 font-semibold">
+                        <td className="px-2 py-1" colSpan={4}>TOTAL cuota anual préstamos</td>
+                        <td className="px-2 py-1 text-right">{formatearBolivianos(cuotaAnualPrestamo)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Editor de % imprevistos */}
         <div className="rounded-md border border-amber-400/60 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/20">
@@ -483,7 +492,7 @@ export default function Paso3Capital() {
                 Costo mensual de operación
               </div>
               <div className="text-base font-bold">{formatearBolivianos(totalMensual)}</div>
-              <div className="text-[10px] text-muted-foreground">= Total anual ÷ 12 meses</div>
+              <div className="text-[10px] text-muted-foreground">= Total operativo anual ÷ 12 meses</div>
             </div>
             <div className="rounded-md bg-card p-2">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -555,7 +564,9 @@ export default function Paso3Capital() {
             primeros meses.
             <br />
             <br />
-            <strong>Fórmula:</strong> (operativos + imprevistos + cuota préstamo) ÷ 12 × meses de buffer.
+            <strong>Fórmula:</strong> (operativos + imprevistos) ÷ 12 × meses de buffer. La
+            cuota del préstamo no entra acá: es financiamiento y se paga con el flujo de cada
+            año.
             <br />
             <br />
             En Bolivia, considera:

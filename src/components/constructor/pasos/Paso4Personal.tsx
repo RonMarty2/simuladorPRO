@@ -473,10 +473,10 @@ export default function Paso4Personal() {
           </p>
           <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
             <strong>⚠ No dupliques la mano de obra:</strong> si ya cargaste a un operario o
-            barista como <em>mano de obra directa por unidad</em> en el Paso 6 (Costos
+            barista como <em>mano de obra directa por unidad</em> en el Paso 5 (Costos
             directos), <strong>no lo pongas también aquí</strong> como puesto fijo. Regla:
             personal fijo (no escala con la producción) va aquí; mano de obra que escala por
-            cada unidad producida va en el Paso 6.
+            cada unidad producida va en el Paso 5.
           </p>
         </Recomendacion>
       </div>

@@ -70,7 +70,7 @@ export default function Paso7GastosOperativos() {
       <div className="space-y-3 rounded-lg border border-border bg-card p-5">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">
-            Paso 7 · Gastos administrativos y comercialización
+            Paso 6 · Gastos administrativos y comercialización
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Gastos fijos del proyecto que no escalan con cada unidad producida.
