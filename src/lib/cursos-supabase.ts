@@ -29,7 +29,32 @@ export interface Curso {
   peso_grupal?: number;
   /** Si TRUE, el estudiante puede crear su propio proyecto individual en el curso. */
   permite_proyecto_libre?: boolean;
+  /** Config del proyecto grupal del curso. */
+  grupo_habilitado?: boolean;
+  grupo_cupo_max?: number;
+  grupo_modelo?: string;
+  grupo_version?: string;
+  grupo_consigna?: string | null;
   creado_en: string;
+}
+
+/** Guarda la configuración del proyecto grupal del curso (lo define el docente). */
+export async function actualizarConfigGrupal(
+  cursoId: string,
+  cfg: {
+    grupo_habilitado: boolean;
+    grupo_cupo_max: number;
+    grupo_modelo: string;
+    grupo_version: string;
+    grupo_consigna: string | null;
+  }
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").update(cfg).eq("id", cursoId),
+    10000,
+    "guardando la configuración del proyecto grupal"
+  );
+  if (error) throw error;
 }
 
 /** Habilita/deshabilita que los estudiantes creen su propio proyecto en el curso. */

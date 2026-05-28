@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, FolderOpen, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Users, FolderOpen, LogIn, LogOut, Loader2, Plus } from "lucide-react";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import { obtenerPromedioEstudiante } from "@/lib/proyecto-supabase";
 import { calcularNotaFinal } from "@/lib/notas";
@@ -10,9 +10,12 @@ import {
   obtenerMiGrupo,
   unirseAGrupo,
   salirDeGrupo,
+  crearGrupoEstudiante,
   type GrupoConMiembros,
   type Grupo,
 } from "@/lib/grupos-supabase";
+import type { ModeloIngreso } from "@/lib/proyecto-factory";
+import type { VersionProyecto } from "@/types/proyecto";
 
 export default function GruposEstudiante({
   curso,
@@ -27,6 +30,7 @@ export default function GruposEstudiante({
   const [promedioInd, setPromedioInd] = useState<number | null>(null);
   const [accion, setAccion] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nombreNuevo, setNombreNuevo] = useState("");
 
   const recargar = async () => {
     try {
@@ -75,22 +79,44 @@ export default function GruposEstudiante({
     }
   };
 
+  const crearMiGrupo = async () => {
+    if (!nombreNuevo.trim()) return;
+    setAccion(true);
+    setError(null);
+    try {
+      await crearGrupoEstudiante({
+        cursoId: curso.id,
+        creadorId: estudianteId,
+        nombre: nombreNuevo.trim(),
+        cupoMax: curso.grupo_cupo_max ?? 4,
+        version: (curso.grupo_version as VersionProyecto) ?? "v2",
+        modeloIngreso: (curso.grupo_modelo as ModeloIngreso) ?? "unidades",
+      });
+      setNombreNuevo("");
+      await recargar();
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setAccion(false);
+    }
+  };
+
   const abrirProyecto = (proyectoId: string | null) => {
     if (!proyectoId) return;
     guardarProyectoActivo(estudianteId, proyectoId);
     navigate("/construir");
   };
 
-  if (grupos === null) {
-    return <div className="text-[11px] text-muted-foreground">Cargando grupos…</div>;
-  }
-
-  if (grupos.length === 0) {
+  if (!curso.grupo_habilitado) {
     return (
-      <div className="text-[11px] text-muted-foreground">
-        Este curso todavía no tiene proyectos grupales.
+      <div className="rounded-md border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">
+        Tu docente todavía no habilitó el proyecto grupal en este curso.
       </div>
     );
+  }
+
+  if (grupos === null) {
+    return <div className="text-[11px] text-muted-foreground">Cargando grupos…</div>;
   }
 
   const miGrupoDetalle = miGrupo ? grupos.find((g) => g.id === miGrupo.id) ?? null : null;
@@ -164,10 +190,41 @@ export default function GruposEstudiante({
           </div>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
+          {curso.grupo_consigna && (
+            <div className="rounded-md border border-sky-300 bg-sky-50/60 p-2 text-[11px] dark:border-sky-800 dark:bg-sky-950/20">
+              <strong>Consigna del docente:</strong> {curso.grupo_consigna}
+            </div>
+          )}
           <div className="text-[11px] text-muted-foreground">
-            Unite a un grupo para trabajar el proyecto grupal (solo podés estar en uno).
+            Podés <strong>crear tu propio grupo</strong> o unirte a uno existente (solo uno
+            por curso). Cupo máximo: <strong>{curso.grupo_cupo_max ?? 4}</strong> integrantes.
           </div>
+
+          {/* Crear grupo */}
+          <div className="flex flex-wrap gap-2 rounded-md border border-border bg-card p-2">
+            <input
+              type="text"
+              value={nombreNuevo}
+              onChange={(e) => setNombreNuevo(e.target.value)}
+              placeholder="Nombre de tu grupo (ej: Los emprendedores)"
+              className="min-w-[200px] flex-1 rounded border border-input bg-background px-2 py-1.5 text-xs"
+            />
+            <button
+              onClick={crearMiGrupo}
+              disabled={accion || !nombreNuevo.trim()}
+              className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {accion ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+              Crear mi grupo
+            </button>
+          </div>
+
+          {grupos.length > 0 && (
+            <div className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              Grupos del curso
+            </div>
+          )}
           {grupos.map((g) => {
             const lleno = g.miembros.length >= g.cupo_max;
             return (

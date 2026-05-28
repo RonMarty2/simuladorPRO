@@ -46,19 +46,23 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
 }
 
 /**
- * El docente crea un grupo con su proyecto COMPARTIDO predefinido.
- * 1) inserta el grupo, 2) crea el proyecto (grupo_id, tipo=proyecto_grupal,
- * dueño = docente), 3) enlaza proyecto_id en el grupo.
+ * Un ESTUDIANTE crea un grupo y se vuelve el primer integrante. El formato del
+ * proyecto (modelo + versión + cupo) lo definió el docente en el curso.
+ * 1) inserta el grupo, 2) crea el proyecto compartido (dueño = estudiante
+ * creador; los miembros lo editan vía RLS), 3) se une al grupo.
+ *
+ * No se actualiza grupos.proyecto_id (el estudiante no tiene UPDATE sobre
+ * grupos): el proyecto del grupo se resuelve por proyectos.grupo_id.
  */
-export async function crearGrupo(params: {
+export async function crearGrupoEstudiante(params: {
   cursoId: string;
-  docenteId: string;
+  creadorId: string;
   nombre: string;
   cupoMax: number;
-  version?: VersionProyecto;
-  modeloIngreso?: ModeloIngreso;
-}): Promise<Grupo> {
-  // 1. Grupo
+  version: VersionProyecto;
+  modeloIngreso: ModeloIngreso;
+}): Promise<void> {
+  // 1. Grupo (el estudiante no setea cupo: viene del curso)
   const { data: grupo, error: e1 } = await conTimeout(
     supabase
       .from("grupos")
@@ -73,30 +77,28 @@ export async function crearGrupo(params: {
     "creando el grupo"
   );
   if (e1) throw e1;
+  const grupoId = (grupo as Grupo).id;
 
-  // 2. Proyecto compartido (dueño = docente; los miembros lo editan vía RLS)
+  // 2. Proyecto compartido (dueño = creador; tipo proyecto_grupal)
   const proyecto: Proyecto = crearProyectoVacio({
-    estudiante_id: params.docenteId,
+    estudiante_id: params.creadorId,
     nombre: `${params.nombre} · proyecto grupal`,
     curso_id: params.cursoId,
-    version: params.version ?? "v2",
-    modeloIngreso: params.modeloIngreso ?? "unidades",
+    version: params.version,
+    modeloIngreso: params.modeloIngreso,
   });
   proyecto.tipo = "proyecto_grupal";
-  proyecto.grupo_id = (grupo as Grupo).id;
+  proyecto.grupo_id = grupoId;
   await insertarProyecto(proyecto);
 
-  // 3. Enlazar el proyecto al grupo
+  // 3. El creador se une al grupo
   const { error: e3 } = await supabase
-    .from("grupos")
-    .update({ proyecto_id: proyecto.id })
-    .eq("id", (grupo as Grupo).id);
+    .from("grupo_miembros")
+    .insert({ grupo_id: grupoId, estudiante_id: params.creadorId });
   if (e3) throw e3;
-
-  return { ...(grupo as Grupo), proyecto_id: proyecto.id };
 }
 
-/** Lista los grupos de un curso con sus integrantes (vista del docente). */
+/** Lista los grupos de un curso con integrantes y el id de su proyecto. */
 export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiembros[]> {
   const { data: grupos, error } = await conTimeout(
     supabase.from("grupos").select("*").eq("curso_id", cursoId).order("creado_en"),
@@ -107,14 +109,20 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
   if (!grupos || grupos.length === 0) return [];
 
   const ids = grupos.map((g: any) => g.id);
-  const { data: miembros, error: e2 } = await supabase
-    .from("grupo_miembros")
-    .select("grupo_id, estudiante_id, perfiles(nombre, apellido, email)")
-    .in("grupo_id", ids);
+  const [{ data: miembros, error: e2 }, { data: proys, error: e3 }] = await Promise.all([
+    supabase
+      .from("grupo_miembros")
+      .select("grupo_id, estudiante_id, perfiles(nombre, apellido, email)")
+      .in("grupo_id", ids),
+    supabase.from("proyectos").select("id, grupo_id").in("grupo_id", ids),
+  ]);
   if (e2) throw e2;
+  if (e3) throw e3;
 
   return (grupos as Grupo[]).map((g) => ({
     ...g,
+    // El proyecto del grupo se resuelve por grupo_id (más confiable que proyecto_id).
+    proyecto_id: (proys ?? []).find((p: any) => p.grupo_id === g.id)?.id ?? g.proyecto_id ?? null,
     miembros: (miembros ?? [])
       .filter((m: any) => m.grupo_id === g.id)
       .map((m: any) => ({

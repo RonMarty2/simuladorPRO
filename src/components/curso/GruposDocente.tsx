@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, Users, FolderOpen, Loader2, Save } from "lucide-react";
+import { Trash2, Users, FolderOpen, Loader2, Save } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
-import { actualizarPesosCurso, type Curso } from "@/lib/cursos-supabase";
+import { actualizarPesosCurso, actualizarConfigGrupal, type Curso } from "@/lib/cursos-supabase";
 import {
-  crearGrupo,
   listarGruposDeCurso,
   eliminarGrupo,
   calificarGrupo,
@@ -20,12 +19,14 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Form crear grupo
-  const [nombre, setNombre] = useState("");
-  const [cupo, setCupo] = useState(4);
-  const [modelo, setModelo] = useState<ModeloIngreso>("unidades");
-  const [version, setVersion] = useState<VersionProyecto>("v2");
-  const [creando, setCreando] = useState(false);
+  // Config del proyecto grupal (la define el docente; los estudiantes crean los grupos)
+  const [habilitado, setHabilitado] = useState(curso.grupo_habilitado ?? false);
+  const [cupo, setCupo] = useState(curso.grupo_cupo_max ?? 4);
+  const [modelo, setModelo] = useState<ModeloIngreso>((curso.grupo_modelo as ModeloIngreso) ?? "unidades");
+  const [version, setVersion] = useState<VersionProyecto>((curso.grupo_version as VersionProyecto) ?? "v2");
+  const [consigna, setConsigna] = useState(curso.grupo_consigna ?? "");
+  const [guardandoCfg, setGuardandoCfg] = useState(false);
+  const [cfgOk, setCfgOk] = useState(false);
 
   // Pesos
   const [pInd, setPInd] = useState(Math.round((curso.peso_individual ?? 0.5) * 100));
@@ -41,25 +42,24 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curso.id]);
 
-  const crear = async () => {
-    if (!nombre.trim()) return;
-    setCreando(true);
+  const guardarConfig = async () => {
+    setGuardandoCfg(true);
+    setCfgOk(false);
     setError(null);
     try {
-      await crearGrupo({
-        cursoId: curso.id,
-        docenteId: user.id,
-        nombre: nombre.trim(),
-        cupoMax: Math.max(1, cupo),
-        version,
-        modeloIngreso: modelo,
+      await actualizarConfigGrupal(curso.id, {
+        grupo_habilitado: habilitado,
+        grupo_cupo_max: Math.max(1, cupo),
+        grupo_modelo: modelo,
+        grupo_version: version,
+        grupo_consigna: consigna.trim() || null,
       });
-      setNombre("");
-      await recargar();
+      setCfgOk(true);
+      setTimeout(() => setCfgOk(false), 1500);
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
-      setCreando(false);
+      setGuardandoCfg(false);
     }
   };
 
@@ -140,29 +140,35 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
         </div>
       </div>
 
-      {/* Crear grupo */}
+      {/* Configurar la actividad grupal del curso */}
       <div className="rounded-md border border-border bg-card p-3">
-        <div className="text-xs font-semibold uppercase tracking-wide">Crear grupo</div>
-        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={habilitado}
+            onChange={(e) => setHabilitado(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-xs">
+            <strong>Habilitar el proyecto grupal en este curso</strong>
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              Si está habilitado, los estudiantes <strong>crean sus propios grupos</strong> con
+              el formato y cupo que definas acá. Vos no creás los grupos: los arman ellos.
+            </span>
+          </span>
+        </label>
+
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-[11px]">
-            Nombre del grupo
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Grupo 1"
-              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
-            />
-          </label>
-          <label className="text-[11px]">
-            Cupo máximo
+            Cupo máx. por grupo
             <input
               type="number"
               min={1}
               max={50}
               value={cupo}
               onChange={(e) => setCupo(Number(e.target.value) || 1)}
-              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+              disabled={!habilitado}
+              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs disabled:opacity-60"
             />
           </label>
           <label className="text-[11px]">
@@ -170,7 +176,8 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
             <select
               value={modelo}
               onChange={(e) => setModelo(e.target.value as ModeloIngreso)}
-              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+              disabled={!habilitado}
+              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs disabled:opacity-60"
             >
               <option value="unidades">Unidades × precio</option>
               <option value="suscripcion">Suscripción</option>
@@ -183,25 +190,35 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
             <select
               value={version}
               onChange={(e) => setVersion(e.target.value as VersionProyecto)}
-              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+              disabled={!habilitado}
+              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs disabled:opacity-60"
             >
               <option value="v2">Extendido (V2)</option>
               <option value="v1">Clásico (V1)</option>
             </select>
           </label>
+          <label className="text-[11px] sm:col-span-2 lg:col-span-1">
+            Consigna / tema (opcional)
+            <input
+              type="text"
+              value={consigna}
+              onChange={(e) => setConsigna(e.target.value)}
+              disabled={!habilitado}
+              placeholder="Ej: cafetería de barrio…"
+              className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs disabled:opacity-60"
+            />
+          </label>
         </div>
+
         <button
-          onClick={crear}
-          disabled={creando || !nombre.trim()}
+          onClick={guardarConfig}
+          disabled={guardandoCfg}
           className="mt-2 flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {creando ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-          Crear grupo + proyecto compartido
+          {guardandoCfg ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+          Guardar configuración
         </button>
-        <p className="mt-1 text-[10px] text-muted-foreground">
-          Se crea un proyecto compartido vacío. Podés abrirlo para dejar la consigna armada
-          (ej. completar el Paso 1 y 2); los estudiantes del grupo lo seguirán llenando.
-        </p>
+        {cfgOk && <span className="ml-2 text-[11px] text-emerald-600">Guardado ✓</span>}
       </div>
 
       {error && (
@@ -214,7 +231,11 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
       {grupos === null ? (
         <div className="text-xs text-muted-foreground">Cargando grupos…</div>
       ) : grupos.length === 0 ? (
-        <div className="text-xs text-muted-foreground">Aún no creaste grupos en este curso.</div>
+        <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+          {habilitado
+            ? "Los estudiantes aún no crearon grupos. Cuando lo hagan, los verás acá."
+            : "El proyecto grupal está deshabilitado. Activalo arriba para que los estudiantes puedan armar grupos."}
+        </div>
       ) : (
         <div className="space-y-2">
           {grupos.map((g) => (
