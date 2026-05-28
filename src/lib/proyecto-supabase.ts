@@ -116,10 +116,43 @@ export async function listarMisProyectos(estudianteId: string): Promise<Proyecto
   return (data ?? []).map(deFilaSupabase);
 }
 
+/**
+ * Lista los proyectos GRUPALES que el estudiante puede editar (uno por cada
+ * grupo al que pertenece). El proyecto compartido es propiedad del docente, por
+ * eso no aparece en `listarMisProyectos`; las RLS de miembro permiten leerlo.
+ */
+export async function listarProyectosGrupales(estudianteId: string): Promise<Proyecto[]> {
+  const { data: mm, error: e1 } = await supabase
+    .from("grupo_miembros")
+    .select("grupo_id")
+    .eq("estudiante_id", estudianteId);
+  if (e1) throw e1;
+  const gids = (mm ?? []).map((m: any) => m.grupo_id);
+  if (gids.length === 0) return [];
+  const { data, error } = await supabase.from("proyectos").select("*").in("grupo_id", gids);
+  if (error) throw error;
+  return (data ?? []).map(deFilaSupabase);
+}
+
 /** Upsert: inserta si no existe, actualiza si ya existe. */
 export async function guardarProyecto(p: Proyecto): Promise<void> {
   const fila = aFilaSupabase(p);
+  // El proyecto GRUPAL lo crea el docente (insertarProyecto). Los miembros solo
+  // tienen permiso de UPDATE (no INSERT), así que para no romper su autoguardado
+  // acá siempre EDITAMOS (update), nunca upsert.
+  if (p.tipo === "proyecto_grupal") {
+    const { error } = await supabase.from("proyectos").update(fila).eq("id", p.id);
+    if (error) throw error;
+    return;
+  }
   const { error } = await supabase.from("proyectos").upsert(fila, { onConflict: "id" });
+  if (error) throw error;
+}
+
+/** Inserta un proyecto nuevo (usado al crear el proyecto compartido de un grupo). */
+export async function insertarProyecto(p: Proyecto): Promise<void> {
+  const fila = aFilaSupabase(p);
+  const { error } = await supabase.from("proyectos").insert(fila);
   if (error) throw error;
 }
 

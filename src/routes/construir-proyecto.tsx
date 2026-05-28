@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
-import { eliminarProyecto, listarMisProyectos } from "@/lib/proyecto-supabase";
+import { eliminarProyecto, listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
 import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
 import BarraProgreso from "@/components/constructor/BarraProgreso";
@@ -93,8 +93,11 @@ export default function ConstruirProyecto() {
 
   useEffect(() => {
     if (!user) return;
-    listarMisProyectos(user.id)
-      .then((proyectos) => {
+    Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
+      .then(([mios, grupales]) => {
+        // Evita duplicar el proyecto grupal si el usuario es el dueño (docente).
+        const ids = new Set(mios.map((p) => p.id));
+        const proyectos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
         setTodosProyectos(proyectos);
         if (proyectos.length > 0) {
           // Elegir el proyecto activo: el guardado en localStorage (si existe

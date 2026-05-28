@@ -10,6 +10,7 @@ import {
 } from "@/lib/cursos-supabase";
 import { listarMisProyectos } from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
+import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import type { Proyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +149,9 @@ export default function DashboardEstudiante() {
                 </div>
               </div>
 
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Proyecto individual
+              </div>
               {delCurso.length === 0 ? (
                 <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
                   Aún no tienes proyectos en este curso.
@@ -159,6 +163,12 @@ export default function DashboardEstudiante() {
                   ))}
                 </div>
               )}
+
+              {/* Proyecto grupal del curso */}
+              <div className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Proyecto grupal
+              </div>
+              {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
             </section>
           );
         })}

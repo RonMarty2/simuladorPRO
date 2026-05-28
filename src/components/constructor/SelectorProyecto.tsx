@@ -83,7 +83,8 @@ export default function SelectorProyecto({ proyectos }: Props) {
       !p.tipo ||
       p.tipo === "libre" ||
       p.tipo === "caso_curso" ||
-      p.tipo === "entrega_estudiante"
+      p.tipo === "entrega_estudiante" ||
+      p.tipo === "proyecto_grupal"
     );
   });
 
@@ -164,6 +165,8 @@ export default function SelectorProyecto({ proyectos }: Props) {
                           ? "🎓 caso"
                           : p.tipo === "entrega_estudiante"
                           ? "📝 entrega"
+                          : p.tipo === "proyecto_grupal"
+                          ? "🤝 grupal"
                           : "📁 libre"}
                       </span>
                     </div>

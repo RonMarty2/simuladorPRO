@@ -14,6 +14,7 @@ import {
 } from "@/lib/cursos-supabase";
 import RankingCurso from "@/components/docente/RankingCurso";
 import EntregasCurso from "@/components/docente/EntregasCurso";
+import GruposDocente from "@/components/curso/GruposDocente";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
 
@@ -249,7 +250,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas">("ranking");
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos">("ranking");
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -421,9 +422,22 @@ function CursoCard({
             >
               📥 Entregas
             </button>
+            <button
+              onClick={() => setVista("grupos")}
+              className={cn(
+                "rounded px-2.5 py-1 transition",
+                vista === "grupos"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/70"
+              )}
+            >
+              🤝 Grupos
+            </button>
           </div>
 
           {vista === "entregas" && <EntregasCurso cursoId={curso.id} />}
+
+          {vista === "grupos" && <GruposDocente curso={curso} />}
 
           {vista === "ranking" && (
             <RankingCurso

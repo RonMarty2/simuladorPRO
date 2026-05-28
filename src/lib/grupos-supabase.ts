@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { guardarProyecto } from "./proyecto-supabase";
+import { insertarProyecto } from "./proyecto-supabase";
 import { crearProyectoVacio, type ModeloIngreso } from "./proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
@@ -84,7 +84,7 @@ export async function crearGrupo(params: {
   });
   proyecto.tipo = "proyecto_grupal";
   proyecto.grupo_id = (grupo as Grupo).id;
-  await guardarProyecto(proyecto);
+  await insertarProyecto(proyecto);
 
   // 3. Enlazar el proyecto al grupo
   const { error: e3 } = await supabase
