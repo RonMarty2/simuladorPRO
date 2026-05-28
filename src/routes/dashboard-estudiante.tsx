@@ -21,6 +21,11 @@ const ESTADO_LABEL: Record<string, { txt: string; clase: string }> = {
   finalizado: { txt: "Finalizado", clase: "bg-secondary text-muted-foreground" },
 };
 
+// Por ahora los estudiantes NO crean proyectos libres (futuro: estudiantes de
+// pago). Reciben su proyecto vía caso del curso o grupo. Cambiar a true cuando
+// se habilite la creación libre para alumnos.
+const PUEDE_CREAR_LIBRE = false;
+
 const MODELO_LABEL: Record<string, string> = {
   unidades: "Unidades",
   suscripcion: "Suscripción",
@@ -109,13 +114,15 @@ export default function DashboardEstudiante() {
             Tus proyectos, organizados por curso. Haz clic en uno para seguir trabajándolo.
           </p>
         </div>
-        <button
-          onClick={() => nuevo()}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo proyecto
-        </button>
+        {PUEDE_CREAR_LIBRE && (
+          <button
+            onClick={() => nuevo()}
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo proyecto
+          </button>
+        )}
       </div>
 
       {cargando && <div className="text-sm text-muted-foreground">Cargando…</div>}
@@ -138,13 +145,15 @@ export default function DashboardEstudiante() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => nuevo(curso.id)}
-                    className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary transition hover:bg-primary/10"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Nuevo aquí
-                  </button>
+                  {PUEDE_CREAR_LIBRE && (
+                    <button
+                      onClick={() => nuevo(curso.id)}
+                      className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary transition hover:bg-primary/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Nuevo aquí
+                    </button>
+                  )}
                   <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
                 </div>
               </div>
@@ -154,7 +163,13 @@ export default function DashboardEstudiante() {
               </div>
               {delCurso.length === 0 ? (
                 <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                  Aún no tienes proyectos en este curso.
+                  Aún no tienes un proyecto individual en este curso.{" "}
+                  <button
+                    onClick={() => navigate("/construir")}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Tomar el proyecto del curso
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -190,8 +205,8 @@ export default function DashboardEstudiante() {
 
       {!cargando && proyectos.length === 0 && inscripciones.length === 0 && (
         <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
-          Aún no tienes proyectos ni cursos. Crea tu primer proyecto con "Nuevo proyecto" o
-          inscríbete a un curso con el código de tu docente.
+          Todavía no estás en ningún curso. Inscríbete con el{" "}
+          <strong>código de 6 letras</strong> que te da tu docente para empezar a trabajar.
         </div>
       )}
 

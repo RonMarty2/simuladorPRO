@@ -82,14 +82,26 @@ export default function EmpezarProyecto() {
         </div>
       )}
 
-      {/* Proyecto libre */}
-      <FormularioProyectoLibre
-        userId={user.id}
-        onCreado={() => {
-          // El proyecto ya está en el store después de inicializar/guardar.
-        }}
-        inicializar={inicializar}
-      />
+      {/* Proyecto libre — por ahora SOLO docentes. El estudiante recibe su
+          proyecto vía caso del curso (arriba) o grupo (desde su panel). */}
+      {perfil?.rol === "docente" ? (
+        <FormularioProyectoLibre
+          userId={user.id}
+          onCreado={() => {
+            // El proyecto ya está en el store después de inicializar/guardar.
+          }}
+          inicializar={inicializar}
+        />
+      ) : (
+        !cargandoCasos &&
+        casosDisponibles.length === 0 && (
+          <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-center text-xs text-muted-foreground">
+            Tu docente todavía no publicó un proyecto individual para tu curso. Mientras tanto,
+            podés trabajar el <strong>proyecto grupal</strong> desde tu panel (si tu curso tiene
+            grupos). Cuando el docente publique un caso, aparecerá acá.
+          </div>
+        )
+      )}
     </div>
   );
 }

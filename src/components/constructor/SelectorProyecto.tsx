@@ -53,6 +53,10 @@ export default function SelectorProyecto({ proyectos }: Props) {
   const proyectoActual = useProyectoStore((s) => s.proyecto);
   const cargar = useProyectoStore((s) => s.cargar);
   const user = useAuthStore((s) => s.user);
+  // Crear proyectos LIBRES es por ahora solo para docentes. (A futuro se abrirá
+  // para estudiantes de pago.) El estudiante recibe su proyecto vía caso del
+  // curso o grupo.
+  const puedeCrearLibre = useAuthStore((s) => s.perfil?.rol === "docente");
 
   const [abierto, setAbierto] = useState(false);
   const [creando, setCreando] = useState(false);
@@ -61,6 +65,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
   // Si llegamos con intención de crear desde el panel (con o sin curso
   // preseleccionado), abrir directamente la ventana de crear.
   useEffect(() => {
+    if (!puedeCrearLibre) return;
     try {
       const hint = localStorage.getItem("simulador.nuevoProyecto");
       if (hint !== null) {
@@ -69,7 +74,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
         localStorage.removeItem("simulador.nuevoProyecto");
       }
     } catch {}
-  }, []);
+  }, [puedeCrearLibre]);
 
   if (!user) return null;
 
@@ -121,15 +126,17 @@ export default function SelectorProyecto({ proyectos }: Props) {
         )}
       </button>
 
-      {/* Botón crear nuevo */}
-      <button
-        type="button"
-        onClick={() => setCreando(true)}
-        className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
-      >
-        <Plus className="h-3 w-3" />
-        Nuevo proyecto
-      </button>
+      {/* Botón crear nuevo — solo docentes por ahora */}
+      {puedeCrearLibre && (
+        <button
+          type="button"
+          onClick={() => setCreando(true)}
+          className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+        >
+          <Plus className="h-3 w-3" />
+          Nuevo proyecto
+        </button>
+      )}
 
       {/* Menú desplegable de proyectos */}
       {abierto && (
