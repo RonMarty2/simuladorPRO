@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/stores/auth-store";
 import BotonGoogle from "@/components/auth/BotonGoogle";
+import CreditoAutor from "@/components/layout/CreditoAutor";
 
 const esquema = z.object({
   nombre: z.string().min(1, "Requerido"),
@@ -57,7 +58,8 @@ export default function Registro() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
+      <div className="flex w-full max-w-md flex-col">
+      <div className="w-full rounded-lg border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary" />
           <h1 className="text-lg font-semibold tracking-tight text-card-foreground">
@@ -186,6 +188,8 @@ export default function Registro() {
             Inicia sesión
           </Link>
         </p>
+      </div>
+      <CreditoAutor />
       </div>
     </div>
   );

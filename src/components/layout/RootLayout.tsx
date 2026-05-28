@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
+import CreditoAutor from "@/components/layout/CreditoAutor";
 
 const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
@@ -116,8 +117,11 @@ export default function RootLayout() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Barra lateral — escritorio */}
-        <aside className="hidden w-56 shrink-0 border-r border-border bg-secondary/30 p-3 md:block">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-secondary/30 p-3 md:flex">
           <nav className="flex flex-col gap-1">{navItems()}</nav>
+          <div className="mt-auto pt-4">
+            <CreditoAutor variante="sutil" />
+          </div>
         </aside>
 
         {/* Menú deslizable — móvil */}
@@ -153,6 +157,9 @@ export default function RootLayout() {
                   </button>
                 )}
               </nav>
+              <div className="mt-auto pt-4">
+                <CreditoAutor variante="sutil" />
+              </div>
             </aside>
           </div>
         )}
