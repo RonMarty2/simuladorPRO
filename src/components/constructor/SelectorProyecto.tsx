@@ -314,8 +314,8 @@ function ModalNuevoProyecto({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-card p-5 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
+      <div className="my-auto w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-card p-5 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold">Crear proyecto nuevo</h2>
           <button
