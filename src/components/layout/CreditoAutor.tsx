@@ -7,6 +7,7 @@ interface Props {
 }
 
 export default function CreditoAutor({ variante = "publico" }: Props) {
+  const anio = new Date().getFullYear();
   if (variante === "sutil") {
     return (
       <p className="text-center text-[10px] leading-tight text-muted-foreground/60">
@@ -26,7 +27,7 @@ export default function CreditoAutor({ variante = "publico" }: Props) {
         Ronald Martínez Jimenes
       </span>
       {" · "}
-      <span className="text-muted-foreground/60">© 2026</span>
+      <span className="text-muted-foreground/60">© {anio}</span>
     </p>
   );
 }

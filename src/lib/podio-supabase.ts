@@ -163,8 +163,8 @@ export async function obtenerPodioCurso(
       .limit(15);
     for (const e of (misEntregas ?? []) as any[]) {
       if (e.estado === "pendiente") continue; // se ignora, no rompe ni suma
-      if (e.estado === "reprobada") break;
-      miRacha++;
+      if (e.estado === "aprobada") miRacha++;
+      else break; // reprobada (o cualquier otro estado inesperado) corta la racha
     }
   }
 

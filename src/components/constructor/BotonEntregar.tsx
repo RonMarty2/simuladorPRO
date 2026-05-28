@@ -7,7 +7,6 @@ import {
   listarMisEntregas,
   type IndicadoresEntrega,
 } from "@/lib/proyecto-supabase";
-import { supabase } from "@/lib/supabase";
 import type { Entrega } from "@/types/proyecto";
 
 interface Props {
@@ -69,21 +68,10 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
     setEntregando(true);
     setMensaje(null);
     try {
-      // Cargar el caso de referencia solo si la entrega proviene de un caso
-      // del curso. Los proyectos libres y los grupales no tienen referencia.
-      if (proyecto.caso_origen_id) {
-        await supabase
-          .from("proyectos")
-          .select("datos")
-          .eq("id", proyecto.caso_origen_id)
-          .single();
-      }
       // Por ahora la sugerencia automática solo aplica reglas duras (VAN>0,
       // TIR>WACC). En el futuro acá podríamos comparar contra el caso del
-      // docente cuando haya referencia.
-      const referencia = null;
-
-      const entrega = await entregarProyecto(proyecto, indicadores, referencia, paso ?? null);
+      // docente cuando exista referencia para entrega_estudiante.
+      const entrega = await entregarProyecto(proyecto, indicadores, null, paso ?? null);
       const nuevaLista = [entrega, ...entregas];
       setEntregas(nuevaLista);
       setMensaje({

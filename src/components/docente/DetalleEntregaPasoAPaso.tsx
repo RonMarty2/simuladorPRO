@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, Fragment } from "react";
 import type { Proyecto, ItemInversion } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
 
@@ -259,15 +259,15 @@ function Paso2({ p }: { p: Proyecto }) {
           </thead>
           <tbody>
             {p.productos.map((prod) => (
-              <>
-                <tr key={prod.id + "-cant"}>
+              <Fragment key={prod.id}>
+                <tr>
                   <Td bold>{prod.nombre}</Td>
                   <Td>{prod.unidadMedida}</Td>
                   {prod.cantidades.map((c, i) => (
                     <Td key={i} alinear="right">{c.toLocaleString("es-BO")}</Td>
                   ))}
                 </tr>
-                <tr key={prod.id + "-prec"}>
+                <tr>
                   <Td>
                     <span className="text-[10px] italic text-muted-foreground">↳ precio</span>
                   </Td>
@@ -276,7 +276,7 @@ function Paso2({ p }: { p: Proyecto }) {
                     <Td key={i} alinear="right">{formatearBolivianos(pr)}</Td>
                   ))}
                 </tr>
-              </>
+              </Fragment>
             ))}
           </tbody>
         </TablaWrap>
@@ -333,13 +333,10 @@ function Paso3({ p }: { p: Proyecto }) {
     { key: "mobiliario", titulo: "Mobiliario y equipo de oficina" },
     { key: "activoDiferido", titulo: "Activo diferido" },
   ];
-  const totalGeneral = useMemo(
-    () =>
-      cats.reduce(
-        (acc, c) => acc + (p.inversiones?.[c.key] ?? []).reduce((s: number, i: ItemInversion) => s + (i.costoTotal ?? 0), 0),
-        0
-      ),
-    [p.inversiones] // eslint-disable-line react-hooks/exhaustive-deps
+  const totalGeneral = cats.reduce(
+    (acc, c) =>
+      acc + (p.inversiones?.[c.key] ?? []).reduce((s: number, i: ItemInversion) => s + (i.costoTotal ?? 0), 0),
+    0
   );
   const algunaCategoria = cats.some((c) => (p.inversiones?.[c.key] ?? []).length > 0);
   if (!algunaCategoria) return <VacioMsg msg="No cargó ninguna inversión." />;
@@ -400,7 +397,6 @@ function Paso3({ p }: { p: Proyecto }) {
 function Paso4({ p }: { p: Proyecto }) {
   if (!p.personal || p.personal.length === 0) return <VacioMsg msg="No cargó personal." />;
   const totalMensual = p.personal.reduce((s, x) => s + (x.cantidad * x.sueldoMensual), 0);
-  const totalAnual = totalMensual * 12 + totalMensual * 2; // 12 + aguinaldo (1 mes) + indemnización (~1 mes)... no exacto, dejamos solo *12
   const totalAnualBase = totalMensual * 12;
   const ov = p.aportesPatronalesOverride;
   return (
@@ -453,7 +449,6 @@ function Paso4({ p }: { p: Proyecto }) {
           </GridCampos>
         </div>
       )}
-      <span className="hidden">{totalAnual}</span>
     </div>
   );
 }

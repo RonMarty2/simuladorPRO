@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Award, Download, Eye, Medal, RefreshCw, Trophy } from "lucide-react";
 import {
   descargarCSV,
@@ -153,9 +153,8 @@ export default function RankingCurso({ cursoId, curso }: Props) {
           </thead>
           <tbody>
             {ordenado.map((f, idx) => (
-              <>
+              <Fragment key={f.estudiante_id}>
               <tr
-                key={f.estudiante_id}
                 className={cn(
                   "border-t border-border transition",
                   expandido === f.estudiante_id ? "bg-secondary/40" : "hover:bg-secondary/20"
@@ -256,7 +255,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                   </td>
                 </tr>
               )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>

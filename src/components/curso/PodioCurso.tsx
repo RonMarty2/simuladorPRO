@@ -65,8 +65,31 @@ export default function PodioCurso({ cursoId, cursoNombre, miEstudianteId }: Pro
 
   if (!data) return null;
 
-  // Si NO hay suficientes datos para ninguna sección, no mostramos nada.
-  if (!mostrarIndividual && !mostrarGrupal) return null;
+  // Si NO hay suficientes datos para ninguna sección:
+  //   - Estudiante (miEstudianteId !== null): silencio total para no mostrar
+  //     un podio vacío que desmotive.
+  //   - Docente (miEstudianteId === null): mensaje claro para que sepa que la
+  //     pestaña no está rota, solo le faltan calificaciones.
+  if (!mostrarIndividual && !mostrarGrupal) {
+    if (miEstudianteId !== null) return null;
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center">
+        <div className="mx-auto mb-2 text-3xl">🏆</div>
+        <h3 className="text-sm font-semibold">Aún no se puede armar el podio</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Se necesitan al menos <strong>3 estudiantes con nota</strong> (individuales) o{" "}
+          <strong>2 grupos calificados</strong> para mostrar el ranking.
+        </p>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Actualmente: {data.totalEstudiantesCalificados} estudiante
+          {data.totalEstudiantesCalificados === 1 ? "" : "s"} y{" "}
+          {data.totalGruposCalificados} grupo
+          {data.totalGruposCalificados === 1 ? "" : "s"} calificado
+          {data.totalGruposCalificados === 1 ? "" : "s"}.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
