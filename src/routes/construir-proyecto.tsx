@@ -263,9 +263,9 @@ function EntregarPasoActual({ pasoActual }: { pasoActual: number }) {
   const proyecto = useProyectoStore((s) => s.proyecto);
   const calc = useMemo(() => (proyecto ? construirFlujoCaja(proyecto) : null), [proyecto]);
   if (!proyecto || !calc) return null;
-  // Las plantillas del docente no se entregan (las propias BotonEntregar igual
-  // lo filtra, pero evitamos hasta computar para no contaminar visualmente).
-  if (proyecto.tipo === "caso_curso") return null;
+  // Solo se entregan proyectos del alumno (libre y grupal). El "caso del
+  // curso" (plantilla del docente / copia del alumno) no se entrega.
+  if (proyecto.tipo !== "libre" && proyecto.tipo !== "proyecto_grupal") return null;
   return (
     <BotonEntregar
       paso={pasoActual}

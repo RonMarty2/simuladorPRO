@@ -56,9 +56,10 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
 
   if (!proyecto || !perfil) return null;
   if (perfil.rol !== "estudiante") return null;
-  // Tipos del proyecto que el alumno puede entregar (los caso_curso son
-  // plantillas del docente y no se entregan).
-  const tiposEntregables = ["entrega_estudiante", "proyecto_grupal", "libre"];
+  // Solo se entregan los proyectos propios del alumno: el INDIVIDUAL libre y
+  // el GRUPAL. El "caso del curso" (entrega_estudiante / caso_curso) es la
+  // plantilla / ejemplo del docente y no se entrega para nota.
+  const tiposEntregables = ["proyecto_grupal", "libre"];
   if (!tiposEntregables.includes(proyecto.tipo ?? "libre")) return null;
   // Sin curso asignado no se puede entregar (la función backend lo valida).
   if (!proyecto.curso_id) return null;
