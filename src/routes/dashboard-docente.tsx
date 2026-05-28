@@ -15,6 +15,7 @@ import {
 import RankingCurso from "@/components/docente/RankingCurso";
 import EntregasCurso from "@/components/docente/EntregasCurso";
 import GruposDocente from "@/components/curso/GruposDocente";
+import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
 
@@ -171,8 +172,62 @@ function FormCrearCurso({
             <option value="trimestral">Trimestral (20 turnos)</option>
             <option value="semestral">Semestral (10 turnos)</option>
           </select>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Cada <strong>turno</strong> = un período del proyecto. Mensual = 60 turnos en 5
+            años (más decisiones y detalle); Semestral = 10 turnos (más rápido). En cada turno
+            pueden aparecer eventos económicos.
+          </p>
         </div>
       </div>
+
+      {/* Explicación de qué es la simulación, con ejemplos reales */}
+      <Recomendacion titulo="🎲 ¿Qué es la simulación? Turnos, frecuencia y modo — con ejemplos">
+        <p>
+          Después de <strong>construir su proyecto</strong> (las 9 etapas: inversión, costos,
+          financiamiento, flujo…), cada estudiante lo pone a prueba en una{" "}
+          <strong>simulación de 5 años</strong>. El proyecto avanza por <strong>turnos</strong>;
+          en cada turno puede ocurrir un <strong>evento económico boliviano real</strong> que
+          cambia sus números, y el estudiante decide cómo reaccionar.
+        </p>
+        <p>
+          <strong>Ejemplos de eventos:</strong> «La inflación sube a 8,2%» (suben tus costos),
+          «El dólar paralelo sube 10%» (importar sale más caro), «Sequía afecta la producción»,
+          «Sube el bono Juancito Pinto» (más demanda en librerías). Así el estudiante ve qué
+          tan resistente es su proyecto ante la realidad, no solo en el papel.
+        </p>
+        <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+          <strong>Frecuencia de turnos</strong> = cada cuánto avanza y decide:
+        </p>
+        <ul className="ml-4 list-disc space-y-0.5">
+          <li><strong>Mensual</strong> (60 turnos): más realista y detallado, más trabajo para el alumno.</li>
+          <li><strong>Trimestral</strong> (20 turnos): equilibrio entre detalle y ritmo.</li>
+          <li><strong>Semestral</strong> (10 turnos): vista rápida, ideal si el foco es la construcción del proyecto.</li>
+        </ul>
+        <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
+          <strong>Modo de simulación</strong> = quién decide cuándo caen los eventos:
+        </p>
+        <ul className="ml-4 list-disc space-y-0.5">
+          <li>
+            <strong>Automático:</strong> el sistema sortea los eventos al azar (según su
+            probabilidad real) y el alumno avanza solo, a su ritmo.{" "}
+            <em>Úsalo para tarea/práctica en casa.</em>
+          </li>
+          <li>
+            <strong>Docente dispara cada evento:</strong> vos, desde tu panel, lanzás el evento
+            cuando querés y a todos a la vez (ej. en la clase decís «ahora a todos les sube la
+            inflación»). <em>Ideal para clase presencial sincronizada.</em>
+          </li>
+          <li>
+            <strong>Eventos curados:</strong> vos elegís de antemano cuáles de los ~50 eventos
+            van a enfrentar (ej. solo devaluación + sequía). <em>Ideal para un examen con una
+            intención pedagógica clara.</em>
+          </li>
+        </ul>
+        <p className="text-muted-foreground">
+          Podés cambiar el modo después desde el curso. Si recién empezás, dejá{" "}
+          <strong>Automático</strong>.
+        </p>
+      </Recomendacion>
 
       {/* Selector de modo de simulación (incluye eventos curados si aplica) */}
       <SelectorModoSimulacion
