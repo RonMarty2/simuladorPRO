@@ -35,31 +35,7 @@ export interface Curso {
   grupo_modelo?: string;
   grupo_version?: string;
   grupo_consigna?: string | null;
-  /** Peso (%) de cada paso 1..9 para la nota ponderada del proyecto. Suma 100. */
-  pesos_pasos?: Record<string, number>;
   creado_en: string;
-}
-
-const PESOS_PASOS_DEFAULT: Record<string, number> = {
-  "1": 5, "2": 10, "3": 10, "4": 10, "5": 10, "6": 10, "7": 10, "8": 15, "9": 20,
-};
-
-/** Devuelve los pesos por paso del curso, o el default si no están definidos. */
-export function obtenerPesosPasos(curso: Curso | null | undefined): Record<string, number> {
-  return curso?.pesos_pasos ?? PESOS_PASOS_DEFAULT;
-}
-
-/** Actualiza los pesos por paso del curso (deben sumar 100). */
-export async function actualizarPesosPasos(
-  cursoId: string,
-  pesos: Record<string, number>
-): Promise<void> {
-  const { error } = await conTimeout(
-    supabase.from("cursos").update({ pesos_pasos: pesos }).eq("id", cursoId),
-    10000,
-    "guardando pesos por paso"
-  );
-  if (error) throw error;
 }
 
 /** Guarda la configuración del proyecto grupal del curso (lo define el docente). */
