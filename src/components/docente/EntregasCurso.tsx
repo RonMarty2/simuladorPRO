@@ -85,7 +85,10 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         nombreTitular:
           vista === "grupales"
             ? grupo?.nombre ?? (primera.snapshot_datos?.nombre ?? "(grupo)")
-            : `Estudiante ${primera.estudiante_id.slice(0, 6)}`,
+            : (primera.perfil
+                ? `${primera.perfil.nombre} ${primera.perfil.apellido}`.trim() ||
+                  primera.perfil.email
+                : `Estudiante ${primera.estudiante_id.slice(0, 6)}`),
         nombreProyecto: primera.snapshot_datos?.nombre ?? "",
         metaSecundaria:
           vista === "grupales" && grupo
@@ -247,6 +250,9 @@ function TarjetaAgrupada({
           <div className="text-[11px] text-muted-foreground">
             {grupo.nombreProyecto}
             {grupo.metaSecundaria ? ` · ${grupo.metaSecundaria}` : ""}
+            {vista === "individuales" && grupo.entregas[0]?.perfil?.email
+              ? ` · ${grupo.entregas[0].perfil.email}`
+              : ""}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">

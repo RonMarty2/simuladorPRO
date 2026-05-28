@@ -414,15 +414,27 @@ export async function listarEntregasPendientes(cursoId: string): Promise<Entrega
   return (data ?? []) as Entrega[];
 }
 
-/** Lista TODAS las entregas de un curso (revisadas + pendientes). */
+/** Lista TODAS las entregas de un curso (revisadas + pendientes), con el
+ * perfil (nombre/apellido/email) del estudiante que entregó para mostrar nombres
+ * reales en el panel del docente. */
 export async function listarEntregasDelCurso(cursoId: string): Promise<Entrega[]> {
   const { data, error } = await supabase
     .from("entregas")
-    .select("*")
+    .select("*, perfiles:estudiante_id(nombre, apellido, email)")
     .eq("curso_id", cursoId)
     .order("entregado_en", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Entrega[];
+  // Aplanamos el perfil en un campo `perfil` para usarlo en el UI.
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    perfil: row.perfiles
+      ? {
+          nombre: row.perfiles.nombre,
+          apellido: row.perfiles.apellido,
+          email: row.perfiles.email,
+        }
+      : null,
+  })) as Entrega[];
 }
 
 /** El docente revisa una entrega: pone nota, comentario y estado. */
