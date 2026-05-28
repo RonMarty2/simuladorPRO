@@ -23,7 +23,28 @@ export interface Curso {
   estado: EstadoCurso;
   modo_simulacion?: ModoSimulacion;
   eventos_curados?: string[] | null;
+  /** Peso (0..1) del promedio individual en la nota final. Default 0.5. */
+  peso_individual?: number;
+  /** Peso (0..1) de la nota grupal en la nota final. Default 0.5. */
+  peso_grupal?: number;
   creado_en: string;
+}
+
+/** Actualiza los pesos de ponderación de la nota final del curso. */
+export async function actualizarPesosCurso(
+  cursoId: string,
+  pesoIndividual: number,
+  pesoGrupal: number
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase
+      .from("cursos")
+      .update({ peso_individual: pesoIndividual, peso_grupal: pesoGrupal })
+      .eq("id", cursoId),
+    10000,
+    "guardando ponderación del curso"
+  );
+  if (error) throw error;
 }
 
 export interface InscripcionConPerfil {

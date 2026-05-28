@@ -132,7 +132,11 @@ export interface Financiamiento {
   prestamoCapitalTrabajo?: PrestamoConfig;
 }
 
-export type TipoProyecto = "libre" | "caso_curso" | "entrega_estudiante";
+export type TipoProyecto =
+  | "libre"
+  | "caso_curso"
+  | "entrega_estudiante"
+  | "proyecto_grupal";
 
 /**
  * Versión del modelo de indicadores del proyecto.
@@ -149,6 +153,9 @@ export interface Proyecto {
   id: string;
   estudiante_id: string;
   curso_id: string | null;
+
+  /** Si está seteado, este proyecto es el proyecto COMPARTIDO de ese grupo. */
+  grupo_id?: string | null;
 
   /** Versión de indicadores. Ausente o 'v1' = comportamiento clásico. */
   version?: VersionProyecto;

@@ -1,0 +1,224 @@
+import { supabase } from "./supabase";
+import { guardarProyecto } from "./proyecto-supabase";
+import { crearProyectoVacio, type ModeloIngreso } from "./proyecto-factory";
+import type { Proyecto, VersionProyecto } from "@/types/proyecto";
+
+export interface Grupo {
+  id: string;
+  curso_id: string;
+  nombre: string;
+  cupo_max: number;
+  proyecto_id: string | null;
+  nota: number | null;
+  comentario_docente: string | null;
+  revisado_en: string | null;
+  creado_en: string;
+}
+
+export interface MiembroGrupo {
+  estudiante_id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+}
+
+export interface GrupoConMiembros extends Grupo {
+  miembros: MiembroGrupo[];
+}
+
+function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(
+      () => reject(new Error(`Tiempo agotado: ${motivo} (>${ms / 1000}s).`)),
+      ms
+    );
+    Promise.resolve(promise).then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(id);
+        reject(e);
+      }
+    );
+  });
+}
+
+/**
+ * El docente crea un grupo con su proyecto COMPARTIDO predefinido.
+ * 1) inserta el grupo, 2) crea el proyecto (grupo_id, tipo=proyecto_grupal,
+ * dueño = docente), 3) enlaza proyecto_id en el grupo.
+ */
+export async function crearGrupo(params: {
+  cursoId: string;
+  docenteId: string;
+  nombre: string;
+  cupoMax: number;
+  version?: VersionProyecto;
+  modeloIngreso?: ModeloIngreso;
+}): Promise<Grupo> {
+  // 1. Grupo
+  const { data: grupo, error: e1 } = await conTimeout(
+    supabase
+      .from("grupos")
+      .insert({
+        curso_id: params.cursoId,
+        nombre: params.nombre,
+        cupo_max: params.cupoMax,
+      })
+      .select()
+      .single(),
+    15000,
+    "creando el grupo"
+  );
+  if (e1) throw e1;
+
+  // 2. Proyecto compartido (dueño = docente; los miembros lo editan vía RLS)
+  const proyecto: Proyecto = crearProyectoVacio({
+    estudiante_id: params.docenteId,
+    nombre: `${params.nombre} · proyecto grupal`,
+    curso_id: params.cursoId,
+    version: params.version ?? "v2",
+    modeloIngreso: params.modeloIngreso ?? "unidades",
+  });
+  proyecto.tipo = "proyecto_grupal";
+  proyecto.grupo_id = (grupo as Grupo).id;
+  await guardarProyecto(proyecto);
+
+  // 3. Enlazar el proyecto al grupo
+  const { error: e3 } = await supabase
+    .from("grupos")
+    .update({ proyecto_id: proyecto.id })
+    .eq("id", (grupo as Grupo).id);
+  if (e3) throw e3;
+
+  return { ...(grupo as Grupo), proyecto_id: proyecto.id };
+}
+
+/** Lista los grupos de un curso con sus integrantes (vista del docente). */
+export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiembros[]> {
+  const { data: grupos, error } = await conTimeout(
+    supabase.from("grupos").select("*").eq("curso_id", cursoId).order("creado_en"),
+    10000,
+    "listando grupos"
+  );
+  if (error) throw error;
+  if (!grupos || grupos.length === 0) return [];
+
+  const ids = grupos.map((g: any) => g.id);
+  const { data: miembros, error: e2 } = await supabase
+    .from("grupo_miembros")
+    .select("grupo_id, estudiante_id, perfiles(nombre, apellido, email)")
+    .in("grupo_id", ids);
+  if (e2) throw e2;
+
+  return (grupos as Grupo[]).map((g) => ({
+    ...g,
+    miembros: (miembros ?? [])
+      .filter((m: any) => m.grupo_id === g.id)
+      .map((m: any) => ({
+        estudiante_id: m.estudiante_id,
+        nombre: m.perfiles?.nombre ?? "",
+        apellido: m.perfiles?.apellido ?? "",
+        email: m.perfiles?.email ?? "",
+      })),
+  }));
+}
+
+/** Lista los grupos de un curso para el estudiante (con conteo de cupo). */
+export async function listarGruposParaEstudiante(
+  cursoId: string
+): Promise<GrupoConMiembros[]> {
+  // Misma data; las RLS ya limitan lo que el estudiante puede ver.
+  return listarGruposDeCurso(cursoId);
+}
+
+/** El grupo al que pertenece el estudiante en un curso (o null). */
+export async function obtenerMiGrupo(
+  estudianteId: string,
+  cursoId: string
+): Promise<Grupo | null> {
+  const { data: filas, error } = await supabase
+    .from("grupo_miembros")
+    .select("grupo_id, grupos!inner(*)")
+    .eq("estudiante_id", estudianteId)
+    .eq("grupos.curso_id", cursoId);
+  if (error) throw error;
+  const fila = (filas ?? [])[0] as any;
+  return fila ? (fila.grupos as Grupo) : null;
+}
+
+/**
+ * El estudiante se une a un grupo. Valida cupo y que no esté ya en otro grupo
+ * del mismo curso (ambas validaciones a nivel app; el race es despreciable en
+ * un aula).
+ */
+export async function unirseAGrupo(grupoId: string, estudianteId: string): Promise<void> {
+  // Grupo destino (para conocer curso y cupo)
+  const { data: grupo, error: eg } = await supabase
+    .from("grupos")
+    .select("id, curso_id, cupo_max")
+    .eq("id", grupoId)
+    .single();
+  if (eg) throw eg;
+
+  // ¿Ya está en un grupo de este curso?
+  const yaTengo = await obtenerMiGrupo(estudianteId, (grupo as any).curso_id);
+  if (yaTengo) {
+    if (yaTengo.id === grupoId) return; // ya está en este grupo
+    throw new Error("Ya estás en otro grupo de este curso. Salí de ese grupo primero.");
+  }
+
+  // ¿Hay cupo?
+  const { count, error: ec } = await supabase
+    .from("grupo_miembros")
+    .select("id", { count: "exact", head: true })
+    .eq("grupo_id", grupoId);
+  if (ec) throw ec;
+  if ((count ?? 0) >= (grupo as any).cupo_max) {
+    throw new Error("Ese grupo ya está lleno.");
+  }
+
+  const { error } = await supabase
+    .from("grupo_miembros")
+    .insert({ grupo_id: grupoId, estudiante_id: estudianteId });
+  if (error) throw error;
+}
+
+/** El estudiante sale de un grupo. */
+export async function salirDeGrupo(grupoId: string, estudianteId: string): Promise<void> {
+  const { error } = await supabase
+    .from("grupo_miembros")
+    .delete()
+    .eq("grupo_id", grupoId)
+    .eq("estudiante_id", estudianteId);
+  if (error) throw error;
+}
+
+/** El docente borra un grupo (cascada: borra miembros y el proyecto compartido). */
+export async function eliminarGrupo(grupoId: string): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("grupos").delete().eq("id", grupoId),
+    15000,
+    "borrando el grupo"
+  );
+  if (error) throw error;
+}
+
+/** El docente califica el proyecto grupal (nota 0..100 + comentario). */
+export async function calificarGrupo(
+  grupoId: string,
+  nota: number,
+  comentario: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("grupos")
+    .update({
+      nota,
+      comentario_docente: comentario,
+      revisado_en: new Date().toISOString(),
+    })
+    .eq("id", grupoId);
+  if (error) throw error;
+}
