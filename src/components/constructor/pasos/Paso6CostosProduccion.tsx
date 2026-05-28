@@ -115,12 +115,18 @@ export default function Paso6CostosProduccion() {
     0
   );
 
-  // Costos directos totales por año (cada producto × su costo unitario + parte genérica)
+  // Crecimiento anual de costos (inflación), configurado en Gastos operativos.
+  // El motor del flujo lo aplica a los costos directos, así que la tabla
+  // consolidada lo incluye para mostrar exactamente lo que llega al VAN.
+  const g = proyecto.crecimientoCostosAnual ?? 0;
+
+  // Costos directos totales por año (cada producto × su costo unitario + parte
+  // genérica) × inflación de costos (1+g)^año, igual que en flujo-proyecto.
   const costosPorAnio = [0, 1, 2, 3, 4].map((i) =>
     productos.reduce((acc, p) => {
       const cant = p.cantidades[i];
       const unit = (costoUnitPorProducto[p.id] ?? 0) + costoUnitGenerico;
-      return acc + cant * unit;
+      return acc + cant * unit * Math.pow(1 + g, i);
     }, 0)
   );
 
@@ -256,7 +262,7 @@ export default function Paso6CostosProduccion() {
                     </td>
                     {[0, 1, 2, 3, 4].map((i) => (
                       <td key={i} className="p-1 text-right">
-                        {formatearBolivianos(p.cantidades[i] * cu)}
+                        {formatearBolivianos(p.cantidades[i] * cu * Math.pow(1 + g, i))}
                       </td>
                     ))}
                   </tr>
@@ -273,6 +279,16 @@ export default function Paso6CostosProduccion() {
             </tbody>
           </table>
           </div>
+          <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+            Cada año = cantidades del Paso 2 × costo unitario
+            {g > 0 && (
+              <>
+                {" "}× crecimiento anual de costos ({(g * 100).toFixed(1)}%, configurado en
+                Gastos operativos)
+              </>
+            )}
+            . Es exactamente el costo directo que entra al flujo de caja del Paso 9.
+          </p>
         </div>
       </div>
 
