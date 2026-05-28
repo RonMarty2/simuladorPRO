@@ -183,14 +183,17 @@ export default function ConstruirProyecto() {
       <ContenidoPaso paso={pasoActual} />
 
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setPasoActual((p) => Math.max(1, p - 1))}
-          disabled={pasoActual === 1}
-          className="flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-foreground transition hover:bg-accent disabled:opacity-50"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Anterior
-        </button>
+        {pasoActual > 1 ? (
+          <button
+            onClick={() => setPasoActual((p) => Math.max(1, p - 1))}
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-foreground transition hover:bg-accent"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </button>
+        ) : (
+          <span />
+        )}
 
         <div className="flex flex-col items-center gap-1.5 text-center">
           <span className="text-xs text-muted-foreground">
@@ -209,14 +212,17 @@ export default function ConstruirProyecto() {
           </button>
         </div>
 
-        <button
-          onClick={() => setPasoActual((p) => Math.min(TOTAL_PASOS, p + 1))}
-          disabled={pasoActual === TOTAL_PASOS}
-          className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-        >
-          Siguiente
-          <ChevronRight className="h-4 w-4" />
-        </button>
+        {pasoActual < TOTAL_PASOS ? (
+          <button
+            onClick={() => setPasoActual((p) => Math.min(TOTAL_PASOS, p + 1))}
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        ) : (
+          <span />
+        )}
       </div>
     </div>
   );
