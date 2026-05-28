@@ -211,8 +211,8 @@ export default function DashboardEstudiante() {
                 </div>
               </div>
 
-              {/* ── 1. 🎓 CASO DEL CURSO (emerald) ──────────────────────── */}
-              <details open className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
+              {/* ── 1. 🎓 CASO DEL CURSO (emerald) — contraído por defecto ── */}
+              <details className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-100/60 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-900/30">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
@@ -285,8 +285,8 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
-              {/* ── 2. 📁 CASO INDIVIDUAL (sky) ─────────────────────────── */}
-              <details open className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
+              {/* ── 2. 📁 CASO INDIVIDUAL (sky) — contraído por defecto ──── */}
+              <details className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-semibold text-sky-900 dark:text-sky-100">
@@ -333,8 +333,8 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
-              {/* ── 3. 🤝 CASO GRUPAL (violet) ──────────────────────────── */}
-              <details open className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
+              {/* ── 3. 🤝 CASO GRUPAL (violet) — contraído por defecto ───── */}
+              <details className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
