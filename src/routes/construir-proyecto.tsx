@@ -6,6 +6,7 @@ import { eliminarProyecto, listarMisProyectos, listarProyectosGrupales } from "@
 import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
 import BarraProgreso from "@/components/constructor/BarraProgreso";
+import { BannerTipoProyecto } from "@/components/constructor/BadgeTipoProyecto";
 import SelectorProyecto, {
   guardarProyectoActivo,
   leerProyectoActivo,
@@ -165,12 +166,14 @@ export default function ConstruirProyecto() {
       {/* Selector de proyecto múltiple */}
       <SelectorProyecto proyectos={todosProyectos} />
 
+      {/* Banner del tipo de proyecto — separa visualmente el selector de la barra */}
+      <BannerTipoProyecto tipo={proyecto.tipo} />
+
       <BarraProgreso
         pasoActual={pasoActual}
         totalPasos={TOTAL_PASOS}
         nombreProyecto={proyecto.nombre}
         version={proyecto.version}
-        tipo={proyecto.tipo}
         estadoGuardado={estadoGuardado}
         onCambiarPaso={setPasoActual}
         titulos={titulosPasos}
