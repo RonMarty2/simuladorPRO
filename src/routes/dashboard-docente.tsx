@@ -365,6 +365,20 @@ function CursoCard({
     setTimeout(() => setCopiado(false), 1500);
   };
 
+  // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos";
+  const irA = (tab: Vista) => {
+    setVista(tab);
+    if (!expandido) onToggle();
+  };
+  const claseTab = (tab: Vista) =>
+    cn(
+      "rounded px-2.5 py-1 transition",
+      expandido && vista === tab
+        ? "bg-primary text-primary-foreground"
+        : "bg-secondary hover:bg-secondary/70"
+    );
+
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
@@ -393,15 +407,31 @@ function CursoCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <button
-          onClick={onToggle}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
-        >
-          <Users className="h-3.5 w-3.5" />
-          {expandido ? "Ocultar" : "Ver"} estudiantes
-          {inscritos && ` (${inscritos.length})`}
-        </button>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
+            <Trophy className="mr-1 inline h-3 w-3" />
+            Ranking
+          </button>
+          <button onClick={() => irA("inscritos")} className={claseTab("inscritos")}>
+            <Users className="mr-1 inline h-3 w-3" />
+            Inscritos{inscritos ? ` (${inscritos.length})` : ""}
+          </button>
+          <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
+            📥 Entregas
+          </button>
+          <button onClick={() => irA("grupos")} className={claseTab("grupos")}>
+            🤝 Grupos
+          </button>
+          {expandido && (
+            <button
+              onClick={onToggle}
+              className="rounded px-2 py-1 text-muted-foreground transition hover:text-foreground"
+            >
+              Ocultar
+            </button>
+          )}
+        </div>
         {!confirmando && (
           <button
             onClick={() => {
@@ -471,55 +501,6 @@ function CursoCard({
 
       {expandido && (
         <div className="mt-3 space-y-3 border-t border-border pt-3">
-          <div className="flex gap-1.5 text-xs">
-            <button
-              onClick={() => setVista("ranking")}
-              className={cn(
-                "rounded px-2.5 py-1 transition",
-                vista === "ranking"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/70"
-              )}
-            >
-              <Trophy className="mr-1 inline h-3 w-3" />
-              Ranking en vivo
-            </button>
-            <button
-              onClick={() => setVista("inscritos")}
-              className={cn(
-                "rounded px-2.5 py-1 transition",
-                vista === "inscritos"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/70"
-              )}
-            >
-              <Users className="mr-1 inline h-3 w-3" />
-              Lista inscritos
-            </button>
-            <button
-              onClick={() => setVista("entregas")}
-              className={cn(
-                "rounded px-2.5 py-1 transition",
-                vista === "entregas"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/70"
-              )}
-            >
-              📥 Entregas
-            </button>
-            <button
-              onClick={() => setVista("grupos")}
-              className={cn(
-                "rounded px-2.5 py-1 transition",
-                vista === "grupos"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/70"
-              )}
-            >
-              🤝 Grupos
-            </button>
-          </div>
-
           {vista === "entregas" && <EntregasCurso cursoId={curso.id} />}
 
           {vista === "grupos" && <GruposDocente curso={curso} />}
