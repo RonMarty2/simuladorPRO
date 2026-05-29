@@ -141,19 +141,10 @@ export default function Registro() {
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="rol" className="text-sm font-medium">
-              Rol
-            </label>
-            <select
-              id="rol"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              {...register("rol")}
-            >
-              <option value="estudiante">Estudiante</option>
-              <option value="docente">Docente</option>
-            </select>
-          </div>
+          {/* El rol del registro público es SIEMPRE 'estudiante' (viene en
+              defaultValues). Para crear un docente, un admin lo promueve desde
+              el panel /admin. Así un alumno no puede registrarse como docente
+              por error y quedar fuera del ranking. */}
 
           <div className="space-y-1.5">
             <label htmlFor="universidad" className="text-sm font-medium">
