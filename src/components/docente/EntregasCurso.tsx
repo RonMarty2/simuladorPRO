@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ChevronRight, Clock, Loader2, Users, User, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, Loader2, Users, User, XCircle, Layers } from "lucide-react";
 import { listarEntregasDelCurso } from "@/lib/proyecto-supabase";
 import { listarGruposDeCurso, type GrupoConMiembros } from "@/lib/grupos-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 import ModalRevisarEntrega from "./ModalRevisarEntrega";
+import ModalRevisionMasiva from "./ModalRevisionMasiva";
 
 type Vista = "individuales" | "grupales";
 type Filtro = "todas" | "pendiente" | "aprobada" | "reprobada";
@@ -27,6 +28,8 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
   const [grupos, setGrupos] = useState<GrupoConMiembros[]>([]);
   const [cargando, setCargando] = useState(true);
   const [entregaActiva, setEntregaActiva] = useState<Entrega | null>(null);
+  // Para "revisión rápida" del lote pendiente de un estudiante o grupo.
+  const [loteMasivo, setLoteMasivo] = useState<{ titular: string; entregas: Entrega[] } | null>(null);
   const [vista, setVista] = useState<Vista>("individuales");
   const [filtro, setFiltro] = useState<Filtro>("pendiente");
 
@@ -208,6 +211,9 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
               grupo={g}
               vista={vista}
               onRevisar={(e) => setEntregaActiva(e)}
+              onRevisarLote={(pendientes) =>
+                setLoteMasivo({ titular: g.nombreTitular, entregas: pendientes })
+              }
             />
           ))}
         </div>
@@ -222,6 +228,17 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
           }}
         />
       )}
+
+      {loteMasivo && (
+        <ModalRevisionMasiva
+          entregas={loteMasivo.entregas}
+          titular={loteMasivo.titular}
+          onCerrar={(alguna) => {
+            setLoteMasivo(null);
+            if (alguna) cargar();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -230,11 +247,14 @@ function TarjetaAgrupada({
   grupo,
   vista,
   onRevisar,
+  onRevisarLote,
 }: {
   grupo: Agrupado;
   vista: Vista;
   onRevisar: (e: Entrega) => void;
+  onRevisarLote: (pendientes: Entrega[]) => void;
 }) {
+  const pendientes = grupo.entregas.filter((e) => e.estado === "pendiente");
   return (
     <div className="rounded-md border border-border bg-card p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -256,6 +276,16 @@ function TarjetaAgrupada({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+          {pendientes.length >= 2 && (
+            <button
+              onClick={() => onRevisarLote(pendientes)}
+              title="Calificar las pendientes de una sola pasada"
+              className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-amber-600"
+            >
+              <Layers className="h-3 w-3" />
+              Revisar las {pendientes.length} pendientes
+            </button>
+          )}
           <span className="rounded-full bg-secondary px-2 py-0.5">
             Entregas: <strong>{grupo.entregas.length}</strong>
           </span>
