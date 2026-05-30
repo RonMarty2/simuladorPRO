@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import CreditoAutor from "@/components/layout/CreditoAutor";
+import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
 
 const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
@@ -90,6 +91,7 @@ export default function RootLayout() {
           </span>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
+          <BadgeRevisionesNuevas />
           {perfil && (
             <button
               onClick={() => navigate("/perfil")}

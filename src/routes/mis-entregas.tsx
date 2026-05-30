@@ -16,6 +16,7 @@ import {
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import type { Entrega, PromedioEstudiante } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
+import { marcarEntregasComoVistas } from "@/components/layout/BadgeRevisionesNuevas";
 
 export default function MisEntregas() {
   const user = useAuthStore((s) => s.user);
@@ -33,6 +34,14 @@ export default function MisEntregas() {
           listarMisInscripciones(user.id),
         ]);
         setEntregas(todasEntregas);
+
+        // Marcar como vistas todas las entregas ya revisadas: cuando el
+        // estudiante abre esta pantalla, leyó (o tiene la oportunidad de leer)
+        // los comentarios y notas de cada una.
+        const idsRevisadas = todasEntregas
+          .filter((e) => e.estado === "aprobada" || e.estado === "reprobada")
+          .map((e) => e.id);
+        marcarEntregasComoVistas(user.id, idsRevisadas);
 
         const mapCursos: Record<string, Curso> = {};
         inscripciones.forEach((i) => {

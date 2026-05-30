@@ -16,6 +16,7 @@ import {
 } from "@/lib/grupos-supabase";
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import type { VersionProyecto } from "@/types/proyecto";
+import { cn } from "@/lib/utils";
 
 export default function GruposEstudiante({
   curso,
@@ -168,9 +169,42 @@ export default function GruposEstudiante({
               </button>
             </div>
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Integrantes:{" "}
-            {miGrupoDetalle.miembros.map((m) => `${m.nombre} ${m.apellido}`.trim()).join(", ")}
+          <div className="mt-2">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Integrantes ({miGrupoDetalle.miembros.length})
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {miGrupoDetalle.miembros.map((m) => {
+                const iniciales =
+                  `${m.nombre[0] ?? ""}${m.apellido[0] ?? ""}`.toUpperCase() || "??";
+                const esYo = m.estudiante_id === estudianteId;
+                return (
+                  <span
+                    key={m.estudiante_id}
+                    title={`${m.nombre} ${m.apellido}${m.email ? ` · ${m.email}` : ""}`}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px]",
+                      esYo
+                        ? "border-primary bg-primary/10 font-semibold text-foreground"
+                        : "border-border bg-card text-muted-foreground"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white",
+                        esYo ? "bg-primary" : "bg-secondary-foreground/60"
+                      )}
+                    >
+                      {iniciales}
+                    </span>
+                    <span>
+                      {m.nombre} {m.apellido}
+                      {esYo && " (tú)"}
+                    </span>
+                  </span>
+                );
+              })}
+            </div>
           </div>
 
           {/* Notas */}
