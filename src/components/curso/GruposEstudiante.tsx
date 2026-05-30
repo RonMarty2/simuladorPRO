@@ -169,41 +169,18 @@ export default function GruposEstudiante({
               </button>
             </div>
           </div>
-          <div className="mt-2">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="mt-3 border-t border-border/50 pt-3">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Integrantes ({miGrupoDetalle.miembros.length})
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {miGrupoDetalle.miembros.map((m) => {
-                const iniciales =
-                  `${m.nombre[0] ?? ""}${m.apellido[0] ?? ""}`.toUpperCase() || "??";
-                const esYo = m.estudiante_id === estudianteId;
-                return (
-                  <span
-                    key={m.estudiante_id}
-                    title={`${m.nombre} ${m.apellido}${m.email ? ` · ${m.email}` : ""}`}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px]",
-                      esYo
-                        ? "border-primary bg-primary/10 font-semibold text-foreground"
-                        : "border-border bg-card text-muted-foreground"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white",
-                        esYo ? "bg-primary" : "bg-secondary-foreground/60"
-                      )}
-                    >
-                      {iniciales}
-                    </span>
-                    <span>
-                      {m.nombre} {m.apellido}
-                      {esYo && " (tú)"}
-                    </span>
-                  </span>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {miGrupoDetalle.miembros.map((m) => (
+                <TarjetaIntegrante
+                  key={m.estudiante_id}
+                  miembro={m}
+                  esYo={m.estudiante_id === estudianteId}
+                />
+              ))}
             </div>
           </div>
 
@@ -287,6 +264,93 @@ export default function GruposEstudiante({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================================
+// TARJETA DE INTEGRANTE — avatar grande, color único por persona
+// ============================================================================
+// Paleta de gradientes para los avatares. Cada miembro recibe siempre el mismo
+// color según el hash de su estudiante_id, así dos personas distintas se
+// distinguen de un vistazo y el color es consistente entre cargas.
+const PALETA_AVATAR = [
+  "from-rose-400 to-rose-600",
+  "from-orange-400 to-orange-600",
+  "from-amber-400 to-amber-600",
+  "from-emerald-400 to-emerald-600",
+  "from-teal-400 to-teal-600",
+  "from-sky-400 to-sky-600",
+  "from-blue-400 to-blue-600",
+  "from-indigo-400 to-indigo-600",
+  "from-violet-400 to-violet-600",
+  "from-fuchsia-400 to-fuchsia-600",
+  "from-pink-400 to-pink-600",
+  "from-cyan-400 to-cyan-600",
+];
+
+function colorPorId(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return PALETA_AVATAR[Math.abs(h) % PALETA_AVATAR.length];
+}
+
+// Iniciales con fallback inteligente: si no hay nombre/apellido, usa la primera
+// letra del email; si no, "?".
+function iniciales(m: { nombre: string; apellido: string; email: string }): string {
+  const a = (m.nombre ?? "").trim();
+  const b = (m.apellido ?? "").trim();
+  if (a && b) return (a[0] + b[0]).toUpperCase();
+  if (a) return a.slice(0, 2).toUpperCase();
+  if (b) return b.slice(0, 2).toUpperCase();
+  if (m.email) return m.email.slice(0, 2).toUpperCase();
+  return "?";
+}
+
+function TarjetaIntegrante({
+  miembro,
+  esYo,
+}: {
+  miembro: { estudiante_id: string; nombre: string; apellido: string; email: string };
+  esYo: boolean;
+}) {
+  const tieneNombre =
+    (miembro.nombre?.trim() ?? "") !== "" || (miembro.apellido?.trim() ?? "") !== "";
+  const nombreCompleto = tieneNombre
+    ? `${miembro.nombre} ${miembro.apellido}`.trim()
+    : miembro.email.split("@")[0]; // muestra la parte antes del @ como nombre
+  const gradiente = colorPorId(miembro.estudiante_id);
+  return (
+    <div
+      title={`${nombreCompleto}${miembro.email ? ` · ${miembro.email}` : ""}`}
+      className={cn(
+        "relative flex flex-col items-center gap-1.5 rounded-lg border bg-card p-2.5 transition hover:shadow-md",
+        esYo
+          ? "border-primary ring-2 ring-primary/30"
+          : "border-border"
+      )}
+    >
+      {esYo && (
+        <span className="absolute -top-1.5 right-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary-foreground shadow">
+          TÚ
+        </span>
+      )}
+      <div
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br text-sm font-extrabold text-white shadow-md ring-2 ring-white",
+          gradiente
+        )}
+      >
+        {iniciales(miembro)}
+      </div>
+      <div className="w-full text-center">
+        <div className="truncate text-xs font-semibold leading-tight" title={nombreCompleto}>
+          {nombreCompleto}
+        </div>
+        {!tieneNombre && (
+          <div className="text-[9px] italic text-muted-foreground">sin nombre</div>
+        )}
+      </div>
     </div>
   );
 }
