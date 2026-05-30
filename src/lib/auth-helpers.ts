@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { normalizarUniversidad } from "./utils";
 import type { DatosRegistro, Perfil } from "@/types/usuario";
 
 export async function registrarUsuario(datos: DatosRegistro) {
@@ -10,7 +11,7 @@ export async function registrarUsuario(datos: DatosRegistro) {
         nombre: datos.nombre,
         apellido: datos.apellido,
         rol: datos.rol,
-        universidad: datos.universidad ?? null,
+        universidad: normalizarUniversidad(datos.universidad),
       },
     },
   });

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, User } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { actualizarMiPerfil } from "@/lib/auth-helpers";
+import { normalizarUniversidad } from "@/lib/utils";
 
 export default function MiPerfil() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -25,7 +26,7 @@ export default function MiPerfil() {
       await actualizarMiPerfil(perfil.id, {
         nombre: nombre.trim() || "Sin nombre",
         apellido: apellido.trim(),
-        universidad: universidad.trim() || null,
+        universidad: normalizarUniversidad(universidad),
       });
       await recargarPerfil();
       setMensaje({ tipo: "ok", texto: "Perfil actualizado correctamente." });
