@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { normalizarUniversidad } from "./utils";
 
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
 export type EstadoCurso = "activo" | "cerrado" | "archivado";
@@ -21,6 +22,8 @@ export interface Curso {
   frecuencia_turnos: FrecuenciaCurso;
   duracion_anios: number;
   estado: EstadoCurso;
+  /** Universidad a la que pertenece el curso (la define el docente al crearlo). */
+  universidad?: string | null;
   modo_simulacion?: ModoSimulacion;
   eventos_curados?: string[] | null;
   /** Peso (0..1) del promedio individual en la nota final. Default 0.5. */
@@ -156,12 +159,14 @@ export async function crearCurso(params: {
   nombre: string;
   materia: string;
   paralelo?: string;
+  universidad?: string;
   frecuencia_turnos: FrecuenciaCurso;
   duracion_anios?: number;
   modo_simulacion?: ModoSimulacion;
   eventos_curados?: string[];
   permite_proyecto_libre?: boolean;
 }): Promise<Curso> {
+  const universidad = normalizarUniversidad(params.universidad);
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
   for (let intento = 0; intento < 5; intento++) {
     const codigo = generarCodigoCurso();
@@ -173,6 +178,7 @@ export async function crearCurso(params: {
           nombre: params.nombre,
           materia: params.materia,
           paralelo: params.paralelo ?? null,
+          universidad,
           frecuencia_turnos: params.frecuencia_turnos,
           duracion_anios: params.duracion_anios ?? 5,
           modo_simulacion: params.modo_simulacion ?? "automatico",

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, User } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { actualizarMiPerfil } from "@/lib/auth-helpers";
-import { normalizarUniversidad } from "@/lib/utils";
 
 export default function MiPerfil() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -10,7 +9,6 @@ export default function MiPerfil() {
 
   const [nombre, setNombre] = useState(perfil?.nombre ?? "");
   const [apellido, setApellido] = useState(perfil?.apellido ?? "");
-  const [universidad, setUniversidad] = useState(perfil?.universidad ?? "");
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "err"; texto: string } | null>(null);
 
@@ -26,7 +24,7 @@ export default function MiPerfil() {
       await actualizarMiPerfil(perfil.id, {
         nombre: nombre.trim() || "Sin nombre",
         apellido: apellido.trim(),
-        universidad: normalizarUniversidad(universidad),
+        universidad: null,
       });
       await recargarPerfil();
       setMensaje({ tipo: "ok", texto: "Perfil actualizado correctamente." });
@@ -95,21 +93,6 @@ export default function MiPerfil() {
               value={apellido}
               onChange={(e) => setApellido(e.target.value)}
               placeholder="Martínez"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Universidad */}
-          <div className="space-y-1">
-            <label htmlFor="universidad" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Universidad (opcional)
-            </label>
-            <input
-              id="universidad"
-              type="text"
-              value={universidad}
-              onChange={(e) => setUniversidad(e.target.value)}
-              placeholder="UMSS, UPB, etc."
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>

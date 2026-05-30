@@ -13,7 +13,6 @@ const esquema = z.object({
   email: z.string().email("Email no válido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
   rol: z.enum(["estudiante", "docente"]),
-  universidad: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof esquema>;
@@ -144,19 +143,9 @@ export default function Registro() {
           {/* El rol del registro público es SIEMPRE 'estudiante' (viene en
               defaultValues). Para crear un docente, un admin lo promueve desde
               el panel /admin. Así un alumno no puede registrarse como docente
-              por error y quedar fuera del ranking. */}
-
-          <div className="space-y-1.5">
-            <label htmlFor="universidad" className="text-sm font-medium">
-              Universidad <span className="text-xs text-muted-foreground">(opcional)</span>
-            </label>
-            <input
-              id="universidad"
-              placeholder="UMSS, UPB, UCB, USFX, etc."
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              {...register("universidad")}
-            />
-          </div>
+              por error y quedar fuera del ranking.
+              La UNIVERSIDAD ya no se pide acá: la define el docente al crear
+              el curso, así no hay 'ucatec / Ucatec / UCATEC' en la lista. */}
 
           {errorServidor && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">

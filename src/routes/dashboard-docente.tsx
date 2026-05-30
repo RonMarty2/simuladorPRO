@@ -113,6 +113,7 @@ function FormCrearCurso({
   const [nombre, setNombre] = useState("");
   const [materia, setMateria] = useState("Administración Financiera");
   const [paralelo, setParalelo] = useState("");
+  const [universidad, setUniversidad] = useState("");
   const [frecuencia, setFrecuencia] = useState<FrecuenciaCurso>("mensual");
   const [modo, setModo] = useState<ModoSimulacion>("automatico");
   const [eventosCurados, setEventosCurados] = useState<string[]>([]);
@@ -134,6 +135,7 @@ function FormCrearCurso({
         nombre,
         materia,
         paralelo: paralelo || undefined,
+        universidad: universidad || undefined,
         frecuencia_turnos: frecuencia,
         modo_simulacion: modo,
         eventos_curados: modo === "curado" ? eventosCurados : undefined,
@@ -158,6 +160,12 @@ function FormCrearCurso({
           onChange={setMateria}
           placeholder="Administración Financiera, Matemática Financiera…"
           required
+        />
+        <CampoTexto
+          label="Universidad"
+          valor={universidad}
+          onChange={setUniversidad}
+          placeholder="UCATEC, UMSS, UPB, USFX, etc."
         />
         <CampoTexto
           label="Paralelo"
@@ -540,19 +548,23 @@ function CursoCard({
                 estudiantes.
               </div>
             ) : (
-              <ul className="space-y-1.5">
-                {inscritos.map((i) => (
-                  <li key={i.id} className="flex items-center justify-between text-xs">
-                    <span>
-                      {i.nombre} {i.apellido}
-                      {i.universidad && (
-                        <span className="ml-2 text-muted-foreground">· {i.universidad}</span>
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">{i.email}</span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                {curso.universidad && (
+                  <div className="mb-2 text-[11px] text-muted-foreground">
+                    Todos los inscritos pertenecen a <strong>{curso.universidad}</strong> (definida en el curso).
+                  </div>
+                )}
+                <ul className="space-y-1.5">
+                  {inscritos.map((i) => (
+                    <li key={i.id} className="flex items-center justify-between gap-3 text-xs">
+                      <span className="min-w-0 truncate">
+                        {i.nombre} {i.apellido}
+                      </span>
+                      <span className="truncate text-muted-foreground">{i.email}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )
           )}
         </div>
