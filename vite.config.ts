@@ -26,11 +26,20 @@ export default defineConfig({
         theme_color: "#0f172a",
         background_color: "#0f172a",
         display: "standalone",
-        orientation: "any",
+        // Bloquea la orientación en vertical en celulares. El layout está
+        // pensado para portrait — si se gira a horizontal se ve mal.
+        orientation: "portrait",
         scope: "/",
         start_url: "/",
         lang: "es",
         categories: ["education", "finance", "productivity"],
+        // Si la PWA ya está corriendo cuando vuelve un callback (ej. OAuth de
+        // Google), navega en esa instancia existente en lugar de abrir el
+        // browser. Crítico para que el login con Google funcione bien desde
+        // la app instalada en mobile.
+        launch_handler: {
+          client_mode: ["navigate-existing", "auto"],
+        },
         icons: [
           {
             src: "pwa-64x64.png",

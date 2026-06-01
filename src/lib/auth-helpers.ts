@@ -29,25 +29,86 @@ export async function iniciarSesion(email: string, password: string) {
 }
 
 /**
+ * Detecta si la app está corriendo como PWA standalone (instalada en el
+ * celular) en vez de en una pestaña normal de browser. Importa para OAuth:
+ * en standalone hay que asegurarse de que el callback vuelva a la PWA, no
+ * abra un browser nuevo.
+ */
+function enModoStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.matchMedia?.("(display-mode: standalone)").matches) return true;
+  if ((window.navigator as any).standalone === true) return true; // iOS
+  return false;
+}
+
+/**
  * Inicia sesión con Google OAuth. Redirige al usuario a Google y vuelve
- * a la app después con la sesión iniciada. El callback es manejado
- * automáticamente por Supabase (la URL queda con un fragment #access_token=…
- * que la librería detecta y procesa).
+ * a la app después con la sesión iniciada.
+ *
+ * En PWA standalone (app instalada) el callback puede caer en el browser
+ * externo en lugar de la PWA — para mitigar eso, el manifest declara
+ * launch_handler:navigate-existing y el callback se procesa explícitamente
+ * en `procesarCallbackOAuthSiAplica()` al inicializar el auth-store.
  */
 export async function iniciarSesionConGoogle() {
+  // En la URL agregamos un marcador para identificar el callback al volver.
+  // Sirve al `procesarCallbackOAuthSiAplica()` para saber que tiene que
+  // intercambiar el code aunque detectSessionInUrl no lo haya hecho solo.
+  const redirectTo = `${window.location.origin}/?oauth=1`;
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/`,
+      redirectTo,
+      // En standalone forzamos que el browser tome control completo de la
+      // navegación (sin custom tab) para que el callback no se quede en otro
+      // contexto. En browser normal Supabase decide la mejor estrategia.
+      skipBrowserRedirect: false,
       queryParams: {
-        // Forzar al usuario a elegir cuenta cada vez, incluso si ya está
-        // logueado en una sola cuenta de Google en el navegador.
         prompt: "select_account",
       },
     },
   });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Si la URL actual tiene un `?code=` (callback OAuth de PKCE) o un fragmento
+ * `#access_token=...` (callback de implicit flow), intercambia ese code por
+ * una sesión y limpia la URL. Esto se llama al inicializar la app para
+ * cubrir el caso PWA standalone donde `detectSessionInUrl` a veces no se
+ * dispara solo.
+ *
+ * Es idempotente: si no hay callback en la URL, no hace nada.
+ */
+export async function procesarCallbackOAuthSiAplica(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("code");
+  const hash = window.location.hash;
+  const tieneCode = !!code;
+  const tieneAccessToken = hash.includes("access_token=");
+
+  if (!tieneCode && !tieneAccessToken) return;
+
+  try {
+    if (tieneCode && code) {
+      // PKCE: intercambiamos el code por una sesión real.
+      await supabase.auth.exchangeCodeForSession(code).catch((e) => {
+        console.warn("[oauth] exchangeCodeForSession falló:", e?.message);
+      });
+    }
+    // Limpiar la URL para que no quede `?code=...&oauth=1` ni el hash.
+    // Usamos replaceState para no agregar entrada al history.
+    const limpia = `${url.origin}${url.pathname}`;
+    window.history.replaceState({}, document.title, limpia);
+  } catch (e) {
+    console.warn("[oauth] procesarCallback error:", e);
+  }
+  // Nota: enModoStandalone se usa en el log para diagnóstico.
+  if (enModoStandalone()) {
+    console.info("[oauth] callback procesado en modo PWA standalone");
+  }
 }
 
 export async function cerrarSesion() {

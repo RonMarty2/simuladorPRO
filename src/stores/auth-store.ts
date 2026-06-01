@@ -6,6 +6,7 @@ import {
   iniciarSesion,
   obtenerPerfil,
   obtenerPerfilConReintentos,
+  procesarCallbackOAuthSiAplica,
   registrarUsuario,
 } from "@/lib/auth-helpers";
 import type { DatosRegistro, Perfil } from "@/types/usuario";
@@ -43,6 +44,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ cargando: false, inicializado: true });
       }
     }, 15000);
+
+    // Si la app arrancó con ?code= o #access_token= en la URL (callback de
+    // OAuth), procesarlo ANTES de pedir la sesión. Necesario en PWA standalone
+    // donde detectSessionInUrl no siempre se dispara solo.
+    await procesarCallbackOAuthSiAplica();
 
     try {
       const sessionPromise = supabase.auth.getSession();
