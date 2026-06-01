@@ -17,6 +17,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import CreditoAutor from "@/components/layout/CreditoAutor";
 import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
 import BotonInstalarApp from "@/components/layout/BotonInstalarApp";
+import { useEsDispositivoMobil } from "@/hooks/useEsDispositivoMobil";
 
 const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
@@ -40,6 +41,9 @@ export default function RootLayout() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // Detección robusta de dispositivo móvil. Sobrescribe cualquier hack del
+  // navegador (ej. "Sitio para escritorio") para forzar el layout mobile.
+  const esMobil = useEsDispositivoMobil();
 
   const enlacesBase = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
   const enlaces = perfil?.es_admin
@@ -75,10 +79,14 @@ export default function RootLayout() {
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
       <header className="flex h-14 items-center justify-between gap-2 border-b border-border px-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
-          {/* Botón menú — solo móvil */}
+          {/* Botón menú hamburguesa — siempre visible en mobile (sobrescribe
+              cualquier hack del browser tipo "Sitio para escritorio") */}
           <button
             onClick={() => setMenuAbierto(true)}
-            className="-ml-1 rounded-md p-1.5 text-foreground hover:bg-accent md:hidden"
+            className={cn(
+              "-ml-1 rounded-md p-1.5 text-foreground hover:bg-accent",
+              esMobil ? "" : "md:hidden"
+            )}
             aria-label="Abrir menú"
           >
             <Menu className="h-5 w-5" />
@@ -119,17 +127,23 @@ export default function RootLayout() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Barra lateral — escritorio */}
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-secondary/30 p-3 md:flex">
-          <nav className="flex flex-col gap-1">{navItems()}</nav>
-          <div className="mt-auto pt-4">
-            <CreditoAutor variante="sutil" />
-          </div>
-        </aside>
+        {/* Barra lateral — solo escritorio. Si detectamos dispositivo móvil
+            (UA, screen estrecho o PWA standalone con touch) NUNCA se muestra
+            aunque el viewport reporte ancho de desktop. */}
+        {!esMobil && (
+          <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-secondary/30 p-3 md:flex">
+            <nav className="flex flex-col gap-1">{navItems()}</nav>
+            <div className="mt-auto pt-4">
+              <CreditoAutor variante="sutil" />
+            </div>
+          </aside>
+        )}
 
-        {/* Menú deslizable — móvil */}
+        {/* Menú deslizable — móvil. md:hidden solo aplica si NO forzamos mobile;
+            si esMobil=true queremos que el menú aparezca siempre que el alumno
+            lo abra, aunque el viewport reporte ancho de escritorio. */}
         {menuAbierto && (
-          <div className="fixed inset-0 z-50 md:hidden">
+          <div className={cn("fixed inset-0 z-50", esMobil ? "" : "md:hidden")}>
             <div
               className="absolute inset-0 bg-black/50"
               onClick={() => setMenuAbierto(false)}
