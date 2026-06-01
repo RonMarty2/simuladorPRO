@@ -24,7 +24,7 @@ type DeferredPrompt = {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const LS_KEY_OCULTO = "simulador.pwa.botonOculto";
+const SS_KEY_OCULTO = "simulador.pwa.botonOcultoSesion";
 
 function esIOS(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -42,9 +42,16 @@ function yaInstalada(): boolean {
 export default function BotonInstalarApp() {
   const [prompt, setPrompt] = useState<DeferredPrompt | null>(null);
   const [mostrarModalIOS, setMostrarModalIOS] = useState(false);
+  // Usamos sessionStorage (no localStorage): si el alumno cierra el banner,
+  // no aparece más en ESTA sesión, pero sí en visitas futuras. Útil cuando
+  // desinstalan y vuelven a entrar: queremos que vean el banner de nuevo.
+  // Migración automática del flag viejo en localStorage (lo borramos si
+  // existe) para que los usuarios que cerraron antes vuelvan a verlo.
   const [ocultoSesion, setOcultoSesion] = useState(() => {
     try {
-      return localStorage.getItem(LS_KEY_OCULTO) === "1";
+      // Limpieza única del flag antiguo
+      localStorage.removeItem("simulador.pwa.botonOculto");
+      return sessionStorage.getItem(SS_KEY_OCULTO) === "1";
     } catch {
       return false;
     }
@@ -71,7 +78,7 @@ export default function BotonInstalarApp() {
   const cerrar = () => {
     setOcultoSesion(true);
     try {
-      localStorage.setItem(LS_KEY_OCULTO, "1");
+      sessionStorage.setItem(SS_KEY_OCULTO, "1");
     } catch {
       /* ignore */
     }
