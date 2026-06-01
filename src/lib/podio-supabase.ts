@@ -86,7 +86,10 @@ export async function obtenerPodioCurso(
     .select("estudiante_id, promedio_nota, entregas_revisadas")
     .eq("curso_id", cursoId)
     .not("promedio_nota", "is", null)
-    .order("promedio_nota", { ascending: false });
+    // Desempate determinístico: si dos alumnos tienen la misma nota, el orden
+    // no debe cambiar entre cargas (sino el podio "parpadea" mostrando distinto).
+    .order("promedio_nota", { ascending: false })
+    .order("estudiante_id", { ascending: true });
   if (e1) throw e1;
 
   const filasPromedio = (promedios ?? []) as Array<{
@@ -159,8 +162,10 @@ export async function obtenerPodioCurso(
       .select("estado, nota, entregado_en")
       .eq("estudiante_id", miEstudianteId)
       .eq("curso_id", cursoId)
-      .order("entregado_en", { ascending: false })
-      .limit(15);
+      .order("entregado_en", { ascending: false });
+    // Sin límite: la racha (entregas consecutivas sin reprobar) debe poder
+    // contar todo el historial. Con un límite bajo, un alumno con muchas
+    // entregas podía ver una racha truncada.
     for (const e of (misEntregas ?? []) as any[]) {
       if (e.estado === "pendiente") continue; // se ignora, no rompe ni suma
       if (e.estado === "aprobada") miRacha++;

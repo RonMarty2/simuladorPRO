@@ -62,6 +62,9 @@ export default function ModalRevisionMasiva({
   });
   const [guardando, setGuardando] = useState(false);
   const [errorGuardar, setErrorGuardar] = useState<string | null>(null);
+  // Si guardamos al menos una etapa (aunque otras fallaran), al cerrar hay que
+  // recargar la lista del docente para reflejar lo que sí quedó calificado.
+  const [huboGuardado, setHuboGuardado] = useState(false);
 
   const entregaActual = ordenadas[activoIdx];
   const estadoActual = estados[entregaActual.id];
@@ -100,7 +103,10 @@ export default function ModalRevisionMasiva({
       return;
     }
     try {
-      await Promise.all(
+      // allSettled (no all): si una etapa falla, las demás igual se guardan.
+      // Así el docente sabe EXACTAMENTE cuántas quedaron y reintenta solo las
+      // que fallaron, en vez de un estado parcial silencioso.
+      const resultados = await Promise.allSettled(
         aGuardar.map((e) => {
           const s = estados[e.id];
           return revisarEntrega(
@@ -111,6 +117,18 @@ export default function ModalRevisionMasiva({
           );
         })
       );
+      const fallidas = resultados.filter((r) => r.status === "rejected").length;
+      if (fallidas > 0) {
+        if (fallidas < aGuardar.length) setHuboGuardado(true);
+        setErrorGuardar(
+          `Se guardaron ${aGuardar.length - fallidas} de ${aGuardar.length}. ` +
+            `${fallidas} no se pudieron guardar (revisá tu conexión y reintentá). ` +
+            `Las que ya se guardaron no se vuelven a enviar — podés cerrar y reabrir para ver el estado.`
+        );
+        // No cerramos: el docente lee el error. Al cerrar manualmente, el flag
+        // huboGuardado hace que el padre recargue y muestre lo que sí quedó.
+        return;
+      }
       onCerrar(true);
     } catch (e: any) {
       setErrorGuardar(e?.message ?? String(e));
@@ -139,7 +157,7 @@ export default function ModalRevisionMasiva({
             </p>
           </div>
           <button
-            onClick={() => onCerrar(false)}
+            onClick={() => onCerrar(huboGuardado)}
             disabled={guardando}
             className="rounded-md p-1 hover:bg-secondary disabled:opacity-50"
           >
@@ -232,7 +250,7 @@ export default function ModalRevisionMasiva({
                 Se guardarán <strong>{cuantasConDecision}</strong> de {ordenadas.length}
               </span>
               <button
-                onClick={() => onCerrar(false)}
+                onClick={() => onCerrar(huboGuardado)}
                 disabled={guardando}
                 className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-secondary"
               >

@@ -461,7 +461,7 @@ function Paso5({ p }: { p: Proyecto }) {
     return <VacioMsg msg="No cargó costos directos." />;
   }
   const nombreProducto = (id: string | null | undefined) =>
-    p.productos.find((x) => x.id === id)?.nombre ?? <em className="text-muted-foreground">general</em>;
+    (p.productos ?? []).find((x) => x.id === id)?.nombre ?? <em className="text-muted-foreground">general</em>;
   return (
     <TablaWrap>
       <thead>

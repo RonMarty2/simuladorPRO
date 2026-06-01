@@ -49,11 +49,16 @@ export default function MisEntregas() {
         });
         setCursos(mapCursos);
 
-        // Cargar promedio por curso
+        // Cargar promedio por curso EN PARALELO (antes era un loop secuencial
+        // = N round-trips; ahora todos a la vez).
+        const cursoIds = Object.keys(mapCursos);
+        const resultados = await Promise.all(
+          cursoIds.map((cursoId) => obtenerPromedioEstudiante(user.id, cursoId))
+        );
         const mapPromedios: Record<string, PromedioEstudiante | null> = {};
-        for (const cursoId of Object.keys(mapCursos)) {
-          mapPromedios[cursoId] = await obtenerPromedioEstudiante(user.id, cursoId);
-        }
+        cursoIds.forEach((cursoId, i) => {
+          mapPromedios[cursoId] = resultados[i];
+        });
         setPromedios(mapPromedios);
       } finally {
         setCargando(false);
