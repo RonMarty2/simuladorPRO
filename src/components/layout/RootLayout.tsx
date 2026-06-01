@@ -5,6 +5,7 @@ import {
   BookOpenCheck,
   GraduationCap,
   Hammer,
+  BookOpen,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -25,6 +26,7 @@ const enlacesEstudiante = [
   // haciendo clic en un proyecto de su panel (evita la redundancia).
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
+  { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
   // El catálogo de eventos NO se muestra a estudiantes — son spoilers de la
   // simulación. Solo docentes y admin lo ven.
@@ -33,6 +35,7 @@ const enlacesEstudiante = [
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
+  { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];
 
