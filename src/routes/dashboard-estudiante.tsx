@@ -165,6 +165,29 @@ export default function DashboardEstudiante() {
         )}
       </div>
 
+      {/* CTA visible: galería de ejemplos (escondida en el menú hamburguesa
+          en mobile). Card destacado para que cualquier alumno la encuentre. */}
+      <button
+        onClick={() => navigate("/ejemplos")}
+        className="flex w-full items-center gap-3 rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-3 text-left transition hover:border-indigo-400 hover:shadow-md dark:border-indigo-800 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40"
+      >
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-lg shadow-md">
+          📖
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
+            Galería de 26 proyectos de ejemplo
+          </div>
+          <div className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
+            Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
+            Mirá ejemplos completos antes de armar el tuyo.
+          </div>
+        </div>
+        <span className="hidden flex-shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white sm:inline">
+          Ver galería →
+        </span>
+      </button>
+
       {cargando && <div className="text-sm text-muted-foreground">Cargando…</div>}
 
       {/* Un bloque por curso inscrito */}
