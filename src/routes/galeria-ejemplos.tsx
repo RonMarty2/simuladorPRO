@@ -1,18 +1,45 @@
 import { useMemo, useState } from "react";
 import { X, BookOpen, Eye } from "lucide-react";
-import { PLANTILLAS, type PlantillaMeta } from "@/lib/plantillas";
+import {
+  PLANTILLAS,
+  CATEGORIAS,
+  type PlantillaMeta,
+  type CategoriaPlantilla,
+} from "@/lib/plantillas";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 import DetalleEntregaPasoAPaso from "@/components/docente/DetalleEntregaPasoAPaso";
 
 /**
- * Galería de proyectos de EJEMPLO (solo lectura). Muestra "mega proyectos"
- * completos como referencia. NO se guardan, NO se mezclan con los proyectos
- * del estudiante: se exploran acá y listo.
+ * Galería de proyectos de EJEMPLO (solo lectura). Vitrina pedagógica para que
+ * el docente enseñe y el alumno se vuelva experto comparando varios tipos.
+ * Organizada por CATEGORÍAS. Cada plantilla es solo de lectura: NO se guarda
+ * y NO se mezcla con los proyectos del alumno.
  */
 export default function GaleriaEjemplos() {
   const [abierto, setAbierto] = useState<PlantillaMeta | null>(null);
+  const [filtroCategoria, setFiltroCategoria] = useState<CategoriaPlantilla | "todas">("todas");
+
+  const categoriasUsadas = useMemo(() => {
+    const set = new Set(PLANTILLAS.map((p) => p.categoria));
+    return Array.from(set);
+  }, []);
+
+  const plantillasFiltradas = useMemo(() => {
+    if (filtroCategoria === "todas") return PLANTILLAS;
+    return PLANTILLAS.filter((p) => p.categoria === filtroCategoria);
+  }, [filtroCategoria]);
+
+  // Para la vista "todas", agrupamos por categoría
+  const porCategoria = useMemo(() => {
+    const m = new Map<CategoriaPlantilla, PlantillaMeta[]>();
+    for (const pl of plantillasFiltradas) {
+      if (!m.has(pl.categoria)) m.set(pl.categoria, []);
+      m.get(pl.categoria)!.push(pl);
+    }
+    return m;
+  }, [plantillasFiltradas]);
 
   return (
     <div className="space-y-5">
@@ -22,46 +49,132 @@ export default function GaleriaEjemplos() {
           Galería de proyectos de ejemplo
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Proyectos modelo <strong>completos</strong> para que veas todo lo que el simulador
-          puede modelar (inversiones, personal, costos, financiamiento, indicadores). Son{" "}
-          <strong>solo de lectura</strong>: explorálos para aprender — tu proyecto será más
-          simple porque elegís un solo tipo.
+          {PLANTILLAS.length} proyectos modelo <strong>completos</strong> agrupados por categoría.
+          Vitrina para que el alumno explore distintos tipos de negocio y se vuelva experto
+          comparándolos. Son <strong>solo de lectura</strong> — no se guardan ni aparecen en
+          tus proyectos.
         </p>
       </div>
 
       <div className="rounded-md border border-amber-300 bg-amber-50/60 px-3 py-2 text-[11px] text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-        💡 Estos ejemplos <strong>no aparecen en tu lista de proyectos</strong> ni se guardan.
-        Son una vitrina de referencia. Para trabajar el tuyo, andá a <strong>Mi panel</strong>.
+        💡 Idea pedagógica: comparar 3 cafeterías muestra cómo el tamaño cambia los
+        indicadores. Comparar restaurante vs food truck muestra estructuras de costo
+        distintas. Comparar podcast premium vs canal de YouTube muestra suscripción vs
+        publicidad sobre el mismo creador.
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {PLANTILLAS.map((pl) => (
-          <button
-            key={pl.clave}
-            onClick={() => setAbierto(pl)}
-            className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left transition hover:border-primary hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-3xl">{pl.emoji}</span>
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                {pl.sector}
-              </span>
-            </div>
-            <div className="text-sm font-bold leading-tight">{pl.titulo}</div>
-            <span className="self-start rounded bg-indigo-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-              {pl.modeloLabel}
-            </span>
-            <p className="text-[11px] leading-snug text-muted-foreground">{pl.resumen}</p>
-            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary">
-              <Eye className="h-3.5 w-3.5" />
-              Ver proyecto completo
-            </div>
-          </button>
-        ))}
+      {/* Filtros por categoría */}
+      <div className="flex flex-wrap gap-1.5">
+        <FiltroCategoria
+          activa={filtroCategoria === "todas"}
+          onClick={() => setFiltroCategoria("todas")}
+          emoji="🎯"
+          label={`Todas (${PLANTILLAS.length})`}
+        />
+        {categoriasUsadas.map((cat) => {
+          const meta = CATEGORIAS[cat];
+          const total = PLANTILLAS.filter((p) => p.categoria === cat).length;
+          return (
+            <FiltroCategoria
+              key={cat}
+              activa={filtroCategoria === cat}
+              onClick={() => setFiltroCategoria(cat)}
+              emoji={meta.emoji}
+              label={`${meta.titulo} (${total})`}
+            />
+          );
+        })}
+      </div>
+
+      {/* Grid de plantillas, agrupadas por categoría */}
+      <div className="space-y-6">
+        {Array.from(porCategoria.entries()).map(([cat, plantillas]) => {
+          const meta = CATEGORIAS[cat];
+          return (
+            <section key={cat} className="space-y-3">
+              <div className="flex items-baseline gap-2 border-b border-border pb-1.5">
+                <span className="text-xl">{meta.emoji}</span>
+                <div>
+                  <h2 className="text-base font-bold">{meta.titulo}</h2>
+                  <p className="text-[11px] text-muted-foreground">{meta.descripcion}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {plantillas.map((pl) => (
+                  <button
+                    key={pl.clave}
+                    onClick={() => setAbierto(pl)}
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left transition hover:border-primary hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl">{pl.emoji}</span>
+                      <ChipEscala escala={pl.escala} />
+                    </div>
+                    <div className="text-sm font-bold leading-tight">{pl.titulo}</div>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                        {pl.modeloLabel}
+                      </span>
+                      <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                        {pl.sector}
+                      </span>
+                    </div>
+                    <p className="text-[11px] leading-snug text-muted-foreground">{pl.resumen}</p>
+                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary">
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver proyecto completo
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       {abierto && <VisorPlantilla plantilla={abierto} onCerrar={() => setAbierto(null)} />}
     </div>
+  );
+}
+
+function FiltroCategoria({
+  activa,
+  onClick,
+  emoji,
+  label,
+}: {
+  activa: boolean;
+  onClick: () => void;
+  emoji: string;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+        activa
+          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"
+      )}
+    >
+      <span>{emoji}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function ChipEscala({ escala }: { escala: "Pequeño" | "Mediano" | "Grande" }) {
+  const clase =
+    escala === "Pequeño"
+      ? "bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200"
+      : escala === "Mediano"
+        ? "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200"
+        : "bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200";
+  return (
+    <span className={cn("rounded-full px-2 py-0.5 text-[9px] font-bold uppercase", clase)}>
+      {escala}
+    </span>
   );
 }
 
@@ -72,7 +185,6 @@ function VisorPlantilla({
   plantilla: PlantillaMeta;
   onCerrar: () => void;
 }) {
-  // Genera el proyecto una sola vez al abrir.
   const proyecto = useMemo<Proyecto>(() => plantilla.crear(), [plantilla]);
   const calc = useMemo(() => {
     try {
@@ -92,7 +204,8 @@ function VisorPlantilla({
               <span className="truncate">{proyecto.nombre}</span>
             </h2>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {plantilla.sector} · {plantilla.modeloLabel} · Proyecto de ejemplo (solo lectura)
+              {CATEGORIAS[plantilla.categoria].titulo} · {plantilla.modeloLabel} ·{" "}
+              {plantilla.escala} · Proyecto de ejemplo (solo lectura)
             </p>
           </div>
           <button onClick={onCerrar} className="rounded-md p-1 hover:bg-secondary">
@@ -101,7 +214,6 @@ function VisorPlantilla({
         </header>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {/* Indicadores calculados */}
           {calc && (
             <div>
               <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -128,12 +240,10 @@ function VisorPlantilla({
             </div>
           )}
 
-          {/* Descripción */}
           <div className="rounded-md border border-border bg-secondary/20 p-3 text-[11px] text-muted-foreground">
             {proyecto.descripcion}
           </div>
 
-          {/* Detalle paso a paso (reusa el visor del docente) */}
           <DetalleEntregaPasoAPaso proyecto={proyecto} pasoEntregado={null} />
         </div>
 
