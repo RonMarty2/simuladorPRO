@@ -15,7 +15,6 @@ import {
 } from "recharts";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { exportarProyectoExcel } from "@/lib/exportar-excel";
 import FichaPedagogica from "../FichaPedagogica";
 import {
   calcularFlujoInversionista,
@@ -1327,15 +1326,29 @@ function FilaFlujo({
 // Una vez verificado, se puede quitar la condición para exponerlo a todos.
 function BotonExportarExcelAdmin({ proyecto }: { proyecto: any }) {
   const esAdmin = useAuthStore((s) => s.perfil?.es_admin === true);
+  const [exportando, setExportando] = useState(false);
   if (!esAdmin) return null;
+  // La librería xlsx-js-style (~150KB) se carga SOLO al hacer click, vía
+  // import() dinámico, así no pesa en el bundle de todos los alumnos.
+  const exportar = async () => {
+    setExportando(true);
+    try {
+      const { exportarProyectoExcel } = await import("@/lib/exportar-excel");
+      exportarProyectoExcel(proyecto);
+    } finally {
+      setExportando(false);
+    }
+  };
   return (
     <button
       type="button"
-      onClick={() => exportarProyectoExcel(proyecto)}
+      onClick={exportar}
+      disabled={exportando}
       title="Descarga el proyecto en .xlsx con todas las etapas y fórmulas Excel. (Visible solo para admin durante pruebas.)"
-      className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-emerald-400/60 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
+      className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-emerald-400/60 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
     >
-      📊 Exportar a Excel <span className="rounded bg-emerald-200 px-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">admin</span>
+      📊 {exportando ? "Generando…" : "Exportar a Excel"}{" "}
+      <span className="rounded bg-emerald-200 px-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">admin</span>
     </button>
   );
 }
