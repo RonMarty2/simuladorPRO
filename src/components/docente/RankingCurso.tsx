@@ -8,6 +8,7 @@ import {
   type FilaRanking,
 } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
+import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import DetalleEstudiante from "./DetalleEstudiante";
 
 interface Props {
@@ -41,11 +42,12 @@ export default function RankingCurso({ cursoId, curso }: Props) {
 
   useEffect(() => {
     cargar();
-    // Auto-refresh cada 30 segundos
-    const id = setInterval(cargar, 30000);
-    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursoId]);
+
+  // Auto-refresh cada 30s SOLO cuando la pestaña está visible (no malgasta
+  // queries si el docente cambió de pestaña o minimizó).
+  useIntervaloVisible(cargar, 30000);
 
   const ordenado = [...filas].sort((a, b) => {
     if (a.tiene_simulacion !== b.tiene_simulacion) return a.tiene_simulacion ? -1 : 1;

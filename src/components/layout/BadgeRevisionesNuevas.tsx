@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { listarMisEntregas } from "@/lib/proyecto-supabase";
+import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 
 /**
  * Badge en el header que muestra cuántas entregas del estudiante fueron
@@ -52,43 +53,45 @@ export default function BadgeRevisionesNuevas() {
   const user = useAuthStore((s) => s.user);
   const perfil = useAuthStore((s) => s.perfil);
   const [pendientesVer, setPendientesVer] = useState(0);
+  // Secuencia para descartar respuestas viejas: si dos recargas corren a la
+  // vez (interval + evento), solo la más reciente aplica su resultado.
+  const seqRef = useRef(0);
+  const esEstudiante = perfil?.rol === "estudiante";
 
-  useEffect(() => {
-    if (!user || perfil?.rol !== "estudiante") {
+  const recargar = useCallback(() => {
+    if (!user || !esEstudiante) {
       setPendientesVer(0);
       return;
     }
-    let cancelado = false;
-    const recargar = () => {
-      listarMisEntregas(user.id)
-        .then((entregas) => {
-          if (cancelado) return;
-          const vistas = leerEntregasVistas(user.id);
-          const revisadasSinVer = entregas.filter(
-            (e) =>
-              (e.estado === "aprobada" || e.estado === "reprobada") &&
-              !vistas.has(e.id)
-          );
-          setPendientesVer(revisadasSinVer.length);
-        })
-        .catch(() => {
-          if (!cancelado) setPendientesVer(0);
-        });
-    };
+    const miSeq = ++seqRef.current;
+    listarMisEntregas(user.id)
+      .then((entregas) => {
+        if (miSeq !== seqRef.current) return; // llegó una más nueva, descartar
+        const vistas = leerEntregasVistas(user.id);
+        const revisadasSinVer = entregas.filter(
+          (e) =>
+            (e.estado === "aprobada" || e.estado === "reprobada") &&
+            !vistas.has(e.id)
+        );
+        setPendientesVer(revisadasSinVer.length);
+      })
+      .catch(() => {
+        if (miSeq === seqRef.current) setPendientesVer(0);
+      });
+  }, [user, esEstudiante]);
+
+  useEffect(() => {
     recargar();
-    // Re-revisa cuando otra parte de la app marca entregas como vistas
-    // (por ejemplo, cuando el estudiante entra a /mis-entregas).
     const handler = () => recargar();
     window.addEventListener("simulador.entregasVistas.changed", handler);
-    // Refresh ligero cada 60s (por si el docente revisa mientras el alumno
-    // tiene la pestaña abierta).
-    const id = setInterval(recargar, 60000);
     return () => {
-      cancelado = true;
       window.removeEventListener("simulador.entregasVistas.changed", handler);
-      clearInterval(id);
     };
-  }, [user, perfil?.rol]);
+  }, [recargar]);
+
+  // Refresh cada 60s solo con la pestaña visible (no malgasta queries en
+  // segundo plano con 30 alumnos).
+  useIntervaloVisible(recargar, 60000);
 
   if (perfil?.rol !== "estudiante") return null;
   if (pendientesVer === 0) return null;

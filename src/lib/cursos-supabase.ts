@@ -341,8 +341,8 @@ export async function obtenerRankingCurso(cursoId: string): Promise<FilaRanking[
 
   const estudianteIds = inscritos.map((i) => i.estudiante_id);
 
-  // 2. Proyectos de esos estudiantes para este curso (o sin curso). Traemos
-  // actualizado_en para mostrar "última actividad" en el ranking.
+  // 2. Proyectos de esos estudiantes. Traemos actualizado_en para mostrar
+  // "última actividad" en el ranking.
   const { data: proyectos, error: errProyectos } = await supabase
     .from("proyectos")
     .select("id, estudiante_id, nombre, estado, actualizado_en")
