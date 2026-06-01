@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="oro" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Fondo -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Barras de gráfico -->
+  <g transform="translate(96, 320)">
+    <rect x="0"   y="-40"  width="48" height="80"  rx="6" fill="#475569"/>
+    <rect x="64"  y="-80"  width="48" height="120" rx="6" fill="#64748b"/>
+    <rect x="128" y="-130" width="48" height="170" rx="6" fill="#94a3b8"/>
+    <rect x="192" y="-180" width="48" height="220" rx="6" fill="url(#oro)"/>
+    <rect x="256" y="-160" width="48" height="200" rx="6" fill="#fbbf24" opacity="0.85"/>
+  </g>
+  <!-- Flecha de crecimiento -->
+  <path d="M 96 240 L 176 180 L 256 140 L 336 110 L 416 80"
+        stroke="#fde047" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="416" cy="80" r="14" fill="#fde047"/>
+  <!-- Texto SP abajo -->
+  <text x="256" y="430" text-anchor="middle"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="56" font-weight="900" fill="white" letter-spacing="4">
+    SIMPRO
+  </text>
+</svg>

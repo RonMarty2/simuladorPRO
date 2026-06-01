@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import CreditoAutor from "@/components/layout/CreditoAutor";
 import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
+import BotonInstalarApp from "@/components/layout/BotonInstalarApp";
 
 const enlacesEstudiante = [
   { to: "/estudiante", label: "Mi panel", icon: LayoutDashboard },
@@ -170,6 +171,11 @@ export default function RootLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Banner flotante "Instalá la app" — solo aparece si el navegador
+          permite instalar la PWA y el usuario aún no la instaló ni la
+          cerró en esta sesión. */}
+      <BotonInstalarApp />
     </div>
   );
 }
