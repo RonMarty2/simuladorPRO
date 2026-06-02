@@ -3,6 +3,10 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
+import { inicializarSentry } from "./lib/sentry";
+
+// Monitoreo de errores en producción. No-op si no hay VITE_SENTRY_DSN.
+inicializarSentry();
 
 // Bloqueo de orientación en vertical en mobile. El layout está pensado para
 // portrait (formularios largos, tablas, podio); en horizontal se ve roto.
