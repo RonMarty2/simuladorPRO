@@ -141,9 +141,19 @@ export default function MisEntregas() {
               )}
             </div>
 
-            {/* Lista de entregas */}
+            {/* Lista de entregas — ordenadas por etapa ascendente, y dentro
+                de cada etapa por intento más reciente primero. Así el alumno
+                ve "Etapa 1, Etapa 2, Etapa 3..." en orden, no mezcladas por
+                fecha. */}
             <div className="space-y-1.5">
-              {entregasCurso.map((e) => (
+              {[...entregasCurso]
+                .sort((a, b) => {
+                  const pa = a.paso_entregado ?? 999;
+                  const pb = b.paso_entregado ?? 999;
+                  if (pa !== pb) return pa - pb;
+                  return b.numero_intento - a.numero_intento;
+                })
+                .map((e) => (
                 <TarjetaEntrega key={e.id} entrega={e} />
               ))}
             </div>
@@ -185,6 +195,9 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
         <Icono className="h-4 w-4 flex-shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="text-xs font-semibold">
+            {entrega.paso_entregado != null
+              ? `Etapa ${entrega.paso_entregado} · `
+              : "Proyecto entero · "}
             Intento #{entrega.numero_intento} ·{" "}
             <span className="capitalize">{entrega.estado}</span>
           </div>
