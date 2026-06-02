@@ -220,3 +220,73 @@ export async function limpiarEventoForzado(simulacionId: string): Promise<void> 
     .eq("id", simulacionId);
   if (error) throw error;
 }
+
+// ============================================================================
+// DASHBOARD DE RESPUESTAS: qué decidió cada alumno ante un evento lanzado
+// ============================================================================
+
+export interface RespuestasEvento {
+  /** Cuántos alumnos YA respondieron (tomaron una decisión sobre ese evento). */
+  totalRespondieron: number;
+  /** Desglose por letra de opción: { A: 12, B: 4, ... } */
+  porLetra: Record<string, number>;
+  /** Texto de cada opción (para mostrar junto al conteo). */
+  textosPorLetra: Record<string, string>;
+}
+
+/**
+ * Lee turnos_historial para saber qué decidieron los alumnos del curso ante
+ * un evento específico. Cruza: proyectos del curso → simulaciones → turnos.
+ * Filtra en JS los turnos cuya decision_tomada.evento_id == eventoId y agrupa
+ * por la letra de la opción elegida.
+ */
+export async function obtenerRespuestasEvento(
+  cursoId: string,
+  eventoId: string
+): Promise<RespuestasEvento> {
+  const vacio: RespuestasEvento = {
+    totalRespondieron: 0,
+    porLetra: {},
+    textosPorLetra: {},
+  };
+
+  // 1) proyectos del curso
+  const { data: proyectos, error: e1 } = await supabase
+    .from("proyectos")
+    .select("id")
+    .eq("curso_id", cursoId);
+  if (e1) throw e1;
+  const proyectoIds = (proyectos ?? []).map((p: any) => p.id);
+  if (proyectoIds.length === 0) return vacio;
+
+  // 2) simulaciones de esos proyectos (activas o finalizadas — la decisión
+  //    pudo tomarse y luego seguir)
+  const { data: sims, error: e2 } = await supabase
+    .from("simulaciones")
+    .select("id")
+    .in("proyecto_id", proyectoIds);
+  if (e2) throw e2;
+  const simIds = (sims ?? []).map((s: any) => s.id);
+  if (simIds.length === 0) return vacio;
+
+  // 3) turnos de esas simulaciones con su decisión
+  const { data: turnos, error: e3 } = await supabase
+    .from("turnos_historial")
+    .select("decision_tomada")
+    .in("simulacion_id", simIds);
+  if (e3) throw e3;
+
+  const porLetra: Record<string, number> = {};
+  const textosPorLetra: Record<string, string> = {};
+  let total = 0;
+  for (const t of (turnos ?? []) as any[]) {
+    const dec = t.decision_tomada;
+    if (!dec || dec.evento_id !== eventoId || !dec.opcion) continue;
+    const letra = dec.opcion.letra ?? "?";
+    porLetra[letra] = (porLetra[letra] ?? 0) + 1;
+    if (!textosPorLetra[letra]) textosPorLetra[letra] = dec.opcion.texto ?? "";
+    total++;
+  }
+
+  return { totalRespondieron: total, porLetra, textosPorLetra };
+}

@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search, Send, Zap, CheckCircle2, History } from "lucide-react";
+import { Loader2, Search, Send, Zap, CheckCircle2, History, BarChart3, Settings2, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { listarEventos } from "@/lib/eventos-supabase";
 import {
   contarSimulacionesActivasDelCurso,
   dispararEventoAlCurso,
   listarEventosDisparadosDelCurso,
+  obtenerRespuestasEvento,
   type AlcanceLanzamiento,
   type EventoDisparado,
+  type RespuestasEvento,
 } from "@/lib/lanzador-eventos";
+import { actualizarTiposSimulables } from "@/lib/cursos-supabase";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import { supabase } from "@/lib/supabase";
 import type { Curso } from "@/lib/cursos-supabase";
@@ -36,6 +39,10 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   const [exito, setExito] = useState<{ titulo: string; afectadas: number } | null>(null);
   const [curso, setCurso] = useState<Curso | null>(null);
   const [alcance, setAlcance] = useState<AlcanceLanzamiento>("todos");
+  // #1 editor de tipos simulables
+  const [mostrarConfig, setMostrarConfig] = useState(false);
+  // #4 dashboard de respuestas: el disparo cuyo desglose estamos viendo
+  const [verRespuestas, setVerRespuestas] = useState<EventoDisparado | null>(null);
 
   // Carga del curso para saber qué alcances están habilitados.
   useEffect(() => {
@@ -184,15 +191,47 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             </div>
           </div>
         </div>
-        <div className="rounded-md bg-white px-3 py-1.5 text-center text-xs shadow-sm dark:bg-amber-950/60">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Simulaciones activas
-          </div>
-          <div className="text-xl font-bold text-amber-900 dark:text-amber-100">
-            {conteo?.totalDelAlcance ?? "—"}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMostrarConfig(true)}
+            className="flex items-center gap-1 rounded-md border border-amber-400 bg-white px-2.5 py-1.5 text-[11px] font-medium text-amber-900 shadow-sm hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-100"
+            title="Configurar qué tipos de proyecto se pueden simular en este curso"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            Configurar
+          </button>
+          <div className="rounded-md bg-white px-3 py-1.5 text-center text-xs shadow-sm dark:bg-amber-950/60">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Simulaciones activas
+            </div>
+            <div className="text-xl font-bold text-amber-900 dark:text-amber-100">
+              {conteo?.totalDelAlcance ?? "—"}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* #1 Editor de tipos simulables (modal) */}
+      {mostrarConfig && curso && (
+        <ModalConfigSimulacion
+          curso={curso}
+          onCerrar={() => setMostrarConfig(false)}
+          onGuardado={(nuevo) => {
+            setCurso(nuevo);
+            setMostrarConfig(false);
+          }}
+        />
+      )}
+
+      {/* #4 Dashboard de respuestas (modal) */}
+      {verRespuestas && (
+        <ModalRespuestas
+          cursoId={cursoId}
+          disparo={verRespuestas}
+          evento={eventos.find((e) => e.id === verRespuestas.evento_id) ?? null}
+          onCerrar={() => setVerRespuestas(null)}
+        />
+      )}
 
       {/* Éxito banner */}
       {exito && (
@@ -414,18 +453,22 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               const evento = eventos.find((e) => e.id === h.evento_id);
               const hace = relativo(h.disparado_en);
               return (
-                <li
-                  key={h.id}
-                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]"
-                >
-                  <span className="truncate">
-                    <strong>{evento?.titulo ?? h.evento_id}</strong> — llegó a{" "}
-                    {h.simulaciones_afectadas} alumno
-                    {h.simulaciones_afectadas === 1 ? "" : "s"}
-                  </span>
-                  <span className="flex-shrink-0 text-[10px] text-muted-foreground">
-                    {hace}
-                  </span>
+                <li key={h.id}>
+                  <button
+                    onClick={() => setVerRespuestas(h)}
+                    className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-left text-[11px] transition hover:border-primary hover:bg-secondary/40"
+                    title="Ver qué decidieron los alumnos ante esta situación"
+                  >
+                    <span className="truncate">
+                      <strong>{evento?.titulo ?? h.evento_id}</strong> — llegó a{" "}
+                      {h.simulaciones_afectadas} alumno
+                      {h.simulaciones_afectadas === 1 ? "" : "s"}
+                    </span>
+                    <span className="flex flex-shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <BarChart3 className="h-3 w-3 text-primary" />
+                      {hace}
+                    </span>
+                  </button>
                 </li>
               );
             })}
@@ -445,4 +488,238 @@ function relativo(iso: string): string {
   if (h < 24) return `hace ${h} h`;
   const d = Math.floor(h / 24);
   return `hace ${d} día${d === 1 ? "" : "s"}`;
+}
+
+// ============================================================================
+// #1 — MODAL: configurar qué tipos de proyecto se pueden simular en el curso
+// ============================================================================
+function ModalConfigSimulacion({
+  curso,
+  onCerrar,
+  onGuardado,
+}: {
+  curso: Curso;
+  onCerrar: () => void;
+  onGuardado: (nuevo: Curso) => void;
+}) {
+  const [caso, setCaso] = useState(curso.simulacion_caso_curso ?? true);
+  const [individual, setIndividual] = useState(curso.simulacion_individual ?? false);
+  const [grupal, setGrupal] = useState(curso.simulacion_grupal ?? true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const guardar = async () => {
+    setGuardando(true);
+    setError(null);
+    try {
+      await actualizarTiposSimulables(curso.id, {
+        simulacion_caso_curso: caso,
+        simulacion_individual: individual,
+        simulacion_grupal: grupal,
+      });
+      onGuardado({
+        ...curso,
+        simulacion_caso_curso: caso,
+        simulacion_individual: individual,
+        simulacion_grupal: grupal,
+      });
+    } catch (e: any) {
+      setError(e?.message ?? "No se pudo guardar");
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-lg bg-card p-5 shadow-xl">
+        <div className="mb-3 flex items-start justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <Settings2 className="h-4 w-4 text-amber-600" />
+              Tipos de proyecto simulables
+            </h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{curso.nombre}</p>
+          </div>
+          <button onClick={onCerrar} disabled={guardando} className="rounded-md p-1 hover:bg-secondary disabled:opacity-50">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          El alumno solo va a ver en su pantalla "Simular" los tipos que marques acá. El
+          lanzador de situaciones también respeta esta configuración.
+        </p>
+
+        <div className="space-y-2">
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50/40 p-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/20">
+            <input type="checkbox" checked={caso} onChange={(e) => setCaso(e.target.checked)} className="mt-0.5" />
+            <span>🎓 <strong>Caso del curso</strong> — la copia del caso que publicaste como docente.</span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-sky-200 bg-sky-50/40 p-2 text-xs dark:border-sky-900 dark:bg-sky-950/20">
+            <input type="checkbox" checked={individual} onChange={(e) => setIndividual(e.target.checked)} className="mt-0.5" />
+            <span>📁 <strong>Proyecto individual</strong> — el proyecto propio del alumno.</span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 rounded-md border border-violet-200 bg-violet-50/40 p-2 text-xs dark:border-violet-900 dark:bg-violet-950/20">
+            <input type="checkbox" checked={grupal} onChange={(e) => setGrupal(e.target.checked)} className="mt-0.5" />
+            <span>🤝 <strong>Proyecto grupal</strong> — el proyecto compartido del grupo.</span>
+          </label>
+        </div>
+
+        {error && <div className="mt-2 text-[11px] text-destructive">{error}</div>}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onCerrar} disabled={guardando} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-secondary disabled:opacity-50">
+            Cancelar
+          </button>
+          <button onClick={guardar} disabled={guardando} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+            {guardando && <Loader2 className="h-3 w-3 animate-spin" />}
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// #4 — MODAL: desglose de decisiones de los alumnos ante un evento lanzado
+// ============================================================================
+function ModalRespuestas({
+  cursoId,
+  disparo,
+  evento,
+  onCerrar,
+}: {
+  cursoId: string;
+  disparo: EventoDisparado;
+  evento: Evento | null;
+  onCerrar: () => void;
+}) {
+  const [datos, setDatos] = useState<RespuestasEvento | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const cargar = async () => {
+    setCargando(true);
+    try {
+      const r = await obtenerRespuestasEvento(cursoId, disparo.evento_id);
+      setDatos(r);
+      setError(null);
+    } catch (e: any) {
+      setError(e?.message ?? "Error al cargar respuestas");
+    } finally {
+      setCargando(false);
+    }
+  };
+  useEffect(() => {
+    cargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursoId, disparo.evento_id]);
+
+  const total = datos?.totalRespondieron ?? 0;
+  const letras = ["A", "B", "C", "D"];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-lg bg-card shadow-xl">
+        <header className="flex items-start justify-between gap-2 border-b border-border p-4">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              ¿Qué decidieron los alumnos?
+            </h2>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+              {evento?.titulo ?? disparo.evento_id}
+            </p>
+          </div>
+          <button onClick={onCerrar} className="rounded-md p-1 hover:bg-secondary">
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {cargando ? (
+            <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando respuestas…
+            </div>
+          ) : error ? (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs text-destructive">
+              {error}
+            </div>
+          ) : total === 0 ? (
+            <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Todavía ningún alumno respondió a esta situación. Volvé a abrir esto en unos
+              minutos cuando hayan avanzado el turno.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground">
+                <strong className="text-foreground">{total}</strong> alumno{total === 1 ? "" : "s"}{" "}
+                ya {total === 1 ? "respondió" : "respondieron"} de los{" "}
+                {disparo.simulaciones_afectadas} que recibieron la situación.
+              </div>
+              {letras.map((letra) => {
+                const n = datos?.porLetra[letra] ?? 0;
+                if (n === 0 && !datos?.textosPorLetra[letra]) {
+                  // Buscar el texto desde el evento si no hubo respuestas con esa letra
+                  const op = evento?.opciones_decision.find((o) => o.letra === letra);
+                  if (!op) return null;
+                  return (
+                    <BarraRespuesta key={letra} letra={letra} texto={op.texto} n={0} total={total} />
+                  );
+                }
+                const texto =
+                  datos?.textosPorLetra[letra] ??
+                  evento?.opciones_decision.find((o) => o.letra === letra)?.texto ??
+                  "";
+                if (!texto) return null;
+                return <BarraRespuesta key={letra} letra={letra} texto={texto} n={n} total={total} />;
+              })}
+              <button
+                onClick={cargar}
+                className="mt-1 text-[11px] font-medium text-primary underline"
+              >
+                Actualizar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BarraRespuesta({
+  letra,
+  texto,
+  n,
+  total,
+}: {
+  letra: string;
+  texto: string;
+  n: number;
+  total: number;
+}) {
+  const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+  return (
+    <div className="rounded-md border border-border bg-background p-2.5">
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+        <span className="flex items-center gap-1.5">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            {letra}
+          </span>
+          <span className="font-medium">{texto}</span>
+        </span>
+        <span className="flex-shrink-0 font-bold tabular-nums">
+          {n} <span className="text-[10px] font-normal text-muted-foreground">({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-primary to-indigo-500 transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
 }
