@@ -25,7 +25,8 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   const user = useAuthStore((s) => s.user);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [historial, setHistorial] = useState<EventoDisparado[]>([]);
-  const [activas, setActivas] = useState<number | null>(null);
+  const [conteo, setConteo] = useState<{ totalDelAlcance: number; enSectoresAfectados: number } | null>(null);
+  const [forzarATodos, setForzarATodos] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState<string>("todas");
   const [seleccionado, setSeleccionado] = useState<Evento | null>(null);
@@ -90,14 +91,18 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
     };
   }, []);
 
-  // Refrescar conteo de activas (según alcance) + historial.
+  // Refrescar conteo de activas (alcance + sectores del evento seleccionado) + historial.
   const refrescar = async () => {
     try {
-      const [n, h] = await Promise.all([
-        contarSimulacionesActivasDelCurso(cursoId, alcance),
+      const [c, h] = await Promise.all([
+        contarSimulacionesActivasDelCurso(
+          cursoId,
+          alcance,
+          seleccionado?.sectores_afectados
+        ),
         listarEventosDisparadosDelCurso(cursoId, 10),
       ]);
-      setActivas(n);
+      setConteo(c);
       setHistorial(h);
     } catch {
       /* no-op: no romper UI por error de polling */
@@ -106,8 +111,16 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   useEffect(() => {
     refrescar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId, alcance]);
+  }, [cursoId, alcance, seleccionado?.id]);
   useIntervaloVisible(refrescar, 10000);
+
+  // Cuántos van a recibir el evento según el toggle de forzado.
+  const aLanzar = !seleccionado
+    ? null
+    : forzarATodos
+      ? conteo?.totalDelAlcance ?? 0
+      : conteo?.enSectoresAfectados ?? 0;
+  const aplicaATodos = seleccionado?.sectores_afectados.includes("todos") ?? false;
 
   // Categorías disponibles
   const categorias = useMemo(() => {
@@ -142,9 +155,12 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
         eventoId: seleccionado.id,
         docenteId: user.id,
         alcance,
+        sectoresAfectados: seleccionado.sectores_afectados,
+        forzarATodos,
       });
       setExito({ titulo: seleccionado.titulo, afectadas: r.afectadas });
       setSeleccionado(null);
+      setForzarATodos(false);
       refrescar();
     } catch (e: any) {
       setError(e?.message ?? "Error al lanzar el evento");
@@ -173,7 +189,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             Simulaciones activas
           </div>
           <div className="text-xl font-bold text-amber-900 dark:text-amber-100">
-            {activas ?? "—"}
+            {conteo?.totalDelAlcance ?? "—"}
           </div>
         </div>
       </div>
@@ -286,11 +302,62 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
                 {e.descripcion}
               </p>
-              <div className="mt-1 text-[9px] text-muted-foreground">
-                {e.opciones_decision.length} decisiones disponibles
+              <div className="mt-1 flex flex-wrap items-center gap-1">
+                <span className="text-[9px] text-muted-foreground">
+                  {e.opciones_decision.length} decisiones · 🎯
+                </span>
+                {e.sectores_afectados.includes("todos") ? (
+                  <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                    todos los sectores
+                  </span>
+                ) : (
+                  e.sectores_afectados.map((s) => (
+                    <span
+                      key={s}
+                      className="rounded bg-sky-100 px-1 py-0.5 text-[9px] font-semibold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+                    >
+                      {s}
+                    </span>
+                  ))
+                )}
               </div>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Filtrado sectorial (solo si hay evento seleccionado con sectores específicos) */}
+      {seleccionado && !aplicaATodos && (
+        <div className="rounded-md border border-sky-300 bg-sky-50/60 p-3 dark:border-sky-800 dark:bg-sky-950/30">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-sky-900 dark:text-sky-100">
+            🎯 Este evento solo aplica a:{" "}
+            {seleccionado.sectores_afectados.map((s) => (
+              <span
+                key={s}
+                className="rounded bg-sky-200 px-1.5 py-0.5 text-[9px] uppercase dark:bg-sky-800/60"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+          <p className="mb-2 text-[10px] leading-snug text-sky-800/80 dark:text-sky-200/80">
+            De los <strong>{conteo?.totalDelAlcance ?? 0}</strong> alumnos con simulación,{" "}
+            <strong>{conteo?.enSectoresAfectados ?? 0}</strong> tienen proyectos en sectores
+            afectados. El resto tiene proyectos en otros sectores (ej. servicios, software).
+          </p>
+          <label className="flex cursor-pointer items-start gap-2 text-[11px] text-sky-900 dark:text-sky-100">
+            <input
+              type="checkbox"
+              checked={forzarATodos}
+              onChange={(e) => setForzarATodos(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <strong>Forzar a TODOS los alumnos del alcance</strong> aunque no sea
+              sectorialmente relevante (útil si querés que los del sector NO afectado
+              discutan en clase <em>por qué</em> no les aplica).
+            </span>
+          </label>
         </div>
       )}
 
@@ -312,11 +379,11 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
         </div>
         <button
           onClick={lanzar}
-          disabled={!seleccionado || confirmando || (activas ?? 0) === 0}
+          disabled={!seleccionado || confirmando || (aLanzar ?? 0) === 0}
           className="flex items-center gap-1.5 rounded-md bg-amber-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:bg-amber-700 disabled:opacity-40"
           title={
-            (activas ?? 0) === 0
-              ? "No hay alumnos con simulación activa en este curso"
+            (aLanzar ?? 0) === 0
+              ? "Ningún alumno aplica para este evento con el filtro actual"
               : ""
           }
         >
@@ -325,7 +392,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
           ) : (
             <Send className="h-4 w-4" />
           )}
-          Lanzar a {activas ?? "—"} alumno{(activas ?? 0) === 1 ? "" : "s"}
+          Lanzar a {aLanzar ?? "—"} alumno{(aLanzar ?? 0) === 1 ? "" : "s"}
         </button>
       </div>
 
