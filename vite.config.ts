@@ -10,6 +10,9 @@ export default defineConfig({
       // 'autoUpdate': el service worker se actualiza solo cuando se publica
       // una versión nueva. El usuario ve los cambios al recargar la app.
       registerType: "autoUpdate",
+      // Registramos el SW manualmente (src/lib/pwa-update.ts) para controlar
+      // el chequeo de versión al abrir/enfocar la app y la recarga única.
+      injectRegister: false,
       // Iconos que vivan en /public para que el navegador los encuentre.
       includeAssets: [
         "favicon.ico",
@@ -65,6 +68,12 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // OTA: el SW nuevo toma control de inmediato (skipWaiting) y reclama
+        // todas las pestañas abiertas (clientsClaim), sin esperar a que el
+        // usuario cierre la app. Junto con el registro manual, esto dispara
+        // la recarga única al haber versión nueva.
+        skipWaiting: true,
+        clientsClaim: true,
         // Cache de los archivos estáticos del build (no toca llamadas a Supabase).
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         // El bundle JS principal pesa ~2.3 MB. Subimos el límite a 5 MB para que
