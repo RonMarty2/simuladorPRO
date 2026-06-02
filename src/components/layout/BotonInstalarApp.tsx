@@ -31,6 +31,17 @@ function esIOS(): boolean {
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !("MSStream" in window);
 }
 
+/**
+ * Solo queremos mostrar el banner de instalación en celulares (Android, iOS).
+ * En desktop el navegador YA tiene su propio menú "Instalar app" y nuestro
+ * banner solo agrega ruido.
+ */
+function esMobil(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent;
+  return /Mobi|Mobile|Android|iPhone|iPad|iPod/.test(ua);
+}
+
 function yaInstalada(): boolean {
   if (typeof window === "undefined") return false;
   // Si la app corre en modo standalone, ya está instalada.
@@ -58,6 +69,10 @@ export default function BotonInstalarApp() {
   });
 
   useEffect(() => {
+    // Solo en móvil: en desktop el navegador ya tiene su propio botón
+    // "Instalar app" en la barra y nuestro banner sobra.
+    if (!esMobil()) return;
+
     const handler = (e: Event) => {
       e.preventDefault();
       setPrompt(e as unknown as DeferredPrompt);
@@ -98,9 +113,12 @@ export default function BotonInstalarApp() {
   };
 
   // No mostrar el botón si:
+  //  - es desktop (no es Android ni iOS — el navegador ya tiene su propio
+  //    "Instalar app" en la barra de direcciones).
   //  - la app ya está instalada
   //  - el usuario lo cerró en esta sesión
   //  - no es iOS y el navegador no disparó beforeinstallprompt
+  if (!esMobil()) return null;
   if (yaInstalada()) return null;
   if (ocultoSesion) return null;
   if (!prompt && !esIOS()) return null;
