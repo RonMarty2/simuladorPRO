@@ -17,6 +17,7 @@ import { useSimulacionStore } from "@/stores/simulacion-store";
 import { listarMisProyectos } from "@/lib/proyecto-supabase";
 import { formatearBolivianos } from "@/lib/utils";
 import { mesesPorTurno } from "@/lib/motor-eventos";
+import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import type { OpcionDecision } from "@/types/evento";
 
 export default function SimularProyecto() {
@@ -31,6 +32,9 @@ export default function SimularProyecto() {
   const inicializar = useSimulacionStore((s) => s.inicializar);
   const decidirYAvanzar = useSimulacionStore((s) => s.decidirYAvanzar);
   const abandonar = useSimulacionStore((s) => s.abandonar);
+  const refrescarSiHayEventoForzado = useSimulacionStore(
+    (s) => s.refrescarSiHayEventoForzado
+  );
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<OpcionDecision | null>(null);
   const [iniciando, setIniciando] = useState(true);
 
@@ -50,6 +54,18 @@ export default function SimularProyecto() {
       inicializar(proyecto, "mensual");
     }
   }, [proyecto, sim, inicializar]);
+
+  // Polling: cada 8 segundos verifica si el docente disparó un evento en vivo
+  // mientras el alumno tenía la pantalla abierta sin tomar decisiones. Solo
+  // mientras la pestaña está visible (useIntervaloVisible).
+  useIntervaloVisible(
+    () => {
+      if (proyecto && sim?.estado === "activa") {
+        refrescarSiHayEventoForzado(proyecto);
+      }
+    },
+    8000
+  );
 
   const aplicarDecision = async () => {
     if (!proyecto) return;
@@ -137,7 +153,18 @@ export default function SimularProyecto() {
 
       {/* Evento del mes */}
       {eventoActual ? (
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div
+          className={
+            sim?.evento_forzado_id
+              ? "rounded-lg border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-md dark:from-amber-950/30 dark:to-orange-950/30"
+              : "rounded-lg border border-border bg-card p-6"
+          }
+        >
+          {sim?.evento_forzado_id && (
+            <div className="mb-3 flex items-center gap-2 rounded-md bg-amber-200/60 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:bg-amber-800/40 dark:text-amber-100">
+              🎲 SITUACIÓN LANZADA POR TU DOCENTE EN VIVO
+            </div>
+          )}
           <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
             <Newspaper className="h-3.5 w-3.5" />
             Noticia del mes — {eventoActual.codigo}

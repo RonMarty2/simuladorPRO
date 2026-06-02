@@ -6,6 +6,7 @@ import {
   obtenerSimulacionActiva,
   registrarTurno,
 } from "@/lib/simulacion-supabase";
+import { limpiarEventoForzado } from "@/lib/lanzador-eventos";
 import {
   avanzarTurnoConDecision,
   calcularBaseProyecto,
@@ -41,6 +42,10 @@ interface SimulacionState {
 
   // Reinicia (borra la simulación activa, queda lista para empezar otra)
   abandonar: () => Promise<void>;
+
+  // Polling: verifica si el docente disparó un evento mientras el alumno
+  // estaba sin tomar decisiones. Si detecta uno nuevo, lo aplica.
+  refrescarSiHayEventoForzado: (proyecto: Proyecto) => Promise<void>;
 }
 
 export const useSimulacionStore = create<SimulacionState>((set, get) => ({
@@ -99,6 +104,16 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
     if (simulacion.estado !== "activa") return;
     if (simulacion.turno_actual >= simulacion.turnos_totales) return;
 
+    // PRIORIDAD MÁXIMA: si el docente disparó un evento en vivo, ese reemplaza
+    // cualquier sorteo del modo del curso.
+    if (simulacion.evento_forzado_id) {
+      const forzado = eventos.find((e) => e.id === simulacion.evento_forzado_id);
+      if (forzado) {
+        set({ eventoActual: forzado });
+        return;
+      }
+    }
+
     const eventosYaUsados = historial
       .flatMap((h) => h.eventos_aplicados.map((e) => e.id))
       .filter(Boolean);
@@ -146,6 +161,16 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
         finalizada_en: estadoFinal === "activa" ? null : new Date().toISOString(),
       });
 
+      // Si esta vuelta venía con evento forzado del docente, lo limpiamos
+      // para que no se aplique de nuevo en el próximo turno.
+      if (simulacion.evento_forzado_id) {
+        try {
+          await limpiarEventoForzado(simulacion.id);
+        } catch {
+          /* no-op: si falla, el siguiente turno igual lo limpia el motor */
+        }
+      }
+
       await registrarTurno({
         simulacion_id: simulacion.id,
         numero_turno: nuevoTurno,
@@ -162,6 +187,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
         estado_actual: resultado.estadoDespues,
         estado: estadoFinal,
         finalizada_en: estadoFinal === "activa" ? null : new Date().toISOString(),
+        evento_forzado_id: null,
       };
       set({ simulacion: nuevaSim, historial, eventoActual: null, cargando: false });
 
@@ -183,5 +209,30 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
       finalizada_en: new Date().toISOString(),
     });
     set({ simulacion: null, historial: [], eventoActual: null });
+  },
+
+  refrescarSiHayEventoForzado: async (proyecto) => {
+    const { simulacion } = get();
+    if (!simulacion || simulacion.estado !== "activa") return;
+    try {
+      // Releemos solo el campo evento_forzado_id de la simulación para evitar
+      // sobrescribir el estado local con datos viejos.
+      const { data } = await supabase
+        .from("simulaciones")
+        .select("evento_forzado_id")
+        .eq("id", simulacion.id)
+        .maybeSingle();
+      const nuevoForzado = (data as { evento_forzado_id?: string | null } | null)
+        ?.evento_forzado_id ?? null;
+      // Si cambió respecto a lo que tenemos, actualizamos y volvemos a preparar
+      // el evento del próximo turno.
+      if (nuevoForzado !== (simulacion.evento_forzado_id ?? null)) {
+        const sim: Simulacion = { ...simulacion, evento_forzado_id: nuevoForzado };
+        set({ simulacion: sim });
+        get().prepararSiguienteTurno(proyecto);
+      }
+    } catch {
+      /* no-op: polling no debe romper la UI si la red falla */
+    }
   },
 }));

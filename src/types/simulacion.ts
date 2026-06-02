@@ -46,6 +46,12 @@ export interface Simulacion {
   estado_actual: EstadoSimulacion;
   iniciada_en: string;
   finalizada_en: string | null;
+  /**
+   * Si está seteado, el motor del alumno usa ESTE evento en el próximo turno
+   * en vez del sorteo aleatorio. El docente lo setea desde el lanzador del
+   * panel docente. Se limpia al avanzar el turno.
+   */
+  evento_forzado_id?: string | null;
 }
 
 export interface TurnoHistorial {

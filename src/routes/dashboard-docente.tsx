@@ -17,6 +17,7 @@ import EntregasCurso from "@/components/docente/EntregasCurso";
 import GruposDocente from "@/components/curso/GruposDocente";
 import CasosCurso from "@/components/curso/CasosCurso";
 import PodioCurso from "@/components/curso/PodioCurso";
+import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
@@ -367,7 +368,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio">("ranking");
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador">("ranking");
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -398,7 +399,7 @@ function CursoCard({
   };
 
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
-  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio";
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador";
   const irA = (tab: Vista) => {
     setVista(tab);
     if (!expandido) onToggle();
@@ -461,6 +462,9 @@ function CursoCard({
           </button>
           <button onClick={() => irA("casos")} className={claseTab("casos")}>
             🎓 Casos
+          </button>
+          <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
+            🎲 Lanzar situación
           </button>
           {expandido && (
             <button
@@ -545,6 +549,8 @@ function CursoCard({
           {vista === "grupos" && <GruposDocente curso={curso} />}
 
           {vista === "casos" && <CasosCurso cursoId={curso.id} />}
+
+          {vista === "lanzador" && <LanzadorEventos cursoId={curso.id} />}
 
           {vista === "podio" && (
             <PodioCurso
