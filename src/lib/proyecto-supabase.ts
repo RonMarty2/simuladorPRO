@@ -187,6 +187,38 @@ export async function guardarComoCasoDelCurso(
   if (error) throw error;
 }
 
+/**
+ * Publica una PLANTILLA de la galería como caso del curso. La plantilla es un
+ * Proyecto en memoria (no persiste); esta función lo "instancia" en la base
+ * marcado como tipo='caso_curso' del docente, asociado al curso elegido. Cada
+ * llamada inserta un caso NUEVO con ids frescos (la plantilla regenera todos
+ * los ids al construirse), así el docente puede publicarla varias veces sin
+ * colisiones.
+ */
+export async function publicarPlantillaComoCaso(params: {
+  plantilla: Proyecto;
+  docenteId: string;
+  cursoId: string;
+  pasoInicioEstudiante: number;
+  nombre?: string;
+}): Promise<Proyecto> {
+  const ahora = new Date().toISOString();
+  const proy: Proyecto = {
+    ...params.plantilla,
+    estudiante_id: params.docenteId,
+    curso_id: params.cursoId,
+    grupo_id: null,
+    tipo: "caso_curso",
+    paso_inicio_estudiante: params.pasoInicioEstudiante,
+    estado: "completo",
+    nombre: params.nombre ?? params.plantilla.nombre,
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+  await insertarProyecto(proy);
+  return proy;
+}
+
 /** Lista los casos del curso disponibles (creados por el docente del curso). */
 export async function listarCasosDelCurso(cursoId: string): Promise<Proyecto[]> {
   const { data, error } = await conTimeout(
