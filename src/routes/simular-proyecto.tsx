@@ -14,11 +14,12 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { useSimulacionStore } from "@/stores/simulacion-store";
-import { listarMisProyectos } from "@/lib/proyecto-supabase";
-import { formatearBolivianos } from "@/lib/utils";
+import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
+import { formatearBolivianos, cn } from "@/lib/utils";
 import { mesesPorTurno } from "@/lib/motor-eventos";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import type { OpcionDecision } from "@/types/evento";
+import type { Proyecto } from "@/types/proyecto";
 
 export default function SimularProyecto() {
   const user = useAuthStore((s) => s.user);
@@ -37,20 +38,36 @@ export default function SimularProyecto() {
   );
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<OpcionDecision | null>(null);
   const [iniciando, setIniciando] = useState(true);
+  const [proyectosDisponibles, setProyectosDisponibles] = useState<Proyecto[]>([]);
 
-  // Cargar proyecto del usuario al entrar
+  // Cargar TODOS los proyectos del usuario al entrar: los propios + los
+  // grupales (proyecto compartido del grupo). El alumno puede tener varios y
+  // elige cuál simular con el selector de arriba.
   useEffect(() => {
     if (!user) return;
-    listarMisProyectos(user.id)
-      .then((proyectos) => {
-        if (proyectos.length > 0) cargarProyecto(proyectos[0]);
+    Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
+      .then(([mios, grupales]) => {
+        // Deduplicar por id (el creador del grupo aparece en ambas listas).
+        const ids = new Set(mios.map((p) => p.id));
+        const todos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
+        // El "caso del curso" del docente (caso_curso) no se simula — es la
+        // plantilla original. Lo sacamos del selector. Los entrega_estudiante
+        // (la copia del alumno) sí se simulan.
+        const simulables = todos.filter((p) => p.tipo !== "caso_curso");
+        setProyectosDisponibles(simulables);
+        // Si todavía no hay proyecto activo, cargar el primero.
+        if (simulables.length > 0 && !proyecto) {
+          cargarProyecto(simulables[0]);
+        }
       })
       .finally(() => setIniciando(false));
-  }, [user, cargarProyecto]);
+  }, [user, cargarProyecto, proyecto]);
 
-  // Inicializar simulación cuando hay proyecto
+  // Inicializar simulación cuando hay proyecto, o cuando el alumno cambia de
+  // proyecto en el selector (la sim cargada corresponde al proyecto anterior).
   useEffect(() => {
-    if (proyecto && !sim) {
+    if (!proyecto) return;
+    if (!sim || sim.proyecto_id !== proyecto.id) {
       inicializar(proyecto, "mensual");
     }
   }, [proyecto, sim, inicializar]);
@@ -105,6 +122,19 @@ export default function SimularProyecto() {
 
   return (
     <div className="space-y-4">
+      {/* Selector de proyecto: el alumno elige cuál de sus proyectos simular
+          (caso del curso / individual / grupal). Solo aparece si tiene 2 o más.
+          NO abandonamos la simulación anterior — queda guardada por si el
+          alumno vuelve. El useEffect detecta el cambio de proyecto y carga la
+          simulación correspondiente (o crea una nueva si no existe). */}
+      {proyectosDisponibles.length > 1 && (
+        <SelectorProyectoSimular
+          proyectos={proyectosDisponibles}
+          activoId={proyecto.id}
+          onCambiar={(p) => cargarProyecto(p)}
+        />
+      )}
+
       {/* Header con turno y métricas */}
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-start justify-between gap-4">
@@ -386,6 +416,63 @@ function ResumenCelda({ titulo, valor }: { titulo: string; valor: string }) {
     <div className="rounded-md border border-border bg-card p-3 text-left">
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div className="text-sm font-semibold">{valor}</div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SelectorProyectoSimular — pills con los proyectos del alumno
+// ============================================================================
+function SelectorProyectoSimular({
+  proyectos,
+  activoId,
+  onCambiar,
+}: {
+  proyectos: Proyecto[];
+  activoId: string;
+  onCambiar: (p: Proyecto) => void;
+}) {
+  const tipoMeta = (p: Proyecto) => {
+    if (p.tipo === "proyecto_grupal") {
+      return { emoji: "🤝", label: "Grupal", clase: "border-violet-400 bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100" };
+    }
+    if (p.caso_origen_id) {
+      // copia del caso del docente — viene de un caso_curso
+      return { emoji: "🎓", label: "Caso del curso", clase: "border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" };
+    }
+    return { emoji: "📁", label: "Individual", clase: "border-sky-400 bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-100" };
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        ¿Qué proyecto querés simular?
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {proyectos.map((p) => {
+          const meta = tipoMeta(p);
+          const activo = p.id === activoId;
+          return (
+            <button
+              key={p.id}
+              onClick={() => !activo && onCambiar(p)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md border-2 px-2.5 py-1.5 text-xs transition",
+                activo
+                  ? "border-primary bg-primary text-primary-foreground shadow"
+                  : `${meta.clase} hover:border-primary`
+              )}
+              title={`${meta.label} — ${p.nombre}`}
+            >
+              <span>{meta.emoji}</span>
+              <span className="max-w-[160px] truncate font-semibold">{p.nombre}</span>
+              <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider dark:bg-white/10">
+                {meta.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
