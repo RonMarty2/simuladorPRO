@@ -23,22 +23,44 @@ export interface EventoDisparado {
   nota: string | null;
 }
 
-/** Cuenta cuántos alumnos del curso tienen simulación activa AHORA. */
-export async function contarSimulacionesActivasDelCurso(cursoId: string): Promise<number> {
-  // 1) Proyectos del curso (libres del alumno + grupales + entrega_estudiante)
+/**
+ * Tipo de proyecto al que va el evento. Mapea los tipos que el alumno usa
+ * (caso/individual/grupal) a las condiciones reales sobre proyectos.tipo y
+ * proyectos.caso_origen_id.
+ */
+export type AlcanceLanzamiento = "todos" | "caso" | "individual" | "grupal";
+
+/** Filtra una lista de proyectos según el alcance. */
+function filtrarPorAlcance(proyectos: { id: string; tipo: string; caso_origen_id: string | null }[], alcance: AlcanceLanzamiento) {
+  return proyectos
+    .filter((p) => {
+      if (p.tipo === "caso_curso") return false; // plantilla del docente, nunca
+      if (alcance === "todos") return true;
+      if (alcance === "grupal") return p.tipo === "proyecto_grupal";
+      if (alcance === "caso") return !!p.caso_origen_id;
+      // individual = libre sin caso_origen_id ni grupo_id
+      return p.tipo === "libre" && !p.caso_origen_id;
+    })
+    .map((p) => p.id);
+}
+
+/** Cuenta cuántos alumnos del curso tienen simulación activa AHORA, filtrando opcionalmente por alcance. */
+export async function contarSimulacionesActivasDelCurso(
+  cursoId: string,
+  alcance: AlcanceLanzamiento = "todos"
+): Promise<number> {
   const { data: proyectos, error: e1 } = await supabase
     .from("proyectos")
-    .select("id")
+    .select("id, tipo, caso_origen_id")
     .eq("curso_id", cursoId);
   if (e1) throw e1;
-  const proyectoIds = (proyectos ?? []).map((p: any) => p.id);
-  if (proyectoIds.length === 0) return 0;
+  const ids = filtrarPorAlcance((proyectos ?? []) as any[], alcance);
+  if (ids.length === 0) return 0;
 
-  // 2) Simulaciones activas de esos proyectos
   const { count, error: e2 } = await supabase
     .from("simulaciones")
     .select("id", { count: "exact", head: true })
-    .in("proyecto_id", proyectoIds)
+    .in("proyecto_id", ids)
     .eq("estado", "activa");
   if (e2) throw e2;
   return count ?? 0;
@@ -52,19 +74,21 @@ export async function dispararEventoAlCurso(params: {
   cursoId: string;
   eventoId: string;
   docenteId: string;
+  alcance?: AlcanceLanzamiento;
   nota?: string | null;
 }): Promise<{ afectadas: number; disparoId: string }> {
-  // 1) Buscar proyectos del curso
+  const alcance = params.alcance ?? "todos";
+  // 1) Buscar proyectos del curso con su tipo y caso_origen_id para filtrar.
   const { data: proyectos, error: e1 } = await supabase
     .from("proyectos")
-    .select("id")
+    .select("id, tipo, caso_origen_id")
     .eq("curso_id", params.cursoId);
   if (e1) throw e1;
-  const proyectoIds = (proyectos ?? []).map((p: any) => p.id);
+  const proyectoIds = filtrarPorAlcance((proyectos ?? []) as any[], alcance);
 
   let afectadas = 0;
   if (proyectoIds.length > 0) {
-    // 2) Setear evento_forzado_id en TODAS las simulaciones activas de esos
+    // 2) Setear evento_forzado_id en las simulaciones activas de esos
     // proyectos. Postgres devuelve la cantidad con count='exact'.
     const { error: e2, count } = await supabase
       .from("simulaciones")
@@ -75,7 +99,8 @@ export async function dispararEventoAlCurso(params: {
     afectadas = count ?? 0;
   }
 
-  // 3) Insertar registro de auditoría
+  // 3) Insertar registro de auditoría (anotamos el alcance en la nota).
+  const notaCompleta = `alcance=${alcance}${params.nota ? ` · ${params.nota}` : ""}`;
   const { data: disparo, error: e3 } = await supabase
     .from("eventos_disparados")
     .insert({
@@ -83,7 +108,7 @@ export async function dispararEventoAlCurso(params: {
       evento_id: params.eventoId,
       disparado_por: params.docenteId,
       simulaciones_afectadas: afectadas,
-      nota: params.nota ?? null,
+      nota: notaCompleta,
     })
     .select()
     .single();

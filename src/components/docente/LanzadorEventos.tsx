@@ -6,9 +6,12 @@ import {
   contarSimulacionesActivasDelCurso,
   dispararEventoAlCurso,
   listarEventosDisparadosDelCurso,
+  type AlcanceLanzamiento,
   type EventoDisparado,
 } from "@/lib/lanzador-eventos";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
+import { supabase } from "@/lib/supabase";
+import type { Curso } from "@/lib/cursos-supabase";
 import type { Evento } from "@/types/evento";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +33,46 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   const [cargandoEventos, setCargandoEventos] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState<{ titulo: string; afectadas: number } | null>(null);
+  const [curso, setCurso] = useState<Curso | null>(null);
+  const [alcance, setAlcance] = useState<AlcanceLanzamiento>("todos");
+
+  // Carga del curso para saber qué alcances están habilitados.
+  useEffect(() => {
+    supabase
+      .from("cursos")
+      .select("*")
+      .eq("id", cursoId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setCurso(data as Curso);
+      });
+  }, [cursoId]);
+
+  // Lista de alcances habilitados para este curso (según flags del docente).
+  const alcancesDisponibles = useMemo(() => {
+    const opts: { value: AlcanceLanzamiento; emoji: string; label: string }[] = [];
+    if (curso?.simulacion_caso_curso ?? true) {
+      opts.push({ value: "caso", emoji: "🎓", label: "Caso del curso" });
+    }
+    if (curso?.simulacion_individual ?? false) {
+      opts.push({ value: "individual", emoji: "📁", label: "Individual" });
+    }
+    if (curso?.simulacion_grupal ?? true) {
+      opts.push({ value: "grupal", emoji: "🤝", label: "Grupal" });
+    }
+    if (opts.length > 1) {
+      opts.unshift({ value: "todos", emoji: "🎯", label: "Todos" });
+    }
+    return opts;
+  }, [curso]);
+
+  // Si el alcance seleccionado ya no está disponible, volver al primero válido.
+  useEffect(() => {
+    if (alcancesDisponibles.length === 0) return;
+    if (!alcancesDisponibles.some((a) => a.value === alcance)) {
+      setAlcance(alcancesDisponibles[0].value);
+    }
+  }, [alcancesDisponibles, alcance]);
 
   // Carga inicial del catálogo de eventos
   useEffect(() => {
@@ -47,11 +90,11 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
     };
   }, []);
 
-  // Refrescar conteo de activas + historial (al inicio y luego cada 10s)
+  // Refrescar conteo de activas (según alcance) + historial.
   const refrescar = async () => {
     try {
       const [n, h] = await Promise.all([
-        contarSimulacionesActivasDelCurso(cursoId),
+        contarSimulacionesActivasDelCurso(cursoId, alcance),
         listarEventosDisparadosDelCurso(cursoId, 10),
       ]);
       setActivas(n);
@@ -63,7 +106,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   useEffect(() => {
     refrescar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId]);
+  }, [cursoId, alcance]);
   useIntervaloVisible(refrescar, 10000);
 
   // Categorías disponibles
@@ -98,6 +141,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
         cursoId,
         eventoId: seleccionado.id,
         docenteId: user.id,
+        alcance,
       });
       setExito({ titulo: seleccionado.titulo, afectadas: r.afectadas });
       setSeleccionado(null);
@@ -151,6 +195,35 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             >
               Cerrar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Selector de alcance (a quién le llega la situación) */}
+      {alcancesDisponibles.length > 1 && (
+        <div className="rounded-md border border-border bg-card p-2.5">
+          <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            ¿A quién le va a llegar la situación?
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {alcancesDisponibles.map((a) => {
+              const activo = alcance === a.value;
+              return (
+                <button
+                  key={a.value}
+                  onClick={() => setAlcance(a.value)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md border-2 px-2.5 py-1 text-xs transition",
+                    activo
+                      ? "border-amber-500 bg-amber-100 font-semibold text-amber-900 dark:bg-amber-900/40 dark:text-amber-100"
+                      : "border-border bg-background hover:border-amber-300"
+                  )}
+                >
+                  <span>{a.emoji}</span>
+                  <span>{a.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

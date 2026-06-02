@@ -141,6 +141,10 @@ function FormCrearCurso({
   const [modo, setModo] = useState<ModoSimulacion>("automatico");
   const [eventosCurados, setEventosCurados] = useState<string[]>([]);
   const [permiteLibre, setPermiteLibre] = useState(true);
+  // FASE 23: tipos de proyecto que se pueden simular en este curso.
+  const [simCaso, setSimCaso] = useState(true);
+  const [simIndividual, setSimIndividual] = useState(false);
+  const [simGrupal, setSimGrupal] = useState(true);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,6 +167,9 @@ function FormCrearCurso({
         modo_simulacion: modo,
         eventos_curados: modo === "curado" ? eventosCurados : undefined,
         permite_proyecto_libre: permiteLibre,
+        simulacion_caso_curso: simCaso,
+        simulacion_individual: simIndividual,
+        simulacion_grupal: simGrupal,
       });
       onCreado(curso);
     } catch (e) {
@@ -290,6 +297,55 @@ function FormCrearCurso({
             </span>
           </span>
         </label>
+      </div>
+
+      {/* Qué tipos de proyecto se pueden SIMULAR en este curso */}
+      <div className="rounded-md border border-amber-300 bg-amber-50/40 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+        <div className="mb-2 text-xs font-semibold text-amber-900 dark:text-amber-100">
+          🎲 ¿Qué tipos de proyecto se pueden simular en este curso?
+        </div>
+        <p className="mb-2 text-[11px] text-amber-800/80 dark:text-amber-300">
+          El alumno solo va a ver en su pantalla "Simular" los tipos que marques. El lanzador
+          de situaciones también respeta esto. Podés cambiarlo después.
+        </p>
+        <div className="space-y-1.5">
+          <label className="flex cursor-pointer items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={simCaso}
+              onChange={(e) => setSimCaso(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              🎓 <strong>Caso del curso</strong> — la copia del caso que publicaste como
+              docente (recomendado: todos analizan el mismo proyecto).
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={simIndividual}
+              onChange={(e) => setSimIndividual(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              📁 <strong>Proyecto individual</strong> — el proyecto propio del alumno (cada uno
+              su idea distinta).
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={simGrupal}
+              onChange={(e) => setSimGrupal(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              🤝 <strong>Proyecto grupal</strong> — el proyecto compartido del grupo (si el
+              grupal está habilitado en el curso).
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Selector de modo de simulación (incluye eventos curados si aplica) */}

@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { useSimulacionStore } from "@/stores/simulacion-store";
 import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
+import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { mesesPorTurno } from "@/lib/motor-eventos";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
@@ -40,24 +41,55 @@ export default function SimularProyecto() {
   const [iniciando, setIniciando] = useState(true);
   const [proyectosDisponibles, setProyectosDisponibles] = useState<Proyecto[]>([]);
 
-  // Cargar TODOS los proyectos del usuario al entrar: los propios + los
-  // grupales (proyecto compartido del grupo). El alumno puede tener varios y
-  // elige cuál simular con el selector de arriba.
+  // Cargar TODOS los proyectos del usuario al entrar + los cursos donde está
+  // inscrito (necesario para filtrar qué tipos se pueden simular según la
+  // configuración del docente — FASE 23).
   useEffect(() => {
     if (!user) return;
-    Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
-      .then(([mios, grupales]) => {
+    Promise.all([
+      listarMisProyectos(user.id),
+      listarProyectosGrupales(user.id),
+      listarMisInscripciones(user.id).catch(() => [] as Array<{ curso: Curso }>),
+    ])
+      .then(([mios, grupales, inscripciones]) => {
         // Deduplicar por id (el creador del grupo aparece en ambas listas).
         const ids = new Set(mios.map((p) => p.id));
         const todos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
-        // El "caso del curso" del docente (caso_curso) no se simula — es la
-        // plantilla original. Lo sacamos del selector. Los entrega_estudiante
-        // (la copia del alumno) sí se simulan.
-        const simulables = todos.filter((p) => p.tipo !== "caso_curso");
+
+        // Mapa cursoId → flags de simulación habilitada.
+        const flagsCurso = new Map<
+          string,
+          { caso: boolean; individual: boolean; grupal: boolean }
+        >();
+        for (const ins of inscripciones) {
+          flagsCurso.set(ins.curso.id, {
+            caso: ins.curso.simulacion_caso_curso ?? true,
+            individual: ins.curso.simulacion_individual ?? false,
+            grupal: ins.curso.simulacion_grupal ?? true,
+          });
+        }
+
+        const simulables = todos.filter((p) => {
+          // 1) El caso_curso (plantilla del docente) nunca se simula.
+          if (p.tipo === "caso_curso") return false;
+          // 2) Proyectos sin curso (libres puros): siempre simulables (no
+          // tienen docente que limite).
+          if (!p.curso_id) return true;
+          const flags = flagsCurso.get(p.curso_id);
+          if (!flags) return true; // por seguridad: si no encontramos el curso, no escondemos
+          // 3) Filtrar según el tipo y los flags del curso.
+          if (p.tipo === "proyecto_grupal") return flags.grupal;
+          if (p.caso_origen_id) return flags.caso; // entrega_estudiante = caso del curso
+          return flags.individual; // libre dentro de un curso = individual
+        });
+
         setProyectosDisponibles(simulables);
-        // Si todavía no hay proyecto activo, cargar el primero.
-        if (simulables.length > 0 && !proyecto) {
-          cargarProyecto(simulables[0]);
+        // Si el proyecto activo ya no está en la lista (ej. el docente
+        // deshabilitó el tipo), cargar el primero disponible. Si no hay
+        // ninguno, dejar null.
+        if (simulables.length > 0) {
+          const activoSigueValido = proyecto && simulables.some((p) => p.id === proyecto.id);
+          if (!activoSigueValido) cargarProyecto(simulables[0]);
         }
       })
       .finally(() => setIniciando(false));
@@ -97,7 +129,9 @@ export default function SimularProyecto() {
   if (!proyecto) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        Primero construye un proyecto antes de simular.
+        {proyectosDisponibles.length === 0
+          ? "Por ahora no tenés ningún proyecto habilitado para simular. Tu docente decide qué tipos de proyecto se pueden simular en cada curso."
+          : "Primero construye un proyecto antes de simular."}
       </div>
     );
   }

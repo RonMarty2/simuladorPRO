@@ -38,6 +38,10 @@ export interface Curso {
   grupo_modelo?: string;
   grupo_version?: string;
   grupo_consigna?: string | null;
+  /** Tipos de proyecto que se pueden simular en este curso (FASE 23). */
+  simulacion_caso_curso?: boolean;
+  simulacion_individual?: boolean;
+  simulacion_grupal?: boolean;
   creado_en: string;
 }
 
@@ -69,6 +73,23 @@ export async function actualizarPermiteProyectoLibre(
     supabase.from("cursos").update({ permite_proyecto_libre: permite }).eq("id", cursoId),
     10000,
     "guardando la opción de proyecto del estudiante"
+  );
+  if (error) throw error;
+}
+
+/** Actualiza qué tipos de proyecto se pueden simular en este curso. */
+export async function actualizarTiposSimulables(
+  cursoId: string,
+  cfg: {
+    simulacion_caso_curso: boolean;
+    simulacion_individual: boolean;
+    simulacion_grupal: boolean;
+  }
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").update(cfg).eq("id", cursoId),
+    10000,
+    "guardando tipos simulables"
   );
   if (error) throw error;
 }
@@ -165,6 +186,9 @@ export async function crearCurso(params: {
   modo_simulacion?: ModoSimulacion;
   eventos_curados?: string[];
   permite_proyecto_libre?: boolean;
+  simulacion_caso_curso?: boolean;
+  simulacion_individual?: boolean;
+  simulacion_grupal?: boolean;
 }): Promise<Curso> {
   const universidad = normalizarUniversidad(params.universidad);
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
@@ -184,6 +208,9 @@ export async function crearCurso(params: {
           modo_simulacion: params.modo_simulacion ?? "automatico",
           eventos_curados: params.eventos_curados ?? null,
           permite_proyecto_libre: params.permite_proyecto_libre ?? true,
+          simulacion_caso_curso: params.simulacion_caso_curso ?? true,
+          simulacion_individual: params.simulacion_individual ?? false,
+          simulacion_grupal: params.simulacion_grupal ?? true,
           codigo,
         })
         .select()
