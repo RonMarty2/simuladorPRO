@@ -41,7 +41,14 @@ export default function InputNumero({ value, onChange, ...rest }: Props) {
           setTxt("0");
           onChange(0);
         } else {
-          setTxt(String(Number(txt)));
+          // Redondeo a 4 decimales al perder foco. Limpia errores típicos
+          // de calculadora (ej. el alumno escribe 0.733333 porque dividió
+          // 22/30 sin redondear → queda 0.7333). 4 decimales cubre cualquier
+          // caso legítimo (tasas al 0.01%, ratios, montos con milésimas).
+          // Los números que ya tienen 4 o menos decimales NO cambian.
+          const redondeado = Math.round(Number(txt) * 10000) / 10000;
+          setTxt(String(redondeado));
+          if (redondeado !== Number(txt)) onChange(redondeado);
         }
       }}
     />
