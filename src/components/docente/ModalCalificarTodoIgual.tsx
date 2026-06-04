@@ -57,22 +57,25 @@ export default function ModalCalificarTodoIgual({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-lg bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 border-b border-border p-4">
-          <div>
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <Zap className="h-4 w-4 text-amber-600" />
-              Calificar todo igual
+        {/* Header — nombre del alumno BIEN PROMINENTE para que el docente
+            sepa siempre a quién le está poniendo la nota. */}
+        <div className="flex items-start justify-between gap-3 border-b border-border bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-4 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+              <Zap className="h-3 w-3" /> Calificando a
+            </div>
+            <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
+              {titular}
             </h2>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {titular} · {entregas.length} etapa{entregas.length === 1 ? "" : "s"} pendiente
-              {entregas.length === 1 ? "" : "s"}
+              {entregas.length} etapa{entregas.length === 1 ? "" : "s"} pendiente
+              {entregas.length === 1 ? "" : "s"} · misma nota para todas
             </p>
           </div>
           <button
             onClick={() => onCerrar(resultado?.ok ? true : false)}
             disabled={guardando}
-            className="rounded-md p-1 hover:bg-secondary disabled:opacity-50"
+            className="flex-shrink-0 rounded-md p-1 hover:bg-secondary disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>

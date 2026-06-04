@@ -42,18 +42,28 @@ export default function ModalRevisarEntrega({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <div>
-            <h2 className="text-base font-semibold">
-              {yaRevisada ? "Ver revisión" : "Revisar entrega"} · Intento #{entrega.numero_intento}
+        {/* Header — nombre del alumno BIEN PROMINENTE, sticky para que el
+            docente no lo pierda mientras revisa y habla con él. */}
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
+              {yaRevisada ? "👁 Viendo revisión de" : "📝 Revisando a"}
+            </div>
+            <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
+              {entrega.perfil
+                ? `${entrega.perfil.nombre} ${entrega.perfil.apellido}`.trim() || entrega.perfil.email
+                : datos.nombre}
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {datos.nombre} · Entregado el{" "}
-              {new Date(entrega.entregado_en).toLocaleString("es-BO")}
+              {entrega.paso_entregado ? `Etapa ${entrega.paso_entregado} · ` : ""}
+              Intento #{entrega.numero_intento} · Proyecto: <strong>{datos.nombre}</strong> ·
+              Entregado el {new Date(entrega.entregado_en).toLocaleString("es-BO")}
             </p>
           </div>
-          <button onClick={() => onCerrar(false)} className="rounded-md p-1 hover:bg-secondary">
+          <button
+            onClick={() => onCerrar(false)}
+            className="flex-shrink-0 rounded-md p-1 hover:bg-secondary"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
