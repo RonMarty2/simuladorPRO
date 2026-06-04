@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ChevronRight, Clock, Loader2, Users, User, XCircle, Layers } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, Loader2, Users, User, XCircle, Layers, Zap } from "lucide-react";
 import { listarEntregasDelCurso } from "@/lib/proyecto-supabase";
 import { listarGruposDeCurso, type GrupoConMiembros } from "@/lib/grupos-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 import ModalRevisarEntrega from "./ModalRevisarEntrega";
 import ModalRevisionMasiva from "./ModalRevisionMasiva";
+import ModalCalificarTodoIgual from "./ModalCalificarTodoIgual";
 
 type Vista = "individuales" | "grupales";
 type Filtro = "todas" | "pendiente" | "aprobada" | "reprobada";
@@ -30,6 +31,10 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
   const [entregaActiva, setEntregaActiva] = useState<Entrega | null>(null);
   // Para "revisión rápida" del lote pendiente de un estudiante o grupo.
   const [loteMasivo, setLoteMasivo] = useState<{ titular: string; entregas: Entrega[] } | null>(null);
+  // "Calificar todo igual": misma nota + comentario para todas las pendientes
+  // del alumno (sin entrar tab por tab). Caso del docente que ya miró el
+  // trabajo y solo quiere cerrar todo de una vez.
+  const [loteRapido, setLoteRapido] = useState<{ titular: string; entregas: Entrega[] } | null>(null);
   const [vista, setVista] = useState<Vista>("individuales");
   const [filtro, setFiltro] = useState<Filtro>("pendiente");
 
@@ -214,6 +219,9 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
               onRevisarLote={(pendientes) =>
                 setLoteMasivo({ titular: g.nombreTitular, entregas: pendientes })
               }
+              onCalificarTodoIgual={(pendientes) =>
+                setLoteRapido({ titular: g.nombreTitular, entregas: pendientes })
+              }
             />
           ))}
         </div>
@@ -239,6 +247,17 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
           }}
         />
       )}
+
+      {loteRapido && (
+        <ModalCalificarTodoIgual
+          entregas={loteRapido.entregas}
+          titular={loteRapido.titular}
+          onCerrar={(alguna) => {
+            setLoteRapido(null);
+            if (alguna) cargar();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -248,11 +267,13 @@ function TarjetaAgrupada({
   vista,
   onRevisar,
   onRevisarLote,
+  onCalificarTodoIgual,
 }: {
   grupo: Agrupado;
   vista: Vista;
   onRevisar: (e: Entrega) => void;
   onRevisarLote: (pendientes: Entrega[]) => void;
+  onCalificarTodoIgual: (pendientes: Entrega[]) => void;
 }) {
   const pendientes = grupo.entregas.filter((e) => e.estado === "pendiente");
   return (
@@ -278,8 +299,18 @@ function TarjetaAgrupada({
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
           {pendientes.length >= 2 && (
             <button
+              onClick={() => onCalificarTodoIgual(pendientes)}
+              title="Misma nota y comentario para todas las pendientes (sin abrir tab por tab)"
+              className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              <Zap className="h-3 w-3" />
+              Calificar todo igual
+            </button>
+          )}
+          {pendientes.length >= 2 && (
+            <button
               onClick={() => onRevisarLote(pendientes)}
-              title="Calificar las pendientes de una sola pasada"
+              title="Revisar etapa por etapa con nota distinta cada una"
               className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-amber-600"
             >
               <Layers className="h-3 w-3" />
