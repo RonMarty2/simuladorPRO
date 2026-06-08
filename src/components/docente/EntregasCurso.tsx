@@ -22,6 +22,8 @@ interface Agrupado {
   aprobadas: number;
   reprobadas: number;
   promedio: number | null;
+  /** Timestamp ISO de la entrega más reciente del grupo (para ordenar). */
+  ultimaEntregaEn: string;
 }
 
 export default function EntregasCurso({ cursoId }: { cursoId: string }) {
@@ -107,19 +109,41 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         aprobadas: es.filter((e) => e.estado === "aprobada").length,
         reprobadas: es.filter((e) => e.estado === "reprobada").length,
         promedio,
+        // Fecha de la entrega más reciente del grupo (para ordenar la lista).
+        ultimaEntregaEn: es.reduce(
+          (max, e) => (e.entregado_en > max ? e.entregado_en : max),
+          es[0].entregado_en
+        ),
       };
     });
   }, [vista, individuales, grupales, grupoPorProyecto]);
 
-  // Filtrar grupos según el estado de sus entregas
+  // Filtrar grupos según el estado de sus entregas + ORDENAR por fecha de
+  // entrega más reciente DESC. Así el docente ve arriba a quien entregó
+  // recién (más útil para revisión en tiempo real).
   const filtrados = useMemo(() => {
-    if (filtro === "todas") return agrupadas;
-    return agrupadas
+    const base =
+      filtro === "todas"
+        ? agrupadas
+        : agrupadas
+            .map((a) => ({
+              ...a,
+              entregas: a.entregas.filter((e) => e.estado === filtro),
+            }))
+            .filter((a) => a.entregas.length > 0);
+    // Recalcular ultimaEntregaEn por si el filtro cambia las entregas visibles.
+    return [...base]
       .map((a) => ({
         ...a,
-        entregas: a.entregas.filter((e) => e.estado === filtro),
+        ultimaEntregaEn:
+          a.entregas.length > 0
+            ? a.entregas.reduce(
+                (max, e) => (e.entregado_en > max ? e.entregado_en : max),
+                a.entregas[0].entregado_en
+              )
+            : a.ultimaEntregaEn,
       }))
-      .filter((a) => a.entregas.length > 0);
+      .sort((a, b) => b.ultimaEntregaEn.localeCompare(a.ultimaEntregaEn));
   }, [agrupadas, filtro]);
 
   const ctVista = {
