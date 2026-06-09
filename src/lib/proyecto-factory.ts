@@ -121,16 +121,31 @@ export function crearProyectoVacio(params: {
  */
 function aplicarModeloIngresoInicial(p: Proyecto, modelo: ModeloIngreso): void {
   if (modelo === "suscripcion") {
-    const sus = { suscriptoresIniciales: 100, altasMensuales: 20, churnMensual: 0.05, cuotaMensual: 30 };
-    const proy = proyectarSuscriptores(sus, 5);
+    // Plan inicial. El alumno puede agregar más planes (VIP, Premium) desde el
+    // Paso 2. Los campos planos quedan llenos por compat con código viejo.
+    const planInicial = {
+      id: nuevoId(),
+      nombre: "Plan básico",
+      suscriptoresIniciales: 100,
+      altasMensuales: 20,
+      churnMensual: 0.05,
+      cuotaMensual: 30,
+    };
     p.modeloIngreso = "suscripcion";
-    p.suscripcionV2 = sus;
+    p.suscripcionV2 = {
+      suscriptoresIniciales: planInicial.suscriptoresIniciales,
+      altasMensuales: planInicial.altasMensuales,
+      churnMensual: planInicial.churnMensual,
+      cuotaMensual: planInicial.cuotaMensual,
+      planes: [planInicial],
+    };
+    const proy = proyectarSuscriptores(planInicial, 5);
     p.productos = [{
       id: nuevoId(),
-      nombre: "Suscripción",
+      nombre: planInicial.nombre,
       unidadMedida: "suscriptor/año",
       cantidades: proy.map((a) => Math.round(a.promedioSuscriptores)) as [number, number, number, number, number],
-      precios: Array(5).fill(sus.cuotaMensual * 12) as [number, number, number, number, number],
+      precios: Array(5).fill(planInicial.cuotaMensual * 12) as [number, number, number, number, number],
     }];
   } else if (modelo === "publicidad") {
     const pub = { audienciaMensual: 5000, crecimientoMensual: 0.04, impresionesPorUsuario: 3, cpm: 40 };

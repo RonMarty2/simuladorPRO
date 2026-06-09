@@ -7,6 +7,7 @@ import InputNumero from "../InputNumero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
 import { calcularLTVSuscripcion, proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
+import { obtenerPlanesSuscripcion } from "@/lib/planes-suscripcion";
 import type { Proyecto } from "@/types/proyecto";
 
 // Paleta de colores por producto (cíclica si hay más de 6)
@@ -29,7 +30,6 @@ export default function Paso2Proyeccion() {
   const eliminar = useProyectoStore((s) => s.eliminarProducto);
   const setTasaCant = useProyectoStore((s) => s.setTasaCrecCantidad);
   const setTasaPrec = useProyectoStore((s) => s.setTasaCrecPrecio);
-  const setSuscripcion = useProyectoStore((s) => s.setSuscripcionV2);
   const setPublicidad = useProyectoStore((s) => s.setPublicidadV2);
   const setCostoBeneficio = useProyectoStore((s) => s.setCostoBeneficioV2);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +37,7 @@ export default function Paso2Proyeccion() {
   // Modelos de ingreso especiales: pantalla propia (el motor recibe el producto
   // portador ya calculado). El modo "unidades × precio" sigue intacto abajo.
   if (proyecto.modeloIngreso === "suscripcion") {
-    return <PanelSuscripcion proyecto={proyecto} onChange={setSuscripcion} />;
+    return <PanelSuscripcion proyecto={proyecto} />;
   }
   if (proyecto.modeloIngreso === "publicidad") {
     return <PanelPublicidad proyecto={proyecto} onChange={setPublicidad} />;
@@ -521,29 +521,20 @@ export default function Paso2Proyeccion() {
   );
 }
 
-function PanelSuscripcion({
-  proyecto,
-  onChange,
-}: {
-  proyecto: Proyecto;
-  onChange: (
-    cambios: Partial<{
-      suscriptoresIniciales: number;
-      altasMensuales: number;
-      churnMensual: number;
-      cuotaMensual: number;
-    }>
-  ) => void;
-}) {
-  const sus = proyecto.suscripcionV2 ?? {
-    suscriptoresIniciales: 100,
-    altasMensuales: 20,
-    churnMensual: 0.05,
-    cuotaMensual: 30,
-  };
-  const proy = proyectarSuscriptores(sus, 5);
-  const ltv = calcularLTVSuscripcion(sus.cuotaMensual, sus.churnMensual);
-  const equilibrio = sus.churnMensual > 0 ? sus.altasMensuales / sus.churnMensual : Infinity;
+function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
+  const agregarPlan = useProyectoStore((s) => s.agregarPlanSuscripcion);
+  const editarPlan = useProyectoStore((s) => s.editarPlanSuscripcion);
+  const eliminarPlan = useProyectoStore((s) => s.eliminarPlanSuscripcion);
+
+  const planes = obtenerPlanesSuscripcion(proyecto);
+
+  // Proyección por plan + agregada (suma de los 5 años en todos los planes).
+  const proyPorPlan = planes.map((plan) => proyectarSuscriptores(plan, 5));
+  const proyAgregada = [0, 1, 2, 3, 4].map((i) => ({
+    suscriptoresFin: proyPorPlan.reduce((acc, p) => acc + p[i].suscriptoresFin, 0),
+    promedioSuscriptores: proyPorPlan.reduce((acc, p) => acc + p[i].promedioSuscriptores, 0),
+    ingresoAnual: proyPorPlan.reduce((acc, p) => acc + p[i].ingresoAnual, 0),
+  }));
 
   const inputClase =
     "w-full rounded-md border border-input bg-background px-2 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring";
@@ -557,25 +548,133 @@ function PanelSuscripcion({
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Aquí no vendes "unidades": tienes una <strong>base de suscriptores</strong> que
-            crece con las altas y baja con el churn (los que se van). El ingreso de cada año
-            sale de los suscriptores activos × su cuota.
+            crece con las altas y baja con el churn (los que se van). Podés definir{" "}
+            <strong>varios planes</strong> (básico, VIP, premium…) y el ingreso anual sale de
+            sumar lo que aporta cada uno.
           </p>
         </div>
 
-        {/* 4 parámetros */}
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <CampoSus label="Suscriptores iniciales" ayuda="Con cuántos arrancas el mes 0." valor={sus.suscriptoresIniciales} sufijo="subs" onChange={(v) => onChange({ suscriptoresIniciales: Math.max(0, Math.round(v)) })} clase={inputClase} />
-          <CampoSus label="Altas por mes" ayuda="Nuevos suscriptores que ganas cada mes." valor={sus.altasMensuales} sufijo="subs/mes" onChange={(v) => onChange({ altasMensuales: Math.max(0, Math.round(v)) })} clase={inputClase} />
-          <CampoSus label="Churn mensual" ayuda="% de la base que se da de baja cada mes. Típico 2-8%." valor={Math.round(sus.churnMensual * 1000) / 10} sufijo="%" paso={0.5} onChange={(v) => onChange({ churnMensual: Math.max(0, v) / 100 })} clase={inputClase} />
-          <CampoSus label="Cuota mensual" ayuda="Lo que paga cada suscriptor por mes." valor={sus.cuotaMensual} sufijo="Bs/mes" onChange={(v) => onChange({ cuotaMensual: Math.max(0, v) })} clase={inputClase} />
+        {/* Lista de planes */}
+        <div className="space-y-3">
+          {planes.map((plan, idx) => {
+            const color = COLORES_PRODUCTO[idx % COLORES_PRODUCTO.length];
+            const ltv = calcularLTVSuscripcion(plan.cuotaMensual, plan.churnMensual);
+            const equilibrio = plan.churnMensual > 0 ? plan.altasMensuales / plan.churnMensual : Infinity;
+            const ingresoAnio1 = proyPorPlan[idx][0].ingresoAnual;
+            return (
+              <div
+                key={plan.id}
+                className={cn(
+                  "rounded-md border border-border bg-background/40 p-3 border-l-4",
+                  color.borde
+                )}
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                      color.chip
+                    )}
+                  >
+                    Plan {idx + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={plan.nombre}
+                    onChange={(e) => editarPlan(plan.id, { nombre: e.target.value })}
+                    onFocus={selectOnFocus}
+                    className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Nombre del plan"
+                  />
+                  {planes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => eliminarPlan(plan.id)}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      title="Eliminar plan"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <CampoSus
+                    label="Suscriptores iniciales"
+                    ayuda="Con cuántos arrancas el mes 0."
+                    valor={plan.suscriptoresIniciales}
+                    sufijo="subs"
+                    onChange={(v) => editarPlan(plan.id, { suscriptoresIniciales: Math.max(0, Math.round(v)) })}
+                    clase={inputClase}
+                  />
+                  <CampoSus
+                    label="Altas por mes"
+                    ayuda="Nuevos suscriptores que ganas cada mes."
+                    valor={plan.altasMensuales}
+                    sufijo="subs/mes"
+                    onChange={(v) => editarPlan(plan.id, { altasMensuales: Math.max(0, Math.round(v)) })}
+                    clase={inputClase}
+                  />
+                  <CampoSus
+                    label="Churn mensual"
+                    ayuda="% de la base que se da de baja cada mes. Típico 2-8%."
+                    valor={Math.round(plan.churnMensual * 1000) / 10}
+                    sufijo="%"
+                    paso={0.5}
+                    onChange={(v) => editarPlan(plan.id, { churnMensual: Math.max(0, v) / 100 })}
+                    clase={inputClase}
+                  />
+                  <CampoSus
+                    label="Cuota mensual"
+                    ayuda="Lo que paga cada suscriptor de este plan, por mes."
+                    valor={plan.cuotaMensual}
+                    sufijo="Bs/mes"
+                    onChange={(v) => editarPlan(plan.id, { cuotaMensual: Math.max(0, v) })}
+                    clase={inputClase}
+                  />
+                </div>
+
+                {/* Mini-indicadores por plan */}
+                <div className="mt-2 grid grid-cols-1 gap-1.5 text-[10px] sm:grid-cols-3">
+                  <div className="rounded-md border border-border bg-secondary/20 p-1.5">
+                    <span className="text-muted-foreground">LTV: </span>
+                    <span className="font-semibold tabular-nums">
+                      {isFinite(ltv) ? formatearBolivianos(ltv) : "∞"}
+                    </span>
+                  </div>
+                  <div className="rounded-md border border-border bg-secondary/20 p-1.5">
+                    <span className="text-muted-foreground">Techo: </span>
+                    <span className="font-semibold tabular-nums">
+                      {isFinite(equilibrio) ? `${Math.round(equilibrio).toLocaleString("es-BO")} subs` : "∞"}
+                    </span>
+                  </div>
+                  <div className="rounded-md border border-border bg-secondary/20 p-1.5">
+                    <span className="text-muted-foreground">Ingreso año 1: </span>
+                    <span className="font-semibold tabular-nums">{formatearBolivianos(ingresoAnio1)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => agregarPlan()}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary/30 hover:text-foreground"
+          >
+            <Plus className="h-4 w-4" />
+            Agregar plan
+          </button>
         </div>
 
-        {/* Proyección */}
+        {/* Proyección agregada (suma de todos los planes) */}
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
             <thead className="bg-secondary text-muted-foreground">
               <tr className="border-b-2 border-border">
-                <th className="p-2 text-left font-semibold">Concepto</th>
+                <th className="p-2 text-left font-semibold">
+                  Total {planes.length > 1 ? `(${planes.length} planes)` : ""}
+                </th>
                 {[1, 2, 3, 4, 5].map((a) => (
                   <th key={a} className="p-2 text-right font-semibold">Año {a}</th>
                 ))}
@@ -584,62 +683,58 @@ function PanelSuscripcion({
             <tbody>
               <tr className="border-b border-border/40">
                 <td className="p-2">Suscriptores al cierre</td>
-                {proy.map((a, i) => (
-                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.suscriptoresFin).toLocaleString("es-BO")}</td>
+                {proyAgregada.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">
+                    {Math.round(a.suscriptoresFin).toLocaleString("es-BO")}
+                  </td>
                 ))}
               </tr>
               <tr className="border-b border-border/40">
                 <td className="p-2">Promedio activo (año)</td>
-                {proy.map((a, i) => (
-                  <td key={i} className="p-2 text-right tabular-nums">{Math.round(a.promedioSuscriptores).toLocaleString("es-BO")}</td>
+                {proyAgregada.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">
+                    {Math.round(a.promedioSuscriptores).toLocaleString("es-BO")}
+                  </td>
                 ))}
               </tr>
               <tr className="bg-primary/10 font-bold">
                 <td className="p-2">Ingreso anual (Bs)</td>
-                {proy.map((a, i) => (
-                  <td key={i} className="p-2 text-right tabular-nums">{formatearBolivianos(a.ingresoAnual)}</td>
+                {proyAgregada.map((a, i) => (
+                  <td key={i} className="p-2 text-right tabular-nums">
+                    {formatearBolivianos(a.ingresoAnual)}
+                  </td>
                 ))}
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Indicadores propios del modelo */}
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="rounded-md border border-border bg-secondary/20 p-2.5 text-[11px]">
-            <div className="font-semibold">LTV (valor de vida del suscriptor)</div>
-            <div className="mt-0.5 text-lg font-bold">{isFinite(ltv) ? formatearBolivianos(ltv) : "∞"}</div>
-            <div className="text-muted-foreground">= cuota ÷ churn. Cuánto deja en promedio cada suscriptor antes de irse.</div>
-          </div>
-          <div className="rounded-md border border-border bg-secondary/20 p-2.5 text-[11px]">
-            <div className="font-semibold">Techo de la base (equilibrio)</div>
-            <div className="mt-0.5 text-lg font-bold">{isFinite(equilibrio) ? `${Math.round(equilibrio).toLocaleString("es-BO")} subs` : "∞"}</div>
-            <div className="text-muted-foreground">= altas ÷ churn. Si no subes las altas o bajas el churn, tu base tiende a estabilizarse aquí.</div>
-          </div>
-        </div>
-
-        <Recomendacion titulo="💡 ¿De dónde saco suscriptores, altas y churn? — buenas prácticas">
+        <Recomendacion titulo="💡 Varios planes: ¿cuándo conviene?">
           <p>
-            <strong>Suscriptores iniciales:</strong> sé realista, casi siempre es bajo.
-            Básalo en tu audiencia o lista de espera <em>real</em>, no en un número soñado.
+            <strong>Un solo plan</strong> es lo más simple y suele alcanzar para empezar. Usá
+            varios planes cuando tu producto sirva a perfiles muy distintos (ej. lector ocasional
+            vs. empresa que necesita licencias).
           </p>
           <p>
-            <strong>Altas por mes:</strong> salen de tu embudo → (personas que te
-            conocen/visitan al mes) × (% que se convierte en pago). Una conversión del 1-5%
-            ya es buena.
+            <strong>Plan básico:</strong> entrada barata, suele tener el churn más alto.{" "}
+            <strong>Plan VIP/Premium:</strong> menos clientes pero LTV mucho mayor; el churn
+            suele ser más bajo porque pagan por algo más valioso.
           </p>
           <p>
-            <strong>Churn (bajas):</strong> es EL número clave. Usa referencias del rubro:
-            contenido/membresías <strong>5-10% mensual</strong>, gimnasios 3-5%, software
-            bueno &lt;5%. Un churn alto hace que nunca crezcas.
+            <strong>Suscriptores iniciales:</strong> sé realista (audiencia o lista de espera{" "}
+            <em>real</em>, no un número soñado).
           </p>
           <p>
-            <strong>Cuota:</strong> compárala con la competencia y con el valor que entregas.
+            <strong>Altas por mes:</strong> embudo → (personas que te conocen al mes) × (% que
+            se convierte). 1-5% ya es bueno.
+          </p>
+          <p>
+            <strong>Churn:</strong> contenido/membresías 5-10%, gimnasios 3-5%, software bueno
+            &lt;5%. Es EL número clave: <strong>bajar el churn vale más que captar más.</strong>
           </p>
           <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
-            <strong>Regla de oro:</strong> tu base se estabiliza en <em>altas ÷ churn</em>.
-            Si captas 40 al mes pero pierdes el 4% de 1.000, te estancas en ~1.000.{" "}
-            <strong>Bajar el churn vale más que captar más.</strong>
+            <strong>Regla de oro:</strong> cada plan se estabiliza en <em>altas ÷ churn</em>. Si
+            captás 40 al mes pero perdés el 4% de 1.000, te estancás en ~1.000.
           </p>
         </Recomendacion>
       </div>
@@ -654,6 +749,11 @@ function PanelSuscripcion({
               <li><strong>Altas:</strong> cuánta gente nueva entra (marketing).</li>
               <li><strong>Churn:</strong> cuánta se va (calidad/retención).</li>
             </ul>
+            <br />
+            Varios planes te permiten capturar perfiles distintos (básico, VIP, premium): cada
+            uno con su propio churn, sus altas y su cuota. El motor financiero suma los aportes
+            de todos.
+            <br />
             <br />
             Bajar el churn del 5% al 3% puede más que duplicar tu base de equilibrio. Por eso
             el <strong>LTV</strong> y el <strong>churn</strong> son los números clave aquí, no
