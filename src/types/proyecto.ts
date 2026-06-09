@@ -149,6 +149,16 @@ export type TipoProyecto =
  */
 export type VersionProyecto = "v1" | "v2";
 
+/** Un plan de suscripción dentro de un negocio recurrente. */
+export interface PlanSuscripcion {
+  id: string;
+  nombre: string;
+  suscriptoresIniciales: number;
+  altasMensuales: number;
+  churnMensual: number;
+  cuotaMensual: number;
+}
+
 export interface Proyecto {
   id: string;
   estudiante_id: string;
@@ -170,12 +180,26 @@ export interface Proyecto {
    */
   modeloIngreso?: "unidades" | "suscripcion" | "publicidad" | "costo_beneficio";
 
-  /** Parámetros del modelo de suscripción (solo si modeloIngreso='suscripcion'). */
+  /**
+   * Parámetros del modelo de suscripción (solo si modeloIngreso='suscripcion').
+   *
+   * Soporta UN plan único (campos planos: suscriptoresIniciales, etc., para
+   * compat con proyectos viejos) o MÚLTIPLES planes (array `planes[]`).
+   *
+   * Si `planes` existe y tiene items, se usa eso (formato preferido).
+   * Si no, los campos planos cuentan como UN plan único.
+   *
+   * Para leerlo siempre uniforme, usar `obtenerPlanesSuscripcion(p)` de
+   * `lib/planes-suscripcion.ts`.
+   */
   suscripcionV2?: {
+    /** Plan único legacy. Solo se usa si `planes` no existe. */
     suscriptoresIniciales: number;
     altasMensuales: number;
     churnMensual: number;
     cuotaMensual: number;
+    /** Múltiples planes (Básico, VIP, Premium...). Formato preferido. */
+    planes?: PlanSuscripcion[];
   };
 
   /** Parámetros del modelo de publicidad (solo si modeloIngreso='publicidad'). */

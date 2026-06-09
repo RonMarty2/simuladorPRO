@@ -1,6 +1,7 @@
 import { useState, Fragment } from "react";
 import type { Proyecto, ItemInversion } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
+import { obtenerPlanesSuscripcion } from "@/lib/planes-suscripcion";
 
 interface Props {
   proyecto: Proyecto;
@@ -199,17 +200,29 @@ function Paso1({ p }: { p: Proyecto }) {
           <div className="mt-0.5 whitespace-pre-wrap text-xs">{p.descripcion}</div>
         </div>
       )}
-      {modelo === "suscripcion" && p.suscripcionV2 && (
-        <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros suscripción</div>
-          <GridCampos>
-            <Campo k="Suscriptores iniciales" v={p.suscripcionV2.suscriptoresIniciales} />
-            <Campo k="Altas mensuales" v={p.suscripcionV2.altasMensuales} />
-            <Campo k="Churn mensual" v={`${(p.suscripcionV2.churnMensual * 100).toFixed(2)}%`} />
-            <Campo k="Cuota mensual" v={formatearBolivianos(p.suscripcionV2.cuotaMensual)} />
-          </GridCampos>
-        </div>
-      )}
+      {modelo === "suscripcion" && p.suscripcionV2 && (() => {
+        const planes = obtenerPlanesSuscripcion(p);
+        return (
+          <div className="space-y-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Planes de suscripción ({planes.length})
+            </div>
+            {planes.map((plan, idx) => (
+              <div key={plan.id} className="rounded-md border border-border bg-background/40 p-2">
+                <div className="mb-1 text-[11px] font-semibold">
+                  {idx + 1}. {plan.nombre}
+                </div>
+                <GridCampos>
+                  <Campo k="Suscriptores iniciales" v={plan.suscriptoresIniciales} />
+                  <Campo k="Altas mensuales" v={plan.altasMensuales} />
+                  <Campo k="Churn mensual" v={`${(plan.churnMensual * 100).toFixed(2)}%`} />
+                  <Campo k="Cuota mensual" v={formatearBolivianos(plan.cuotaMensual)} />
+                </GridCampos>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
       {modelo === "publicidad" && p.publicidadV2 && (
         <div>
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros publicidad</div>

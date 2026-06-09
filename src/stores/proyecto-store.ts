@@ -14,12 +14,79 @@ import type {
   EstadoProyecto,
   Financiamiento,
   ItemInversion,
+  PlanSuscripcion,
   Producto,
   Proyecto,
   PuestoTrabajo,
   Sector,
   VersionProyecto,
 } from "@/types/proyecto";
+
+// ============================================================================
+// Helpers privados: planes de suscripción
+// ============================================================================
+
+/** Lee los planes (FASE 24) o los deriva del legacy plano. */
+function obtenerPlanesSuscripcionStore(p: Proyecto): PlanSuscripcion[] {
+  const sus = p.suscripcionV2;
+  if (!sus) return [];
+  if (sus.planes && sus.planes.length > 0) return sus.planes;
+  return [
+    {
+      id: "legacy",
+      nombre: "Plan único",
+      suscriptoresIniciales: sus.suscriptoresIniciales,
+      altasMensuales: sus.altasMensuales,
+      churnMensual: sus.churnMensual,
+      cuotaMensual: sus.cuotaMensual,
+    },
+  ];
+}
+
+/** Sugiere nombres comunes para el plan N (1=Básico, 2=VIP, etc.). */
+function sugerirNombrePlan(indice: number): string {
+  const sugerencias = ["Plan básico", "Plan VIP", "Plan Premium", "Plan Empresarial", "Plan Anual"];
+  return sugerencias[indice] ?? `Plan ${indice + 1}`;
+}
+
+/**
+ * Aplica una lista de planes al proyecto y regenera los productos portadores:
+ * un producto por plan, con sus cantidades (promedio de suscriptores) y su
+ * precio anual (cuota × 12). Mantiene los campos planos sincronizados con el
+ * primer plan para compat.
+ */
+function aplicarPlanesSuscripcion(p: Proyecto, planes: PlanSuscripcion[]): Proyecto {
+  const productos: Producto[] = planes.map((plan) => {
+    const proy = proyectarSuscriptores(plan, 5);
+    const cantidades = proy.map((a) => Math.round(a.promedioSuscriptores)) as [
+      number, number, number, number, number,
+    ];
+    const precioAnual = Math.round(plan.cuotaMensual * 12 * 100) / 100;
+    return {
+      id: plan.id,
+      nombre: plan.nombre,
+      unidadMedida: "suscriptor/año",
+      cantidades,
+      precios: [precioAnual, precioAnual, precioAnual, precioAnual, precioAnual],
+    };
+  });
+  const primero = planes[0];
+  const ahora = new Date().toISOString();
+  return {
+    ...p,
+    modeloIngreso: "suscripcion",
+    suscripcionV2: {
+      // Campos planos = primer plan (compat con código viejo que los lee).
+      suscriptoresIniciales: primero.suscriptoresIniciales,
+      altasMensuales: primero.altasMensuales,
+      churnMensual: primero.churnMensual,
+      cuotaMensual: primero.cuotaMensual,
+      planes,
+    },
+    productos,
+    actualizado_en: ahora,
+  };
+}
 
 interface ProyectoState {
   proyecto: Proyecto | null;
@@ -105,6 +172,13 @@ interface ProyectoState {
       cuotaMensual: number;
     }>
   ) => void;
+  // Suscripción multi-plan (FASE 24): agregar, editar o eliminar un plan.
+  agregarPlanSuscripcion: (nombre?: string) => void;
+  editarPlanSuscripcion: (
+    id: string,
+    cambios: Partial<{ nombre: string; suscriptoresIniciales: number; altasMensuales: number; churnMensual: number; cuotaMensual: number }>
+  ) => void;
+  eliminarPlanSuscripcion: (id: string) => void;
 
   // Publicidad (audiencia × CPM): recalcula el producto portador
   setPublicidadV2: (
@@ -490,40 +564,56 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
   setSuscripcionV2: (cambios) => {
     const p = get().proyecto;
     if (!p) return;
-    const params = {
+    // Compat: edita el PRIMER plan (o crea uno si no existe ninguno).
+    const planesActuales = obtenerPlanesSuscripcionStore(p);
+    const primero = planesActuales[0] ?? {
+      id: nuevoId(),
+      nombre: "Plan básico",
       suscriptoresIniciales: 100,
       altasMensuales: 20,
       churnMensual: 0.05,
       cuotaMensual: 30,
-      ...(p.suscripcionV2 ?? {}),
-      ...cambios,
     };
-    const proy = proyectarSuscriptores(params, 5);
-    // El ingreso recurrente se representa como UN producto portador, para que
-    // el motor de flujo (que suma productos) funcione sin cambios.
-    const cantidades = proy.map((a) => Math.round(a.promedioSuscriptores)) as [
-      number, number, number, number, number,
-    ];
-    const precioAnual = Math.round(params.cuotaMensual * 12 * 100) / 100;
-    const precios: [number, number, number, number, number] = [
-      precioAnual, precioAnual, precioAnual, precioAnual, precioAnual,
-    ];
-    const prodId = p.productos[0]?.id ?? nuevoId();
-    const producto: Producto = {
-      id: prodId,
-      nombre: "Suscripción",
-      unidadMedida: "suscriptor/año",
-      cantidades,
-      precios,
+    const primeroEditado = { ...primero, ...cambios };
+    const planesNuevos = [primeroEditado, ...planesActuales.slice(1)];
+    set({ proyecto: aplicarPlanesSuscripcion(p, planesNuevos) });
+  },
+
+  agregarPlanSuscripcion: (nombre) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const planesActuales = obtenerPlanesSuscripcionStore(p);
+    const nombreDefault = nombre ?? sugerirNombrePlan(planesActuales.length);
+    const nuevo: PlanSuscripcion = {
+      id: nuevoId(),
+      nombre: nombreDefault,
+      suscriptoresIniciales: 0,
+      altasMensuales: 10,
+      churnMensual: 0.05,
+      cuotaMensual: 50,
     };
     set({
-      proyecto: conTimestamp({
-        ...p,
-        modeloIngreso: "suscripcion",
-        suscripcionV2: params,
-        productos: [producto],
-      }),
+      proyecto: aplicarPlanesSuscripcion(p, [...planesActuales, nuevo]),
     });
+  },
+
+  editarPlanSuscripcion: (id, cambios) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const planesActuales = obtenerPlanesSuscripcionStore(p);
+    const planesNuevos = planesActuales.map((pl) =>
+      pl.id === id ? { ...pl, ...cambios } : pl
+    );
+    set({ proyecto: aplicarPlanesSuscripcion(p, planesNuevos) });
+  },
+
+  eliminarPlanSuscripcion: (id) => {
+    const p = get().proyecto;
+    if (!p) return;
+    const planesActuales = obtenerPlanesSuscripcionStore(p);
+    if (planesActuales.length <= 1) return; // no permitir quedarse sin planes
+    const planesNuevos = planesActuales.filter((pl) => pl.id !== id);
+    set({ proyecto: aplicarPlanesSuscripcion(p, planesNuevos) });
   },
 
   setPublicidadV2: (cambios) => {
