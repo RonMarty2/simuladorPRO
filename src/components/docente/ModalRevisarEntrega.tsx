@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, Loader2, X, XCircle } from "lucide-react";
+import { CheckCircle2, Layers, Loader2, X, XCircle } from "lucide-react";
 import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
@@ -7,9 +7,13 @@ import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
 
 export default function ModalRevisarEntrega({
   entrega,
+  otrasPendientes = [],
   onCerrar,
 }: {
   entrega: Entrega;
+  /** Otras entregas pendientes del MISMO alumno+proyecto (sin incluir `entrega`).
+   *  Si vienen, el modal ofrece aplicar la misma nota a todas de una vez. */
+  otrasPendientes?: Entrega[];
   onCerrar: (actualizada: boolean) => void;
 }) {
   const yaRevisada = entrega.estado !== "pendiente";
@@ -21,6 +25,9 @@ export default function ModalRevisarEntrega({
     entrega.nota ?? entrega.sugerencia_nota ?? 70
   );
   const [comentario, setComentario] = useState(entrega.comentario_docente ?? "");
+  // Si hay otras pendientes del mismo alumno, por defecto se aplican todas
+  // con la misma nota (es justo lo que el docente pidió: una sola decisión).
+  const [aplicarATodas, setAplicarATodas] = useState(otrasPendientes.length > 0);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +35,19 @@ export default function ModalRevisarEntrega({
     setGuardando(true);
     setError(null);
     try {
-      await revisarEntrega(entrega.id, decision, nota, comentario);
+      const objetivos = aplicarATodas
+        ? [entrega, ...otrasPendientes]
+        : [entrega];
+      // Promise.allSettled — si una falla, seguimos con las otras y luego
+      // reportamos. Lo importante es no dejar al docente sin saber qué pasó.
+      const resultados = await Promise.allSettled(
+        objetivos.map((e) => revisarEntrega(e.id, decision, nota, comentario))
+      );
+      const fallos = resultados.filter((r) => r.status === "rejected").length;
+      if (fallos > 0) {
+        setError(`${fallos} de ${objetivos.length} no se pudo guardar. Revisá tu conexión y reintentá.`);
+        // Igual cerramos como "actualizada" para refrescar lo que sí pasó.
+      }
       onCerrar(true);
     } catch (e: any) {
       setError(e?.message ?? String(e));
@@ -198,6 +217,36 @@ export default function ModalRevisarEntrega({
               />
             </div>
 
+            {!yaRevisada && otrasPendientes.length > 0 && (
+              <label
+                className={cn(
+                  "flex cursor-pointer items-start gap-2 rounded-md border-2 p-2.5 transition",
+                  aplicarATodas
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                    : "border-border bg-card hover:bg-secondary"
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={aplicarATodas}
+                  onChange={(e) => setAplicarATodas(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-emerald-600"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    <Layers className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
+                    Aplicar también a {otrasPendientes.length} etapa{otrasPendientes.length === 1 ? "" : "s"} pendiente{otrasPendientes.length === 1 ? "" : "s"} del alumno
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">
+                    {otrasPendientes
+                      .map((e) => (e.paso_entregado ? `Etapa ${e.paso_entregado}` : "Proyecto"))
+                      .join(", ")}
+                    {" · "}misma nota, mismo comentario, misma decisión.
+                  </div>
+                </div>
+              </label>
+            )}
+
             {yaRevisada && entrega.revisado_en && (
               <div className="text-[10px] text-muted-foreground">
                 Revisada el {new Date(entrega.revisado_en).toLocaleString("es-BO")}
@@ -232,7 +281,9 @@ export default function ModalRevisarEntrega({
               )}
             >
               {guardando && <Loader2 className="h-3 w-3 animate-spin" />}
-              Confirmar {decision === "aprobada" ? "aprobación" : "reprobación"}
+              {aplicarATodas && otrasPendientes.length > 0
+                ? `Confirmar ${decision === "aprobada" ? "aprobación" : "reprobación"} de ${otrasPendientes.length + 1} etapas`
+                : `Confirmar ${decision === "aprobada" ? "aprobación" : "reprobación"}`}
             </button>
           )}
         </div>

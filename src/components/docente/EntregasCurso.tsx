@@ -30,7 +30,10 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [grupos, setGrupos] = useState<GrupoConMiembros[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [entregaActiva, setEntregaActiva] = useState<Entrega | null>(null);
+  // Al revisar una etapa, pasamos también las OTRAS pendientes del mismo
+  // alumno+proyecto para que el modal ofrezca "calificar todas igual" sin
+  // que el docente tenga que volver y abrir tab por tab.
+  const [entregaActiva, setEntregaActiva] = useState<{ entrega: Entrega; otrasPendientes: Entrega[] } | null>(null);
   // Para "revisión rápida" del lote pendiente de un estudiante o grupo.
   const [loteMasivo, setLoteMasivo] = useState<{ titular: string; entregas: Entrega[] } | null>(null);
   // "Calificar todo igual": misma nota + comentario para todas las pendientes
@@ -239,7 +242,13 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
               key={g.key}
               grupo={g}
               vista={vista}
-              onRevisar={(e) => setEntregaActiva(e)}
+              onRevisar={(e) => {
+                // Otras pendientes del mismo alumno+proyecto (excluyendo la abierta).
+                const otrasPendientes = g.entregas.filter(
+                  (x) => x.id !== e.id && x.estado === "pendiente"
+                );
+                setEntregaActiva({ entrega: e, otrasPendientes });
+              }}
               onRevisarLote={(pendientes) =>
                 setLoteMasivo({ titular: g.nombreTitular, entregas: pendientes })
               }
@@ -253,7 +262,8 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
 
       {entregaActiva && (
         <ModalRevisarEntrega
-          entrega={entregaActiva}
+          entrega={entregaActiva.entrega}
+          otrasPendientes={entregaActiva.otrasPendientes}
           onCerrar={(actualizada) => {
             setEntregaActiva(null);
             if (actualizada) cargar();
