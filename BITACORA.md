@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-06-01 — `e7b5209`
+> **Última actualización**: 2026-06-09 — `72fcedd`
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 (orden de prioridad para un onboarding rápido).
 
@@ -49,7 +49,7 @@ Arquitectura preparada para escalar a cientos.
 | **Excel export** | xlsx-js-style (dinámico, solo al click admin) |
 | **Form** | react-hook-form + Zod |
 | **PWA** | vite-plugin-pwa con Workbox (auto-update OTA) |
-| **Tests** | Vitest (196 tests al día de hoy) |
+| **Tests** | Vitest (201 tests al día de hoy) |
 | **Backend** | Supabase (Postgres + Auth + Storage + Edge Functions) |
 | **Auth** | Supabase Auth (email/password + Google OAuth con PKCE) |
 | **Hosting** | Vercel (deploy automático desde main) |
@@ -63,7 +63,7 @@ Arquitectura preparada para escalar a cientos.
 ✅ **Live en producción**: `https://simulador-pro-seven.vercel.app`
 ✅ **Base de datos**: Supabase project `syfbgauvictgykdptamb` (region `us-east-2`)
 ✅ **PWA instalable** en Android, iOS y desktop (con auto-update OTA)
-✅ **Tests verdes** (196/196), TypeScript clean, build OK
+✅ **Tests verdes** (201/201), TypeScript clean, build OK
 ✅ **Seguridad RLS**: todas las tablas protegidas, escalada de privilegios
    bloqueada por trigger (migración 018)
 ✅ **23 migraciones SQL** aplicadas (ver §6)
@@ -98,7 +98,9 @@ Arquitectura preparada para escalar a cientos.
 
 **Modelos de ingreso disponibles** en el constructor:
 - `unidades` — productos × cantidad × precio (default).
-- `suscripcion` — base recurrente con altas y churn.
+- `suscripcion` — base recurrente con altas y churn. **Multi-plan**: el alumno
+  puede tener varios planes (básico/VIP/premium) cada uno con su cuota, churn
+  y altas; la proyección suma todos. Ver §7.12.
 - `publicidad` — audiencia × CPM.
 - `costo_beneficio` — evaluación por beneficio incremental.
 
@@ -119,9 +121,12 @@ Arquitectura preparada para escalar a cientos.
 | Catálogo de eventos | `/eventos` | `routes/catalogo-eventos.tsx` |
 
 **3 modales de revisión** (todos en `components/docente/`):
-1. `ModalRevisarEntrega` — revisar UNA entrega individual.
+1. `ModalRevisarEntrega` — revisar UNA entrega individual. Si el alumno tiene
+   OTRAS pendientes del mismo proyecto, ofrece un checkbox (marcado por
+   defecto) para aplicar la misma nota+comentario+decisión a todas. Ver §7.13.
 2. `ModalRevisionMasiva` — revisar varias etapas con tabs (nota distinta por etapa).
-3. `ModalCalificarTodoIgual` — MISMA nota+comentario para todas las pendientes.
+3. `ModalCalificarTodoIgual` — MISMA nota+comentario para todas las pendientes
+   (botón desde la tarjeta del alumno, sin abrir tab por tab).
 
 ### 4.3 Para el ADMIN
 
@@ -322,6 +327,36 @@ proyecto personal de cada uno.
 Evita el error típico del alumno que pega `0.733333` (resultado de 22/30 sin
 redondear). Cubre cualquier precisión legítima del simulador.
 
+### 7.12 Suscripciones multi-plan (FASE 24)
+Antes el modelo de suscripción solo permitía UN plan único (suscriptores,
+altas, churn, cuota). Ahora `suscripcionV2.planes?: PlanSuscripcion[]` es
+opcional; cada plan tiene sus 4 parámetros independientes. El motor financiero
+no se tocó: el store genera **un producto portador por plan** (cantidades =
+promedio de suscriptores año a año, precio anual = cuota × 12) y los suma.
+
+**Retro-compat total**: proyectos viejos sin `planes[]` se leen como "Plan
+único" vía `lib/planes-suscripcion.ts::obtenerPlanesSuscripcion`. Las 26
+plantillas (gimnasio, podcast, etc.) no necesitaron cambios porque caen al
+fallback legacy. Los campos planos (`suscriptoresIniciales`, etc.) se
+sincronizan con el primer plan para no romper código viejo.
+
+**UI**: `PanelSuscripcion` en `Paso2Proyeccion.tsx` ahora muestra una tarjeta
+por plan con LTV/techo/ingreso año 1 propios + tabla agregada que suma todo.
+
+### 7.13 Revisión batch desde el modal individual
+El docente abre la Etapa 1 de un alumno, califica y cierra. La tarjeta del
+alumno no se va de "Pendientes" porque las Etapas 2 y 3 siguen pendientes.
+Antes había que abrir tab por tab.
+
+Ahora, si el modal individual detecta que el mismo alumno+proyecto tiene
+otras pendientes, muestra un checkbox **marcado por defecto** "Aplicar
+también a N etapa(s) pendiente(s) del alumno". Al confirmar, se ejecuta
+`Promise.allSettled` con `revisarEntrega` por cada una. La tarjeta
+desaparece de "Pendientes" con un solo clic.
+
+Implementación: `EntregasCurso` calcula `otrasPendientes` filtrando las del
+mismo grupo (excluyendo la abierta) y se las pasa al `ModalRevisarEntrega`.
+
 ---
 
 ## 8. Variables de entorno
@@ -372,11 +407,15 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
 - [ ] **Email de nota nueva** → crear cuenta Resend, deploy de la Edge
       Function `notificar-nota`, crear webhook. ~15 min.
 
+### Hecho recientemente
+- [x] **Múltiples planes de suscripción** (`9cfc1dc`, 2026-06-09) — Básico,
+      VIP, Premium o los que sumes, cada uno con su churn/cuota/altas. Retro-
+      compat total con proyectos y plantillas viejas. Ver §7.12.
+- [x] **Revisión batch desde el modal individual** (`72fcedd`, 2026-06-09) —
+      Calificar todas las pendientes del alumno desde el modal de UNA etapa.
+      Ver §7.13.
+
 ### En consideración (no implementado)
-- [ ] **Múltiples planes de suscripción** (Básico/Pro/Premium con sus
-      propias bases, churn y cuotas). Pausado en `e7b5209` — el cambio del
-      type fue revertido para no dejar nada roto. Requiere: type change,
-      helpers, UI del Paso 2, motor, plantillas. ~3-4 horas.
 - [ ] **Detección automática de plagio** (proyectos muy similares entre
       alumnos). Para cursos grandes.
 - [ ] **Notificaciones push** vía Service Worker (Android).
