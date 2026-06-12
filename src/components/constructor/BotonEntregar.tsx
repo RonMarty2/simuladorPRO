@@ -71,7 +71,10 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
       // Por ahora la sugerencia automática solo aplica reglas duras (VAN>0,
       // TIR>WACC). En el futuro acá podríamos comparar contra el caso del
       // docente cuando exista referencia para entrega_estudiante.
-      const entrega = await entregarProyecto(proyecto, indicadores, null, paso ?? null);
+      // Pasamos perfil.id como "submitter": para proyectos grupales el dueño
+      // del proyecto (creador del grupo) puede ser otro alumno. El RLS exige
+      // que la entrega tenga estudiante_id = auth.uid() del que entrega.
+      const entrega = await entregarProyecto(proyecto, indicadores, null, paso ?? null, perfil.id);
       const nuevaLista = [entrega, ...entregas];
       setEntregas(nuevaLista);
       setMensaje({
