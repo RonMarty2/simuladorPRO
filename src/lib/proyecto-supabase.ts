@@ -431,13 +431,39 @@ export async function entregarProyecto(
   return data as Entrega;
 }
 
-/** Lista las entregas de un estudiante (su propio historial). */
+/** Lista las entregas del alumno: las que él subió + las del proyecto grupal
+ *  de cada grupo en el que es miembro (aunque las haya subido un compañero).
+ *  Requiere migración 024 para que la RLS deje leer las grupales ajenas. */
 export async function listarMisEntregas(estudianteId: string): Promise<Entrega[]> {
-  const { data, error } = await supabase
+  // 1. Proyectos grupales de los grupos donde soy miembro.
+  const { data: misMembresias } = await supabase
+    .from("grupo_miembros")
+    .select("grupo_id")
+    .eq("estudiante_id", estudianteId);
+  const grupoIds = (misMembresias ?? []).map((m: any) => m.grupo_id as string);
+
+  let proyectoGrupalIds: string[] = [];
+  if (grupoIds.length > 0) {
+    const { data: proyGr } = await supabase
+      .from("proyectos")
+      .select("id")
+      .in("grupo_id", grupoIds);
+    proyectoGrupalIds = (proyGr ?? []).map((p: any) => p.id as string);
+  }
+
+  // 2. Entregas: las mías (estudiante_id) ∪ las del proyecto grupal de mis grupos.
+  let q = supabase
     .from("entregas")
     .select("*")
-    .eq("estudiante_id", estudianteId)
     .order("entregado_en", { ascending: false });
+  if (proyectoGrupalIds.length > 0) {
+    q = q.or(
+      `estudiante_id.eq.${estudianteId},proyecto_id.in.(${proyectoGrupalIds.join(",")})`
+    );
+  } else {
+    q = q.eq("estudiante_id", estudianteId);
+  }
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Entrega[];
 }

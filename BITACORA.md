@@ -255,6 +255,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 021 | `indices_consultas_calientes.sql` | Índices compuestos para entregas y grupos |
 | 022 | `lanzador_eventos_docente.sql` | `eventos_disparados` + `simulaciones.evento_forzado_id` |
 | 023 | `tipos_proyecto_simulables.sql` | `cursos.simulacion_caso_curso/individual/grupal` |
+| 024 | `entregas_miembros_grupo_leen.sql` | Policy SELECT adicional: miembros del grupo leen entregas del proyecto compartido |
 
 ---
 
@@ -540,7 +541,7 @@ Buscá en §7 (Decisiones de diseño). Si NO está documentado, pedile a la IA:
 | **simulaciones** | Dueño · docente del curso · admin | Dueño · admin |
 | **turnos_historial** | Dueño de la simulación | Dueño |
 | **eventos** | Cualquier autenticado (los activos) | (Solo admin/seed) |
-| **entregas** | Dueño · docente del curso · admin | Estudiante crea (forzando estado=pendiente, sin nota) · docente revisa · admin |
+| **entregas** | Submitter · miembros del grupo (si proyecto_grupal, migración 024) · docente del curso · admin | Estudiante crea (forzando estado=pendiente, sin nota) · docente revisa · admin |
 | **grupos** | Alumnos inscritos · docente del curso | Docente del curso · estudiante crea (con restricciones) |
 | **grupo_miembros** | Alumnos del mismo curso · docente | Estudiante entra/sale del suyo · docente |
 | **eventos_disparados** | Docente · alumno inscrito · admin | Docente del curso · admin |
