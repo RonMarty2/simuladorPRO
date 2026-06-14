@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { guardarProyecto } from "@/lib/proyecto-supabase";
+import { registrarActividad } from "@/lib/proyecto-actividad-supabase";
+import { useAuthStore } from "@/stores/auth-store";
 import type { Proyecto } from "@/types/proyecto";
 
 export type EstadoGuardado =
@@ -11,12 +13,17 @@ export type EstadoGuardado =
 /**
  * Auto-guardado del proyecto con debounce corto + guardado de emergencia
  * cuando la pestaña pierde foco o el usuario cierra/refresca.
+ *
+ * Side-effect: en proyectos GRUPALES registra actividad del usuario (deduplica
+ * por día, así que un alumno editando todo el día genera 1 fila). El log es
+ * "best-effort" — nunca traba el guardado.
  */
 export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
   const [estado, setEstado] = useState<EstadoGuardado>({ tipo: "idle" });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ultimoGuardadoTimestampRef = useRef<string | null>(null);
   const proyectoRef = useRef<Proyecto | null>(null);
+  const usuarioId = useAuthStore((s) => s.user?.id ?? null);
 
   // Mantenemos un ref actualizado al último proyecto para acceder desde handlers
   useEffect(() => {
@@ -33,6 +40,10 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
       await guardarProyecto(p);
       ultimoGuardadoTimestampRef.current = p.actualizado_en;
       setEstado({ tipo: "guardado", en: new Date() });
+      // Audit de actividad: solo para grupales, deduplicado por día en BD.
+      if (p.tipo === "proyecto_grupal" && usuarioId) {
+        void registrarActividad(p.id, usuarioId, "edito", 0);
+      }
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "Error al guardar";
       setEstado({ tipo: "error", mensaje });

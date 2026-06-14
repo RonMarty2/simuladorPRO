@@ -256,6 +256,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 022 | `lanzador_eventos_docente.sql` | `eventos_disparados` + `simulaciones.evento_forzado_id` |
 | 023 | `tipos_proyecto_simulables.sql` | `cursos.simulacion_caso_curso/individual/grupal` |
 | 024 | `entregas_miembros_grupo_leen.sql` | Policy SELECT adicional: miembros del grupo leen entregas del proyecto compartido |
+| 025 | `proyecto_actividad.sql` | Tabla de actividad por usuario + RLS. Audit de quién editó/entregó proyectos grupales. |
 
 ---
 

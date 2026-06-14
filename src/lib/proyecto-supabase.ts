@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { registrarActividad } from "./proyecto-actividad-supabase";
 import type {
   Entrega,
   EstadoEntrega,
@@ -428,6 +429,10 @@ export async function entregarProyecto(
     .select()
     .single();
   if (error) throw error;
+  // Audit: registramos que el usuario entregó (para el panel del docente en grupales).
+  // Best-effort: si falla, no rompemos la entrega.
+  const submitter = estudianteIdSubmitter ?? proyecto.estudiante_id;
+  void registrarActividad(proyecto.id, submitter, "entrego", pasoEntregado ?? 0);
   return data as Entrega;
 }
 
