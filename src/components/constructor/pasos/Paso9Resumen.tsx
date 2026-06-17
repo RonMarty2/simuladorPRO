@@ -39,13 +39,13 @@ export default function Paso9Resumen() {
 
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
 
-  // Colapso por sección del flujo de caja (todas CONTRAÍDAS por defecto; el
-  // usuario expande la que quiera ver).
+  // El IVA afecta caja, no resultado contable; por eso vive en ajustes de caja.
+  // Dejamos abiertos los bloques clave para que IT/IUE/IVA sean visibles al cargar.
   const [secAbierta, setSecAbierta] = useState<Record<string, boolean>>({
-    emerald: false,
+    emerald: true,
     rose: false,
-    violet: false,
-    sky: false,
+    violet: true,
+    sky: true,
   });
   const toggleSeccion = (k: string) =>
     setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
@@ -280,7 +280,7 @@ export default function Paso9Resumen() {
 
             {/* ── 4. AJUSTES A FLUJO DE CAJA (gris/azul) ─────────────── */}
             <FilaSeccion
-              label="4 · AJUSTES A FLUJO DE CAJA"
+              label="4 · AJUSTES A FLUJO DE CAJA / IVA"
               color="sky"
               abierta={secAbierta.sky}
               onToggle={() => toggleSeccion("sky")}
