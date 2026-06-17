@@ -56,12 +56,20 @@ export async function actualizarConfigGrupal(
     grupo_consigna: string | null;
   }
 ): Promise<void> {
+  const cupoMax = Math.max(1, Math.min(50, cfg.grupo_cupo_max));
   const { error } = await conTimeout(
-    supabase.from("cursos").update(cfg).eq("id", cursoId),
+    supabase.from("cursos").update({ ...cfg, grupo_cupo_max: cupoMax }).eq("id", cursoId),
     10000,
     "guardando la configuración del proyecto grupal"
   );
   if (error) throw error;
+
+  const { error: errorGrupos } = await conTimeout(
+    supabase.from("grupos").update({ cupo_max: cupoMax }).eq("curso_id", cursoId),
+    10000,
+    "actualizando el cupo de los grupos existentes"
+  );
+  if (errorGrupos) throw errorGrupos;
 }
 
 /** Habilita/deshabilita que los estudiantes creen su propio proyecto en el curso. */

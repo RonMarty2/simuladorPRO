@@ -60,6 +60,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
         grupo_version: version,
         grupo_consigna: consigna.trim() || null,
       });
+      await recargar();
       setCfgOk(true);
       setTimeout(() => setCfgOk(false), 1500);
     } catch (e: any) {
