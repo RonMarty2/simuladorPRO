@@ -30,6 +30,7 @@ export function migrarProducto(prod: any): Producto {
     id: prod.id,
     nombre: prod.nombre,
     unidadMedida: prod.unidadMedida,
+    aplicaIVA: prod.aplicaIVA ?? true,
     cantidades,
     precios,
     precioVenta: prod.precioVenta,

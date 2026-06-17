@@ -269,6 +269,7 @@ function SeccionGastos({
                   <th className="p-1.5 text-right w-[12%]">Cantidad</th>
                   <th className="p-1.5 text-right w-[16%]">Costo unit.</th>
                   <th className="p-1.5 text-right w-[18%]">Total anual</th>
+                  <th className="p-1.5 text-center w-[10%]">Factura IVA</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -323,6 +324,17 @@ function SeccionGastos({
                       </td>
                       <td className="p-1 text-right font-semibold">
                         {formatearBolivianos(c.cantidad * c.costoUnitario * factor)}
+                      </td>
+                      <td className="p-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={c.creditoFiscalIVA ?? true}
+                          onChange={(e) =>
+                            onEditar(c.id, { creditoFiscalIVA: e.target.checked })
+                          }
+                          title="Con factura valida para computar credito fiscal IVA"
+                          className="h-3.5 w-3.5"
+                        />
                       </td>
                       <td className="p-1">
                         <button
@@ -393,6 +405,19 @@ function SeccionGastos({
                       />
                     </label>
                   </div>
+                  <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={c.creditoFiscalIVA ?? true}
+                      onChange={(e) =>
+                        onEditar(c.id, { creditoFiscalIVA: e.target.checked })
+                      }
+                      className="h-3.5 w-3.5"
+                    />
+                    <span>
+                      <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                    </span>
+                  </label>
                   <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">
                     <span className="text-muted-foreground">Total anual:</span>{" "}
                     <strong>{formatearBolivianos(c.cantidad * c.costoUnitario * factor)}</strong>
@@ -405,7 +430,13 @@ function SeccionGastos({
 
         <button
           onClick={() =>
-            onAgregar({ descripcion: "", unidadMedida: "mes", cantidad: 1, costoUnitario: 0 })
+            onAgregar({
+              descripcion: "",
+              unidadMedida: "mes",
+              cantidad: 1,
+              costoUnitario: 0,
+              creditoFiscalIVA: true,
+            })
           }
           className="flex items-center gap-1.5 rounded-md border border-dashed border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:border-foreground hover:text-foreground"
         >

@@ -32,6 +32,8 @@ export interface ItemInversion {
   unidadMedida: string;
   cantidad: number;
   costoUnitario: number;
+  /** Si tiene factura valida para computar credito fiscal IVA. */
+  creditoFiscalIVA?: boolean;
   costoTotal: number;
   vidaUtilAnios: number | null; // null = no se deprecia (terreno)
   depreciacionAnual: number;
@@ -79,6 +81,8 @@ export interface CostoDirecto {
   unidadMedida: string;
   cantidadPorUnidad: number;
   costoUnitario: number;
+  /** Si la compra/insumo tiene factura valida para computar credito fiscal IVA. */
+  creditoFiscalIVA?: boolean;
 }
 
 export interface CostoGeneral {
@@ -87,12 +91,16 @@ export interface CostoGeneral {
   unidadMedida: "mes" | "año";
   cantidad: number;
   costoUnitario: number;
+  /** Si el gasto tiene factura valida para computar credito fiscal IVA. */
+  creditoFiscalIVA?: boolean;
 }
 
 export interface Producto {
   id: string;
   nombre: string;
   unidadMedida: string;
+  /** Si la venta genera debito fiscal IVA. */
+  aplicaIVA?: boolean;
   /** Cantidad proyectada para cada uno de los 5 años. cantidades[0] = año 1. */
   cantidades: [number, number, number, number, number];
   /** Precio de venta para cada año. precios[0] = año 1. */

@@ -97,6 +97,51 @@ describe("construirFlujoCajaProyecto", () => {
       6
     );
   });
+
+  it("no genera debito fiscal IVA en productos marcados sin IVA", () => {
+    const proyecto = proyectoDemo();
+    proyecto.productos[0].aplicaIVA = false;
+
+    const resultado = construirFlujoCajaProyecto(proyecto);
+
+    expect(resultado.ingresos[0]).toBeGreaterThan(0);
+    expect(resultado.ingresosGravadosIVA[0]).toBe(0);
+    expect(resultado.ivaDebitoFiscal[0]).toBe(0);
+    expect(resultado.ivaNetoPagar[0]).toBe(0);
+  });
+
+  it("no computa credito fiscal IVA en costos/gastos sin factura", () => {
+    const proyecto = proyectoDemo();
+    proyecto.inversiones.maquinaria[0].creditoFiscalIVA = false;
+    proyecto.costosDirectos[0].creditoFiscalIVA = false;
+    proyecto.costosAdministracion[0].creditoFiscalIVA = false;
+    proyecto.costosComercializacion[0].creditoFiscalIVA = false;
+
+    const resultado = construirFlujoCajaProyecto(proyecto);
+
+    expect(resultado.comprasGravadasIVA[0]).toBe(0);
+    expect(resultado.ivaCreditoFiscal[0]).toBe(0);
+    expect(resultado.ivaDebitoFiscal[0]).toBeGreaterThan(0);
+    expect(resultado.ivaNetoPagar[0]).toBe(resultado.ivaDebitoFiscal[0]);
+  });
+
+  it("registra el credito fiscal IVA inicial de inversiones con factura", () => {
+    const proyecto = proyectoDemo();
+    proyecto.inversiones.maquinaria[0].creditoFiscalIVA = true;
+
+    const resultado = construirFlujoCajaProyecto(proyecto);
+    const creditoInicial = 30000 * 0.13;
+
+    expect(resultado.ivaCreditoFiscalInversionInicial).toBe(creditoInicial);
+    expect(resultado.flujoCaja[0]).toBeCloseTo(
+      -(
+        resultado.inversionInicial +
+        resultado.capitalTrabajo -
+        resultado.montoPrestamo
+      ) - creditoInicial,
+      2
+    );
+  });
 });
 
 describe("analizarSensibilidadProyecto", () => {

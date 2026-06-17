@@ -377,6 +377,17 @@ export default function Paso2Proyeccion() {
                       />
                     </label>
                   </div>
+                  <label className="flex items-center gap-2 rounded-md border border-border bg-secondary/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={p.aplicaIVA !== false}
+                      onChange={(e) => editar(p.id, { aplicaIVA: e.target.checked })}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span>
+                      <strong className="text-foreground">Venta con IVA</strong> · genera debito fiscal
+                    </span>
+                  </label>
                   {[0, 1, 2, 3, 4].map((i) => (
                     <div key={i} className="rounded-md border border-border bg-background/60 p-2">
                       <div className="mb-1 text-[10px] font-semibold text-muted-foreground">Año {i + 1}</div>
@@ -434,6 +445,7 @@ export default function Paso2Proyeccion() {
               unidadMedida: "und",
               cantidades: [0, 0, 0, 0, 0],
               precios: [0, 0, 0, 0, 0],
+              aplicaIVA: true,
             } as any);
             // Abrir automáticamente el producto recién creado para editarlo.
             const lista = useProyectoStore.getState().proyecto?.productos ?? [];

@@ -22,6 +22,7 @@ o sensibilidad, debe consumir el contrato de `simuladorPRO`.
 | Sensibilidad con escenarios alternativos y combinacion recalibrada | `src/lib/finanzas/sensibilidad.ts` | Migrado como motor determinista |
 | Idea de helper runtime para entregar resultados a otro sistema | `src/lib/finanzas/api-contract.ts` | Migrado como contrato |
 | Separacion tributaria IVA/IT/IUE esperada por WEBAPP | `src/lib/calculo-financiero.ts` + `src/lib/finanzas/proyecto-financiero.ts` | Centralizado |
+| Configuracion explicita de ventas/compras con IVA | `src/lib/iva-proyecto.ts` + pasos 2, 3, 5, 6 y 9 | Centralizado en simuladorPRO |
 
 ## Que ya existia en simuladorPRO y se mantiene
 
@@ -49,6 +50,13 @@ o sensibilidad, debe consumir el contrato de `simuladorPRO`.
   fiscal, IT 3% sobre ingresos brutos e IUE 25% sobre utilidad positiva.
   El IVA no se mezcla como gasto de resultado; se resta solo cuando genera
   neto a pagar de caja.
+- El IVA ya no se asume de forma ciega: cada producto define si su venta genera
+  debito fiscal; cada costo, gasto e inversion define si tiene factura valida
+  para credito fiscal. Personal, deuda, depreciacion, capital de trabajo e
+  impuestos no generan credito fiscal.
+- Cuando una inversion tiene factura IVA, el simulador registra el IVA pagado
+  en el ano 0 como salida recuperable y lo arrastra como saldo de credito
+  fiscal para compensar debitos futuros.
 
 ## Contrato para que WEBAPP consuma simuladorPRO
 
@@ -114,8 +122,14 @@ adaptador temporal sin ejecutar calculos locales.
 - `src/lib/finanzas/proyecto-financiero.test.ts`
 - `src/lib/finanzas/sensibilidad.ts`
 - `src/lib/finanzas/api-contract.ts`
+- `src/lib/iva-proyecto.ts`
 - `src/lib/proyecto-factory.ts`
+- `src/types/proyecto.ts`
 - `api/finanzas/evaluar.ts`
+- `src/components/constructor/pasos/Paso2Proyeccion.tsx`
+- `src/components/constructor/pasos/Paso2Inversiones.tsx`
+- `src/components/constructor/pasos/Paso6CostosProduccion.tsx`
+- `src/components/constructor/pasos/Paso7GastosOperativos.tsx`
 - `src/components/constructor/pasos/Paso9Resumen.tsx`
 - `src/routes/evaluacion-final.tsx`
 - `docs/FINANZAS_CONSOLIDACION.md`

@@ -123,6 +123,19 @@ describe("calcularTributosBolivia", () => {
     expect(r.totalTributosResultado).toBe(18500);
     expect(r.totalTributosCaja).toBe(31500);
   });
+
+  it("permite que IVA use ventas gravadas distintas a ingresos brutos", () => {
+    const r = calcularTributosBolivia({
+      ingresosBrutos: 200000,
+      ventasGravadasIVA: 50000,
+      comprasGravadasIVA: 10000,
+      utilidadAntesIUE: 0,
+    });
+    expect(r.it).toBe(6000);
+    expect(r.iva.debitoFiscal).toBe(6500);
+    expect(r.iva.creditoFiscalPeriodo).toBe(1300);
+    expect(r.iva.ivaNetoPagar).toBe(5200);
+  });
 });
 
 // ============================================================================

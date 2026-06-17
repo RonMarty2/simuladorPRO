@@ -214,6 +214,7 @@ export function calcularIVA(params: ParamsIVA): ResultadoIVA {
 
 export interface ParamsTributosBolivia {
   ingresosBrutos: number;
+  ventasGravadasIVA?: number;
   comprasGravadasIVA: number;
   utilidadAntesIUE: number;
   saldoCreditoFiscalIVAAnterior?: number;
@@ -243,7 +244,7 @@ export function calcularTributosBolivia(
   const tasaIT = params.tasaIT ?? TASA_IT;
   const tasaIUE = params.tasaIUE ?? TASA_IUE;
   const iva = calcularIVA({
-    ventasGravadas: params.ingresosBrutos,
+    ventasGravadas: params.ventasGravadasIVA ?? params.ingresosBrutos,
     comprasGravadas: params.comprasGravadasIVA,
     saldoCreditoFiscalAnterior: params.saldoCreditoFiscalIVAAnterior,
     tasaIVA: params.tasaIVA,

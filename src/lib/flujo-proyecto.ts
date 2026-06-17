@@ -22,8 +22,16 @@ import {
   calcularVAN,
   calcularWACC,
   obtenerTasasAportes,
+  TASA_IVA,
   TASA_IUE,
 } from "./calculo-financiero";
+import {
+  costoDirectoDaCreditoIVA,
+  costoGeneralDaCreditoIVA,
+  inversionDaCreditoIVA,
+  productoGeneraDebitoIVA,
+} from "./iva-proyecto";
+import type { CategoriaInversion } from "../types/proyecto";
 
 export function construirFlujoCaja(proyecto: any) {
   const productos = proyecto.productos.map((p: any) => {
@@ -42,7 +50,20 @@ export function construirFlujoCaja(proyecto: any) {
   // que antes: compra en año 0, depreciación durante su vida, sin reposición.
   const HORIZONTE = 5;
   const inversionItems = Object.values(proyecto.inversiones).flat() as any[];
+  const inversionesConCategoria = Object.entries(proyecto.inversiones).flatMap(
+    ([categoria, items]) =>
+      (items as any[]).map((item) => ({
+        categoria: categoria as CategoriaInversion,
+        item,
+      }))
+  );
   const inversionInicial = inversionItems.reduce((a, it) => a + it.costoTotal, 0);
+  const inversionConCreditoIVA = inversionesConCategoria.reduce(
+    (acc, { categoria, item }) =>
+      acc + (inversionDaCreditoIVA(item, categoria) ? item.costoTotal : 0),
+    0
+  );
+  const ivaCreditoFiscalInversionInicial = inversionConCreditoIVA * TASA_IVA;
 
   const depreciacion = [0, 0, 0, 0, 0]; // por año 1..5
   const reinversionPorAnio = [0, 0, 0, 0, 0]; // recompras de activos de vida corta, año 1..5
@@ -167,15 +188,30 @@ export function construirFlujoCaja(proyecto: any) {
   const ingresos = [0, 1, 2, 3, 4].map((i) =>
     productos.reduce((acc: number, p: any) => acc + p.cantidades[i] * p.precios[i], 0)
   );
+  const ingresosGravadosIVA = [0, 1, 2, 3, 4].map((i) =>
+    productos.reduce(
+      (acc: number, p: any) =>
+        acc + (productoGeneraDebitoIVA(p) ? p.cantidades[i] * p.precios[i] : 0),
+      0
+    )
+  );
+  const prorrataVentasGravadasIVA = ingresos.map((total: number, i: number) =>
+    total > 0 ? Math.min(1, ingresosGravadosIVA[i] / total) : 0
+  );
 
   // ── Costos directos POR PRODUCTO ─────────────────────────────────────────
   const g = proyecto.crecimientoCostosAnual;
-  const costosProduccion = [0, 1, 2, 3, 4].map((i) => {
+  const calcularCostosDirectosAnio = (i: number, soloConCreditoIVA: boolean) => {
     const inflacion = Math.pow(1 + g, i);
     const costoPorProducto = productos.reduce((acc: number, p: any) => {
       const unidadesProd = p.cantidades[i] ?? 0;
       const costoUnit = proyecto.costosDirectos
-        .filter((c: any) => c.productoId === p.id)
+        .filter(
+          (c: any) =>
+            c.productoId === p.id &&
+            (!soloConCreditoIVA ||
+              (costoDirectoDaCreditoIVA(c) && productoGeneraDebitoIVA(p)))
+        )
         .reduce((a: number, c: any) => a + c.cantidadPorUnidad * c.costoUnitario, 0);
       return acc + unidadesProd * costoUnit * inflacion;
     }, 0);
@@ -184,10 +220,26 @@ export function construirFlujoCaja(proyecto: any) {
       0
     );
     const costoUnitHuerfanos = proyecto.costosDirectos
-      .filter((c: any) => c.productoId == null)
+      .filter(
+        (c: any) =>
+          c.productoId == null &&
+          (!soloConCreditoIVA || costoDirectoDaCreditoIVA(c))
+      )
       .reduce((a: number, c: any) => a + c.cantidadPorUnidad * c.costoUnitario, 0);
-    return costoPorProducto + unidadesTotales * costoUnitHuerfanos * inflacion;
-  });
+    const costoHuerfano = unidadesTotales * costoUnitHuerfanos * inflacion;
+    return (
+      costoPorProducto +
+      (soloConCreditoIVA
+        ? costoHuerfano * prorrataVentasGravadasIVA[i]
+        : costoHuerfano)
+    );
+  };
+  const costosProduccion = [0, 1, 2, 3, 4].map((i) =>
+    calcularCostosDirectosAnio(i, false)
+  );
+  const costosProduccionConCreditoIVA = [0, 1, 2, 3, 4].map((i) =>
+    calcularCostosDirectosAnio(i, true)
+  );
 
   // ── Admin y Comerc — crecimiento aplicado año a año ──────────────────────
   const gAdminBase = proyecto.costosAdministracion.reduce(
@@ -200,6 +252,24 @@ export function construirFlujoCaja(proyecto: any) {
   );
   const gastosAdmin = [0, 1, 2, 3, 4].map((i) => gAdminBase * Math.pow(1 + g, i));
   const gastosComerc = [0, 1, 2, 3, 4].map((i) => gComercBase * Math.pow(1 + g, i));
+  const calcularGastosConCreditoIVA = (items: any[], i: number) =>
+    items
+      .filter((c) => costoGeneralDaCreditoIVA(c))
+      .reduce(
+        (acc, c) =>
+          acc +
+          c.cantidad *
+            c.costoUnitario *
+            (c.unidadMedida === "mes" ? 12 : 1) *
+            Math.pow(1 + g, i),
+        0
+      ) * prorrataVentasGravadasIVA[i];
+  const gastosAdminConCreditoIVA = [0, 1, 2, 3, 4].map((i) =>
+    calcularGastosConCreditoIVA(proyecto.costosAdministracion, i)
+  );
+  const gastosComercConCreditoIVA = [0, 1, 2, 3, 4].map((i) =>
+    calcularGastosConCreditoIVA(proyecto.costosComercializacion, i)
+  );
 
   const personal = [0, 1, 2, 3, 4].map((i) => personalAnual * Math.pow(1 + g, i));
   // depreciacion ya se calculó arriba (por año, respetando la vida de cada activo)
@@ -208,7 +278,10 @@ export function construirFlujoCaja(proyecto: any) {
     return base * proyecto.imprevistosPorcentaje;
   });
   const comprasGravadasIVA = [0, 1, 2, 3, 4].map(
-    (i) => costosProduccion[i] + gastosAdmin[i] + gastosComerc[i] + imprevistos[i]
+    (i) =>
+      costosProduccionConCreditoIVA[i] +
+      gastosAdminConCreditoIVA[i] +
+      gastosComercConCreditoIVA[i]
   );
 
   // Utilidad y flujo
@@ -221,7 +294,7 @@ export function construirFlujoCaja(proyecto: any) {
   const utilidadAAI: number[] = [];
   const impuestos: number[] = [];
   const utilidadNeta: number[] = [];
-  let saldoCreditoFiscalIVA = 0;
+  let saldoCreditoFiscalIVA = ivaCreditoFiscalInversionInicial;
   for (let i = 0; i < 5; i++) {
     const uOp =
       ingresos[i] -
@@ -235,6 +308,7 @@ export function construirFlujoCaja(proyecto: any) {
     const aai = uOp - itEstimado - intereses[i];
     const tributos = calcularTributosBolivia({
       ingresosBrutos: ingresos[i],
+      ventasGravadasIVA: ingresosGravadosIVA[i],
       comprasGravadasIVA: comprasGravadasIVA[i],
       utilidadAntesIUE: aai,
       saldoCreditoFiscalIVAAnterior: saldoCreditoFiscalIVA,
@@ -252,7 +326,9 @@ export function construirFlujoCaja(proyecto: any) {
     utilidadNeta.push(aai - tributos.iue);
   }
 
-  const flujoCaja: number[] = [-(totalProyecto - montoPrestamo)];
+  const flujoCaja: number[] = [
+    -(totalProyecto - montoPrestamo) - ivaCreditoFiscalInversionInicial,
+  ];
   for (let i = 0; i < 5; i++) {
     // Resta la reposición de activos de vida corta en el año que toca recomprarlos.
     let fc =
@@ -284,7 +360,7 @@ export function construirFlujoCaja(proyecto: any) {
   // RBC = VP(beneficios) / VP(costos), mismos flujos que el VAN (RBC>1 ⟺ VAN>0)
   const flujoIngresos: number[] = [montoPrestamo, ...ingresos];
   flujoIngresos[5] += valorResidual + proyecto.capitalTrabajo;
-  const flujoCostosTotal: number[] = [totalProyecto];
+  const flujoCostosTotal: number[] = [totalProyecto + ivaCreditoFiscalInversionInicial];
   for (let i = 0; i < 5; i++) {
     flujoCostosTotal.push(
       costosProduccion[i] +
@@ -303,9 +379,13 @@ export function construirFlujoCaja(proyecto: any) {
 
   return {
     ingresos,
+    ingresosGravadosIVA,
     costosProduccion,
+    costosProduccionConCreditoIVA,
     gastosAdmin,
+    gastosAdminConCreditoIVA,
     gastosComerc,
+    gastosComercConCreditoIVA,
     personal,
     depreciacion,
     reinversionPorAnio,
@@ -313,6 +393,8 @@ export function construirFlujoCaja(proyecto: any) {
     intereses,
     amortizacion,
     comprasGravadasIVA,
+    inversionConCreditoIVA,
+    ivaCreditoFiscalInversionInicial,
     ivaDebitoFiscal,
     ivaCreditoFiscal,
     ivaNetoPagar,

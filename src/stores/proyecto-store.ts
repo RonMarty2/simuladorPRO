@@ -7,6 +7,10 @@ import {
   proyectarSuscriptores,
   proyectarPublicidad,
 } from "@/lib/calculo-financiero";
+import {
+  defaultCreditoFiscalIVACostoDirecto,
+  defaultCreditoFiscalIVAInversion,
+} from "@/lib/iva-proyecto";
 import type {
   CategoriaInversion,
   CostoDirecto,
@@ -253,7 +257,15 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
   agregarInversion: (categoria, item) => {
     const p = get().proyecto;
     if (!p) return;
-    const base: ItemInversion = { ...item, id: nuevoId(), costoTotal: 0, depreciacionAnual: 0, valorResidual: 0 };
+    const base: ItemInversion = {
+      ...item,
+      creditoFiscalIVA:
+        item.creditoFiscalIVA ?? defaultCreditoFiscalIVAInversion(categoria),
+      id: nuevoId(),
+      costoTotal: 0,
+      depreciacionAnual: 0,
+      valorResidual: 0,
+    };
     const calculado = recalcularItemInversion(base);
     set({
       proyecto: conTimestamp({
@@ -349,7 +361,15 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     set({
       proyecto: conTimestamp({
         ...p,
-        costosDirectos: [...p.costosDirectos, { ...c, id: nuevoId() }],
+        costosDirectos: [
+          ...p.costosDirectos,
+          {
+            ...c,
+            creditoFiscalIVA:
+              c.creditoFiscalIVA ?? defaultCreditoFiscalIVACostoDirecto(c.categoria),
+            id: nuevoId(),
+          },
+        ],
       }),
     });
   },
@@ -383,7 +403,10 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     set({
       proyecto: conTimestamp({
         ...p,
-        costosAdministracion: [...p.costosAdministracion, { ...c, id: nuevoId() }],
+        costosAdministracion: [
+          ...p.costosAdministracion,
+          { ...c, creditoFiscalIVA: c.creditoFiscalIVA ?? true, id: nuevoId() },
+        ],
       }),
     });
   },
@@ -417,7 +440,10 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     set({
       proyecto: conTimestamp({
         ...p,
-        costosComercializacion: [...p.costosComercializacion, { ...c, id: nuevoId() }],
+        costosComercializacion: [
+          ...p.costosComercializacion,
+          { ...c, creditoFiscalIVA: c.creditoFiscalIVA ?? true, id: nuevoId() },
+        ],
       }),
     });
   },
@@ -458,7 +484,7 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     set({
       proyecto: conTimestamp({
         ...p,
-        productos: [...p.productos, { ...prod, id: nuevoId() }],
+        productos: [...p.productos, { ...prod, aplicaIVA: prod.aplicaIVA ?? true, id: nuevoId() }],
       }),
     });
   },
