@@ -12,10 +12,12 @@ import {
   calcularAportesPatronales,
   calcularCuotaPrestamoFrancesa,
   calcularIR,
+  calcularIT,
   calcularPayback,
   calcularRBC,
   calcularServicioDeuda,
   calcularTIR,
+  calcularTributosBolivia,
   calcularTRC,
   calcularVAN,
   calcularWACC,
@@ -205,11 +207,21 @@ export function construirFlujoCaja(proyecto: any) {
     const base = costosProduccion[i] + gastosAdmin[i] + gastosComerc[i] + personal[i];
     return base * proyecto.imprevistosPorcentaje;
   });
+  const comprasGravadasIVA = [0, 1, 2, 3, 4].map(
+    (i) => costosProduccion[i] + gastosAdmin[i] + gastosComerc[i] + imprevistos[i]
+  );
 
   // Utilidad y flujo
+  const ivaDebitoFiscal: number[] = [];
+  const ivaCreditoFiscal: number[] = [];
+  const ivaNetoPagar: number[] = [];
+  const ivaSaldoCreditoFiscal: number[] = [];
+  const it: number[] = [];
+  const iue: number[] = [];
   const utilidadAAI: number[] = [];
   const impuestos: number[] = [];
   const utilidadNeta: number[] = [];
+  let saldoCreditoFiscalIVA = 0;
   for (let i = 0; i < 5; i++) {
     const uOp =
       ingresos[i] -
@@ -219,17 +231,36 @@ export function construirFlujoCaja(proyecto: any) {
       personal[i] -
       depreciacion[i] -
       imprevistos[i];
-    const aai = uOp - intereses[i];
+    const itEstimado = calcularIT(ingresos[i]);
+    const aai = uOp - itEstimado - intereses[i];
+    const tributos = calcularTributosBolivia({
+      ingresosBrutos: ingresos[i],
+      comprasGravadasIVA: comprasGravadasIVA[i],
+      utilidadAntesIUE: aai,
+      saldoCreditoFiscalIVAAnterior: saldoCreditoFiscalIVA,
+    });
+    saldoCreditoFiscalIVA = tributos.iva.saldoCreditoFiscal;
+
+    ivaDebitoFiscal.push(tributos.iva.debitoFiscal);
+    ivaCreditoFiscal.push(tributos.iva.creditoFiscalPeriodo);
+    ivaNetoPagar.push(tributos.iva.ivaNetoPagar);
+    ivaSaldoCreditoFiscal.push(tributos.iva.saldoCreditoFiscal);
+    it.push(tributos.it);
+    iue.push(tributos.iue);
     utilidadAAI.push(aai);
-    const imp = Math.max(0, aai) * TASA_IMP;
-    impuestos.push(imp);
-    utilidadNeta.push(aai - imp);
+    impuestos.push(tributos.totalTributosResultado);
+    utilidadNeta.push(aai - tributos.iue);
   }
 
   const flujoCaja: number[] = [-(totalProyecto - montoPrestamo)];
   for (let i = 0; i < 5; i++) {
     // Resta la reposición de activos de vida corta en el año que toca recomprarlos.
-    let fc = utilidadNeta[i] + depreciacion[i] - amortizacion[i] - reinversionPorAnio[i];
+    let fc =
+      utilidadNeta[i] +
+      depreciacion[i] -
+      amortizacion[i] -
+      reinversionPorAnio[i] -
+      ivaNetoPagar[i];
     if (i === 4) fc += valorResidual + proyecto.capitalTrabajo;
     flujoCaja.push(fc);
   }
@@ -263,6 +294,7 @@ export function construirFlujoCaja(proyecto: any) {
         imprevistos[i] +
         intereses[i] +
         impuestos[i] +
+        ivaNetoPagar[i] +
         amortizacion[i] +
         reinversionPorAnio[i]
     );
@@ -280,6 +312,13 @@ export function construirFlujoCaja(proyecto: any) {
     imprevistos,
     intereses,
     amortizacion,
+    comprasGravadasIVA,
+    ivaDebitoFiscal,
+    ivaCreditoFiscal,
+    ivaNetoPagar,
+    ivaSaldoCreditoFiscal,
+    it,
+    iue,
     utilidadAAI,
     impuestos,
     utilidadNeta,

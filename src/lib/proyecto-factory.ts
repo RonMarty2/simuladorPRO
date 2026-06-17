@@ -1,10 +1,10 @@
-import { proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
+import { proyectarPublicidad, proyectarSuscriptores } from "./calculo-financiero";
 import type {
   ItemInversion,
   Producto,
   Proyecto,
   VersionProyecto,
-} from "@/types/proyecto";
+} from "../types/proyecto";
 
 /**
  * Migra un producto antiguo al shape actual.
