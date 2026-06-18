@@ -126,6 +126,8 @@ export default function GruposEstudiante({
         modeloIngreso: (curso.grupo_modelo as ModeloIngreso) ?? "unidades",
       });
       setNombreNuevo("");
+      setBusquedaGrupo("");
+      setCodigoCopiado(false);
       setModoSemanaE(null);
       await recargar();
     } catch (e: any) {
@@ -215,6 +217,13 @@ export default function GruposEstudiante({
 
       {miGrupoDetalle ? (
         <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3">
+          {curso.es_semana_e && (
+            <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+              <strong>Tu equipo está guardado aquí.</strong> Si cierras la página o vuelves después,
+              entra por <strong>Mi panel</strong> y baja a <strong>Forma tu equipo de Semana E</strong>.
+              Desde este bloque puedes copiar el código y continuar el proyecto.
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-primary" />
@@ -238,7 +247,7 @@ export default function GruposEstudiante({
                 className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
               >
                 <FolderOpen className="h-3 w-3" />
-                Abrir proyecto
+                {curso.es_semana_e ? "Continuar proyecto de Semana E" : "Abrir proyecto"}
               </button>
               <button
                 onClick={() => salir(miGrupoDetalle.id)}
@@ -255,7 +264,7 @@ export default function GruposEstudiante({
               <div className="mr-auto">
                 <div className="font-semibold">Código para invitar a tu equipo</div>
                 <div className="text-[10px] text-muted-foreground">
-                  Compártelo por WhatsApp; tus compañeros pueden buscarlo abajo.
+                  Compártelo por WhatsApp; tus compañeros pueden buscarlo por este código.
                 </div>
               </div>
               <code className="rounded-md bg-card px-3 py-1.5 text-base font-black tracking-[0.2em]">
@@ -317,6 +326,11 @@ export default function GruposEstudiante({
         </div>
       ) : curso.es_semana_e ? (
         <div className="space-y-4">
+          <div className="rounded-lg border border-violet-200 bg-white/70 px-3 py-2 text-xs text-violet-950 dark:border-violet-900 dark:bg-violet-950/20 dark:text-violet-100">
+            En Semana E el equipo vive siempre en este bloque. Si lo creas, al volver a
+            <strong> Mi panel</strong> verás aquí el nombre, el código y el botón para continuar.
+          </div>
+
           {curso.grupo_consigna && (
             <div className="rounded-md border border-sky-300 bg-sky-50/60 p-2 text-[11px] dark:border-sky-800 dark:bg-sky-950/20">
               <strong>Reto del evento:</strong> {curso.grupo_consigna}

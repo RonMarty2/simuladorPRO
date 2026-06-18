@@ -258,7 +258,7 @@ export default function DashboardEstudiante() {
                     </button>
                   )}
                   <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
-                  {confirmandoSalida === curso.id ? (
+                  {!curso.es_semana_e && (confirmandoSalida === curso.id ? (
                     <span className="flex items-center gap-1 text-[10px]">
                       <button
                         onClick={() => salirDelCurso(curso.id)}
@@ -288,10 +288,10 @@ export default function DashboardEstudiante() {
                       <DoorOpen className="h-3 w-3" />
                       Salir
                     </button>
-                  )}
+                  ))}
                 </div>
               </div>
-              {confirmandoSalida === curso.id && (
+              {!curso.es_semana_e && confirmandoSalida === curso.id && (
                 <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                   <strong>¿Salir del curso?</strong> Tus <strong>entregas, proyectos y grupos
                   quedan guardados</strong>. Cuando quieras volver, ingresá el código{" "}

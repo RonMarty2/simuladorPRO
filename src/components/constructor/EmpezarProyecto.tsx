@@ -102,6 +102,11 @@ export default function EmpezarProyecto() {
               <strong>Mi panel</strong>: ahí está tu grupo, el caso del curso (si el docente lo
               publicó) y tu historial.
             </p>
+            <p>
+              Si acabas de crear o unirte a un equipo de <strong>Semana E</strong>, no se perdió:
+              vuelve a <strong>Mi panel → Forma tu equipo de Semana E</strong> y toca{" "}
+              <strong>Continuar proyecto de Semana E</strong>.
+            </p>
             <Link
               to="/estudiante"
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
