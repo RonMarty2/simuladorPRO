@@ -5,7 +5,7 @@ import { nombrePerfilEsProvisional } from "@/lib/perfil";
 import { useAuthStore } from "@/stores/auth-store";
 
 /** Bloquea la app hasta reemplazar nombres históricos como Invitado-a1b2c3. */
-export default function CompletarNombreInicial() {
+export default function CompletarNombreInicial({ activo }: { activo: boolean }) {
   const user = useAuthStore((s) => s.user);
   const perfil = useAuthStore((s) => s.perfil);
   const recargarPerfil = useAuthStore((s) => s.recargarPerfil);
@@ -14,7 +14,7 @@ export default function CompletarNombreInicial() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const debeCompletar = !!user && !!perfil && nombrePerfilEsProvisional(perfil);
+  const debeCompletar = activo && !!user && !!perfil && nombrePerfilEsProvisional(perfil);
 
   useEffect(() => {
     if (!user || !perfil || !debeCompletar) return;
@@ -100,4 +100,3 @@ export default function CompletarNombreInicial() {
     </div>
   );
 }
-

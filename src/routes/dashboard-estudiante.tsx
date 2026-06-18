@@ -20,6 +20,7 @@ import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import PodioCurso from "@/components/curso/PodioCurso";
 import BannerSemanaE from "@/components/curso/BannerSemanaE";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
+import CompletarNombreInicial from "@/components/auth/CompletarNombreInicial";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
@@ -168,6 +169,9 @@ export default function DashboardEstudiante() {
 
   return (
     <div className="space-y-5">
+      <CompletarNombreInicial
+        activo={!cargando && inscripciones.some(({ curso }) => curso.es_semana_e === true)}
+      />
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Hola, {perfil?.nombre} 👋</h1>

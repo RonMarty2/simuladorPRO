@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { proyectoAFilaSupabase } from "./proyecto-supabase";
+import { insertarProyecto, proyectoAFilaSupabase } from "./proyecto-supabase";
 import { crearProyectoVacio, type ModeloIngreso } from "./proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
@@ -48,13 +48,15 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
 /**
  * Un ESTUDIANTE crea un grupo y se vuelve el primer integrante. El formato del
  * proyecto (modelo + versión + cupo) lo definió el docente en el curso.
- * La RPC hace las tres escrituras en una sola transacción para que RLS no deje
- * grupos huérfanos si falla la creación del proyecto o de la membresía.
+ * Los cursos normales conservan el flujo histórico. Solo Semana E usa una RPC
+ * transaccional para evitar los falsos rechazos RLS observados en el evento.
  */
 export async function crearGrupoEstudiante(params: {
   cursoId: string;
   creadorId: string;
   nombre: string;
+  cupoMax: number;
+  esSemanaE: boolean;
   version: VersionProyecto;
   modeloIngreso: ModeloIngreso;
 }): Promise<void> {
@@ -66,6 +68,37 @@ export async function crearGrupoEstudiante(params: {
     modeloIngreso: params.modeloIngreso,
   });
   proyecto.tipo = "proyecto_grupal";
+
+  // Los cursos normales mantienen el flujo histórico sin ningún cambio.
+  if (!params.esSemanaE) {
+    const { data: grupo, error: errorGrupo } = await conTimeout(
+      supabase
+        .from("grupos")
+        .insert({
+          curso_id: params.cursoId,
+          nombre: params.nombre,
+          cupo_max: params.cupoMax,
+        })
+        .select()
+        .single(),
+      15000,
+      "creando el grupo"
+    );
+    if (errorGrupo) throw errorGrupo;
+    const grupoId = (grupo as Grupo).id;
+
+    proyecto.grupo_id = grupoId;
+    await insertarProyecto(proyecto);
+
+    const { error: errorMiembro } = await supabase
+      .from("grupo_miembros")
+      .insert({ grupo_id: grupoId, estudiante_id: params.creadorId });
+    if (errorMiembro) throw errorMiembro;
+    return;
+  }
+
+  // Semana E usa una única transacción para resistir los falsos rechazos RLS
+  // observados en el evento, sin alterar proyectos o cursos convencionales.
   const filaProyecto = proyectoAFilaSupabase(proyecto);
 
   const { error } = await conTimeout(

@@ -89,6 +89,8 @@ export default function GruposEstudiante({
         cursoId: curso.id,
         creadorId: estudianteId,
         nombre: nombreNuevo.trim(),
+        cupoMax: curso.grupo_cupo_max ?? 4,
+        esSemanaE: curso.es_semana_e === true,
         version: (curso.grupo_version as VersionProyecto) ?? "v2",
         modeloIngreso: (curso.grupo_modelo as ModeloIngreso) ?? "unidades",
       });

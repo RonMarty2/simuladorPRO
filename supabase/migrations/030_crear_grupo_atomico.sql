@@ -38,6 +38,7 @@ BEGIN
     ON i.curso_id = c.id
    AND i.estudiante_id = v_usuario_id
   WHERE c.id = p_curso_id
+    AND c.es_semana_e = TRUE
     AND c.grupo_habilitado = TRUE
     AND c.estado = 'activo';
 
@@ -96,4 +97,3 @@ REVOKE ALL ON FUNCTION public.crear_grupo_estudiante_atomico(
 GRANT EXECUTE ON FUNCTION public.crear_grupo_estudiante_atomico(
   UUID, TEXT, UUID, TEXT, JSONB
 ) TO authenticated;
-
