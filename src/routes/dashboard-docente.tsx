@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
+import { AlertTriangle, Copy, GraduationCap, Loader2, Plus, Trash2, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
+  actualizarEsSemanaE,
   crearCurso,
   eliminarCurso,
   listarInscritosDeCurso,
@@ -453,6 +454,9 @@ function CursoCard({
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
   const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
+  // Toggle de Semana E en vivo. Estado local optimista; si falla, se revierte.
+  const [esSemanaE, setEsSemanaE] = useState(!!curso.es_semana_e);
+  const [toggleSemanaE, setToggleSemanaE] = useState(false);
 
   const borrar = async () => {
     setBorrando(true);
@@ -478,6 +482,20 @@ function CursoCard({
     setTimeout(() => setCopiado(false), 1500);
   };
 
+  const alternarSemanaE = async () => {
+    const nuevoValor = !esSemanaE;
+    setToggleSemanaE(true);
+    setEsSemanaE(nuevoValor); // optimista
+    try {
+      await actualizarEsSemanaE(curso.id, nuevoValor);
+    } catch (e) {
+      setEsSemanaE(!nuevoValor); // revertir si falla
+      alert(e instanceof Error ? e.message : "No se pudo cambiar el modo Semana E.");
+    } finally {
+      setToggleSemanaE(false);
+    }
+  };
+
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
   type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
   const irA = (tab: Vista) => {
@@ -496,12 +514,32 @@ function CursoCard({
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
+            {esSemanaE && (
+              <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                🎓 Semana E
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {curso.materia}
             {curso.paralelo && ` · Paralelo ${curso.paralelo}`} · {curso.frecuencia_turnos} ·{" "}
             {curso.duracion_anios} años
           </p>
+          <button
+            onClick={alternarSemanaE}
+            disabled={toggleSemanaE}
+            className={`mt-1.5 inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-50 ${
+              esSemanaE
+                ? "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800 hover:bg-fuchsia-100 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200"
+                : "border-border bg-card text-muted-foreground hover:bg-secondary"
+            }`}
+            title="Encender/apagar el modo evento Semana E. Cambia EN VIVO lo que ven los alumnos: con el modo prendido se oculta entregas/notas y aparece el banner del evento."
+          >
+            {toggleSemanaE ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            {esSemanaE ? "Modo Semana E · ON" : "Activar modo Semana E"}
+          </button>
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
