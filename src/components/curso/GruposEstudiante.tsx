@@ -244,10 +244,25 @@ export default function GruposEstudiante({
               <button
                 onClick={() => abrirProyecto(miGrupoDetalle.proyecto_id)}
                 disabled={curso.es_semana_e && !nivelActual}
-                className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                className={
+                  curso.es_semana_e
+                    ? "group flex min-h-16 w-full animate-pulse items-center justify-center gap-3 rounded-xl border-2 border-fuchsia-200 bg-gradient-to-r from-fuchsia-700 via-purple-700 to-fuchsia-700 px-6 py-3 text-left text-white shadow-xl shadow-fuchsia-500/30 ring-4 ring-fuchsia-300/50 transition hover:animate-none hover:scale-[1.02] hover:shadow-2xl disabled:animate-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    : "flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                }
               >
-                <FolderOpen className="h-3 w-3" />
-                {curso.es_semana_e ? "Continuar proyecto de Semana E" : "Abrir proyecto"}
+                <FolderOpen className={curso.es_semana_e ? "h-7 w-7 shrink-0" : "h-3 w-3"} />
+                {curso.es_semana_e ? (
+                  <span className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
+                      Aquí está tu proyecto
+                    </span>
+                    <span className="text-base font-black leading-tight sm:text-lg">
+                      Ver y continuar mi proyecto de Semana E →
+                    </span>
+                  </span>
+                ) : (
+                  "Abrir proyecto"
+                )}
               </button>
               <button
                 onClick={() => salir(miGrupoDetalle.id)}
