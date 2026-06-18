@@ -366,7 +366,7 @@ export default function GruposEstudiante({
                   type="text"
                   value={nombreNuevo}
                   onChange={(e) => setNombreNuevo(e.target.value)}
-                  placeholder="Ej: Innovadores UPB, Equipo Cóndor…"
+                  placeholder="Ej: Equipo Cóndor, Los Innovadores…"
                   maxLength={60}
                   autoFocus
                   className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm"

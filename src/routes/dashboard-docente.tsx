@@ -230,7 +230,7 @@ function FormCrearSemanaE({
           label="Universidad (opcional)"
           valor={universidad}
           onChange={setUniversidad}
-          placeholder="Ej: UCATEC, UMSS, UMSA…"
+          placeholder="Nombre de la universidad"
         />
         <label className="text-sm font-medium">
           Cupo máximo por grupo
@@ -352,7 +352,7 @@ function FormCrearCurso({
           label="Universidad"
           valor={universidad}
           onChange={setUniversidad}
-          placeholder="UCATEC, UMSS, UPB, USFX, etc."
+          placeholder="Nombre de la universidad"
         />
         <CampoTexto
           label="Paralelo"

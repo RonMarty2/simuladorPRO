@@ -103,13 +103,16 @@ export async function crearGrupoEstudiante(params: {
 
   // Semana E usa una única transacción para resistir los falsos rechazos RLS
   // observados en el evento, sin alterar proyectos o cursos convencionales.
-  // Forzamos una renovación justo antes de la RPC: después de una recarga de
-  // la PWA el store podía mostrar el perfil mientras PostgREST aún enviaba la
-  // llamada con el rol anon, haciendo que auth.uid() llegara como NULL.
-  const { data: sesionRenovada, error: errorSesion } =
-    await supabase.auth.refreshSession();
-  if (errorSesion || !sesionRenovada.session?.user) {
-    throw new Error("Tu sesión no terminó de activarse. Salí, vuelve a ingresar con Google e inténtalo otra vez.");
+  // Esperamos y validamos la sesión existente, pero NO forzamos refresh:
+  // algunos inicios con Google tienen access token válido sin un refresh token
+  // utilizable en ese instante y refreshSession los rechazaba por error.
+  const { data: sesionActual, error: errorSesion } = await supabase.auth.getSession();
+  if (errorSesion || !sesionActual.session?.user) {
+    throw new Error("No encontramos una sesión activa. Salí y vuelve a ingresar con Google.");
+  }
+  const { data: usuarioValidado, error: errorUsuario } = await supabase.auth.getUser();
+  if (errorUsuario || !usuarioValidado.user) {
+    throw new Error("No pudimos validar tu sesión con Google. Salí y vuelve a ingresar.");
   }
 
   const filaProyecto = proyectoAFilaSupabase(proyecto);
