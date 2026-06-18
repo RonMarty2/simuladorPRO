@@ -1,13 +1,16 @@
 import { Check, Save } from "lucide-react";
 import type { EstadoGuardado } from "@/hooks/useAutoGuardado";
-import type { VersionProyecto } from "@/types/proyecto";
+import type { NivelSemanaE, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+import { datosNivelSemanaE } from "@/lib/semana-e";
 
 interface Props {
   pasoActual: number;
   totalPasos: number;
   nombreProyecto: string;
   version?: VersionProyecto;
+  nivelSemanaE?: NivelSemanaE;
+  pasosVisibles?: number[];
   estadoGuardado: EstadoGuardado;
   onCambiarPaso: (paso: number) => void;
   titulos: Record<number, string>;
@@ -19,11 +22,19 @@ export default function BarraProgreso({
   totalPasos,
   nombreProyecto,
   version,
+  nivelSemanaE,
+  pasosVisibles,
   estadoGuardado,
   onCambiarPaso,
   titulos,
   titulosCortos,
 }: Props) {
+  const numerosPasos =
+    pasosVisibles ?? Array.from({ length: totalPasos }, (_, indice) => indice + 1);
+  const indiceActual = Math.max(0, numerosPasos.indexOf(pasoActual));
+  const nivel = datosNivelSemanaE(nivelSemanaE);
+  const etiquetaPaso = nivel ? "Etapa" : "Paso";
+
   return (
     <div className="space-y-3 rounded-lg border border-border bg-card p-4">
       {/* Header con nombre + estado guardado */}
@@ -37,6 +48,11 @@ export default function BarraProgreso({
               {nombreProyecto}
             </div>
             <BadgeVersion version={version} />
+            {nivel && (
+              <span className="flex-shrink-0 rounded bg-fuchsia-100 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-800 dark:bg-fuchsia-950/50 dark:text-fuchsia-200">
+                {nivel.emoji} {nivel.nombre} · {nivel.pasos} etapas
+              </span>
+            )}
           </div>
         </div>
         <EstadoGuardadoChip estado={estadoGuardado} />
@@ -45,9 +61,8 @@ export default function BarraProgreso({
       {/* Stepper de pasos */}
       <div className="overflow-x-auto pb-1">
         <div className="flex min-w-max items-stretch gap-1">
-          {Array.from({ length: totalPasos }, (_, i) => {
-            const n = i + 1;
-            const completado = n < pasoActual;
+          {numerosPasos.map((n, i) => {
+            const completado = i < indiceActual;
             const actual = n === pasoActual;
             const corto = titulosCortos?.[n] ?? titulos[n] ?? `Paso ${n}`;
             return (
@@ -97,11 +112,11 @@ export default function BarraProgreso({
       {/* Detalle del paso actual */}
       <div className="flex items-center justify-between border-t border-border pt-2 text-xs">
         <span className="text-muted-foreground">
-          Paso <strong>{pasoActual}</strong> de {totalPasos}:{" "}
+          {etiquetaPaso} <strong>{indiceActual + 1}</strong> de {numerosPasos.length}:{" "}
           <strong className="text-foreground">{titulos[pasoActual]}</strong>
         </span>
         <span className="text-muted-foreground">
-          {Math.round((pasoActual / totalPasos) * 100)}% completado
+          {Math.round(((indiceActual + 1) / numerosPasos.length) * 100)}% completado
         </span>
       </div>
     </div>

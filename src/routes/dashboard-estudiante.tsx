@@ -468,19 +468,24 @@ export default function DashboardEstudiante() {
                     )}
                     {muestraGrupal && (
               <>
-              {/* ── 3. 🤝 CASO GRUPAL (violet) — contraído por defecto ───── */}
-              <details className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
+              {/* En Semana E es la acción principal; en cursos normales conserva "Caso grupal". */}
+              <details
+                open={curso.es_semana_e ? true : undefined}
+                className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20"
+              >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
                       <span className="text-base">🤝</span>
-                      <span>Caso grupal</span>
+                      <span>{curso.es_semana_e ? "Forma tu equipo de Semana E" : "Caso grupal"}</span>
                     </div>
                     <div className="text-[11px] text-violet-900/70 dark:text-violet-200/70">
-                      Trabajen en equipo sobre un mismo proyecto.
+                      {curso.es_semana_e
+                        ? "Crea un equipo o encuentra el de tus compañeros por nombre o código."
+                        : "Trabajen en equipo sobre un mismo proyecto."}
                     </div>
                   </div>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className={cn("text-[11px] text-muted-foreground", curso.es_semana_e && "hidden")}>
                     <span className="group-open:hidden">▸ ver</span>
                     <span className="hidden group-open:inline">▾ ocultar</span>
                   </span>

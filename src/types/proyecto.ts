@@ -157,6 +157,9 @@ export type TipoProyecto =
  */
 export type VersionProyecto = "v1" | "v2";
 
+/** Ruta pedagógica elegida por un equipo de Semana E. */
+export type NivelSemanaE = "basico" | "medio" | "avanzado";
+
 /** Un plan de suscripción dentro de un negocio recurrente. */
 export interface PlanSuscripcion {
   id: string;
@@ -177,6 +180,9 @@ export interface Proyecto {
 
   /** Versión de indicadores. Ausente o 'v1' = comportamiento clásico. */
   version?: VersionProyecto;
+
+  /** Solo Semana E: controla qué etapas debe completar el equipo. */
+  nivelSemanaE?: NivelSemanaE;
 
   /**
    * Modelo de cómo entra el ingreso. Ausente o 'unidades' = clásico

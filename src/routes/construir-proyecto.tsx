@@ -25,6 +25,7 @@ import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamie
 import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
 import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
+import { pasosVisiblesDelProyecto } from "@/lib/semana-e";
 
 const TOTAL_PASOS = 9;
 
@@ -84,6 +85,11 @@ export default function ConstruirProyecto() {
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [todosProyectos, setTodosProyectos] = useState<Proyecto[]>([]);
   const estadoGuardado = useAutoGuardado(proyecto);
+  const pasosVisibles = useMemo(
+    () => (proyecto ? pasosVisiblesDelProyecto(proyecto) : Array.from({ length: TOTAL_PASOS }, (_, i) => i + 1)),
+    [proyecto]
+  );
+  const indicePasoActual = Math.max(0, pasosVisibles.indexOf(pasoActual));
 
   // Setter que también persiste en localStorage
   const setPasoActual = (paso: number | ((prev: number) => number)) => {
@@ -110,7 +116,11 @@ export default function ConstruirProyecto() {
             (idActivo && proyectos.find((p) => p.id === idActivo)) || proyectos[0];
           cargar(elegido);
           guardarProyectoActivo(user.id, elegido.id);
-          setPasoActualState(leerPasoGuardado(elegido.id));
+          const pasoGuardado = leerPasoGuardado(elegido.id);
+          const pasosElegidos = pasosVisiblesDelProyecto(elegido);
+          setPasoActualState(
+            pasosElegidos.includes(pasoGuardado) ? pasoGuardado : pasosElegidos[0]
+          );
         }
         setErrorCarga(null);
       })
@@ -119,6 +129,13 @@ export default function ConstruirProyecto() {
       })
       .finally(() => setIniciando(false));
   }, [user, cargar]);
+
+  useEffect(() => {
+    if (!proyecto || pasosVisibles.includes(pasoActual)) return;
+    setPasoActual(pasosVisibles[0]);
+    // setPasoActual también guarda el paso normalizado para este proyecto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proyecto?.id, proyecto?.nivelSemanaE, pasosVisibles, pasoActual]);
 
   const abandonarProyecto = async () => {
     if (!proyecto) return;
@@ -176,6 +193,8 @@ export default function ConstruirProyecto() {
         totalPasos={TOTAL_PASOS}
         nombreProyecto={proyecto.nombre}
         version={proyecto.version}
+        nivelSemanaE={proyecto.nivelSemanaE}
+        pasosVisibles={pasosVisibles}
         estadoGuardado={estadoGuardado}
         onCambiarPaso={setPasoActual}
         titulos={titulosPasos}
@@ -187,9 +206,9 @@ export default function ConstruirProyecto() {
       <EntregarPasoActual pasoActual={pasoActual} />
 
       <div className="flex items-center justify-between">
-        {pasoActual > 1 ? (
+        {indicePasoActual > 0 ? (
           <button
-            onClick={() => setPasoActual((p) => Math.max(1, p - 1))}
+            onClick={() => setPasoActual(pasosVisibles[indicePasoActual - 1])}
             className="flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-foreground transition hover:bg-accent"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -216,9 +235,9 @@ export default function ConstruirProyecto() {
           </button>
         </div>
 
-        {pasoActual < TOTAL_PASOS ? (
+        {indicePasoActual < pasosVisibles.length - 1 ? (
           <button
-            onClick={() => setPasoActual((p) => Math.min(TOTAL_PASOS, p + 1))}
+            onClick={() => setPasoActual(pasosVisibles[indicePasoActual + 1])}
             className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
           >
             Siguiente

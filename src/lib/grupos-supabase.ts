@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { insertarProyecto, proyectoAFilaSupabase } from "./proyecto-supabase";
 import { crearProyectoVacio, type ModeloIngreso } from "./proyecto-factory";
+import { obtenerNivelSemanaE, type NivelSemanaE } from "./semana-e";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
 export interface Grupo {
@@ -24,6 +25,7 @@ export interface MiembroGrupo {
 
 export interface GrupoConMiembros extends Grupo {
   miembros: MiembroGrupo[];
+  nivel_semana_e: NivelSemanaE | null;
 }
 
 function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
@@ -57,6 +59,7 @@ export async function crearGrupoEstudiante(params: {
   nombre: string;
   cupoMax: number;
   esSemanaE: boolean;
+  nivelSemanaE?: NivelSemanaE;
   version: VersionProyecto;
   modeloIngreso: ModeloIngreso;
 }): Promise<void> {
@@ -65,6 +68,7 @@ export async function crearGrupoEstudiante(params: {
     nombre: `${params.nombre} · proyecto grupal`,
     curso_id: params.cursoId,
     version: params.version,
+    nivelSemanaE: params.esSemanaE ? params.nivelSemanaE : undefined,
     modeloIngreso: params.modeloIngreso,
   });
   proyecto.tipo = "proyecto_grupal";
@@ -140,7 +144,7 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
       .from("grupo_miembros")
       .select("grupo_id, estudiante_id, perfiles(nombre, apellido, email)")
       .in("grupo_id", ids),
-    supabase.from("proyectos").select("id, grupo_id").in("grupo_id", ids),
+    supabase.from("proyectos").select("id, grupo_id, datos").in("grupo_id", ids),
   ]);
   if (e2) throw e2;
   if (e3) throw e3;
@@ -149,6 +153,9 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
     ...g,
     // El proyecto del grupo se resuelve por grupo_id (más confiable que proyecto_id).
     proyecto_id: (proys ?? []).find((p: any) => p.grupo_id === g.id)?.id ?? g.proyecto_id ?? null,
+    nivel_semana_e: obtenerNivelSemanaE(
+      (proys ?? []).find((p: any) => p.grupo_id === g.id)?.datos?.nivelSemanaE
+    ),
     miembros: (miembros ?? [])
       .filter((m: any) => m.grupo_id === g.id)
       .map((m: any) => ({
@@ -158,6 +165,27 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
         email: m.perfiles?.email ?? "",
       })),
   }));
+}
+
+/** Define la ruta pedagógica de un proyecto Semana E ya creado. */
+export async function configurarNivelProyectoSemanaE(
+  proyectoId: string,
+  nivel: NivelSemanaE,
+  version: VersionProyecto
+): Promise<void> {
+  const { data, error: errorLectura } = await supabase
+    .from("proyectos")
+    .select("datos")
+    .eq("id", proyectoId)
+    .single();
+  if (errorLectura) throw errorLectura;
+
+  const datosActuales = (data?.datos as Record<string, unknown> | null) ?? {};
+  const { error } = await supabase
+    .from("proyectos")
+    .update({ datos: { ...datosActuales, nivelSemanaE: nivel, version } })
+    .eq("id", proyectoId);
+  if (error) throw error;
 }
 
 /** Lista los grupos de un curso para el estudiante (con conteo de cupo). */

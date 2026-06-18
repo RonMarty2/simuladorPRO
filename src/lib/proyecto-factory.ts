@@ -3,6 +3,7 @@ import type {
   ItemInversion,
   Producto,
   Proyecto,
+  NivelSemanaE,
   VersionProyecto,
 } from "../types/proyecto";
 
@@ -60,6 +61,7 @@ export function crearProyectoVacio(params: {
   curso_id?: string | null;
   nombre: string;
   version?: VersionProyecto;
+  nivelSemanaE?: NivelSemanaE;
   modeloIngreso?: ModeloIngreso;
 }): Proyecto {
   const ahora = new Date().toISOString();
@@ -68,6 +70,7 @@ export function crearProyectoVacio(params: {
     estudiante_id: params.estudiante_id,
     curso_id: params.curso_id ?? null,
     version: params.version ?? "v1",
+    ...(params.nivelSemanaE ? { nivelSemanaE: params.nivelSemanaE } : {}),
     nombre: params.nombre,
     ubicacion: "",
     descripcion: "",

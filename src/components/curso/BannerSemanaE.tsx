@@ -43,12 +43,12 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
           <PasoChecklist
             n={1}
             titulo="Unite o creá tu grupo"
-            detalle={`Bajá hasta la sección "🤝 Caso grupal" y entrá a un grupo existente o creá el tuyo. Ahí vas a trabajar con tus compañeros sobre el MISMO proyecto.`}
+            detalle="Bajá hasta “Forma tu equipo”. Podés crear uno y compartir su código, o buscar el equipo de tus compañeros por nombre o código."
           />
           <PasoChecklist
             n={2}
-            titulo="Armá el proyecto en 9 etapas"
-            detalle="Click en tu grupo → 'Abrir proyecto'. Llenás datos generales, productos, costos, personal, inversión, etc. Cada paso tiene una ficha pedagógica que explica QUÉ poner."
+            titulo="Elegí el nivel y armá el proyecto"
+            detalle="Básico tiene 5 etapas, Medio 7 y Avanzado 9. Elijan según su experiencia y el tiempo disponible; todo el equipo seguirá la misma ruta."
           />
           <PasoChecklist
             n={3}
