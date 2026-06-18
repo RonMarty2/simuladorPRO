@@ -564,7 +564,11 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios">("ranking");
+  // En cursos normales arrancamos en Ranking. En Semana E ese tab está oculto,
+  // arrancamos en Inscritos (lo más útil al inicio del evento: ver quién entró).
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios">(
+    curso.es_semana_e ? "inscritos" : "ranking"
+  );
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -645,30 +649,45 @@ function CursoCard({
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <button onClick={() => irA("podio")} className={claseTab("podio")}>
-            <Trophy className="mr-1 inline h-3 w-3" />
-            Podio
-          </button>
-          <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
-            <Trophy className="mr-1 inline h-3 w-3" />
-            Ranking
-          </button>
+          {/* En modo Semana E ocultamos lo que no aplica al evento: Podio,
+              Ranking, Entregas, Casos y Lanzar situación. Quedan solo los
+              tabs que el docente realmente necesita para administrar el
+              evento: Inscritos (ver quién entró), Grupos (formar/ver
+              equipos) y Escenarios (config del análisis de sensibilidad). */}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("podio")} className={claseTab("podio")}>
+              <Trophy className="mr-1 inline h-3 w-3" />
+              Podio
+            </button>
+          )}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
+              <Trophy className="mr-1 inline h-3 w-3" />
+              Ranking
+            </button>
+          )}
           <button onClick={() => irA("inscritos")} className={claseTab("inscritos")}>
             <Users className="mr-1 inline h-3 w-3" />
             Inscritos{inscritos ? ` (${inscritos.length})` : ""}
           </button>
-          <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
-            📥 Entregas
-          </button>
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
+              📥 Entregas
+            </button>
+          )}
           <button onClick={() => irA("grupos")} className={claseTab("grupos")}>
             🤝 Grupos
           </button>
-          <button onClick={() => irA("casos")} className={claseTab("casos")}>
-            🎓 Casos
-          </button>
-          <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
-            🎲 Lanzar situación
-          </button>
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("casos")} className={claseTab("casos")}>
+              🎓 Casos
+            </button>
+          )}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
+              🎲 Lanzar situación
+            </button>
+          )}
           <button onClick={() => irA("escenarios")} className={claseTab("escenarios")}>
             📊 Escenarios
           </button>
