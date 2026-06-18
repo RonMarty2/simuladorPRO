@@ -259,6 +259,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 024 | `entregas_miembros_grupo_leen.sql` | Policy SELECT adicional: miembros del grupo leen entregas del proyecto compartido |
 | 025 | `proyecto_actividad.sql` | Tabla de actividad por usuario + RLS. Audit de quién editó/entregó proyectos grupales. |
 | 026 | `escenarios_config_por_curso.sql` | Columna `cursos.escenarios_config` (JSONB). El docente ajusta los % de Optimista/Pesimista por curso. NULL = defaults del código. |
+| 027 | `curso_semana_e.sql` | Columna `cursos.es_semana_e` (BOOL). Modo evento universitario: oculta entregas/notas/podio, muestra banner + checklist al estudiante. |
 
 ---
 

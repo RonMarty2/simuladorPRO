@@ -45,6 +45,8 @@ export interface Curso {
   simulacion_grupal?: boolean;
   /** Config de escenarios económicos por curso (FASE A.2 del Modo Escenarios). */
   escenarios_config?: EscenariosConfig | null;
+  /** Si TRUE, el curso es un evento "Semana E" (sin entregas/notas, UI simple). */
+  es_semana_e?: boolean;
   creado_en: string;
 }
 
@@ -73,6 +75,19 @@ export async function actualizarConfigGrupal(
     "actualizando el cupo de los grupos existentes"
   );
   if (errorGrupos) throw errorGrupos;
+}
+
+/** Marca/desmarca el curso como evento "Semana E". */
+export async function actualizarEsSemanaE(
+  cursoId: string,
+  es_semana_e: boolean
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").update({ es_semana_e }).eq("id", cursoId),
+    10000,
+    "actualizando modo Semana E"
+  );
+  if (error) throw error;
 }
 
 /** Habilita/deshabilita que los estudiantes creen su propio proyecto en el curso. */
@@ -219,6 +234,7 @@ export async function crearCurso(params: {
   simulacion_caso_curso?: boolean;
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
+  es_semana_e?: boolean;
 }): Promise<Curso> {
   const universidad = normalizarUniversidad(params.universidad);
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
@@ -241,6 +257,7 @@ export async function crearCurso(params: {
           simulacion_caso_curso: params.simulacion_caso_curso ?? true,
           simulacion_individual: params.simulacion_individual ?? false,
           simulacion_grupal: params.simulacion_grupal ?? true,
+          es_semana_e: params.es_semana_e ?? false,
           codigo,
         })
         .select()

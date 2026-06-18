@@ -18,6 +18,7 @@ import {
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import PodioCurso from "@/components/curso/PodioCurso";
+import BannerSemanaE from "@/components/curso/BannerSemanaE";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
@@ -297,8 +298,12 @@ export default function DashboardEstudiante() {
                 </div>
               )}
 
+              {/* Banner Semana E (si aplica) — reemplaza al podio en modo evento. */}
+              {curso.es_semana_e && <BannerSemanaE curso={curso} />}
+
               {/* ── 🏆 PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
-              {user && (
+              {/* En modo Semana E no se muestra: no hay notas, no hay competencia. */}
+              {user && !curso.es_semana_e && (
                 <div className="mb-3">
                   <PodioCurso
                     cursoId={curso.id}

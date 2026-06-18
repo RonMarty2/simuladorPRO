@@ -146,6 +146,8 @@ function FormCrearCurso({
   const [simCaso, setSimCaso] = useState(true);
   const [simIndividual, setSimIndividual] = useState(false);
   const [simGrupal, setSimGrupal] = useState(true);
+  // Modo "Semana E" — evento universitario de viabilidad sin notas.
+  const [esSemanaE, setEsSemanaE] = useState(false);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -171,6 +173,7 @@ function FormCrearCurso({
         simulacion_caso_curso: simCaso,
         simulacion_individual: simIndividual,
         simulacion_grupal: simGrupal,
+        es_semana_e: esSemanaE,
       });
       onCreado(curso);
     } catch (e) {
@@ -347,6 +350,26 @@ function FormCrearCurso({
             </span>
           </label>
         </div>
+      </div>
+
+      {/* Modo Semana E — evento universitario sin calificaciones */}
+      <div className="rounded-md border-2 border-amber-300 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={esSemanaE}
+            onChange={(e) => setEsSemanaE(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-xs">
+            <strong>🎓 Este es un evento "Semana E" (sin notas)</strong>
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              UI simplificada para el estudiante: oculta entregas, calificaciones, podio,
+              ranking y catálogo de eventos. Aparece un banner de bienvenida con checklist
+              paso a paso. Pensado para eventos universitarios de viabilidad de proyectos.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Selector de modo de simulación (incluye eventos curados si aplica) */}

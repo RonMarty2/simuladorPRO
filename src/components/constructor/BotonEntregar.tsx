@@ -7,6 +7,7 @@ import {
   listarMisEntregas,
   type IndicadoresEntrega,
 } from "@/lib/proyecto-supabase";
+import { obtenerCursoPorId } from "@/lib/cursos-supabase";
 import type { Entrega } from "@/types/proyecto";
 
 interface Props {
@@ -31,6 +32,8 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
   const [cargando, setCargando] = useState(true);
   const [entregando, setEntregando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "err"; texto: string } | null>(null);
+  /** Si el curso del proyecto es Semana E, no hay entregas: el botón se oculta. */
+  const [cursoEsSemanaE, setCursoEsSemanaE] = useState(false);
 
   useEffect(() => {
     if (!proyecto || !perfil) {
@@ -51,6 +54,15 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
       )
       .catch(() => {})
       .finally(() => setCargando(false));
+    // Detectar si el curso es evento Semana E. Si falla, asumimos NO Semana E
+    // (mejor mostrar el botón de más).
+    if (proyecto.curso_id) {
+      obtenerCursoPorId(proyecto.curso_id)
+        .then((c) => setCursoEsSemanaE(!!c?.es_semana_e))
+        .catch(() => setCursoEsSemanaE(false));
+    } else {
+      setCursoEsSemanaE(false);
+    }
   }, [proyecto?.id, perfil?.id, paso]);
 
   if (!proyecto || !perfil) return null;
@@ -62,6 +74,8 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
   if (!tiposEntregables.includes(proyecto.tipo ?? "libre")) return null;
   // Sin curso asignado no se puede entregar (la función backend lo valida).
   if (!proyecto.curso_id) return null;
+  // Modo Semana E: el evento no tiene calificaciones, no se entrega.
+  if (cursoEsSemanaE) return null;
 
   const entregar = async () => {
     if (!proyecto) return;
