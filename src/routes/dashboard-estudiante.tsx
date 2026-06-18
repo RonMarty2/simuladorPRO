@@ -16,6 +16,7 @@ import {
   tomarCasoDelCurso,
 } from "@/lib/proyecto-supabase";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
+import { obtenerMiGrupo } from "@/lib/grupos-supabase";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import PodioCurso from "@/components/curso/PodioCurso";
 import BannerSemanaE from "@/components/curso/BannerSemanaE";
@@ -55,6 +56,10 @@ export default function DashboardEstudiante() {
   const [inscribiendo, setInscribiendo] = useState(false);
   const [crearEnCurso, setCrearEnCurso] = useState<Curso | null>(null);
   const [casosPorCurso, setCasosPorCurso] = useState<Record<string, Proyecto[]>>({});
+  /** Curso → ¿el alumno ya tiene grupo ahí? Para no esconderle un grupo
+   *  existente cuando el docente armó los grupos a mano (sin habilitar el
+   *  autoservicio `grupo_habilitado`). */
+  const [tieneGrupoPorCurso, setTieneGrupoPorCurso] = useState<Record<string, boolean>>({});
   const [tomandoCaso, setTomandoCaso] = useState<string | null>(null);
   /** Curso para el que el alumno ya confirmó "Salir" — pinta el botón de
    *  confirmar. Se limpia al cancelar o al terminar. */
@@ -79,6 +84,18 @@ export default function DashboardEstudiante() {
           })
         );
         setCasosPorCurso(Object.fromEntries(casosEntries));
+        // ¿En qué cursos el alumno ya tiene grupo? (todos en paralelo)
+        const gruposEntries = await Promise.all(
+          insc.map(async ({ curso }) => {
+            try {
+              const grupo = await obtenerMiGrupo(user.id, curso.id);
+              return [curso.id, !!grupo] as const;
+            } catch {
+              return [curso.id, false] as const;
+            }
+          })
+        );
+        setTieneGrupoPorCurso(Object.fromEntries(gruposEntries));
       })
       .catch(() => {})
       .finally(() => setCargando(false));
@@ -321,7 +338,8 @@ export default function DashboardEstudiante() {
                 const hayCasos = casosDisponibles.length > 0 || casosTomados.length > 0;
                 const muestraIndividual =
                   curso.permite_proyecto_libre !== false || proyectosLibres.length > 0;
-                const muestraGrupal = curso.grupo_habilitado === true;
+                const muestraGrupal =
+                  curso.grupo_habilitado === true || tieneGrupoPorCurso[curso.id] === true;
                 const muestraNada = !hayCasos && !muestraIndividual && !muestraGrupal;
                 return (
                   <>

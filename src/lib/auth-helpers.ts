@@ -272,14 +272,15 @@ export async function entrarAEventoSemanaE(opciones?: {
   }
 
   // 2. Encontrar el curso Semana E. Si el llamador pasó un cursoId, usamos
-  // ese; si no, buscamos el primero que sea es_semana_e=TRUE (asumimos un
-  // único evento activo).
+  // ese; si no, buscamos el más reciente que esté es_semana_e=TRUE Y activo
+  // (filtrar por estado evita engancharse a cursos de prueba ya cerrados).
   let cursoId = opciones?.cursoId ?? null;
   if (!cursoId) {
     const { data: cursos } = await supabase
       .from("cursos")
       .select("id")
       .eq("es_semana_e", true)
+      .eq("estado", "activo")
       .order("creado_en", { ascending: false })
       .limit(1);
     cursoId = cursos?.[0]?.id ?? null;
@@ -298,12 +299,14 @@ export async function entrarAEventoSemanaE(opciones?: {
   }
 
   // 4. Auto-inscripción al curso. Si ya estaba inscripto (porque el usuario
-  // refrescó), ignoramos el error de unique constraint.
+  // refrescó), ignoramos el error de unique constraint. Cualquier OTRO error
+  // se relanza: si no quedó inscripto, más adelante "crear grupo" le va a
+  // fallar por RLS con un mensaje confuso — mejor avisar acá, de entrada.
   const { error: errIns } = await supabase
     .from("inscripciones")
     .insert({ curso_id: cursoId, estudiante_id: userId });
   if (errIns && !errIns.message.toLowerCase().includes("duplicate")) {
-    console.warn("Inscripción a Semana E falló:", errIns.message);
+    throw new Error(`No se pudo inscribirte al evento: ${errIns.message}`);
   }
 
   return { userId, cursoId };
