@@ -54,8 +54,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const sessionPromise = supabase.auth.getSession();
       const { data } = await Promise.race([
         sessionPromise,
+        // Si getSession cuelga >5s probablemente hay un token corrupto en
+        // localStorage. Lo limpiamos y seguimos sin sesión: mejor pedirle
+        // que se loguee de nuevo que dejarlo trabado.
         new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null } }), 10000)
+          setTimeout(() => {
+            console.warn("[auth] getSession >5s — limpiando sesión persistida");
+            try {
+              for (const k of Object.keys(localStorage)) {
+                if (k.startsWith("sb-")) localStorage.removeItem(k);
+              }
+            } catch {}
+            resolve({ data: { session: null } });
+          }, 5000)
         ),
       ]);
       const session = data.session ?? null;

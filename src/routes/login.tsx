@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,7 +21,6 @@ export default function Login() {
   const perfil = useAuthStore((s) => s.perfil);
   const login = useAuthStore((s) => s.login);
   const cargando = useAuthStore((s) => s.cargando);
-  const navigate = useNavigate();
   const location = useLocation();
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
 
@@ -43,11 +42,32 @@ export default function Login() {
     return <Navigate to={desde ?? destinoPostLogin(perfil.rol)} replace />;
   }
 
+  // Sesión activa pero el perfil todavía no llegó (query a la BD en curso o
+  // intermitencia). NO mostrar el form: sería confuso pedirle al usuario que
+  // se loguee de nuevo cuando ya está logueado.
+  if (inicializado && user && !perfil) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-sm space-y-3">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <h2 className="text-sm font-semibold">Cargando tu perfil…</h2>
+          <p className="text-xs text-muted-foreground">
+            Ya estás logueado como <strong>{user.email}</strong>. Conectando con tu cuenta.
+            Si tarda más de 30 segundos, refrescá la página.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const onSubmit = async (datos: FormValues) => {
     setErrorServidor(null);
     try {
       await login(datos.email, datos.password);
-      navigate("/", { replace: true });
+      // No navegamos imperativamente: dejamos que el <Navigate> declarativo
+      // de abajo dispare cuando user+perfil lleguen vía onAuthStateChange.
+      // El navigate prematuro tiraba a "/" sin user → ProtectedRoute rebotaba
+      // a /login y el form se reseteaba. Quedaba el alumno trabado.
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al iniciar sesión";
       setErrorServidor(traducir(msg));
@@ -132,6 +152,32 @@ export default function Login() {
           </Link>
         </p>
       </div>
+
+      {/* Escape hatch: si el alumno quedó trabado (sesión vieja corrupta,
+          token expirado, etc.) puede limpiar todo y volver a entrar desde 0
+          sin tener que abrir la consola del browser. */}
+      <details className="mt-4 text-center">
+        <summary className="cursor-pointer text-[10px] text-muted-foreground">
+          ¿No te deja entrar? Limpiar sesión y reintentar
+        </summary>
+        <button
+          onClick={async () => {
+            try {
+              localStorage.clear();
+              sessionStorage.clear();
+              if (window.indexedDB?.databases) {
+                const dbs = await window.indexedDB.databases();
+                for (const db of dbs) if (db.name) indexedDB.deleteDatabase(db.name);
+              }
+            } catch {}
+            window.location.reload();
+          }}
+          className="mt-2 rounded-md border border-border bg-card px-3 py-1.5 text-[11px] hover:bg-secondary"
+        >
+          🧹 Borrar todo lo guardado en este navegador
+        </button>
+      </details>
+
       <CreditoAutor />
       </div>
     </div>
