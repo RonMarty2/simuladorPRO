@@ -166,6 +166,7 @@ function FormCrearSemanaE({
   const [materia, setMateria] = useState("Evaluación de proyectos");
   const [paralelo, setParalelo] = useState("");
   const [universidad, setUniversidad] = useState("");
+  const [cupoGrupo, setCupoGrupo] = useState(6);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -187,6 +188,11 @@ function FormCrearSemanaE({
         simulacion_individual: false,
         simulacion_grupal: true,
         es_semana_e: true,
+        // Grupos LISTOS al crear: el alumno entra y ya puede formar/unirse.
+        grupo_habilitado: true,
+        grupo_cupo_max: Math.max(1, Math.min(50, cupoGrupo)),
+        grupo_modelo: "unidades",
+        grupo_version: "v2",
       });
       onCreado(curso);
     } catch (e) {
@@ -226,13 +232,24 @@ function FormCrearSemanaE({
           onChange={setUniversidad}
           placeholder="Ej: UCATEC, UMSS, UMSA…"
         />
+        <label className="text-sm font-medium">
+          Cupo máximo por grupo
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={cupoGrupo}
+            onChange={(e) => setCupoGrupo(Number(e.target.value) || 1)}
+            className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
 
       <div className="rounded-md border border-fuchsia-200 bg-white/60 p-2 text-[11px] text-fuchsia-900 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200">
         <strong>Configuración fija del evento</strong> (no se puede tocar — esa es la idea):
         <ul className="ml-4 mt-1 list-disc space-y-0.5">
           <li>Sin entregas, sin notas, sin podio.</li>
-          <li>Trabajo en grupos obligatorio.</li>
+          <li>Trabajo en grupos OBLIGATORIO — los grupos ya quedan habilitados.</li>
           <li>Cada alumno arma el proyecto desde cero (no hay caso del docente).</li>
           <li>Banner con checklist de 5 pasos para guiar a los alumnos.</li>
         </ul>

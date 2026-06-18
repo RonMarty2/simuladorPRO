@@ -235,6 +235,12 @@ export async function crearCurso(params: {
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
   es_semana_e?: boolean;
+  // Config opcional de grupos al crear (útil para "Crear Semana E" que los
+  // habilita de una; en cursos normales el docente los configura después).
+  grupo_habilitado?: boolean;
+  grupo_cupo_max?: number;
+  grupo_modelo?: string;
+  grupo_version?: string;
 }): Promise<Curso> {
   const universidad = normalizarUniversidad(params.universidad);
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
@@ -258,6 +264,10 @@ export async function crearCurso(params: {
           simulacion_individual: params.simulacion_individual ?? false,
           simulacion_grupal: params.simulacion_grupal ?? true,
           es_semana_e: params.es_semana_e ?? false,
+          grupo_habilitado: params.grupo_habilitado ?? false,
+          grupo_cupo_max: params.grupo_cupo_max ?? 4,
+          grupo_modelo: params.grupo_modelo ?? "unidades",
+          grupo_version: params.grupo_version ?? "v2",
           codigo,
         })
         .select()
