@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
+import { DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   buscarCursoPorCodigo,
+  desinscribirseDeCurso,
   inscribirseACurso,
   listarMisInscripciones,
   type Curso,
@@ -54,6 +55,10 @@ export default function DashboardEstudiante() {
   const [crearEnCurso, setCrearEnCurso] = useState<Curso | null>(null);
   const [casosPorCurso, setCasosPorCurso] = useState<Record<string, Proyecto[]>>({});
   const [tomandoCaso, setTomandoCaso] = useState<string | null>(null);
+  /** Curso para el que el alumno ya confirmó "Salir" — pinta el botón de
+   *  confirmar. Se limpia al cancelar o al terminar. */
+  const [confirmandoSalida, setConfirmandoSalida] = useState<string | null>(null);
+  const [saliendoDeCurso, setSaliendoDeCurso] = useState<string | null>(null);
 
   const recargar = () => {
     if (!user) return;
@@ -98,6 +103,21 @@ export default function DashboardEstudiante() {
       localStorage.setItem("simulador.nuevoProyecto", cursoId ?? "");
     } catch {}
     navigate("/construir");
+  };
+
+  const salirDelCurso = async (cursoId: string) => {
+    if (!user) return;
+    setSaliendoDeCurso(cursoId);
+    setError(null);
+    try {
+      await desinscribirseDeCurso({ curso_id: cursoId, estudiante_id: user.id });
+      setConfirmandoSalida(null);
+      recargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo salir del curso.");
+    } finally {
+      setSaliendoDeCurso(null);
+    }
   };
 
   const inscribirse = async (e: React.FormEvent) => {
@@ -222,7 +242,7 @@ export default function DashboardEstudiante() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {PUEDE_CREAR_LIBRE && (
                     <button
                       onClick={() => nuevo(curso.id)}
@@ -233,8 +253,49 @@ export default function DashboardEstudiante() {
                     </button>
                   )}
                   <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
+                  {confirmandoSalida === curso.id ? (
+                    <span className="flex items-center gap-1 text-[10px]">
+                      <button
+                        onClick={() => salirDelCurso(curso.id)}
+                        disabled={saliendoDeCurso === curso.id}
+                        className="flex items-center gap-1 rounded-md bg-rose-600 px-2 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+                      >
+                        {saliendoDeCurso === curso.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <DoorOpen className="h-3 w-3" />
+                        )}
+                        Salir igual
+                      </button>
+                      <button
+                        onClick={() => setConfirmandoSalida(null)}
+                        className="rounded-md border border-border bg-card px-2 py-1 hover:bg-secondary"
+                      >
+                        Cancelar
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmandoSalida(curso.id)}
+                      title={`Salir del curso. Tus entregas, proyectos y grupos quedan guardados. Si volvés a ingresar el código ${curso.codigo} recuperás todo.`}
+                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:border-rose-900 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                    >
+                      <DoorOpen className="h-3 w-3" />
+                      Salir
+                    </button>
+                  )}
                 </div>
               </div>
+              {confirmandoSalida === curso.id && (
+                <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  <strong>¿Salir del curso?</strong> Tus <strong>entregas, proyectos y grupos
+                  quedan guardados</strong>. Cuando quieras volver, ingresá el código{" "}
+                  <code className="rounded bg-amber-200 px-1 font-mono dark:bg-amber-900">
+                    {curso.codigo}
+                  </code>{" "}
+                  y vas a recuperar TODO tu historial.
+                </div>
+              )}
 
               {/* ── 🏆 PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
               {user && (

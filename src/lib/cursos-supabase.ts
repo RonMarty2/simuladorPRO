@@ -286,6 +286,27 @@ export async function inscribirseACurso(params: {
   if (error) throw error;
 }
 
+/**
+ * Saca al estudiante del curso. NO borra sus entregas, ni su proyecto, ni su
+ * membresía a grupos — solo el row de `inscripciones`. Si vuelve a inscribirse
+ * con el mismo código, recupera todo el historial intacto.
+ */
+export async function desinscribirseDeCurso(params: {
+  curso_id: string;
+  estudiante_id: string;
+}): Promise<void> {
+  const { error } = await conTimeout(
+    supabase
+      .from("inscripciones")
+      .delete()
+      .eq("curso_id", params.curso_id)
+      .eq("estudiante_id", params.estudiante_id),
+    10000,
+    "saliendo del curso"
+  );
+  if (error) throw error;
+}
+
 export async function listarMisInscripciones(estudianteId: string): Promise<
   Array<{ curso: Curso; inscrito_en: string }>
 > {
