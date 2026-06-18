@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { entrarAEventoSemanaE, iniciarSesionConGoogle } from "@/lib/auth-helpers";
 import { useAuthStore } from "@/stores/auth-store";
 
 /**
- * Ruta `/semanae` — entrada al evento Semana E.
+ * Ruta `/semanae` — entrada al evento Semana E con Google únicamente.
  *
- * Dos caminos:
- *  1) GOOGLE (recomendado): persistente, podés cerrar sesión, volver al día
- *     siguiente o entrar desde otro dispositivo y seguir donde quedaste.
- *  2) INVITADO: 1 click, sin cuenta. Si cerrás el navegador o borrás cache,
- *     PERDÉS el acceso al trabajo (la data queda en BD pero sin forma de
- *     identificarte de vuelta).
- *
- * En los dos casos al final llamamos `entrarAEventoSemanaE()` que detecta la
- * sesión existente y auto-inscribe al curso Semana E activo.
+ * Flujo:
+ *  1) Alumno aprieta "Continuar con Google".
+ *  2) Vuelve del callback OAuth con sesión activa.
+ *  3) useEffect detecta sesión + perfil y dispara `entrarAEventoSemanaE()`.
+ *  4) Auto-inscribe al curso Semana E activo y manda a /estudiante.
  */
 export default function SemanaEEntrada() {
   const navigate = useNavigate();
@@ -23,10 +19,7 @@ export default function SemanaEEntrada() {
   const perfil = useAuthStore((s) => s.perfil);
   const inicializado = useAuthStore((s) => s.inicializado);
   const inicializar = useAuthStore((s) => s.inicializar);
-  const recargarPerfil = useAuthStore((s) => s.recargarPerfil);
 
-  const [nombre, setNombre] = useState("");
-  const [cargandoAnon, setCargandoAnon] = useState(false);
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
   const [autoInscribiendo, setAutoInscribiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +32,7 @@ export default function SemanaEEntrada() {
 
   // Si el usuario YA tiene sesión cuando llega a /semanae (volvió del
   // callback de Google, o ya estaba logueado), inscribirlo automáticamente
-  // y mandarlo al panel del estudiante. Esto cubre el flujo Google end-to-end.
+  // y mandarlo al panel del estudiante.
   useEffect(() => {
     if (!inicializado || !user || !perfil) return;
     if (autoInscribiendo) return;
@@ -56,39 +49,14 @@ export default function SemanaEEntrada() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inicializado, user, perfil]);
 
-  // Bonus: ?auto=1 entra como invitado sin tocar nada (útil para QR de pared).
-  useEffect(() => {
-    if (!inicializado || user) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("auto") === "1") entrarComoInvitado();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inicializado, user]);
-
   const entrarConGoogle = async () => {
     setCargandoGoogle(true);
     setError(null);
     try {
-      // Vuelve a /semanae después del callback → useEffect de arriba dispara
-      // entrarAEventoSemanaE() automáticamente porque ya hay sesión.
       await iniciarSesionConGoogle({ volverA: "/semanae" });
-      // signInWithOAuth redirige el browser, no hace falta nada más acá.
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo abrir el login de Google.");
       setCargandoGoogle(false);
-    }
-  };
-
-  const entrarComoInvitado = async () => {
-    setCargandoAnon(true);
-    setError(null);
-    try {
-      await entrarAEventoSemanaE({ nombreVisible: nombre.trim() || undefined });
-      await recargarPerfil().catch(() => {});
-      navigate("/estudiante", { replace: true });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo entrar al evento.");
-    } finally {
-      setCargandoAnon(false);
     }
   };
 
@@ -122,7 +90,7 @@ export default function SemanaEEntrada() {
         <div className="rounded-md border border-sky-200 bg-sky-50/70 p-3 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
           <strong>¿Qué vas a hacer acá?</strong>
           <ol className="ml-4 mt-1 list-decimal space-y-0.5">
-            <li>Entrás en segundos.</li>
+            <li>Entrás con tu cuenta Google en segundos.</li>
             <li>Te unís o formás un grupo con tus compañeros.</li>
             <li>Arman juntos un proyecto: producto, costos, inversión.</li>
             <li>Ven si el VAN/TIR cierra y simulan 5 años.</li>
@@ -136,10 +104,9 @@ export default function SemanaEEntrada() {
           </div>
         )}
 
-        {/* Camino RECOMENDADO: Google */}
         <button
           onClick={entrarConGoogle}
-          disabled={cargandoGoogle || cargandoAnon}
+          disabled={cargandoGoogle}
           className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-sm font-bold transition hover:bg-secondary disabled:opacity-50"
         >
           {cargandoGoogle ? (
@@ -167,56 +134,13 @@ export default function SemanaEEntrada() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continuar con Google (recomendado)
+              Continuar con Google
             </>
           )}
         </button>
-        <p className="-mt-3 text-center text-[10px] text-muted-foreground">
-          Persistente. Podés cerrar y volver cuando quieras desde cualquier dispositivo.
-        </p>
-
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-          <div className="h-px flex-1 bg-border" />
-          o si preferís
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        {/* Camino SECUNDARIO: anónimo */}
-        <div className="space-y-2 rounded-md border border-dashed border-border bg-card/50 p-3">
-          <div className="text-xs font-medium">Entrar como invitado</div>
-          <div className="flex items-start gap-1.5 text-[10px] text-amber-800 dark:text-amber-200">
-            <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
-            <span>
-              Si cerrás el navegador o borrás cache, <strong>perdés el acceso</strong> a este
-              trabajo. Usá Google si querés retomar después o cambiar de dispositivo.
-            </span>
-          </div>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Cómo te llamás (opcional)"
-            maxLength={50}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            onClick={entrarComoInvitado}
-            disabled={cargandoAnon || cargandoGoogle}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs font-medium hover:bg-secondary/70 disabled:opacity-50"
-          >
-            {cargandoAnon ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Entrando…
-              </>
-            ) : (
-              "Entrar como invitado"
-            )}
-          </button>
-        </div>
 
         <div className="text-center text-[10px] text-muted-foreground">
-          ¿Tenés cuenta de docente o estudiante regular?{" "}
+          ¿Sos docente o estudiante regular?{" "}
           <Link to="/login" className="font-medium text-foreground underline">
             Ingresar normal
           </Link>
