@@ -5,6 +5,7 @@ import RootLayout from "@/components/layout/RootLayout";
 // Login y Registro NO son lazy: son la primera pantalla, deben pintar rápido.
 import Login from "@/routes/login";
 import Registro from "@/routes/registro";
+import SemanaEEntrada from "@/routes/semana-e-entrada";
 
 // El resto de rutas se cargan bajo demanda (code-splitting). Esto saca del
 // bundle inicial las librerías pesadas que solo viven en algunas rutas:
@@ -37,6 +38,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
+      <Route path="/semanae" element={<SemanaEEntrada />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<RootLayout />}>
           <Route
