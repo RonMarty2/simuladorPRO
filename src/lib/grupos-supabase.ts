@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { insertarProyecto } from "./proyecto-supabase";
+import { proyectoAFilaSupabase } from "./proyecto-supabase";
 import { crearProyectoVacio, type ModeloIngreso } from "./proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
@@ -48,38 +48,16 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
 /**
  * Un ESTUDIANTE crea un grupo y se vuelve el primer integrante. El formato del
  * proyecto (modelo + versión + cupo) lo definió el docente en el curso.
- * 1) inserta el grupo, 2) crea el proyecto compartido (dueño = estudiante
- * creador; los miembros lo editan vía RLS), 3) se une al grupo.
- *
- * No se actualiza grupos.proyecto_id (el estudiante no tiene UPDATE sobre
- * grupos): el proyecto del grupo se resuelve por proyectos.grupo_id.
+ * La RPC hace las tres escrituras en una sola transacción para que RLS no deje
+ * grupos huérfanos si falla la creación del proyecto o de la membresía.
  */
 export async function crearGrupoEstudiante(params: {
   cursoId: string;
   creadorId: string;
   nombre: string;
-  cupoMax: number;
   version: VersionProyecto;
   modeloIngreso: ModeloIngreso;
 }): Promise<void> {
-  // 1. Grupo (el estudiante no setea cupo: viene del curso)
-  const { data: grupo, error: e1 } = await conTimeout(
-    supabase
-      .from("grupos")
-      .insert({
-        curso_id: params.cursoId,
-        nombre: params.nombre,
-        cupo_max: params.cupoMax,
-      })
-      .select()
-      .single(),
-    15000,
-    "creando el grupo"
-  );
-  if (e1) throw e1;
-  const grupoId = (grupo as Grupo).id;
-
-  // 2. Proyecto compartido (dueño = creador; tipo proyecto_grupal)
   const proyecto: Proyecto = crearProyectoVacio({
     estudiante_id: params.creadorId,
     nombre: `${params.nombre} · proyecto grupal`,
@@ -88,14 +66,20 @@ export async function crearGrupoEstudiante(params: {
     modeloIngreso: params.modeloIngreso,
   });
   proyecto.tipo = "proyecto_grupal";
-  proyecto.grupo_id = grupoId;
-  await insertarProyecto(proyecto);
+  const filaProyecto = proyectoAFilaSupabase(proyecto);
 
-  // 3. El creador se une al grupo
-  const { error: e3 } = await supabase
-    .from("grupo_miembros")
-    .insert({ grupo_id: grupoId, estudiante_id: params.creadorId });
-  if (e3) throw e3;
+  const { error } = await conTimeout(
+    supabase.rpc("crear_grupo_estudiante_atomico", {
+      p_curso_id: params.cursoId,
+      p_nombre_grupo: params.nombre,
+      p_proyecto_id: proyecto.id,
+      p_proyecto_nombre: proyecto.nombre,
+      p_proyecto_datos: filaProyecto.datos,
+    }),
+    15000,
+    "creando el grupo"
+  );
+  if (error) throw error;
 }
 
 /** Lista los grupos de un curso con integrantes y el id de su proyecto. */

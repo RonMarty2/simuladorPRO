@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import CreditoAutor from "@/components/layout/CreditoAutor";
 import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
 import BotonInstalarApp from "@/components/layout/BotonInstalarApp";
+import CompletarNombreInicial from "@/components/auth/CompletarNombreInicial";
 import { useEsDispositivoMobil } from "@/hooks/useEsDispositivoMobil";
 
 const enlacesEstudiante = [
@@ -196,6 +197,7 @@ export default function RootLayout() {
           permite instalar la PWA y el usuario aún no la instaló ni la
           cerró en esta sesión. */}
       <BotonInstalarApp />
+      <CompletarNombreInicial />
     </div>
   );
 }

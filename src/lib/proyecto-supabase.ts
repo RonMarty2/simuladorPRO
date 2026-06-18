@@ -13,7 +13,7 @@ import type {
  * `proyectos`. Los campos del dominio que no son metadatos (inversiones,
  * costos, productos, etc.) van comprimidos en `datos`.
  */
-function aFilaSupabase(p: Proyecto) {
+export function proyectoAFilaSupabase(p: Proyecto) {
   const {
     id,
     estudiante_id,
@@ -137,7 +137,7 @@ export async function listarProyectosGrupales(estudianteId: string): Promise<Pro
 
 /** Upsert: inserta si no existe, actualiza si ya existe. */
 export async function guardarProyecto(p: Proyecto): Promise<void> {
-  const fila = aFilaSupabase(p);
+  const fila = proyectoAFilaSupabase(p);
   // El proyecto GRUPAL lo crea el docente (insertarProyecto). Los miembros solo
   // tienen permiso de UPDATE (no INSERT), así que para no romper su autoguardado
   // acá siempre EDITAMOS (update), nunca upsert.
@@ -152,7 +152,7 @@ export async function guardarProyecto(p: Proyecto): Promise<void> {
 
 /** Inserta un proyecto nuevo (usado al crear el proyecto compartido de un grupo). */
 export async function insertarProyecto(p: Proyecto): Promise<void> {
-  const fila = aFilaSupabase(p);
+  const fila = proyectoAFilaSupabase(p);
   const { error } = await supabase.from("proyectos").insert(fila);
   if (error) throw error;
 }
