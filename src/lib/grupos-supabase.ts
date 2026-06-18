@@ -99,6 +99,15 @@ export async function crearGrupoEstudiante(params: {
 
   // Semana E usa una única transacción para resistir los falsos rechazos RLS
   // observados en el evento, sin alterar proyectos o cursos convencionales.
+  // Forzamos una renovación justo antes de la RPC: después de una recarga de
+  // la PWA el store podía mostrar el perfil mientras PostgREST aún enviaba la
+  // llamada con el rol anon, haciendo que auth.uid() llegara como NULL.
+  const { data: sesionRenovada, error: errorSesion } =
+    await supabase.auth.refreshSession();
+  if (errorSesion || !sesionRenovada.session?.user) {
+    throw new Error("Tu sesión no terminó de activarse. Salí, vuelve a ingresar con Google e inténtalo otra vez.");
+  }
+
   const filaProyecto = proyectoAFilaSupabase(proyecto);
 
   const { error } = await conTimeout(
