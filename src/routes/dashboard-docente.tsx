@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Copy, GraduationCap, Loader2, Plus, Trash2, Trophy, Users } from "lucide-react";
+import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
-  actualizarEsSemanaE,
   crearCurso,
   eliminarCurso,
   listarInscritosDeCurso,
@@ -30,6 +29,7 @@ export default function DashboardDocente() {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [mostrarFormSemanaE, setMostrarFormSemanaE] = useState(false);
   const [cursoExpandido, setCursoExpandido] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,6 +45,7 @@ export default function DashboardDocente() {
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);
     setMostrarForm(false);
+    setMostrarFormSemanaE(false);
   };
 
   const onCursoEliminado = (cursoId: string) => {
@@ -61,14 +62,23 @@ export default function DashboardDocente() {
             Hola {perfil?.nombre} — gestiona tus cursos y ve cómo van tus estudiantes.
           </p>
         </div>
-        {!mostrarForm && (
-          <button
-            onClick={() => setMostrarForm(true)}
-            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Crear curso
-          </button>
+        {!mostrarForm && !mostrarFormSemanaE && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setMostrarForm(true)}
+              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Crear curso
+            </button>
+            <button
+              onClick={() => setMostrarFormSemanaE(true)}
+              className="flex items-center gap-1.5 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              title="Crea un evento Semana E aparte: sin notas, con grupos, guiado paso a paso. Independiente de tus cursos normales."
+            >
+              🎓 Crear Semana E
+            </button>
+          </div>
         )}
       </div>
 
@@ -102,6 +112,14 @@ export default function DashboardDocente() {
         />
       )}
 
+      {mostrarFormSemanaE && user && (
+        <FormCrearSemanaE
+          docenteId={user.id}
+          onCreado={onCursoCreado}
+          onCancelar={() => setMostrarFormSemanaE(false)}
+        />
+      )}
+
       {cargando && <div className="text-sm text-muted-foreground">Cargando cursos…</div>}
 
       {!cargando && cursos.length === 0 && !mostrarForm && (
@@ -126,6 +144,126 @@ export default function DashboardDocente() {
   );
 }
 
+/**
+ * Form acotado para crear un EVENTO Semana E. Más simple que el form normal:
+ * solo pide lo esencial (nombre, materia, paralelo, universidad), y deja todo
+ * lo demás pre-configurado para el caso de uso del evento:
+ *  - es_semana_e = true (oculta entregas/notas, muestra banner).
+ *  - permite_proyecto_libre = false (todos van por grupo).
+ *  - simulacion_grupal = true, simulacion_caso/individual = false.
+ *  - modo simulacion automatico.
+ */
+function FormCrearSemanaE({
+  docenteId,
+  onCreado,
+  onCancelar,
+}: {
+  docenteId: string;
+  onCreado: (c: Curso) => void;
+  onCancelar: () => void;
+}) {
+  const [nombre, setNombre] = useState("Semana E · Viabilidad de proyectos");
+  const [materia, setMateria] = useState("Evaluación de proyectos");
+  const [paralelo, setParalelo] = useState("");
+  const [universidad, setUniversidad] = useState("");
+  const [creando, setCreando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreando(true);
+    setError(null);
+    try {
+      const curso = await crearCurso({
+        docente_id: docenteId,
+        nombre,
+        materia,
+        paralelo: paralelo || undefined,
+        universidad: universidad || undefined,
+        frecuencia_turnos: "mensual",
+        modo_simulacion: "automatico",
+        permite_proyecto_libre: false,
+        simulacion_caso_curso: false,
+        simulacion_individual: false,
+        simulacion_grupal: true,
+        es_semana_e: true,
+      });
+      onCreado(curso);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al crear el evento");
+    } finally {
+      setCreando(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="space-y-3 rounded-lg border-2 border-fuchsia-300 bg-gradient-to-br from-fuchsia-50/70 via-violet-50/70 to-sky-50/70 p-4 dark:border-fuchsia-900 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30"
+    >
+      <div>
+        <h2 className="text-sm font-bold text-fuchsia-900 dark:text-fuchsia-200">
+          🎓 Crear evento Semana E
+        </h2>
+        <p className="mt-0.5 text-[11px] text-fuchsia-900/80 dark:text-fuchsia-200/80">
+          Curso especial sin calificaciones, con banner de bienvenida y checklist paso a paso.
+          Los alumnos trabajan en grupo. Independiente de tus otros cursos.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <CampoTexto label="Nombre del evento" valor={nombre} onChange={setNombre} required />
+        <CampoTexto label="Materia / tema" valor={materia} onChange={setMateria} required />
+        <CampoTexto
+          label="Paralelo (opcional)"
+          valor={paralelo}
+          onChange={setParalelo}
+          placeholder="Ej: Mañana, Tarde, A, B…"
+        />
+        <CampoTexto
+          label="Universidad (opcional)"
+          valor={universidad}
+          onChange={setUniversidad}
+          placeholder="Ej: UCATEC, UMSS, UMSA…"
+        />
+      </div>
+
+      <div className="rounded-md border border-fuchsia-200 bg-white/60 p-2 text-[11px] text-fuchsia-900 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200">
+        <strong>Configuración fija del evento</strong> (no se puede tocar — esa es la idea):
+        <ul className="ml-4 mt-1 list-disc space-y-0.5">
+          <li>Sin entregas, sin notas, sin podio.</li>
+          <li>Trabajo en grupos obligatorio.</li>
+          <li>Cada alumno arma el proyecto desde cero (no hay caso del docente).</li>
+          <li>Banner con checklist de 5 pasos para guiar a los alumnos.</li>
+        </ul>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {error}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={creando || !nombre || !materia}
+          className="rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {creando ? "Creando evento…" : "🎓 Crear evento Semana E"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-md border border-border px-3 py-2 text-sm hover:bg-secondary"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function FormCrearCurso({
   docenteId,
   onCreado,
@@ -147,8 +285,6 @@ function FormCrearCurso({
   const [simCaso, setSimCaso] = useState(true);
   const [simIndividual, setSimIndividual] = useState(false);
   const [simGrupal, setSimGrupal] = useState(true);
-  // Modo "Semana E" — evento universitario de viabilidad sin notas.
-  const [esSemanaE, setEsSemanaE] = useState(false);
   const [creando, setCreando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,7 +310,6 @@ function FormCrearCurso({
         simulacion_caso_curso: simCaso,
         simulacion_individual: simIndividual,
         simulacion_grupal: simGrupal,
-        es_semana_e: esSemanaE,
       });
       onCreado(curso);
     } catch (e) {
@@ -353,26 +488,6 @@ function FormCrearCurso({
         </div>
       </div>
 
-      {/* Modo Semana E — evento universitario sin calificaciones */}
-      <div className="rounded-md border-2 border-amber-300 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30">
-        <label className="flex cursor-pointer items-start gap-2">
-          <input
-            type="checkbox"
-            checked={esSemanaE}
-            onChange={(e) => setEsSemanaE(e.target.checked)}
-            className="mt-0.5"
-          />
-          <span className="text-xs">
-            <strong>🎓 Este es un evento "Semana E" (sin notas)</strong>
-            <span className="mt-0.5 block text-[11px] text-muted-foreground">
-              UI simplificada para el estudiante: oculta entregas, calificaciones, podio,
-              ranking y catálogo de eventos. Aparece un banner de bienvenida con checklist
-              paso a paso. Pensado para eventos universitarios de viabilidad de proyectos.
-            </span>
-          </span>
-        </label>
-      </div>
-
       {/* Selector de modo de simulación (incluye eventos curados si aplica) */}
       <SelectorModoSimulacion
         modo={modo}
@@ -454,9 +569,6 @@ function CursoCard({
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
   const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
-  // Toggle de Semana E en vivo. Estado local optimista; si falla, se revierte.
-  const [esSemanaE, setEsSemanaE] = useState(!!curso.es_semana_e);
-  const [toggleSemanaE, setToggleSemanaE] = useState(false);
 
   const borrar = async () => {
     setBorrando(true);
@@ -482,20 +594,6 @@ function CursoCard({
     setTimeout(() => setCopiado(false), 1500);
   };
 
-  const alternarSemanaE = async () => {
-    const nuevoValor = !esSemanaE;
-    setToggleSemanaE(true);
-    setEsSemanaE(nuevoValor); // optimista
-    try {
-      await actualizarEsSemanaE(curso.id, nuevoValor);
-    } catch (e) {
-      setEsSemanaE(!nuevoValor); // revertir si falla
-      alert(e instanceof Error ? e.message : "No se pudo cambiar el modo Semana E.");
-    } finally {
-      setToggleSemanaE(false);
-    }
-  };
-
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
   type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
   const irA = (tab: Vista) => {
@@ -516,7 +614,7 @@ function CursoCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
-            {esSemanaE && (
+            {curso.es_semana_e && (
               <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                 🎓 Semana E
               </span>
@@ -527,19 +625,6 @@ function CursoCard({
             {curso.paralelo && ` · Paralelo ${curso.paralelo}`} · {curso.frecuencia_turnos} ·{" "}
             {curso.duracion_anios} años
           </p>
-          <button
-            onClick={alternarSemanaE}
-            disabled={toggleSemanaE}
-            className={`mt-1.5 inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-50 ${
-              esSemanaE
-                ? "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800 hover:bg-fuchsia-100 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200"
-                : "border-border bg-card text-muted-foreground hover:bg-secondary"
-            }`}
-            title="Encender/apagar el modo evento Semana E. Cambia EN VIVO lo que ven los alumnos: con el modo prendido se oculta entregas/notas y aparece el banner del evento."
-          >
-            {toggleSemanaE ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            {esSemanaE ? "Modo Semana E · ON" : "Activar modo Semana E"}
-          </button>
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
