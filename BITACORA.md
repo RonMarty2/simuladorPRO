@@ -50,7 +50,7 @@ Arquitectura preparada para escalar a cientos.
 | **Excel export** | xlsx-js-style (dinámico, solo al click admin) |
 | **Form** | react-hook-form + Zod |
 | **PWA** | vite-plugin-pwa con Workbox (auto-update OTA) |
-| **Tests** | Vitest (201 tests al día de hoy) |
+| **Tests** | Vitest (211 tests al día de hoy) |
 | **Backend** | Supabase (Postgres + Auth + Storage + Edge Functions) |
 | **Auth** | Supabase Auth (email/password + Google OAuth con PKCE) |
 | **Hosting** | Vercel (deploy automático desde main) |
@@ -88,6 +88,7 @@ Arquitectura preparada para escalar a cientos.
 | Constructor proyecto (9 pasos) | `/construir` | `routes/construir-proyecto.tsx` + `components/constructor/pasos/*` |
 | Galería de 26 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` + `lib/plantillas.ts` |
 | Simular (5 años, eventos) | `/simular` | `routes/simular-proyecto.tsx` |
+| Escenarios (análisis de sensibilidad) | `/escenarios` | `routes/escenarios.tsx` |
 | Mis entregas | `/mis-entregas` | `routes/mis-entregas.tsx` |
 | Evaluación final | `/evaluacion` | `routes/evaluacion-final.tsx` |
 | Mi perfil | `/perfil` | `routes/mi-perfil.tsx` |

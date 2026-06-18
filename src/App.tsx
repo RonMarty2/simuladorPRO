@@ -20,6 +20,7 @@ const EvaluacionFinal = lazy(() => import("@/routes/evaluacion-final"));
 const CatalogoEventos = lazy(() => import("@/routes/catalogo-eventos"));
 const MisEntregas = lazy(() => import("@/routes/mis-entregas"));
 const GaleriaEjemplos = lazy(() => import("@/routes/galeria-ejemplos"));
+const Escenarios = lazy(() => import("@/routes/escenarios"));
 const AdminPanel = lazy(() => import("@/routes/admin"));
 const MiPerfil = lazy(() => import("@/routes/mi-perfil"));
 
@@ -107,6 +108,14 @@ export default function App() {
             element={
               <Suspense fallback={<Cargando />}>
                 <GaleriaEjemplos />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/escenarios"
+            element={
+              <Suspense fallback={<Cargando />}>
+                <Escenarios />
               </Suspense>
             }
           />
