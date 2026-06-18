@@ -5,6 +5,7 @@ import App from "./App";
 import "./index.css";
 import { inicializarSentry } from "./lib/sentry";
 import { registrarActualizacionPWA } from "./lib/pwa-update";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Monitoreo de errores en producción. No-op si no hay VITE_SENTRY_DSN.
 inicializarSentry();
@@ -29,8 +30,10 @@ if (typeof window !== "undefined" && "screen" in window) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );

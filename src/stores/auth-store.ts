@@ -32,10 +32,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   inicializado: false,
 
   inicializar: async () => {
-    if (get().inicializado) return;
+    // React StrictMode ejecuta los efectos dos veces en desarrollo. Evitamos
+    // que dos inicializaciones compitan por la misma sesión persistida.
+    if (get().inicializado || get().cargando) return;
     set({ cargando: true });
 
-    // Hard timeout total: si después de 15 segundos no terminó, igual marcamos
+    // Hard timeout total: si después de 20 segundos no terminó, igual marcamos
     // como inicializado para que el usuario pueda ver la pantalla de login en
     // vez de quedarse colgado en "Cargando sesión..." para siempre.
     const timeoutHard = setTimeout(() => {
@@ -43,30 +45,88 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.warn("Auth init timeout — forzando inicializado=true");
         set({ cargando: false, inicializado: true });
       }
-    }, 15000);
+    }, 20000);
+
+    // Supabase recomienda no esperar otras llamadas del cliente dentro de
+    // onAuthStateChange: el callback corre mientras el cliente mantiene su
+    // bloqueo interno. Diferimos el trabajo para evitar un bloqueo circular.
+    supabase.auth.onAuthStateChange((evento, nuevaSesion) => {
+      setTimeout(() => {
+        void (async () => {
+          // Logout o sin sesión: limpiar todo.
+          if (evento === "SIGNED_OUT" || !nuevaSesion?.user) {
+            set({ session: null, user: null, perfil: null });
+            return;
+          }
+
+          const prev = get();
+          const mismoUsuario = prev.user?.id === nuevaSesion.user.id;
+
+          // Refresco de token (TOKEN_REFRESHED) u otros eventos donde la identidad
+          // no cambió y ya tenemos el perfil cargado: solo actualizar la sesión.
+          if (mismoUsuario && prev.perfil) {
+            set({ session: nuevaSesion, user: nuevaSesion.user });
+            return;
+          }
+
+          let nuevoPerfil = await obtenerPerfilConReintentos(
+            nuevaSesion.user.id
+          ).catch(() => null);
+
+          if (
+            evento === "SIGNED_IN" &&
+            nuevoPerfil &&
+            nuevaSesion.user.app_metadata?.provider === "google"
+          ) {
+            const { sincronizarNombreConGoogle } = await import(
+              "@/lib/auth-helpers"
+            );
+            await sincronizarNombreConGoogle(
+              nuevaSesion.user.id,
+              nuevoPerfil,
+              nuevaSesion.user.user_metadata
+            );
+            nuevoPerfil = await obtenerPerfilConReintentos(
+              nuevaSesion.user.id
+            ).catch(() => nuevoPerfil);
+          }
+
+          set({
+            session: nuevaSesion,
+            user: nuevaSesion.user,
+            // Nunca pisar un perfil bueno del mismo usuario con null por un fallo
+            // transitorio de la query.
+            perfil: nuevoPerfil ?? (mismoUsuario ? prev.perfil : null),
+          });
+        })().catch((error) => {
+          console.error("Error procesando cambio de sesión:", error);
+        });
+      }, 0);
+    });
 
     // Si la app arrancó con ?code= o #access_token= en la URL (callback de
     // OAuth), procesarlo ANTES de pedir la sesión. Necesario en PWA standalone
     // donde detectSessionInUrl no siempre se dispara solo.
-    await procesarCallbackOAuthSiAplica();
+    try {
+      await procesarCallbackOAuthSiAplica();
+    } catch (error) {
+      console.error("Error procesando callback OAuth:", error);
+    }
 
     try {
       const sessionPromise = supabase.auth.getSession();
       const { data } = await Promise.race([
         sessionPromise,
-        // Si getSession cuelga >5s probablemente hay un token corrupto en
-        // localStorage. Lo limpiamos y seguimos sin sesión: mejor pedirle
-        // que se loguee de nuevo que dejarlo trabado.
+        // Una red lenta no significa que el token esté corrupto. Continuamos
+        // sin bloquear la interfaz, pero conservamos la sesión persistida para
+        // que INITIAL_SESSION o el próximo intento puedan recuperarla.
         new Promise<{ data: { session: null } }>((resolve) =>
           setTimeout(() => {
-            console.warn("[auth] getSession >5s — limpiando sesión persistida");
-            try {
-              for (const k of Object.keys(localStorage)) {
-                if (k.startsWith("sb-")) localStorage.removeItem(k);
-              }
-            } catch {}
+            console.warn(
+              "[auth] getSession >12s — continuando sin borrar la sesión persistida"
+            );
             resolve({ data: { session: null } });
-          }, 5000)
+          }, 12000)
         ),
       ]);
       const session = data.session ?? null;
@@ -88,53 +148,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       clearTimeout(timeoutHard);
     }
-
-    // Suscripción al cambio de sesión (login OAuth, logout, refresh de token, etc.)
-    supabase.auth.onAuthStateChange(async (evento, nuevaSesion) => {
-      // Logout o sin sesión: limpiar todo.
-      if (evento === "SIGNED_OUT" || !nuevaSesion?.user) {
-        set({ session: null, user: null, perfil: null });
-        return;
-      }
-
-      const prev = get();
-      const mismoUsuario = prev.user?.id === nuevaSesion.user.id;
-
-      // Refresco de token (TOKEN_REFRESHED) u otros eventos donde la identidad
-      // no cambió y ya tenemos el perfil cargado: solo actualizar la sesión.
-      // NO volver a pedir el perfil — una query fallida en segundo plano no
-      // debe borrar el perfil bueno y mandar al usuario a la pantalla de error.
-      if (mismoUsuario && prev.perfil) {
-        set({ session: nuevaSesion, user: nuevaSesion.user });
-        return;
-      }
-
-      let nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
-        () => null
-      );
-      // Si se acaba de loguear con Google y el perfil tiene nombre default,
-      // sincronizar con los datos de Google (given_name, family_name, name)
-      if (evento === "SIGNED_IN" && nuevoPerfil && nuevaSesion.user.app_metadata?.provider === "google") {
-        const { sincronizarNombreConGoogle } = await import("@/lib/auth-helpers");
-        await sincronizarNombreConGoogle(
-          nuevaSesion.user.id,
-          nuevoPerfil,
-          nuevaSesion.user.user_metadata
-        );
-        // Recargar perfil después de la sincronización
-        nuevoPerfil = await obtenerPerfilConReintentos(nuevaSesion.user.id).catch(
-          () => nuevoPerfil
-        );
-      }
-
-      set({
-        session: nuevaSesion,
-        user: nuevaSesion.user,
-        // Nunca pisar un perfil bueno del mismo usuario con null por un fallo
-        // transitorio de la query.
-        perfil: nuevoPerfil ?? (mismoUsuario ? prev.perfil : null),
-      });
-    });
   },
 
   registrar: async (datos) => {
