@@ -252,8 +252,27 @@ export async function unirseAGrupo(grupoId: string, estudianteId: string): Promi
   if (error) throw error;
 }
 
-/** El estudiante sale de un grupo. */
-export async function salirDeGrupo(grupoId: string, estudianteId: string): Promise<void> {
+/**
+ * El estudiante sale de un grupo. En Semana E la operación es atómica y, si
+ * era el último integrante, elimina también el equipo y su proyecto compartido.
+ * Los cursos convencionales mantienen el comportamiento histórico.
+ */
+export async function salirDeGrupo(
+  grupoId: string,
+  estudianteId: string,
+  esSemanaE = false
+): Promise<void> {
+  if (esSemanaE) {
+    const { error } = await supabase.rpc("salir_grupo_semana_e", {
+      p_grupo_id: grupoId,
+    });
+    if (!error) return;
+
+    // Compatibilidad durante el despliegue: si la migración 031 todavía no se
+    // ejecutó, al menos conserva el comportamiento anterior sin romper la UI.
+    if (error.code !== "PGRST202" && error.code !== "42883") throw error;
+  }
+
   const { error } = await supabase
     .from("grupo_miembros")
     .delete()

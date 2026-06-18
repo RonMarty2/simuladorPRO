@@ -9,6 +9,7 @@ import {
   Loader2,
   Plus,
   Search,
+  Trash2,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -68,7 +69,9 @@ export default function GruposEstudiante({
         obtenerMiGrupo(estudianteId, curso.id),
         obtenerPromedioEstudiante(estudianteId, curso.id),
       ]);
-      setGrupos(gs);
+      // Los equipos vacíos de pruebas anteriores no deben aparecer en Semana E.
+      // En cursos normales conservamos la lista histórica sin alteraciones.
+      setGrupos(curso.es_semana_e ? gs.filter((g) => g.miembros.length > 0) : gs);
       setMiGrupo(mg);
       setPromedioInd(prom?.promedio_nota ?? null);
       setError(null);
@@ -96,10 +99,20 @@ export default function GruposEstudiante({
   };
 
   const salir = async (grupoId: string) => {
+    const eliminaEquipo = curso.es_semana_e && miGrupoDetalle?.miembros.length === 1;
+    if (
+      eliminaEquipo &&
+      !window.confirm(
+        "Eres el último integrante. Al continuar se eliminarán este equipo y su proyecto de Semana E. ¿Deseas eliminarlos?"
+      )
+    ) {
+      return;
+    }
+
     setAccion(true);
     setError(null);
     try {
-      await salirDeGrupo(grupoId, estudianteId);
+      await salirDeGrupo(grupoId, estudianteId, curso.es_semana_e === true);
       await recargar();
     } catch (e: any) {
       setError(e?.message ?? String(e));
@@ -269,8 +282,16 @@ export default function GruposEstudiante({
                 disabled={accion}
                 className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive disabled:opacity-50"
               >
-                {accion ? <Loader2 className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
-                Salir
+                {accion ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : curso.es_semana_e && miGrupoDetalle.miembros.length === 1 ? (
+                  <Trash2 className="h-3 w-3" />
+                ) : (
+                  <LogOut className="h-3 w-3" />
+                )}
+                {curso.es_semana_e && miGrupoDetalle.miembros.length === 1
+                  ? "Eliminar equipo"
+                  : "Salir"}
               </button>
             </div>
           </div>

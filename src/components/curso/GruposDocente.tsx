@@ -24,6 +24,9 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
   const navigate = useNavigate();
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const gruposVisibles = curso.es_semana_e
+    ? grupos?.filter((grupo) => grupo.miembros.length > 0) ?? null
+    : grupos;
 
   // Config del proyecto grupal (la define el docente; los estudiantes crean los grupos)
   const [habilitado, setHabilitado] = useState(curso.grupo_habilitado ?? false);
@@ -234,9 +237,9 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
       )}
 
       {/* Lista de grupos */}
-      {grupos === null ? (
+      {gruposVisibles === null ? (
         <div className="text-xs text-muted-foreground">Cargando grupos…</div>
-      ) : grupos.length === 0 ? (
+      ) : gruposVisibles.length === 0 ? (
         <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
           {habilitado
             ? "Los estudiantes aún no crearon grupos. Cuando lo hagan, los verás acá."
@@ -244,7 +247,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {grupos.map((g) => (
+          {gruposVisibles.map((g) => (
             <GrupoFila key={g.id} grupo={g} onAbrir={abrirProyecto} onCambio={recargar} />
           ))}
         </div>
