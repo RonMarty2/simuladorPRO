@@ -50,11 +50,14 @@ function enModoStandalone(): boolean {
  * launch_handler:navigate-existing y el callback se procesa explícitamente
  * en `procesarCallbackOAuthSiAplica()` al inicializar el auth-store.
  */
-export async function iniciarSesionConGoogle() {
+export async function iniciarSesionConGoogle(opciones?: { volverA?: string }) {
   // En la URL agregamos un marcador para identificar el callback al volver.
   // Sirve al `procesarCallbackOAuthSiAplica()` para saber que tiene que
   // intercambiar el code aunque detectSessionInUrl no lo haya hecho solo.
-  const redirectTo = `${window.location.origin}/?oauth=1`;
+  // `volverA` permite mandarlo a una ruta específica después del login
+  // (ej. /semanae para auto-inscribirse al evento).
+  const ruta = opciones?.volverA ?? "/";
+  const redirectTo = `${window.location.origin}${ruta}?oauth=1`;
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
