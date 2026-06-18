@@ -88,14 +88,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Atajo de Semana E: alumnos del evento NO necesitan cuenta. */}
-        <Link
-          to="/semanae"
-          className="mb-4 flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
-        >
-          🎓 Entrar al evento Semana E (sin cuenta)
-        </Link>
-
         {/* Botón Google primero (opción recomendada) */}
         <BotonGoogle />
 
