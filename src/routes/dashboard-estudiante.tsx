@@ -494,8 +494,13 @@ export default function DashboardEstudiante() {
           );
         })}
 
-      {/* Proyectos sin curso (libres) */}
-      {!cargando && libres.length > 0 && (
+      {/* Proyectos sin curso (libres). Si el alumno está en al menos un curso
+          Semana E, escondemos esta sección para que el evento mantenga el foco:
+          en un Semana E el alumno no debería estar viendo restos de pruebas
+          viejas u otros proyectos sueltos. */}
+      {!cargando &&
+        libres.length > 0 &&
+        !inscripciones.some((i) => i.curso.es_semana_e) && (
         <section className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
