@@ -82,11 +82,12 @@ const ANIOS_PROYECTO = 5;
 
 // Anchos consistentes de columnas para que se alineen entre categorías
 const COLS_ANCHO = {
-  descripcion: "w-[20%]",
+  descripcion: "w-[18%]",
   unidad: "w-[8%]",
   cantidad: "w-[8%]",
   costo: "w-[11%]",
   total: "w-[12%]",
+  iva: "w-[9%]",
   vidaUtil: "w-[11%]",
   depAnio: "w-[9%]",
   valorResidual: "w-[12%]",
@@ -235,6 +236,7 @@ function SeccionCategoria({
     unidadMedida: string;
     cantidad: number;
     costoUnitario: number;
+    creditoFiscalIVA?: boolean;
     vidaUtilAnios: number | null;
   }) => void;
   onEditar: (id: string, cambios: any) => void;
@@ -364,6 +366,9 @@ function SeccionCategoria({
                     <th className={cn("p-1.5 text-right", COLS_ANCHO.total)}>
                       Total (Bs)
                     </th>
+                    <th className={cn("p-1.5 text-center", COLS_ANCHO.iva)}>
+                      Factura IVA
+                    </th>
                     <th className={cn("p-1.5 text-right", COLS_ANCHO.vidaUtil)}>
                       Vida útil
                     </th>
@@ -420,6 +425,17 @@ function SeccionCategoria({
                       </td>
                       <td className="p-1 text-right text-xs font-semibold">
                         {formatearBolivianos(it.costoTotal)}
+                      </td>
+                      <td className="p-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={it.creditoFiscalIVA ?? config.valor !== "terreno"}
+                          onChange={(e) =>
+                            onEditar(it.id, { creditoFiscalIVA: e.target.checked })
+                          }
+                          title="Con factura valida para computar credito fiscal IVA"
+                          className="h-3.5 w-3.5"
+                        />
                       </td>
                       <td className="p-1">
                         {sinDepreciacion ? (
@@ -576,6 +592,19 @@ function SeccionCategoria({
                         </label>
                       </div>
                     )}
+                    <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={it.creditoFiscalIVA ?? config.valor !== "terreno"}
+                        onChange={(e) =>
+                          onEditar(it.id, { creditoFiscalIVA: e.target.checked })
+                        }
+                        className="h-3.5 w-3.5"
+                      />
+                      <span>
+                        <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                      </span>
+                    </label>
                     <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-0.5 border-t border-border/50 pt-1.5 text-[11px]">
                       <span><span className="text-muted-foreground">Total:</span> <strong>{formatearBolivianos(it.costoTotal)}</strong></span>
                       {!sinDepreciacion && (
@@ -596,6 +625,7 @@ function SeccionCategoria({
                 unidadMedida: "und",
                 cantidad: 1,
                 costoUnitario: 0,
+                creditoFiscalIVA: config.valor !== "terreno",
                 vidaUtilAnios: sinDepreciacion ? null : config.vidaDefault,
               })
             }

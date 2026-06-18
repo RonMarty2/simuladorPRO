@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { BookOpen, GraduationCap, Hammer, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, BookOpen, GraduationCap, Hammer, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { guardarProyecto, listarCasosDelCurso, tomarCasoDelCurso } from "@/lib/proyecto-supabase";
@@ -95,10 +96,19 @@ export default function EmpezarProyecto() {
       ) : (
         !cargandoCasos &&
         casosDisponibles.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-center text-xs text-muted-foreground">
-            Tu docente todavía no publicó un proyecto individual para tu curso. Mientras tanto,
-            puedes trabajar el <strong>proyecto grupal</strong> desde tu panel (si tu curso tiene
-            grupos). Cuando el docente publique un caso, aparecerá acá.
+          <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-center text-xs text-muted-foreground space-y-3">
+            <p>
+              No tenés un proyecto activo cargado en esta pantalla. Tus proyectos viven en{" "}
+              <strong>Mi panel</strong>: ahí está tu grupo, el caso del curso (si el docente lo
+              publicó) y tu historial.
+            </p>
+            <Link
+              to="/estudiante"
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Volver a Mi panel
+            </Link>
           </div>
         )
       )}

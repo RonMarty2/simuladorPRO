@@ -25,6 +25,7 @@ import {
   calcularPuntoEquilibrio,
   calcularSensibilidad,
   simularMonteCarlo,
+  calcularTributosBolivia,
   calcularVAN,
   TASA_IUE,
 } from "@/lib/calculo-financiero";
@@ -38,13 +39,13 @@ export default function Paso9Resumen() {
 
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
 
-  // Colapso por sección del flujo de caja (todas CONTRAÍDAS por defecto; el
-  // usuario expande la que quiera ver).
+  // El IVA afecta caja, no resultado contable; por eso vive en ajustes de caja.
+  // Dejamos abiertos los bloques clave para que IT/IUE/IVA sean visibles al cargar.
   const [secAbierta, setSecAbierta] = useState<Record<string, boolean>>({
-    emerald: false,
+    emerald: true,
     rose: false,
-    violet: false,
-    sky: false,
+    violet: true,
+    sky: true,
   });
   const toggleSeccion = (k: string) =>
     setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
@@ -188,7 +189,7 @@ export default function Paso9Resumen() {
                 ? `✓ Por cada Bs de costo, ingresas Bs ${calc.indicadores.rbc.toFixed(2)}`
                 : "✗ Gastas más de lo que ingresas"
             }
-            tooltip="RBC = VP(beneficios) ÷ VP(costos), con los MISMOS flujos que el VAN.\n\nBeneficios = ventas + préstamo + valor residual + recuperación del capital de trabajo.\nCostos = inversión + operación + impuestos + intereses + amortización.\n\nPor eso siempre coincide con el VAN: si VAN > 0, RBC > 1."
+            tooltip="RBC = VP(beneficios) ÷ VP(costos), con los MISMOS flujos que el VAN.\n\nBeneficios = ventas + préstamo + valor residual + recuperación del capital de trabajo.\nCostos = inversión + operación + impuestos + IVA neto + intereses + amortización.\n\nPor eso siempre coincide con el VAN: si VAN > 0, RBC > 1."
             explicacion="Por cada Bs de costo (incluida la inversión), cuántos Bs de beneficio recibes en total (ventas + valor residual + recuperación de capital). Usa los mismos flujos que el VAN, así que nunca se contradicen: VAN positivo ⟺ RBC mayor a 1. Si está apenas por encima de 1, el proyecto es rentable pero ajustado."
           />
           <CardIndicador
@@ -270,15 +271,16 @@ export default function Paso9Resumen() {
             />
             {secAbierta.violet && (
               <>
-                <FilaFlujo label="= Utilidad antes de impuestos" valores={[0, ...calc.utilidadAAI]} destacada fila="violet" />
-                <FilaFlujo label="(-) Impuestos (IUE 25%)" valores={[0, ...calc.impuestos]} signo="-" fila="violet" />
+                <FilaFlujo label="(-) IT 3% sobre ingresos brutos" valores={[0, ...calc.it]} signo="-" fila="violet" />
+                <FilaFlujo label="= Utilidad antes de IUE" valores={[0, ...calc.utilidadAAI]} destacada fila="violet" />
+                <FilaFlujo label="(-) IUE 25% sobre utilidad" valores={[0, ...calc.iue]} signo="-" fila="violet" />
                 <FilaFlujo label="= Utilidad neta" valores={[0, ...calc.utilidadNeta]} destacada fila="violet" />
               </>
             )}
 
             {/* ── 4. AJUSTES A FLUJO DE CAJA (gris/azul) ─────────────── */}
             <FilaSeccion
-              label="4 · AJUSTES A FLUJO DE CAJA"
+              label="4 · AJUSTES A FLUJO DE CAJA / IVA"
               color="sky"
               abierta={secAbierta.sky}
               onToggle={() => toggleSeccion("sky")}
@@ -287,12 +289,19 @@ export default function Paso9Resumen() {
               <>
                 <FilaFlujo label="(+) Depreciación (se reintegra, no salió de caja)" valores={[0, ...calc.depreciacion]} signo="+" fila="sky" />
                 <FilaFlujo label="(-) Inversión inicial (activos fijos)" valores={[-calc.inversionInicial, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
+                {calc.ivaCreditoFiscalInversionInicial > 0 && (
+                  <FilaFlujo label="(-) IVA pagado en inversión con factura (recuperable)" valores={[-calc.ivaCreditoFiscalInversionInicial, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
+                )}
                 <FilaFlujo label="(-) Capital de trabajo" valores={[-calc.capitalTrabajo, 0, 0, 0, 0, 0]} signo="-" fila="sky" />
                 <FilaFlujo label="(+) Préstamo recibido" valores={[calc.montoPrestamo, 0, 0, 0, 0, 0]} signo="+" fila="sky" />
                 <FilaFlujo label="(-) Amortización de capital de la deuda" valores={[0, ...calc.amortizacion]} signo="-" fila="sky" />
                 {calc.reinversionPorAnio.some((r) => r > 0) && (
                   <FilaFlujo label="(-) Reinversión (reposición de activos de vida corta)" valores={[0, ...calc.reinversionPorAnio]} signo="-" fila="sky" />
                 )}
+                <FilaFlujo label="IVA débito fiscal (ventas con IVA)" valores={[0, ...calc.ivaDebitoFiscal]} fila="sky" />
+                <FilaFlujo label="IVA crédito fiscal del periodo (compras/gastos con factura)" valores={[calc.ivaCreditoFiscalInversionInicial, ...calc.ivaCreditoFiscal]} fila="sky" />
+                <FilaFlujo label="(-) IVA neto a pagar (débito - crédito disponible)" valores={[0, ...calc.ivaNetoPagar]} signo="-" fila="sky" />
+                <FilaFlujo label="Saldo crédito fiscal IVA acumulado" valores={[calc.ivaCreditoFiscalInversionInicial, ...calc.ivaSaldoCreditoFiscal]} fila="sky" />
                 <FilaFlujo label="(+) Valor residual (año 5)" valores={[0, 0, 0, 0, 0, calc.valorResidual]} signo="+" fila="sky" />
                 <FilaFlujo label="(+) Recuperación capital de trabajo (año 5)" valores={[0, 0, 0, 0, 0, calc.capitalTrabajo]} signo="+" fila="sky" />
               </>
@@ -357,7 +366,10 @@ export default function Paso9Resumen() {
                   calc.gastosAdmin[i] +
                   calc.gastosComerc[i] +
                   calc.personal[i] +
-                  calc.imprevistos[i],
+                  calc.imprevistos[i] +
+                  calc.it[i] +
+                  calc.iue[i] +
+                  calc.ivaNetoPagar[i],
               }))}
             >
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -755,19 +767,31 @@ function PanelMonteCarlo({
     void seed; // re-corre al cambiar la semilla
     const flujoMC = (facIngreso: number, facCosto: number): number[] => {
       const flujos: number[] = [calc.flujoCaja[0]];
+      let saldoCreditoFiscalIVA = calc.ivaCreditoFiscalInversionInicial;
       for (let i = 0; i < 5; i++) {
         const ing = calc.ingresos[i] * (1 + facIngreso);
-        const costOper =
+        const costosSinPersonal =
           (calc.costosProduccion[i] +
             calc.gastosAdmin[i] +
             calc.gastosComerc[i] +
-            calc.personal[i] +
             calc.imprevistos[i]) *
           (1 + facCosto);
+        const comprasGravadasIVA = calc.comprasGravadasIVA[i] * (1 + facCosto);
+        const ventasGravadasIVA = calc.ingresosGravadosIVA[i] * (1 + facIngreso);
+        const costOper = costosSinPersonal + calc.personal[i] * (1 + facCosto);
         const uOp = ing - costOper - calc.depreciacion[i];
-        const aai = uOp - calc.intereses[i];
-        const neta = aai - Math.max(0, aai) * TASA_IUE;
-        let fc = neta + calc.depreciacion[i] - calc.amortizacion[i];
+        const itEstimado = calc.it[i] * (1 + facIngreso);
+        const aai = uOp - itEstimado - calc.intereses[i];
+        const tributos = calcularTributosBolivia({
+          ingresosBrutos: ing,
+          ventasGravadasIVA,
+          comprasGravadasIVA,
+          utilidadAntesIUE: aai,
+          saldoCreditoFiscalIVAAnterior: saldoCreditoFiscalIVA,
+        });
+        saldoCreditoFiscalIVA = tributos.iva.saldoCreditoFiscal;
+        const neta = aai - tributos.iue;
+        let fc = neta + calc.depreciacion[i] - calc.amortizacion[i] - tributos.iva.ivaNetoPagar;
         if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
         flujos.push(fc);
       }
@@ -1072,16 +1096,39 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
     fCostoFijo: number
   ): number[] => {
     const flujos: number[] = [calc.flujoCaja[0]]; // año 0 = inversión, no cambia
+    let saldoCreditoFiscalIVA = calc.ivaCreditoFiscalInversionInicial;
     for (let i = 0; i < 5; i++) {
       const ing = calc.ingresos[i] * (1 + fPrecio) * (1 + fCantidad);
+      const ventasGravadasIVA =
+        calc.ingresosGravadosIVA[i] * (1 + fPrecio) * (1 + fCantidad);
       const cVar = calc.costosProduccion[i] * (1 + fCantidad) * (1 + fCostoVar);
-      const cFijo =
-        (calc.gastosAdmin[i] + calc.gastosComerc[i] + calc.personal[i]) * (1 + fCostoFijo);
+      const gastosGravados =
+        (calc.gastosAdmin[i] + calc.gastosComerc[i]) * (1 + fCostoFijo);
+      const personal = calc.personal[i] * (1 + fCostoFijo);
+      const cFijo = gastosGravados + personal;
       const imprev = (cVar + cFijo) * pct;
+      const comprasGravadasIVA =
+        calc.costosProduccionConCreditoIVA[i] * (1 + fCantidad) * (1 + fCostoVar) +
+        (calc.gastosAdminConCreditoIVA[i] + calc.gastosComercConCreditoIVA[i]) *
+          (1 + fCostoFijo);
       const uOp = ing - cVar - cFijo - imprev - calc.depreciacion[i];
-      const aai = uOp - calc.intereses[i];
-      const neta = aai - Math.max(0, aai) * TASA_IUE;
-      let fc = neta + calc.depreciacion[i] - calc.amortizacion[i] - calc.reinversionPorAnio[i];
+      const itEstimado = calc.it[i] * (1 + fPrecio) * (1 + fCantidad);
+      const aai = uOp - itEstimado - calc.intereses[i];
+      const tributos = calcularTributosBolivia({
+        ingresosBrutos: ing,
+        ventasGravadasIVA,
+        comprasGravadasIVA,
+        utilidadAntesIUE: aai,
+        saldoCreditoFiscalIVAAnterior: saldoCreditoFiscalIVA,
+      });
+      saldoCreditoFiscalIVA = tributos.iva.saldoCreditoFiscal;
+      const neta = aai - tributos.iue;
+      let fc =
+        neta +
+        calc.depreciacion[i] -
+        calc.amortizacion[i] -
+        calc.reinversionPorAnio[i] -
+        tributos.iva.ivaNetoPagar;
       if (i === 4) fc += calc.valorResidual + calc.capitalTrabajo;
       flujos.push(fc);
     }

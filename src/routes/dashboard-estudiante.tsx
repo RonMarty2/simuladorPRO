@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
+import { DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   buscarCursoPorCodigo,
+  desinscribirseDeCurso,
   inscribirseACurso,
   listarMisInscripciones,
   type Curso,
@@ -17,6 +18,7 @@ import {
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import GruposEstudiante from "@/components/curso/GruposEstudiante";
 import PodioCurso from "@/components/curso/PodioCurso";
+import BannerSemanaE from "@/components/curso/BannerSemanaE";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
@@ -54,6 +56,10 @@ export default function DashboardEstudiante() {
   const [crearEnCurso, setCrearEnCurso] = useState<Curso | null>(null);
   const [casosPorCurso, setCasosPorCurso] = useState<Record<string, Proyecto[]>>({});
   const [tomandoCaso, setTomandoCaso] = useState<string | null>(null);
+  /** Curso para el que el alumno ya confirmó "Salir" — pinta el botón de
+   *  confirmar. Se limpia al cancelar o al terminar. */
+  const [confirmandoSalida, setConfirmandoSalida] = useState<string | null>(null);
+  const [saliendoDeCurso, setSaliendoDeCurso] = useState<string | null>(null);
 
   const recargar = () => {
     if (!user) return;
@@ -98,6 +104,21 @@ export default function DashboardEstudiante() {
       localStorage.setItem("simulador.nuevoProyecto", cursoId ?? "");
     } catch {}
     navigate("/construir");
+  };
+
+  const salirDelCurso = async (cursoId: string) => {
+    if (!user) return;
+    setSaliendoDeCurso(cursoId);
+    setError(null);
+    try {
+      await desinscribirseDeCurso({ curso_id: cursoId, estudiante_id: user.id });
+      setConfirmandoSalida(null);
+      recargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo salir del curso.");
+    } finally {
+      setSaliendoDeCurso(null);
+    }
   };
 
   const inscribirse = async (e: React.FormEvent) => {
@@ -222,7 +243,7 @@ export default function DashboardEstudiante() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {PUEDE_CREAR_LIBRE && (
                     <button
                       onClick={() => nuevo(curso.id)}
@@ -233,11 +254,56 @@ export default function DashboardEstudiante() {
                     </button>
                   )}
                   <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
+                  {confirmandoSalida === curso.id ? (
+                    <span className="flex items-center gap-1 text-[10px]">
+                      <button
+                        onClick={() => salirDelCurso(curso.id)}
+                        disabled={saliendoDeCurso === curso.id}
+                        className="flex items-center gap-1 rounded-md bg-rose-600 px-2 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+                      >
+                        {saliendoDeCurso === curso.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <DoorOpen className="h-3 w-3" />
+                        )}
+                        Salir igual
+                      </button>
+                      <button
+                        onClick={() => setConfirmandoSalida(null)}
+                        className="rounded-md border border-border bg-card px-2 py-1 hover:bg-secondary"
+                      >
+                        Cancelar
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmandoSalida(curso.id)}
+                      title={`Salir del curso. Tus entregas, proyectos y grupos quedan guardados. Si volvés a ingresar el código ${curso.codigo} recuperás todo.`}
+                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:border-rose-900 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                    >
+                      <DoorOpen className="h-3 w-3" />
+                      Salir
+                    </button>
+                  )}
                 </div>
               </div>
+              {confirmandoSalida === curso.id && (
+                <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  <strong>¿Salir del curso?</strong> Tus <strong>entregas, proyectos y grupos
+                  quedan guardados</strong>. Cuando quieras volver, ingresá el código{" "}
+                  <code className="rounded bg-amber-200 px-1 font-mono dark:bg-amber-900">
+                    {curso.codigo}
+                  </code>{" "}
+                  y vas a recuperar TODO tu historial.
+                </div>
+              )}
+
+              {/* Banner Semana E (si aplica) — reemplaza al podio en modo evento. */}
+              {curso.es_semana_e && <BannerSemanaE curso={curso} />}
 
               {/* ── 🏆 PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
-              {user && (
+              {/* En modo Semana E no se muestra: no hay notas, no hay competencia. */}
+              {user && !curso.es_semana_e && (
                 <div className="mb-3">
                   <PodioCurso
                     cursoId={curso.id}
@@ -247,6 +313,27 @@ export default function DashboardEstudiante() {
                 </div>
               )}
 
+              {/* Visibilidad por sección según lo que el docente habilitó.
+                   Regla: si el docente desactivó algo PERO el alumno ya tiene
+                   datos en esa sección, igual la mostramos (para no esconderle
+                   su trabajo). */}
+              {(() => {
+                const hayCasos = casosDisponibles.length > 0 || casosTomados.length > 0;
+                const muestraIndividual =
+                  curso.permite_proyecto_libre !== false || proyectosLibres.length > 0;
+                const muestraGrupal = curso.grupo_habilitado === true;
+                const muestraNada = !hayCasos && !muestraIndividual && !muestraGrupal;
+                return (
+                  <>
+                    {muestraNada && (
+                      <div className="rounded-md border border-dashed border-border bg-card/50 p-3 text-center text-xs text-muted-foreground">
+                        Tu docente todavía no habilitó ninguna actividad en este curso. Cuando
+                        publique casos, habilite el proyecto individual o el grupal, vas a verlo
+                        acá.
+                      </div>
+                    )}
+                    {hayCasos && (
+              <>
               {/* ── 1. 🎓 CASO DEL CURSO (emerald) — contraído por defecto ── */}
               <details className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-100/60 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-900/30">
@@ -321,6 +408,10 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
+              </>
+                    )}
+                    {muestraIndividual && (
+              <>
               {/* ── 2. 📁 CASO INDIVIDUAL (sky) — contraído por defecto ──── */}
               <details className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
@@ -369,6 +460,10 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
+              </>
+                    )}
+                    {muestraGrupal && (
+              <>
               {/* ── 3. 🤝 CASO GRUPAL (violet) — contraído por defecto ───── */}
               <details className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
@@ -390,12 +485,22 @@ export default function DashboardEstudiante() {
                   {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
                 </div>
               </details>
+              </>
+                    )}
+                  </>
+                );
+              })()}
             </section>
           );
         })}
 
-      {/* Proyectos sin curso (libres) */}
-      {!cargando && libres.length > 0 && (
+      {/* Proyectos sin curso (libres). Si el alumno está en al menos un curso
+          Semana E, escondemos esta sección para que el evento mantenga el foco:
+          en un Semana E el alumno no debería estar viendo restos de pruebas
+          viejas u otros proyectos sueltos. */}
+      {!cargando &&
+        libres.length > 0 &&
+        !inscripciones.some((i) => i.curso.es_semana_e) && (
         <section className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
             <FolderOpen className="h-4 w-4 text-muted-foreground" />

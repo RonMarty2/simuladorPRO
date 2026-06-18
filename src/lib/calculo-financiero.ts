@@ -3,7 +3,7 @@
  *
  * Biblioteca de funciones PURAS (mismo input → mismo output, sin efectos
  * secundarios) que calcula todo lo financiero del simulador. Respeta el
- * contexto boliviano: aportes patronales 30.37%, IUE 25%, IT 3%.
+ * contexto boliviano: aportes patronales 30.37%, IVA 13%, IT 3%, IUE 25%.
  *
  * No incluir aquí lógica de UI, llamadas a Supabase, ni acceso a stores.
  */
@@ -11,6 +11,19 @@
 // ============================================================================
 // CONSTANTES BOLIVIA (2025)
 // ============================================================================
+
+export function redondear(value: number, decimals = 2): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+export function pctToDecimal(pct: number): number {
+  return pct / 100;
+}
+
+export function decimalToPct(decimal: number): number {
+  return decimal * 100;
+}
 
 export interface TasasAportesPatronales {
   riesgoProfesional: number;
@@ -158,6 +171,96 @@ export function calcularIT(ingresosBrutos: number): number {
   return Math.max(0, ingresosBrutos) * TASA_IT;
 }
 
+export interface ParamsIVA {
+  ventasGravadas: number;
+  comprasGravadas: number;
+  saldoCreditoFiscalAnterior?: number;
+  tasaIVA?: number;
+}
+
+export interface ResultadoIVA {
+  debitoFiscal: number;
+  creditoFiscalPeriodo: number;
+  creditoFiscalDisponible: number;
+  ivaNetoPagar: number;
+  saldoCreditoFiscal: number;
+}
+
+/**
+ * IVA Bolivia para simulacion academica:
+ * - Debito fiscal: IVA de ventas gravadas.
+ * - Credito fiscal: IVA de compras/gastos gravados mas saldo anterior.
+ * - Si el credito excede al debito, queda saldo a favor para el siguiente periodo.
+ */
+export function calcularIVA(params: ParamsIVA): ResultadoIVA {
+  const tasaIVA = params.tasaIVA ?? TASA_IVA;
+  const ventasGravadas = Math.max(0, params.ventasGravadas);
+  const comprasGravadas = Math.max(0, params.comprasGravadas);
+  const saldoAnterior = Math.max(0, params.saldoCreditoFiscalAnterior ?? 0);
+  const debitoFiscal = ventasGravadas * tasaIVA;
+  const creditoFiscalPeriodo = comprasGravadas * tasaIVA;
+  const creditoFiscalDisponible = creditoFiscalPeriodo + saldoAnterior;
+  const ivaNetoPagar = Math.max(0, debitoFiscal - creditoFiscalDisponible);
+  const saldoCreditoFiscal = Math.max(0, creditoFiscalDisponible - debitoFiscal);
+
+  return {
+    debitoFiscal: redondear(debitoFiscal),
+    creditoFiscalPeriodo: redondear(creditoFiscalPeriodo),
+    creditoFiscalDisponible: redondear(creditoFiscalDisponible),
+    ivaNetoPagar: redondear(ivaNetoPagar),
+    saldoCreditoFiscal: redondear(saldoCreditoFiscal),
+  };
+}
+
+export interface ParamsTributosBolivia {
+  ingresosBrutos: number;
+  ventasGravadasIVA?: number;
+  comprasGravadasIVA: number;
+  utilidadAntesIUE: number;
+  saldoCreditoFiscalIVAAnterior?: number;
+  tasaIVA?: number;
+  tasaIT?: number;
+  tasaIUE?: number;
+}
+
+export interface ResultadoTributosBolivia {
+  iva: ResultadoIVA;
+  it: number;
+  iue: number;
+  totalTributosResultado: number;
+  totalTributosCaja: number;
+}
+
+/**
+ * Bloque tributario base para el Regimen General en Bolivia.
+ *
+ * El IVA se trata como impuesto trasladado: afecta caja por el neto a pagar,
+ * pero no como gasto del estado de resultados. IT e IUE si se consideran
+ * impuestos/gastos del periodo para la evaluacion academica.
+ */
+export function calcularTributosBolivia(
+  params: ParamsTributosBolivia
+): ResultadoTributosBolivia {
+  const tasaIT = params.tasaIT ?? TASA_IT;
+  const tasaIUE = params.tasaIUE ?? TASA_IUE;
+  const iva = calcularIVA({
+    ventasGravadas: params.ventasGravadasIVA ?? params.ingresosBrutos,
+    comprasGravadas: params.comprasGravadasIVA,
+    saldoCreditoFiscalAnterior: params.saldoCreditoFiscalIVAAnterior,
+    tasaIVA: params.tasaIVA,
+  });
+  const it = Math.max(0, params.ingresosBrutos) * tasaIT;
+  const iue = Math.max(0, params.utilidadAntesIUE) * tasaIUE;
+
+  return {
+    iva,
+    it: redondear(it),
+    iue: redondear(iue),
+    totalTributosResultado: redondear(it + iue),
+    totalTributosCaja: redondear(iva.ivaNetoPagar + it + iue),
+  };
+}
+
 // ============================================================================
 // FINANCIAMIENTO — Sistema de amortización francés (cuota fija)
 // ============================================================================
@@ -240,6 +343,30 @@ export function calcularWACC(params: ParamsWACC): number {
   );
 }
 
+export interface ParamsWACCPorMontos {
+  capitalPropio: number;
+  deuda: number;
+  tasaCapitalPropio: number;
+  tasaDeuda: number;
+  tasaImpositiva: number;
+}
+
+/**
+ * WACC calculado desde montos absolutos. Es equivalente a calcular los pesos
+ * D/V y E/V manualmente, pero evita errores de ponderacion en consumidores API.
+ */
+export function calcularWACCPorMontos(params: ParamsWACCPorMontos): number {
+  const total = params.capitalPropio + params.deuda;
+  if (total <= 0) return 0;
+  return calcularWACC({
+    porcentajeDeuda: params.deuda / total,
+    porcentajeCapital: params.capitalPropio / total,
+    tasaInteresDeuda: params.tasaDeuda,
+    costoOportunidadAccionista: params.tasaCapitalPropio,
+    tasaImpuesto: params.tasaImpositiva,
+  });
+}
+
 // ============================================================================
 // EVALUACIÓN DE PROYECTOS — VAN, TIR, Payback, IR, RBC
 // ============================================================================
@@ -257,8 +384,8 @@ export function calcularVAN(flujos: number[], tasaDescuento: number): number {
 }
 
 /**
- * Tasa Interna de Retorno por Newton-Raphson.
- * Devuelve NaN si no converge.
+ * Tasa Interna de Retorno por Newton-Raphson con fallback por biseccion.
+ * Devuelve 0 cuando no existe una TIR interpretable para evitar NaN en UI.
  */
 export function calcularTIR(
   flujos: number[],
@@ -266,6 +393,10 @@ export function calcularTIR(
   tolerancia = 1e-7,
   maxIteraciones = 200
 ): number {
+  const hayPositivos = flujos.some((f) => f > 0);
+  const hayNegativos = flujos.some((f) => f < 0);
+  if (flujos.length < 2 || !hayPositivos || !hayNegativos) return 0;
+
   let tasa = estimacionInicial;
   for (let it = 0; it < maxIteraciones; it++) {
     let f = 0;
@@ -277,13 +408,36 @@ export function calcularTIR(
         fp += (-t * flujos[t]) / (denom * (1 + tasa));
       }
     }
-    if (Math.abs(fp) < 1e-12) return NaN;
+    if (Math.abs(fp) < 1e-12) break;
     const nuevaTasa = tasa - f / fp;
-    if (!isFinite(nuevaTasa)) return NaN;
+    if (!isFinite(nuevaTasa)) break;
     if (Math.abs(nuevaTasa - tasa) < tolerancia) return nuevaTasa;
     tasa = nuevaTasa;
   }
-  return tasa;
+
+  // Fallback robusto migrado desde WEBAPP: si Newton no converge, intenta
+  // biseccion en un rango amplio de tasas reales [-99%, 1000%].
+  const vanAt = (r: number) =>
+    flujos.reduce((acc, flujo, t) => acc + flujo / Math.pow(1 + r, t), 0);
+  let lo = -0.99;
+  let hi = 10;
+  let vanLo = vanAt(lo);
+  const vanHi = vanAt(hi);
+  if (!Number.isFinite(vanLo) || !Number.isFinite(vanHi) || vanLo * vanHi > 0) {
+    return Number.isFinite(tasa) ? tasa : 0;
+  }
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    const vanMid = vanAt(mid);
+    if (Math.abs(vanMid) < tolerancia || (hi - lo) / 2 < tolerancia) return mid;
+    if (vanMid * vanLo < 0) {
+      hi = mid;
+    } else {
+      lo = mid;
+      vanLo = vanMid;
+    }
+  }
+  return 0;
 }
 
 /**
@@ -388,6 +542,113 @@ export function calcularServicioDeuda(
   return promedio / cuotaAnualTotal;
 }
 
+export type MetodoAmortizacion = "frances" | "aleman" | "americano";
+
+export interface ParamsAmortizacionGenerica {
+  capital: number;
+  tasaPeriodo: number;
+  numPeriodos: number;
+  metodo: MetodoAmortizacion;
+}
+
+export interface CuotaAmortizacionGenerica {
+  periodo: number;
+  saldoInicial: number;
+  cuota: number;
+  interes: number;
+  amortizacionCapital: number;
+  saldoFinal: number;
+}
+
+export interface ResultadoAmortizacionGenerica {
+  cuotas: CuotaAmortizacionGenerica[];
+  totalIntereses: number;
+  totalPagado: number;
+}
+
+/**
+ * Tabla de amortizacion por periodo para tres metodos academicos. La UI actual
+ * sigue usando calcularTablaAmortizacion() para prestamos mensuales franceses.
+ */
+export function calcularAmortizacionGenerica(
+  params: ParamsAmortizacionGenerica
+): ResultadoAmortizacionGenerica {
+  const { capital, tasaPeriodo, numPeriodos, metodo } = params;
+  if (capital <= 0 || tasaPeriodo < 0 || numPeriodos <= 0) {
+    return { cuotas: [], totalIntereses: 0, totalPagado: 0 };
+  }
+
+  const cuotas: CuotaAmortizacionGenerica[] = [];
+  let saldo = capital;
+  let totalIntereses = 0;
+  let totalPagado = 0;
+
+  if (metodo === "frances") {
+    const factor = Math.pow(1 + tasaPeriodo, numPeriodos);
+    const cuotaFija =
+      tasaPeriodo === 0 ? capital / numPeriodos : (capital * tasaPeriodo * factor) / (factor - 1);
+    for (let periodo = 1; periodo <= numPeriodos; periodo++) {
+      const interes = saldo * tasaPeriodo;
+      const amortizacionCapital = cuotaFija - interes;
+      const saldoFinal = Math.max(0, saldo - amortizacionCapital);
+      cuotas.push({
+        periodo,
+        saldoInicial: redondear(saldo),
+        cuota: redondear(cuotaFija),
+        interes: redondear(interes),
+        amortizacionCapital: redondear(amortizacionCapital),
+        saldoFinal: redondear(saldoFinal),
+      });
+      totalIntereses += interes;
+      totalPagado += cuotaFija;
+      saldo = saldoFinal;
+    }
+  } else if (metodo === "aleman") {
+    const amortizacionFija = capital / numPeriodos;
+    for (let periodo = 1; periodo <= numPeriodos; periodo++) {
+      const interes = saldo * tasaPeriodo;
+      const cuota = amortizacionFija + interes;
+      const saldoFinal = Math.max(0, saldo - amortizacionFija);
+      cuotas.push({
+        periodo,
+        saldoInicial: redondear(saldo),
+        cuota: redondear(cuota),
+        interes: redondear(interes),
+        amortizacionCapital: redondear(amortizacionFija),
+        saldoFinal: redondear(saldoFinal),
+      });
+      totalIntereses += interes;
+      totalPagado += cuota;
+      saldo = saldoFinal;
+    }
+  } else {
+    const interesPeriodico = capital * tasaPeriodo;
+    for (let periodo = 1; periodo <= numPeriodos; periodo++) {
+      const esUltimo = periodo === numPeriodos;
+      const cuota = esUltimo ? interesPeriodico + capital : interesPeriodico;
+      const amortizacionCapital = esUltimo ? capital : 0;
+      const saldoFinal = esUltimo ? 0 : saldo;
+      cuotas.push({
+        periodo,
+        saldoInicial: redondear(saldo),
+        cuota: redondear(cuota),
+        interes: redondear(interesPeriodico),
+        amortizacionCapital: redondear(amortizacionCapital),
+        saldoFinal: redondear(saldoFinal),
+      });
+      totalIntereses += interesPeriodico;
+      totalPagado += cuota;
+      saldo = saldoFinal;
+    }
+  }
+
+  return {
+    cuotas,
+    totalIntereses: redondear(totalIntereses),
+    totalPagado: redondear(totalPagado),
+  };
+}
+
 // ============================================================================
 // FLUJO DE CAJA
 // ============================================================================
@@ -402,10 +663,22 @@ export interface ParamsFlujoCaja {
   interesDeuda: number;
   amortizacionDeuda: number;
   tasaImpuesto: number;
+  comprasGravadasIVA?: number;
+  saldoCreditoFiscalIVAAnterior?: number;
+  incluirIT?: boolean;
+  incluirIVA?: boolean;
+  tasaIT?: number;
+  tasaIVA?: number;
 }
 
 export interface FlujoCajaAnual {
   utilidadAntesImpuestos: number;
+  it: number;
+  iue: number;
+  ivaDebitoFiscal: number;
+  ivaCreditoFiscal: number;
+  ivaNetoPagar: number;
+  ivaSaldoCreditoFiscal: number;
   impuestos: number;
   utilidadNeta: number;
   flujoCaja: number;
@@ -422,12 +695,14 @@ export interface FlujoCajaAnual {
  *   - Imprevistos
  *   - Depreciación               ← gasto no efectivo
  *   = Utilidad operativa
+ *   - IT                         ← 3% sobre ingresos brutos
  *   - Intereses de deuda
- *   = Utilidad antes de impuestos
- *   - Impuestos (IUE)
+ *   = Utilidad antes de IUE
+ *   - IUE                        ← 25% sobre utilidad
  *   = Utilidad neta
  *   + Depreciación               ← se reintegra (no salió de caja)
  *   - Amortización capital deuda  ← sí sale de caja
+ *   - IVA neto a pagar            ← debito fiscal - credito fiscal
  *   = Flujo de caja
  */
 export function calcularFlujoCajaAnual(params: ParamsFlujoCaja): FlujoCajaAnual {
@@ -437,11 +712,51 @@ export function calcularFlujoCajaAnual(params: ParamsFlujoCaja): FlujoCajaAnual 
     params.costosComercializacion +
     params.imprevistos;
   const utilidadOperativa = params.ingresos - costosTotales - params.depreciacion;
-  const utilidadAntesImpuestos = utilidadOperativa - params.interesDeuda;
-  const impuestos = Math.max(0, utilidadAntesImpuestos) * params.tasaImpuesto;
-  const utilidadNeta = utilidadAntesImpuestos - impuestos;
-  const flujoCaja = utilidadNeta + params.depreciacion - params.amortizacionDeuda;
-  return { utilidadAntesImpuestos, impuestos, utilidadNeta, flujoCaja };
+  const it =
+    params.incluirIT === false
+      ? 0
+      : Math.max(0, params.ingresos) * (params.tasaIT ?? TASA_IT);
+  const utilidadAntesImpuestos = utilidadOperativa - it - params.interesDeuda;
+  const iue = Math.max(0, utilidadAntesImpuestos) * params.tasaImpuesto;
+  const impuestos = it + iue;
+  const utilidadNeta = utilidadAntesImpuestos - iue;
+  const iva =
+    params.incluirIVA === false
+      ? {
+          debitoFiscal: 0,
+          creditoFiscalPeriodo: 0,
+          creditoFiscalDisponible: 0,
+          ivaNetoPagar: 0,
+          saldoCreditoFiscal: 0,
+        }
+      : calcularIVA({
+          ventasGravadas: params.ingresos,
+          comprasGravadas:
+            params.comprasGravadasIVA ??
+            params.costosProduccion +
+              params.costosAdministracion +
+              params.costosComercializacion +
+              params.imprevistos,
+          saldoCreditoFiscalAnterior: params.saldoCreditoFiscalIVAAnterior,
+          tasaIVA: params.tasaIVA,
+        });
+  const flujoCaja =
+    utilidadNeta +
+    params.depreciacion -
+    params.amortizacionDeuda -
+    iva.ivaNetoPagar;
+  return {
+    utilidadAntesImpuestos,
+    it: redondear(it),
+    iue: redondear(iue),
+    ivaDebitoFiscal: iva.debitoFiscal,
+    ivaCreditoFiscal: iva.creditoFiscalPeriodo,
+    ivaNetoPagar: iva.ivaNetoPagar,
+    ivaSaldoCreditoFiscal: iva.saldoCreditoFiscal,
+    impuestos: redondear(impuestos),
+    utilidadNeta,
+    flujoCaja,
+  };
 }
 
 // ============================================================================

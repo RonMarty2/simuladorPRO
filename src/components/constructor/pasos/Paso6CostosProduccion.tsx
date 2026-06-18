@@ -4,6 +4,7 @@ import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { migrarProducto } from "@/lib/proyecto-factory";
+import { defaultCreditoFiscalIVACostoDirecto } from "@/lib/iva-proyecto";
 import CantidadFraccionInput from "../CantidadFraccionInput";
 import InputNumero from "../InputNumero";
 import type { CategoriaCostoDirecto, CostoDirecto, Sector } from "@/types/proyecto";
@@ -177,6 +178,7 @@ export default function Paso6CostosProduccion() {
                   unidadMedida: "",
                   cantidadPorUnidad: 1,
                   costoUnitario: 0,
+                  creditoFiscalIVA: defaultCreditoFiscalIVACostoDirecto(categoria),
                 })
               }
               onEditar={editar}
@@ -449,6 +451,7 @@ function BloqueProducto({
                         </th>
                         <th className="p-1.5 text-right">Costo unit. (Bs)</th>
                         <th className="p-1.5 text-right">Subtotal/u</th>
+                        <th className="p-1.5 text-center">Factura IVA</th>
                         <th
                           className="p-1.5 text-center text-[9px] font-bold uppercase tracking-wide text-foreground/60"
                           colSpan={5}
@@ -458,7 +461,7 @@ function BloqueProducto({
                         <th className="w-8 p-1.5"></th>
                       </tr>
                       <tr className="border-b border-border text-[9px]">
-                        <th colSpan={5}></th>
+                        <th colSpan={6}></th>
                         {[1, 2, 3, 4, 5].map((a) => (
                           <th key={a} className="bg-secondary/40 p-1 text-right">
                             Año {a}
@@ -518,6 +521,20 @@ function BloqueProducto({
                           </td>
                           <td className="p-1 text-right font-semibold">
                             {formatearBolivianos(it.cantidadPorUnidad * it.costoUnitario)}
+                          </td>
+                          <td className="p-1 text-center">
+                            <input
+                              type="checkbox"
+                              checked={
+                                it.creditoFiscalIVA ??
+                                defaultCreditoFiscalIVACostoDirecto(it.categoria)
+                              }
+                              onChange={(e) =>
+                                onEditar(it.id, { creditoFiscalIVA: e.target.checked })
+                              }
+                              title="Con factura valida para computar credito fiscal IVA"
+                              className="h-3.5 w-3.5"
+                            />
                           </td>
                           {[0, 1, 2, 3, 4].map((i) => {
                             const totalUnidades =
@@ -606,6 +623,22 @@ function BloqueProducto({
                           />
                         </label>
                       </div>
+                      <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={
+                            it.creditoFiscalIVA ??
+                            defaultCreditoFiscalIVACostoDirecto(it.categoria)
+                          }
+                          onChange={(e) =>
+                            onEditar(it.id, { creditoFiscalIVA: e.target.checked })
+                          }
+                          className="h-3.5 w-3.5"
+                        />
+                        <span>
+                          <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                        </span>
+                      </label>
                       <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">
                         <span className="text-muted-foreground">Subtotal por unidad:</span>{" "}
                         <strong>{formatearBolivianos(it.cantidadPorUnidad * it.costoUnitario)}</strong>

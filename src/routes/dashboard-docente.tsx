@@ -17,6 +17,7 @@ import EntregasCurso from "@/components/docente/EntregasCurso";
 import GruposDocente from "@/components/curso/GruposDocente";
 import CasosCurso from "@/components/curso/CasosCurso";
 import PodioCurso from "@/components/curso/PodioCurso";
+import ConfigEscenariosCurso from "@/components/docente/ConfigEscenariosCurso";
 import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
@@ -28,6 +29,7 @@ export default function DashboardDocente() {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [mostrarFormSemanaE, setMostrarFormSemanaE] = useState(false);
   const [cursoExpandido, setCursoExpandido] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function DashboardDocente() {
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);
     setMostrarForm(false);
+    setMostrarFormSemanaE(false);
   };
 
   const onCursoEliminado = (cursoId: string) => {
@@ -59,14 +62,23 @@ export default function DashboardDocente() {
             Hola {perfil?.nombre} — gestiona tus cursos y ve cómo van tus estudiantes.
           </p>
         </div>
-        {!mostrarForm && (
-          <button
-            onClick={() => setMostrarForm(true)}
-            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Crear curso
-          </button>
+        {!mostrarForm && !mostrarFormSemanaE && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setMostrarForm(true)}
+              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Crear curso
+            </button>
+            <button
+              onClick={() => setMostrarFormSemanaE(true)}
+              className="flex items-center gap-1.5 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              title="Crea un evento Semana E aparte: sin notas, con grupos, guiado paso a paso. Independiente de tus cursos normales."
+            >
+              🎓 Crear Semana E
+            </button>
+          </div>
         )}
       </div>
 
@@ -100,6 +112,14 @@ export default function DashboardDocente() {
         />
       )}
 
+      {mostrarFormSemanaE && user && (
+        <FormCrearSemanaE
+          docenteId={user.id}
+          onCreado={onCursoCreado}
+          onCancelar={() => setMostrarFormSemanaE(false)}
+        />
+      )}
+
       {cargando && <div className="text-sm text-muted-foreground">Cargando cursos…</div>}
 
       {!cargando && cursos.length === 0 && !mostrarForm && (
@@ -121,6 +141,143 @@ export default function DashboardDocente() {
         />
       ))}
     </div>
+  );
+}
+
+/**
+ * Form acotado para crear un EVENTO Semana E. Más simple que el form normal:
+ * solo pide lo esencial (nombre, materia, paralelo, universidad), y deja todo
+ * lo demás pre-configurado para el caso de uso del evento:
+ *  - es_semana_e = true (oculta entregas/notas, muestra banner).
+ *  - permite_proyecto_libre = false (todos van por grupo).
+ *  - simulacion_grupal = true, simulacion_caso/individual = false.
+ *  - modo simulacion automatico.
+ */
+function FormCrearSemanaE({
+  docenteId,
+  onCreado,
+  onCancelar,
+}: {
+  docenteId: string;
+  onCreado: (c: Curso) => void;
+  onCancelar: () => void;
+}) {
+  const [nombre, setNombre] = useState("Semana E · Viabilidad de proyectos");
+  const [materia, setMateria] = useState("Evaluación de proyectos");
+  const [paralelo, setParalelo] = useState("");
+  const [universidad, setUniversidad] = useState("");
+  const [cupoGrupo, setCupoGrupo] = useState(6);
+  const [creando, setCreando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreando(true);
+    setError(null);
+    try {
+      const curso = await crearCurso({
+        docente_id: docenteId,
+        nombre,
+        materia,
+        paralelo: paralelo || undefined,
+        universidad: universidad || undefined,
+        frecuencia_turnos: "mensual",
+        modo_simulacion: "automatico",
+        permite_proyecto_libre: false,
+        simulacion_caso_curso: false,
+        simulacion_individual: false,
+        simulacion_grupal: true,
+        es_semana_e: true,
+        // Grupos LISTOS al crear: el alumno entra y ya puede formar/unirse.
+        grupo_habilitado: true,
+        grupo_cupo_max: Math.max(1, Math.min(50, cupoGrupo)),
+        grupo_modelo: "unidades",
+        grupo_version: "v2",
+      });
+      onCreado(curso);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al crear el evento");
+    } finally {
+      setCreando(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="space-y-3 rounded-lg border-2 border-fuchsia-300 bg-gradient-to-br from-fuchsia-50/70 via-violet-50/70 to-sky-50/70 p-4 dark:border-fuchsia-900 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30"
+    >
+      <div>
+        <h2 className="text-sm font-bold text-fuchsia-900 dark:text-fuchsia-200">
+          🎓 Crear evento Semana E
+        </h2>
+        <p className="mt-0.5 text-[11px] text-fuchsia-900/80 dark:text-fuchsia-200/80">
+          Curso especial sin calificaciones, con banner de bienvenida y checklist paso a paso.
+          Los alumnos trabajan en grupo. Independiente de tus otros cursos.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <CampoTexto label="Nombre del evento" valor={nombre} onChange={setNombre} required />
+        <CampoTexto label="Materia / tema" valor={materia} onChange={setMateria} required />
+        <CampoTexto
+          label="Paralelo (opcional)"
+          valor={paralelo}
+          onChange={setParalelo}
+          placeholder="Ej: Mañana, Tarde, A, B…"
+        />
+        <CampoTexto
+          label="Universidad (opcional)"
+          valor={universidad}
+          onChange={setUniversidad}
+          placeholder="Ej: UCATEC, UMSS, UMSA…"
+        />
+        <label className="text-sm font-medium">
+          Cupo máximo por grupo
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={cupoGrupo}
+            onChange={(e) => setCupoGrupo(Number(e.target.value) || 1)}
+            className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+      </div>
+
+      <div className="rounded-md border border-fuchsia-200 bg-white/60 p-2 text-[11px] text-fuchsia-900 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200">
+        <strong>Configuración fija del evento</strong> (no se puede tocar — esa es la idea):
+        <ul className="ml-4 mt-1 list-disc space-y-0.5">
+          <li>Sin entregas, sin notas, sin podio.</li>
+          <li>Trabajo en grupos OBLIGATORIO — los grupos ya quedan habilitados.</li>
+          <li>Cada alumno arma el proyecto desde cero (no hay caso del docente).</li>
+          <li>Banner con checklist de 5 pasos para guiar a los alumnos.</li>
+        </ul>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {error}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={creando || !nombre || !materia}
+          className="rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {creando ? "Creando evento…" : "🎓 Crear evento Semana E"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-md border border-border px-3 py-2 text-sm hover:bg-secondary"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -424,7 +581,11 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador">("ranking");
+  // En cursos normales arrancamos en Ranking. En Semana E ese tab está oculto,
+  // arrancamos en Inscritos (lo más útil al inicio del evento: ver quién entró).
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios">(
+    curso.es_semana_e ? "inscritos" : "ranking"
+  );
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -455,7 +616,7 @@ function CursoCard({
   };
 
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
-  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador";
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
   const irA = (tab: Vista) => {
     setVista(tab);
     if (!expandido) onToggle();
@@ -472,7 +633,14 @@ function CursoCard({
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
+            {curso.es_semana_e && (
+              <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                🎓 Semana E
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {curso.materia}
             {curso.paralelo && ` · Paralelo ${curso.paralelo}`} · {curso.frecuencia_turnos} ·{" "}
@@ -498,29 +666,47 @@ function CursoCard({
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <button onClick={() => irA("podio")} className={claseTab("podio")}>
-            <Trophy className="mr-1 inline h-3 w-3" />
-            Podio
-          </button>
-          <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
-            <Trophy className="mr-1 inline h-3 w-3" />
-            Ranking
-          </button>
+          {/* En modo Semana E ocultamos lo que no aplica al evento: Podio,
+              Ranking, Entregas, Casos y Lanzar situación. Quedan solo los
+              tabs que el docente realmente necesita para administrar el
+              evento: Inscritos (ver quién entró), Grupos (formar/ver
+              equipos) y Escenarios (config del análisis de sensibilidad). */}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("podio")} className={claseTab("podio")}>
+              <Trophy className="mr-1 inline h-3 w-3" />
+              Podio
+            </button>
+          )}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("ranking")} className={claseTab("ranking")}>
+              <Trophy className="mr-1 inline h-3 w-3" />
+              Ranking
+            </button>
+          )}
           <button onClick={() => irA("inscritos")} className={claseTab("inscritos")}>
             <Users className="mr-1 inline h-3 w-3" />
             Inscritos{inscritos ? ` (${inscritos.length})` : ""}
           </button>
-          <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
-            📥 Entregas
-          </button>
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
+              📥 Entregas
+            </button>
+          )}
           <button onClick={() => irA("grupos")} className={claseTab("grupos")}>
             🤝 Grupos
           </button>
-          <button onClick={() => irA("casos")} className={claseTab("casos")}>
-            🎓 Casos
-          </button>
-          <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
-            🎲 Lanzar situación
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("casos")} className={claseTab("casos")}>
+              🎓 Casos
+            </button>
+          )}
+          {!curso.es_semana_e && (
+            <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
+              🎲 Lanzar situación
+            </button>
+          )}
+          <button onClick={() => irA("escenarios")} className={claseTab("escenarios")}>
+            📊 Escenarios
           </button>
           {expandido && (
             <button
@@ -607,6 +793,8 @@ function CursoCard({
           {vista === "casos" && <CasosCurso cursoId={curso.id} />}
 
           {vista === "lanzador" && <LanzadorEventos cursoId={curso.id} />}
+
+          {vista === "escenarios" && <ConfigEscenariosCurso cursoId={curso.id} />}
 
           {vista === "podio" && (
             <PodioCurso

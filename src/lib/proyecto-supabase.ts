@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { registrarActividad } from "./proyecto-actividad-supabase";
 import type {
   Entrega,
   EstadoEntrega,
@@ -375,14 +376,20 @@ export async function entregarProyecto(
   proyecto: Proyecto,
   indicadores: IndicadoresEntrega,
   referencia: { van: number; tir: number; wacc: number; payback: number } | null,
-  pasoEntregado: number | null = null
+  pasoEntregado: number | null = null,
+  /** ID del estudiante que ENTREGA. En proyectos grupales no es lo mismo que
+   *  `proyecto.estudiante_id` (ese es el creador del grupo). El RLS exige
+   *  `estudiante_id = auth.uid()`, así que el llamador pasa SU id. */
+  estudianteIdSubmitter?: string
 ): Promise<Entrega> {
   if (!proyecto.curso_id) {
     throw new Error("El proyecto no está asociado a un curso. No se puede entregar.");
   }
 
   // 1. Calcular el próximo número de intento para este (proyecto, paso).
-  // Cada paso tiene su propia secuencia de intentos.
+  // Cada paso tiene su propia secuencia de intentos. Para proyectos grupales,
+  // los intentos son COMPARTIDOS entre todos los miembros (filtramos por
+  // proyecto_id, no por estudiante_id).
   let q = supabase
     .from("entregas")
     .select("numero_intento")
@@ -396,10 +403,12 @@ export async function entregarProyecto(
   // 2. Calcular sugerencia automática
   const sugerencia = obtenerSugerenciaAutomatica(indicadores, referencia);
 
-  // 3. Insertar
+  // 3. Insertar. `estudiante_id` debe ser el del usuario que ENTREGA (RLS lo
+  // exige). En proyectos grupales eso es el miembro que sube, no el creador
+  // del grupo. Si no se pasó, caemos al dueño (libre/entrega_estudiante).
   const filaEntrega = {
     proyecto_id: proyecto.id,
-    estudiante_id: proyecto.estudiante_id,
+    estudiante_id: estudianteIdSubmitter ?? proyecto.estudiante_id,
     curso_id: proyecto.curso_id,
     numero_intento: proximoIntento,
     paso_entregado: pasoEntregado,
@@ -420,16 +429,46 @@ export async function entregarProyecto(
     .select()
     .single();
   if (error) throw error;
+  // Audit: registramos que el usuario entregó (para el panel del docente en grupales).
+  // Best-effort: si falla, no rompemos la entrega.
+  const submitter = estudianteIdSubmitter ?? proyecto.estudiante_id;
+  void registrarActividad(proyecto.id, submitter, "entrego", pasoEntregado ?? 0);
   return data as Entrega;
 }
 
-/** Lista las entregas de un estudiante (su propio historial). */
+/** Lista las entregas del alumno: las que él subió + las del proyecto grupal
+ *  de cada grupo en el que es miembro (aunque las haya subido un compañero).
+ *  Requiere migración 024 para que la RLS deje leer las grupales ajenas. */
 export async function listarMisEntregas(estudianteId: string): Promise<Entrega[]> {
-  const { data, error } = await supabase
+  // 1. Proyectos grupales de los grupos donde soy miembro.
+  const { data: misMembresias } = await supabase
+    .from("grupo_miembros")
+    .select("grupo_id")
+    .eq("estudiante_id", estudianteId);
+  const grupoIds = (misMembresias ?? []).map((m: any) => m.grupo_id as string);
+
+  let proyectoGrupalIds: string[] = [];
+  if (grupoIds.length > 0) {
+    const { data: proyGr } = await supabase
+      .from("proyectos")
+      .select("id")
+      .in("grupo_id", grupoIds);
+    proyectoGrupalIds = (proyGr ?? []).map((p: any) => p.id as string);
+  }
+
+  // 2. Entregas: las mías (estudiante_id) ∪ las del proyecto grupal de mis grupos.
+  let q = supabase
     .from("entregas")
     .select("*")
-    .eq("estudiante_id", estudianteId)
     .order("entregado_en", { ascending: false });
+  if (proyectoGrupalIds.length > 0) {
+    q = q.or(
+      `estudiante_id.eq.${estudianteId},proyecto_id.in.(${proyectoGrupalIds.join(",")})`
+    );
+  } else {
+    q = q.eq("estudiante_id", estudianteId);
+  }
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Entrega[];
 }

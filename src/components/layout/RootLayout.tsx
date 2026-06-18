@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   BookOpenCheck,
+  ChartScatter,
   GraduationCap,
   Hammer,
   BookOpen,
@@ -25,6 +26,7 @@ const enlacesEstudiante = [
   // "Construir proyecto" se quitó del menú: el estudiante entra al constructor
   // haciendo clic en un proyecto de su panel (evita la redundancia).
   { to: "/simular", label: "Simular", icon: PlayCircle },
+  { to: "/escenarios", label: "Escenarios", icon: ChartScatter },
   { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
   { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
@@ -35,6 +37,7 @@ const enlacesEstudiante = [
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
+  { to: "/escenarios", label: "Escenarios", icon: ChartScatter },
   { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];

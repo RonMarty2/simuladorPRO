@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, Users, FolderOpen, Loader2, Save } from "lucide-react";
+import { Trash2, Users, FolderOpen, Loader2, Save, Activity, ChevronDown, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import { actualizarPesosCurso, actualizarConfigGrupal, type Curso } from "@/lib/cursos-supabase";
@@ -10,6 +10,11 @@ import {
   calificarGrupo,
   type GrupoConMiembros,
 } from "@/lib/grupos-supabase";
+import {
+  listarActividadProyecto,
+  resumirActividadPorMiembro,
+  type ResumenActividadMiembro,
+} from "@/lib/proyecto-actividad-supabase";
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import type { VersionProyecto } from "@/types/proyecto";
 import InputNumero from "@/components/constructor/InputNumero";
@@ -55,6 +60,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
         grupo_version: version,
         grupo_consigna: consigna.trim() || null,
       });
+      await recargar();
       setCfgOk(true);
       setTimeout(() => setCfgOk(false), 1500);
     } catch (e: any) {
@@ -369,6 +375,141 @@ function GrupoFila({
         </button>
         {ok && <span className="text-[11px] text-emerald-600">Guardado ✓</span>}
       </div>
+
+      {/* Actividad por miembro — quién trabajó realmente en el proyecto compartido. */}
+      <PanelActividadGrupo grupo={grupo} />
     </div>
   );
+}
+
+function PanelActividadGrupo({ grupo }: { grupo: GrupoConMiembros }) {
+  const [abierto, setAbierto] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [resumen, setResumen] = useState<ResumenActividadMiembro[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const cargar = async () => {
+    if (!grupo.proyecto_id) return;
+    setCargando(true);
+    setError(null);
+    try {
+      const actividad = await listarActividadProyecto(grupo.proyecto_id);
+      const miembrosLite = grupo.miembros.map((m) => ({
+        id: m.estudiante_id,
+        nombre: m.nombre,
+        apellido: m.apellido,
+        email: m.email,
+      }));
+      setResumen(resumirActividadPorMiembro(actividad, miembrosLite));
+    } catch (e: any) {
+      setError(e?.message ?? "No se pudo cargar la actividad.");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const toggle = () => {
+    const next = !abierto;
+    setAbierto(next);
+    if (next && resumen === null) void cargar();
+  };
+
+  if (!grupo.proyecto_id) return null;
+
+  return (
+    <div className="mt-2 border-t border-border/50 pt-2">
+      <button
+        onClick={toggle}
+        className="flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-secondary/40"
+      >
+        {abierto ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        <Activity className="h-3 w-3" />
+        Actividad del grupo · quién trabajó en el proyecto
+        {!abierto && <span className="ml-auto text-[10px] opacity-60">click para ver</span>}
+      </button>
+
+      {abierto && (
+        <div className="mt-1.5 space-y-1 rounded-md border border-border bg-background/40 p-2">
+          {cargando ? (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Cargando actividad…
+            </div>
+          ) : error ? (
+            <div className="text-[11px] text-destructive">{error}</div>
+          ) : resumen === null || resumen.length === 0 ? (
+            <div className="text-[11px] text-muted-foreground">Sin datos.</div>
+          ) : (
+            <>
+              <p className="text-[10px] italic text-muted-foreground">
+                Una fila por miembro. "Sin actividad" = nunca abrió ni guardó el
+                proyecto. Si la migración 025 no fue aplicada todavía, todos van
+                a aparecer sin actividad.
+              </p>
+              <table className="w-full text-[11px]">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    <th className="text-left font-medium">Miembro</th>
+                    <th className="text-left font-medium">Última edición</th>
+                    <th className="text-center font-medium">Días activos</th>
+                    <th className="text-center font-medium">Entregó</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumen.map((m) => {
+                    const sinActividad = m.ultimaEdicion === null && !m.entrego;
+                    return (
+                      <tr
+                        key={m.usuarioId}
+                        className={sinActividad ? "text-muted-foreground" : ""}
+                      >
+                        <td className="py-0.5">
+                          {`${m.nombre} ${m.apellido}`.trim() || m.email}
+                        </td>
+                        <td className="py-0.5">
+                          {m.ultimaEdicion ? (
+                            <>
+                              {m.ultimaEdicion.paso > 0 ? `Paso ${m.ultimaEdicion.paso} · ` : ""}
+                              {hacerRelativo(m.ultimaEdicion.momento)}
+                            </>
+                          ) : (
+                            <span className="italic">sin actividad</span>
+                          )}
+                        </td>
+                        <td className="py-0.5 text-center tabular-nums">{m.diasActivos}</td>
+                        <td className="py-0.5 text-center">
+                          {m.entrego ? (
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                              sí
+                            </span>
+                          ) : (
+                            <span className="text-[10px]">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function hacerRelativo(iso: string): string {
+  const ahora = Date.now();
+  const t = new Date(iso).getTime();
+  const dif = Math.max(0, ahora - t);
+  const min = Math.floor(dif / 60_000);
+  if (min < 1) return "hace instantes";
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "ayer";
+  if (d < 30) return `hace ${d} días`;
+  return new Date(iso).toLocaleDateString("es-BO");
 }

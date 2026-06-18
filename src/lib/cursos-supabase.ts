@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { normalizarUniversidad } from "./utils";
+import type { EscenariosConfig } from "./escenarios";
 
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
 export type EstadoCurso = "activo" | "cerrado" | "archivado";
@@ -42,6 +43,10 @@ export interface Curso {
   simulacion_caso_curso?: boolean;
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
+  /** Config de escenarios económicos por curso (FASE A.2 del Modo Escenarios). */
+  escenarios_config?: EscenariosConfig | null;
+  /** Si TRUE, el curso es un evento "Semana E" (sin entregas/notas, UI simple). */
+  es_semana_e?: boolean;
   creado_en: string;
 }
 
@@ -56,10 +61,31 @@ export async function actualizarConfigGrupal(
     grupo_consigna: string | null;
   }
 ): Promise<void> {
+  const cupoMax = Math.max(1, Math.min(50, cfg.grupo_cupo_max));
   const { error } = await conTimeout(
-    supabase.from("cursos").update(cfg).eq("id", cursoId),
+    supabase.from("cursos").update({ ...cfg, grupo_cupo_max: cupoMax }).eq("id", cursoId),
     10000,
     "guardando la configuración del proyecto grupal"
+  );
+  if (error) throw error;
+
+  const { error: errorGrupos } = await conTimeout(
+    supabase.from("grupos").update({ cupo_max: cupoMax }).eq("curso_id", cursoId),
+    10000,
+    "actualizando el cupo de los grupos existentes"
+  );
+  if (errorGrupos) throw errorGrupos;
+}
+
+/** Marca/desmarca el curso como evento "Semana E". */
+export async function actualizarEsSemanaE(
+  cursoId: string,
+  es_semana_e: boolean
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase.from("cursos").update({ es_semana_e }).eq("id", cursoId),
+    10000,
+    "actualizando modo Semana E"
   );
   if (error) throw error;
 }
@@ -90,6 +116,25 @@ export async function actualizarTiposSimulables(
     supabase.from("cursos").update(cfg).eq("id", cursoId),
     10000,
     "guardando tipos simulables"
+  );
+  if (error) throw error;
+}
+
+/**
+ * Guarda la config de escenarios económicos por curso (Modo Escenarios A.2).
+ * Si se pasa `null`, vuelve a los defaults del código.
+ */
+export async function actualizarEscenariosConfig(
+  cursoId: string,
+  config: EscenariosConfig | null
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase
+      .from("cursos")
+      .update({ escenarios_config: config })
+      .eq("id", cursoId),
+    10000,
+    "guardando la configuración de escenarios"
   );
   if (error) throw error;
 }
@@ -189,6 +234,13 @@ export async function crearCurso(params: {
   simulacion_caso_curso?: boolean;
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
+  es_semana_e?: boolean;
+  // Config opcional de grupos al crear (útil para "Crear Semana E" que los
+  // habilita de una; en cursos normales el docente los configura después).
+  grupo_habilitado?: boolean;
+  grupo_cupo_max?: number;
+  grupo_modelo?: string;
+  grupo_version?: string;
 }): Promise<Curso> {
   const universidad = normalizarUniversidad(params.universidad);
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
@@ -211,6 +263,11 @@ export async function crearCurso(params: {
           simulacion_caso_curso: params.simulacion_caso_curso ?? true,
           simulacion_individual: params.simulacion_individual ?? false,
           simulacion_grupal: params.simulacion_grupal ?? true,
+          es_semana_e: params.es_semana_e ?? false,
+          grupo_habilitado: params.grupo_habilitado ?? false,
+          grupo_cupo_max: params.grupo_cupo_max ?? 4,
+          grupo_modelo: params.grupo_modelo ?? "unidades",
+          grupo_version: params.grupo_version ?? "v2",
           codigo,
         })
         .select()
@@ -237,6 +294,17 @@ export async function eliminarCurso(cursoId: string): Promise<void> {
     "borrando curso"
   );
   if (error) throw error;
+}
+
+/** Lee un curso por id. Si el usuario no tiene RLS para verlo, devuelve null. */
+export async function obtenerCursoPorId(cursoId: string): Promise<Curso | null> {
+  const { data, error } = await supabase
+    .from("cursos")
+    .select("*")
+    .eq("id", cursoId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Curso | null) ?? null;
 }
 
 export async function buscarCursoPorCodigo(codigo: string): Promise<Curso | null> {
@@ -274,6 +342,27 @@ export async function inscribirseACurso(params: {
     }),
     10000,
     "inscribiéndote al curso"
+  );
+  if (error) throw error;
+}
+
+/**
+ * Saca al estudiante del curso. NO borra sus entregas, ni su proyecto, ni su
+ * membresía a grupos — solo el row de `inscripciones`. Si vuelve a inscribirse
+ * con el mismo código, recupera todo el historial intacto.
+ */
+export async function desinscribirseDeCurso(params: {
+  curso_id: string;
+  estudiante_id: string;
+}): Promise<void> {
+  const { error } = await conTimeout(
+    supabase
+      .from("inscripciones")
+      .delete()
+      .eq("curso_id", params.curso_id)
+      .eq("estudiante_id", params.estudiante_id),
+    10000,
+    "saliendo del curso"
   );
   if (error) throw error;
 }

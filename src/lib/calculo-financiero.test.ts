@@ -15,8 +15,10 @@ import {
   calcularGAO,
   calcularGAT,
   calcularIR,
+  calcularIVA,
   calcularIT,
   calcularIUE,
+  calcularAmortizacionGenerica,
   calcularPayback,
   calcularPaybackDescontado,
   calcularPuntoEquilibrio,
@@ -24,9 +26,11 @@ import {
   calcularSensibilidad,
   calcularTIR,
   calcularTablaAmortizacion,
+  calcularTributosBolivia,
   calcularVAN,
   calcularValorResidual,
   calcularWACC,
+  calcularWACCPorMontos,
   proyectarConCrecimiento,
 } from "./calculo-financiero";
 
@@ -80,6 +84,57 @@ describe("calcularIUE", () => {
 describe("calcularIT", () => {
   it("ingresos Bs 200.000 → IT Bs 6.000 (3%)", () => {
     expect(calcularIT(200000)).toBe(6000);
+  });
+});
+
+describe("calcularIVA", () => {
+  it("calcula debito fiscal, credito fiscal y neto a pagar", () => {
+    const r = calcularIVA({
+      ventasGravadas: 20000,
+      comprasGravadas: 15000,
+    });
+    expect(r.debitoFiscal).toBe(2600);
+    expect(r.creditoFiscalPeriodo).toBe(1950);
+    expect(r.ivaNetoPagar).toBe(650);
+    expect(r.saldoCreditoFiscal).toBe(0);
+  });
+
+  it("arrastra saldo de credito fiscal cuando el credito supera al debito", () => {
+    const r = calcularIVA({
+      ventasGravadas: 10000,
+      comprasGravadas: 20000,
+      saldoCreditoFiscalAnterior: 100,
+    });
+    expect(r.ivaNetoPagar).toBe(0);
+    expect(r.saldoCreditoFiscal).toBe(1400);
+  });
+});
+
+describe("calcularTributosBolivia", () => {
+  it("integra IVA, IT e IUE sin mezclar caja y resultado", () => {
+    const r = calcularTributosBolivia({
+      ingresosBrutos: 200000,
+      comprasGravadasIVA: 100000,
+      utilidadAntesIUE: 50000,
+    });
+    expect(r.it).toBe(6000);
+    expect(r.iue).toBe(12500);
+    expect(r.iva.ivaNetoPagar).toBe(13000);
+    expect(r.totalTributosResultado).toBe(18500);
+    expect(r.totalTributosCaja).toBe(31500);
+  });
+
+  it("permite que IVA use ventas gravadas distintas a ingresos brutos", () => {
+    const r = calcularTributosBolivia({
+      ingresosBrutos: 200000,
+      ventasGravadasIVA: 50000,
+      comprasGravadasIVA: 10000,
+      utilidadAntesIUE: 0,
+    });
+    expect(r.it).toBe(6000);
+    expect(r.iva.debitoFiscal).toBe(6500);
+    expect(r.iva.creditoFiscalPeriodo).toBe(1300);
+    expect(r.iva.ivaNetoPagar).toBe(5200);
   });
 });
 
@@ -175,6 +230,17 @@ describe("calcularWACC", () => {
     });
     expect(cerca(wacc, 0.18)).toBe(true);
   });
+
+  it("WACC por montos coincide con WACC por porcentajes", () => {
+    const porMontos = calcularWACCPorMontos({
+      capitalPropio: 60000,
+      deuda: 40000,
+      tasaCapitalPropio: 0.18,
+      tasaDeuda: 0.1,
+      tasaImpositiva: 0.25,
+    });
+    expect(cerca(porMontos, 0.138)).toBe(true);
+  });
 });
 
 // ============================================================================
@@ -227,6 +293,47 @@ describe("calcularPayback", () => {
   });
 });
 
+describe("calcularPaybackDescontado", () => {
+  it("calcula recuperacion descontada dentro del horizonte", () => {
+    const pb = calcularPaybackDescontado([-1000, 400, 400, 400, 400], 0.1);
+    expect(pb).not.toBeNull();
+    expect(pb!).toBeGreaterThan(3);
+    expect(pb!).toBeLessThan(4);
+  });
+
+  it("retorna -1 cuando no recupera", () => {
+    expect(calcularPaybackDescontado([-1000, 50, 50, 50], 0.1)).toBe(-1);
+  });
+});
+
+describe("calcularPuntoEquilibrio", () => {
+  it("calcula unidades, monto y margen", () => {
+    const pe = calcularPuntoEquilibrio(12000, 50, 30);
+    expect(pe.unidades).toBe(600);
+    expect(pe.ingresoBs).toBe(30000);
+    expect(pe.margenContribucionUnitario).toBe(20);
+  });
+
+  it("retorna infinito si no hay margen de contribucion", () => {
+    const pe = calcularPuntoEquilibrio(1000, 10, 12);
+    expect(pe.unidades).toBe(Infinity);
+    expect(pe.ingresoBs).toBe(Infinity);
+  });
+});
+
+describe("calcularAmortizacionGenerica", () => {
+  it("soporta metodo aleman con amortizacion fija", () => {
+    const r = calcularAmortizacionGenerica({
+      capital: 10000,
+      tasaPeriodo: 0.1,
+      numPeriodos: 4,
+      metodo: "aleman",
+    });
+    expect(r.cuotas).toHaveLength(4);
+    expect(r.cuotas.every((c) => cerca(c.amortizacionCapital, 2500))).toBe(true);
+  });
+});
+
 describe("calcularIR", () => {
   it("IR > 1 → proyecto rentable", () => {
     const ir = calcularIR([-100000, 30000, 30000, 30000, 30000, 30000], 0.10);
@@ -265,14 +372,16 @@ describe("calcularFlujoCajaAnual", () => {
       tasaImpuesto: 0.25,
     });
     // utilidad operativa = 500k - 290k - 20k = 190k
-    // utilidad antes imp = 190k - 15k = 175k
-    // impuestos = 43.75k
-    // utilidad neta = 131.25k
-    // flujo = 131.25k + 20k - 25k = 126.25k
-    expect(cerca(r.utilidadAntesImpuestos, 175000)).toBe(true);
-    expect(cerca(r.impuestos, 43750)).toBe(true);
-    expect(cerca(r.utilidadNeta, 131250)).toBe(true);
-    expect(cerca(r.flujoCaja, 126250)).toBe(true);
+    // IT = 15k; utilidad antes IUE = 190k - 15k IT - 15k intereses = 160k
+    // IUE = 40k; IVA neto caja = 65k debito - 37.7k credito = 27.3k
+    // flujo = 120k + 20k - 25k - 27.3k = 87.7k
+    expect(cerca(r.it, 15000)).toBe(true);
+    expect(cerca(r.utilidadAntesImpuestos, 160000)).toBe(true);
+    expect(cerca(r.iue, 40000)).toBe(true);
+    expect(cerca(r.ivaNetoPagar, 27300)).toBe(true);
+    expect(cerca(r.impuestos, 55000)).toBe(true);
+    expect(cerca(r.utilidadNeta, 120000)).toBe(true);
+    expect(cerca(r.flujoCaja, 87700)).toBe(true);
   });
 
   it("pérdidas no generan impuestos negativos", () => {
@@ -288,7 +397,10 @@ describe("calcularFlujoCajaAnual", () => {
       tasaImpuesto: 0.25,
     });
     expect(r.utilidadAntesImpuestos).toBeLessThan(0);
-    expect(r.impuestos).toBe(0);
+    expect(r.iue).toBe(0);
+    expect(r.impuestos).toBe(3000);
+    expect(r.ivaNetoPagar).toBe(0);
+    expect(r.ivaSaldoCreditoFiscal).toBe(13000);
   });
 });
 

@@ -1,10 +1,10 @@
-import { proyectarPublicidad, proyectarSuscriptores } from "@/lib/calculo-financiero";
+import { proyectarPublicidad, proyectarSuscriptores } from "./calculo-financiero";
 import type {
   ItemInversion,
   Producto,
   Proyecto,
   VersionProyecto,
-} from "@/types/proyecto";
+} from "../types/proyecto";
 
 /**
  * Migra un producto antiguo al shape actual.
@@ -30,6 +30,7 @@ export function migrarProducto(prod: any): Producto {
     id: prod.id,
     nombre: prod.nombre,
     unidadMedida: prod.unidadMedida,
+    aplicaIVA: prod.aplicaIVA ?? true,
     cantidades,
     precios,
     precioVenta: prod.precioVenta,
