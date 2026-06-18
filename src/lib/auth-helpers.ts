@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { normalizarUniversidad } from "./utils";
+import { nombrePerfilEsProvisional } from "./perfil";
 import type { DatosRegistro, Perfil } from "@/types/usuario";
 
 export async function registrarUsuario(datos: DatosRegistro) {
@@ -195,6 +196,27 @@ export async function actualizarMiPerfil(
   if (error) throw error;
 }
 
+/** Guarda el nombre elegido al entrar por primera vez a Semana E. */
+export async function confirmarNombreSemanaE(
+  userId: string,
+  datos: { nombre: string; apellido?: string }
+): Promise<void> {
+  const nombre = datos.nombre.trim();
+  const apellido = datos.apellido?.trim() ?? "";
+  if (nombre.length < 2) {
+    throw new Error("Escribí un nombre de al menos 2 caracteres.");
+  }
+
+  await actualizarMiPerfil(userId, { nombre, apellido });
+
+  // La marca vive en Auth metadata para que la pregunta aparezca una sola vez
+  // sin agregar una columna específica del evento a la tabla perfiles.
+  const { error } = await supabase.auth.updateUser({
+    data: { semana_e_nombre_confirmado: true },
+  });
+  if (error) throw error;
+}
+
 /**
  * Si el perfil tiene nombre vacío o el default "Sin nombre", lo sincroniza
  * con los datos que vienen en la metadata de Google OAuth.
@@ -211,10 +233,7 @@ export async function sincronizarNombreConGoogle(
   const apellidoActual = perfilActual.apellido?.trim() ?? "";
 
   // Solo sincronizar si el nombre actual es vacío o el default
-  const nombreEsDefault =
-    !nombreActual ||
-    nombreActual === "Sin nombre" ||
-    nombreActual.toLowerCase() === perfilActual.email.split("@")[0].toLowerCase();
+  const nombreEsDefault = nombrePerfilEsProvisional(perfilActual);
 
   if (!nombreEsDefault) return;
 
@@ -238,37 +257,16 @@ export async function sincronizarNombreConGoogle(
   });
 }
 
-/**
- * Flujo "Semana E sin cuenta": crea un usuario anónimo en Supabase y lo
- * inscribe automáticamente al curso Semana E indicado. El alumno entra al
- * evento sin tener que registrarse ni recordar un código.
- *
- * El user anon es válido para RLS (`auth.uid()` devuelve su UUID) y persiste
- * mientras el navegador conserve la sesión (localStorage).
- *
- * Requisitos del lado de Supabase:
- *   1. Authentication → Providers → Anonymous: encendido.
- *   2. Migración 028 aplicada (policies que dejan al anon inscribirse a
- *      cursos Semana E).
- */
+/** Inscribe la sesión de Google actual al evento Semana E activo. */
 export async function entrarAEventoSemanaE(opciones?: {
   cursoId?: string;
-  nombreVisible?: string;
 }): Promise<{ userId: string; cursoId: string }> {
-  // 1. Sign in anónimo. Si ya hay sesión, no creamos otra.
-  let userId: string;
+  // 1. Semana E usa una cuenta Google persistente. No creamos usuarios
+  // anónimos acá: así nadie vuelve a terminar con un nombre Invitado-xxxxxx.
   const { data: sesionActual } = await supabase.auth.getSession();
-  if (sesionActual.session?.user) {
-    userId = sesionActual.session.user.id;
-  } else {
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      throw new Error(
-        `No se pudo crear el invitado: ${error.message}. ¿Está activado "Anonymous sign-ins" en Supabase?`
-      );
-    }
-    if (!data.user) throw new Error("Supabase no devolvió usuario anónimo.");
-    userId = data.user.id;
+  const userId = sesionActual.session?.user?.id;
+  if (!userId) {
+    throw new Error("Inicia sesión con Google para entrar a Semana E.");
   }
 
   // 2. Encontrar el curso Semana E. Si el llamador pasó un cursoId, usamos
@@ -280,6 +278,7 @@ export async function entrarAEventoSemanaE(opciones?: {
       .from("cursos")
       .select("id")
       .eq("es_semana_e", true)
+      .eq("estado", "activo")
       .order("creado_en", { ascending: false })
       .limit(1);
     cursoId = cursos?.[0]?.id ?? null;
@@ -288,22 +287,15 @@ export async function entrarAEventoSemanaE(opciones?: {
     throw new Error("No hay ningún evento Semana E activo. Pedile al docente que cree uno.");
   }
 
-  // 3. Setear nombre visible del invitado (para que aparezca algo más amable
-  // que "Estudiante a1b2c3" en los listados de grupo).
-  const nombre = opciones?.nombreVisible?.trim() || `Invitado-${userId.slice(0, 6)}`;
-  try {
-    await supabase.from("perfiles").update({ nombre }).eq("id", userId);
-  } catch {
-    // No bloqueamos si falla — el alumno entra igual.
-  }
-
-  // 4. Auto-inscripción al curso. Si ya estaba inscripto (porque el usuario
-  // refrescó), ignoramos el error de unique constraint.
+  // 3. Auto-inscripción al curso. Si ya estaba inscripto (porque el usuario
+  // refrescó), ignoramos el error de unique constraint. Cualquier otro error
+  // se muestra acá, antes de que termine convertido en un error RLS al crear
+  // el grupo.
   const { error: errIns } = await supabase
     .from("inscripciones")
     .insert({ curso_id: cursoId, estudiante_id: userId });
   if (errIns && !errIns.message.toLowerCase().includes("duplicate")) {
-    console.warn("Inscripción a Semana E falló:", errIns.message);
+    throw new Error(`No se pudo inscribirte al evento: ${errIns.message}`);
   }
 
   return { userId, cursoId };

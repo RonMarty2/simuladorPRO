@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2, Sparkles } from "lucide-react";
-import { entrarAEventoSemanaE, iniciarSesionConGoogle } from "@/lib/auth-helpers";
+import {
+  confirmarNombreSemanaE,
+  entrarAEventoSemanaE,
+  iniciarSesionConGoogle,
+} from "@/lib/auth-helpers";
+import { nombrePerfilEsProvisional } from "@/lib/perfil";
 import { useAuthStore } from "@/stores/auth-store";
 
 /**
@@ -19,10 +24,20 @@ export default function SemanaEEntrada() {
   const perfil = useAuthStore((s) => s.perfil);
   const inicializado = useAuthStore((s) => s.inicializado);
   const inicializar = useAuthStore((s) => s.inicializar);
+  const recargarPerfil = useAuthStore((s) => s.recargarPerfil);
 
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
   const [autoInscribiendo, setAutoInscribiendo] = useState(false);
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const necesitaConfirmarNombre =
+    !!user &&
+    !!perfil &&
+    (user.user_metadata?.semana_e_nombre_confirmado !== true ||
+      nombrePerfilEsProvisional(perfil));
 
   // Asegurar que el store de auth esté inicializado para detectar sesión
   // existente (ej. al volver del callback de Google).
@@ -30,11 +45,27 @@ export default function SemanaEEntrada() {
     inicializar();
   }, [inicializar]);
 
+  // La primera vez sugerimos el nombre de Google, pero el alumno puede elegir
+  // cómo quiere aparecer. Nunca precargamos el viejo "Invitado-xxxxxx".
+  useEffect(() => {
+    if (!user || !perfil || !necesitaConfirmarNombre) return;
+    const metadata = user.user_metadata ?? {};
+    const nombreCompleto = String(metadata.name ?? "").trim();
+    const nombreGoogle =
+      String(metadata.given_name ?? "").trim() || nombreCompleto.split(" ")[0] || "";
+    const apellidoGoogle =
+      String(metadata.family_name ?? "").trim() ||
+      nombreCompleto.split(" ").slice(1).join(" ").trim();
+
+    setNombre(nombrePerfilEsProvisional(perfil) ? nombreGoogle : perfil.nombre.trim());
+    setApellido(apellidoGoogle || perfil.apellido?.trim() || "");
+  }, [user?.id, perfil?.nombre, perfil?.apellido, necesitaConfirmarNombre]);
+
   // Si el usuario YA tiene sesión cuando llega a /semanae (volvió del
   // callback de Google, o ya estaba logueado), inscribirlo automáticamente
   // y mandarlo al panel del estudiante.
   useEffect(() => {
-    if (!inicializado || !user || !perfil) return;
+    if (!inicializado || !user || !perfil || necesitaConfirmarNombre) return;
     if (autoInscribiendo) return;
     setAutoInscribiendo(true);
     (async () => {
@@ -47,7 +78,7 @@ export default function SemanaEEntrada() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inicializado, user, perfil]);
+  }, [inicializado, user, perfil, necesitaConfirmarNombre]);
 
   const entrarConGoogle = async () => {
     setCargandoGoogle(true);
@@ -59,6 +90,86 @@ export default function SemanaEEntrada() {
       setCargandoGoogle(false);
     }
   };
+
+  const guardarNombreYEntrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !nombre.trim()) return;
+    setGuardandoNombre(true);
+    setAutoInscribiendo(true);
+    setError(null);
+    try {
+      await confirmarNombreSemanaE(user.id, { nombre, apellido });
+      await recargarPerfil();
+      await entrarAEventoSemanaE();
+      navigate("/estudiante", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo guardar tu nombre.");
+      setAutoInscribiendo(false);
+      setGuardandoNombre(false);
+    }
+  };
+
+  if (inicializado && user && perfil && necesitaConfirmarNombre) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-fuchsia-50 via-violet-50 to-sky-50 p-4 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30">
+        <form
+          onSubmit={guardarNombreYEntrar}
+          className="w-full max-w-md space-y-4 rounded-xl border-2 border-fuchsia-300 bg-card p-6 shadow-lg dark:border-fuchsia-900"
+        >
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 text-white">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <h1 className="mt-3 text-xl font-extrabold tracking-tight">¿Cómo te llamas?</h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Este es el nombre que verán tus compañeros en el grupo.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-xs font-medium">
+              <span>Nombre</span>
+              <input
+                value={nombre}
+                onChange={(event) => setNombre(event.target.value)}
+                maxLength={50}
+                autoFocus
+                autoComplete="given-name"
+                placeholder="Tu nombre"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+            <label className="space-y-1 text-xs font-medium">
+              <span>Apellido <span className="font-normal text-muted-foreground">(opcional)</span></span>
+              <input
+                value={apellido}
+                onChange={(event) => setApellido(event.target.value)}
+                maxLength={70}
+                autoComplete="family-name"
+                placeholder="Tu apellido"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+          </div>
+
+          {error && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={guardandoNombre || nombre.trim().length < 2}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {guardandoNombre && <Loader2 className="h-4 w-4 animate-spin" />}
+            {guardandoNombre ? "Guardando…" : "Guardar y entrar"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   // Si está en proceso de auto-inscribir vía sesión existente, mostrar loader.
   if (inicializado && user && (autoInscribiendo || perfil)) {

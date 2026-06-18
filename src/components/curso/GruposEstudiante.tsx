@@ -96,7 +96,12 @@ export default function GruposEstudiante({
       setNombreNuevo("");
       await recargar();
     } catch (e: any) {
-      setError(e?.message ?? String(e));
+      const mensaje = e?.message ?? String(e);
+      setError(
+        mensaje.toLowerCase().includes("row-level security")
+          ? "No pudimos crear el grupo. Recargá la página e intentá otra vez; si continúa, avisale al docente."
+          : mensaje
+      );
     } finally {
       setAccion(false);
     }
