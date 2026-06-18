@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
@@ -48,6 +48,8 @@ export default function DashboardEstudiante() {
   const perfil = useAuthStore((s) => s.perfil);
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+  const location = useLocation();
+  const modoSemanaE = new URLSearchParams(location.search).get("semanae") === "1";
   const [inscripciones, setInscripciones] = useState<Array<{ curso: Curso; inscrito_en: string }>>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -193,7 +195,7 @@ export default function DashboardEstudiante() {
       {/* CTA visible: galería de ejemplos (escondida en el menú hamburguesa
           en mobile). Card destacado para que cualquier alumno la encuentre. */}
       <button
-        onClick={() => navigate("/ejemplos")}
+        onClick={() => navigate(modoSemanaE ? "/ejemplos?semanae=1" : "/ejemplos")}
         className="flex w-full items-center gap-3 rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-3 text-left transition hover:border-indigo-400 hover:shadow-md dark:border-indigo-800 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40"
       >
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-lg shadow-md">

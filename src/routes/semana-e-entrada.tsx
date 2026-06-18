@@ -16,7 +16,7 @@ import { useAuthStore } from "@/stores/auth-store";
  *  1) Alumno aprieta "Continuar con Google".
  *  2) Vuelve del callback OAuth con sesión activa.
  *  3) useEffect detecta sesión + perfil y dispara `entrarAEventoSemanaE()`.
- *  4) Auto-inscribe al curso Semana E activo y manda a /estudiante.
+ *  4) Auto-inscribe al curso Semana E activo y abre su panel aislado.
  */
 export default function SemanaEEntrada() {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export default function SemanaEEntrada() {
     (async () => {
       try {
         await entrarAEventoSemanaE();
-        navigate("/estudiante", { replace: true });
+        navigate("/estudiante?semanae=1", { replace: true });
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo inscribirte al evento.");
         setAutoInscribiendo(false);
@@ -101,7 +101,7 @@ export default function SemanaEEntrada() {
       await confirmarNombreSemanaE(user.id, { nombre, apellido });
       await recargarPerfil();
       await entrarAEventoSemanaE();
-      navigate("/estudiante", { replace: true });
+      navigate("/estudiante?semanae=1", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar tu nombre.");
       setAutoInscribiendo(false);

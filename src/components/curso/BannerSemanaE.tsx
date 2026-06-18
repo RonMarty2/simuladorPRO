@@ -57,13 +57,13 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
           />
           <PasoChecklist
             n={4}
-            titulo="Probá escenarios (📊 menú lateral)"
-            detalle="Andá al tab 'Escenarios' del menú. Mové los sliders: '¿qué pasa si la harina sube 20%?' '¿y si vendo menos?'. Eso muestra qué tan robusto es tu proyecto."
+            titulo="Probá cambios en los supuestos"
+            detalle="Volvé a precios, demanda o costos y probá: '¿qué pasa si la harina sube 20%?' o '¿si vendo menos?'. Después compará nuevamente los indicadores."
           />
           <PasoChecklist
             n={5}
-            titulo="Simulá 5 años en el mercado"
-            detalle="Tab 'Simular' (menú lateral). El sistema te va a tirar eventos económicos (inflación, devaluación, etc.) y vos decidís qué hacer. Llegá al año 5 sin quebrar."
+            titulo="Cerrá el análisis con tu equipo"
+            detalle="Revisen juntos el Resumen, expliquen qué cambiarían para mejorar la viabilidad y comparen el resultado con otro grupo."
           />
           <div className="mt-2 rounded-md border border-sky-200 bg-sky-50/70 p-2 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
             🎯 <strong>Meta del evento</strong>: terminar los 5 pasos. Si te trabás, pregntale

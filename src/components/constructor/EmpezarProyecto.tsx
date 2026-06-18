@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, BookOpen, GraduationCap, Hammer, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
@@ -15,6 +15,8 @@ interface CasoDisponible {
 }
 
 export default function EmpezarProyecto() {
+  const location = useLocation();
+  const modoSemanaE = new URLSearchParams(location.search).get("semanae") === "1";
   const user = useAuthStore((s) => s.user);
   const perfil = useAuthStore((s) => s.perfil);
   const cargar = useProyectoStore((s) => s.cargar);
@@ -108,7 +110,7 @@ export default function EmpezarProyecto() {
               <strong>Continuar proyecto de Semana E</strong>.
             </p>
             <Link
-              to="/estudiante"
+              to={modoSemanaE ? "/estudiante?semanae=1" : "/estudiante"}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
             >
               <ArrowLeft className="h-3 w-3" />

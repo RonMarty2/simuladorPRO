@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   BookOpenCheck,
@@ -34,6 +34,13 @@ const enlacesEstudiante = [
   // simulación. Solo docentes y admin lo ven.
 ];
 
+// Semana E es una experiencia aislada y sin calificaciones ni entregas.
+// Conservamos Ejemplos porque forma parte de la ayuda para armar el proyecto.
+const enlacesEstudianteSemanaE = [
+  { to: "/estudiante?semanae=1", label: "Mi panel", icon: LayoutDashboard },
+  { to: "/ejemplos?semanae=1", label: "Ejemplos", icon: BookOpen },
+];
+
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
@@ -46,12 +53,21 @@ export default function RootLayout() {
   const perfil = useAuthStore((s) => s.perfil);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
   // Detección robusta de dispositivo móvil. Sobrescribe cualquier hack del
   // navegador (ej. "Sitio para escritorio") para forzar el layout mobile.
   const esMobil = useEsDispositivoMobil();
 
-  const enlacesBase = perfil?.rol === "docente" ? enlacesDocente : enlacesEstudiante;
+  const modoSemanaE =
+    perfil?.rol === "estudiante" &&
+    new URLSearchParams(location.search).get("semanae") === "1";
+  const enlacesBase =
+    perfil?.rol === "docente"
+      ? enlacesDocente
+      : modoSemanaE
+        ? enlacesEstudianteSemanaE
+        : enlacesEstudiante;
   const enlaces = perfil?.es_admin
     ? [...enlacesBase, { to: "/admin", label: "Admin", icon: ShieldCheck }]
     : enlacesBase;
