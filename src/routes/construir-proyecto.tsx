@@ -111,20 +111,27 @@ export default function ConstruirProyecto() {
     if (!user) return;
     Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
       .then(([mios, grupales]) => {
-        // Evita duplicar el proyecto grupal si el usuario es el dueño (docente).
-        const ids = new Set(mios.map((p) => p.id));
-        const proyectos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
-        const proyectosNormales = proyectos.filter((p) => !esProyectoSemanaE(p));
-        const proyectosSemanaE = proyectos.filter(
+        // Los grupales que aparecen como "propios" pueden ser equipos antiguos
+        // creados por el usuario. Solo aceptamos grupales devueltos por su
+        // membresía ACTUAL; así no se muestran grupos de los que ya salió.
+        const proyectosNoGrupales = mios.filter(
+          (p) => p.tipo !== "proyecto_grupal" && !esProyectoSemanaE(p)
+        );
+        const grupalesNormales = grupales.filter((p) => !esProyectoSemanaE(p));
+        const idsNormales = new Set(proyectosNoGrupales.map((p) => p.id));
+        const proyectosNormales = [
+          ...proyectosNoGrupales,
+          ...grupalesNormales.filter((p) => !idsNormales.has(p.id)),
+        ];
+        const proyectosSemanaE = grupales.filter(
           (p) => esProyectoSemanaE(p) || p.id === proyectoSemanaEUrl
         );
         const listaElegible = modoSemanaE ? proyectosSemanaE : proyectosNormales;
-        // El selector superior es solo para el flujo normal. Semana E se abre
-        // desde su tarjeta/equipo y no debe mezclarse con proyectos del curso.
+
+        // Semana E no entra al selector general. Los cursos normales conservan
+        // su proyecto grupal actual junto a individuales y casos.
         setTodosProyectos(proyectosNormales);
         if (listaElegible.length > 0) {
-          // Elegir el proyecto activo: normal y Semana E usan claves separadas
-          // para que un evento no contamine el constructor general.
           const idActivo = modoSemanaE
             ? proyectoSemanaEUrl ?? leerProyectoSemanaEActivo(user.id)
             : leerProyectoActivo(user.id);
