@@ -258,6 +258,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 023 | `tipos_proyecto_simulables.sql` | `cursos.simulacion_caso_curso/individual/grupal` |
 | 024 | `entregas_miembros_grupo_leen.sql` | Policy SELECT adicional: miembros del grupo leen entregas del proyecto compartido |
 | 025 | `proyecto_actividad.sql` | Tabla de actividad por usuario + RLS. Audit de quién editó/entregó proyectos grupales. |
+| 026 | `escenarios_config_por_curso.sql` | Columna `cursos.escenarios_config` (JSONB). El docente ajusta los % de Optimista/Pesimista por curso. NULL = defaults del código. |
 
 ---
 

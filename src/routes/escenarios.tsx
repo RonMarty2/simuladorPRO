@@ -1,22 +1,37 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChartScatter, ArrowLeft } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import PanelEscenarios from "@/components/escenarios/PanelEscenarios";
+import { obtenerCursoPorId } from "@/lib/cursos-supabase";
+import type { EscenariosConfig } from "@/lib/escenarios";
 
 /**
  * Ruta /escenarios — Modo demostrativo de análisis de sensibilidad.
  *
- * Carga el proyecto activo del store y delega al PanelEscenarios. Si no hay
- * proyecto activo, muestra un CTA para volver al panel y elegir uno.
+ * Carga el proyecto activo del store y la config de escenarios del curso (si
+ * existe y el docente la editó). Delega todo al PanelEscenarios.
  */
 export default function Escenarios() {
   const proyecto = useProyectoStore((s) => s.proyecto);
+  const [configCurso, setConfigCurso] = useState<EscenariosConfig | null>(null);
 
   // useMemo aquí: el proyecto puede tener docenas de campos; evitamos que el
   // panel recompute todos los escenarios mientras el alumno arrastra sliders
   // si nada del proyecto base cambió.
   const proyectoBase = useMemo(() => proyecto, [proyecto?.id, proyecto?.actualizado_en]);
+
+  // Carga la config del curso del proyecto (si lo hay). Best-effort: si falla
+  // o el alumno no tiene permiso, caemos a los defaults del código.
+  useEffect(() => {
+    if (!proyectoBase?.curso_id) {
+      setConfigCurso(null);
+      return;
+    }
+    obtenerCursoPorId(proyectoBase.curso_id)
+      .then((c) => setConfigCurso(c?.escenarios_config ?? null))
+      .catch(() => setConfigCurso(null));
+  }, [proyectoBase?.curso_id]);
 
   if (!proyectoBase) {
     return (
@@ -40,5 +55,5 @@ export default function Escenarios() {
     );
   }
 
-  return <PanelEscenarios proyecto={proyectoBase} />;
+  return <PanelEscenarios proyecto={proyectoBase} configCurso={configCurso} />;
 }

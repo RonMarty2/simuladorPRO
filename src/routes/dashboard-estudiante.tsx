@@ -308,6 +308,27 @@ export default function DashboardEstudiante() {
                 </div>
               )}
 
+              {/* Visibilidad por sección según lo que el docente habilitó.
+                   Regla: si el docente desactivó algo PERO el alumno ya tiene
+                   datos en esa sección, igual la mostramos (para no esconderle
+                   su trabajo). */}
+              {(() => {
+                const hayCasos = casosDisponibles.length > 0 || casosTomados.length > 0;
+                const muestraIndividual =
+                  curso.permite_proyecto_libre !== false || proyectosLibres.length > 0;
+                const muestraGrupal = curso.grupo_habilitado === true;
+                const muestraNada = !hayCasos && !muestraIndividual && !muestraGrupal;
+                return (
+                  <>
+                    {muestraNada && (
+                      <div className="rounded-md border border-dashed border-border bg-card/50 p-3 text-center text-xs text-muted-foreground">
+                        Tu docente todavía no habilitó ninguna actividad en este curso. Cuando
+                        publique casos, habilite el proyecto individual o el grupal, vas a verlo
+                        acá.
+                      </div>
+                    )}
+                    {hayCasos && (
+              <>
               {/* ── 1. 🎓 CASO DEL CURSO (emerald) — contraído por defecto ── */}
               <details className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-100/60 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-900/30">
@@ -382,6 +403,10 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
+              </>
+                    )}
+                    {muestraIndividual && (
+              <>
               {/* ── 2. 📁 CASO INDIVIDUAL (sky) — contraído por defecto ──── */}
               <details className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
@@ -430,6 +455,10 @@ export default function DashboardEstudiante() {
                 </div>
               </details>
 
+              </>
+                    )}
+                    {muestraGrupal && (
+              <>
               {/* ── 3. 🤝 CASO GRUPAL (violet) — contraído por defecto ───── */}
               <details className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
@@ -451,6 +480,11 @@ export default function DashboardEstudiante() {
                   {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
                 </div>
               </details>
+              </>
+                    )}
+                  </>
+                );
+              })()}
             </section>
           );
         })}

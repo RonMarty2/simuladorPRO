@@ -54,6 +54,16 @@ export interface EscenarioCalculado {
   flujo: FlujoCajaProyecto;
 }
 
+/**
+ * Config de escenarios que el DOCENTE define por curso (FASE A.2). Sobreescribe
+ * los DEFAULTS hardcodeados. Todos los campos opcionales: lo que no esté seteado
+ * cae al default. Se guarda en `cursos.escenarios_config` (JSONB).
+ */
+export interface EscenariosConfig {
+  optimista?: Partial<ModificadoresEscenario>;
+  pesimista?: Partial<ModificadoresEscenario>;
+}
+
 // ============================================================================
 // DEFAULTS — los valores "de fábrica" para Optimista / Base / Pesimista.
 // ============================================================================
@@ -191,6 +201,20 @@ export function aplicarModificadores(
   }
 
   return p;
+}
+
+/**
+ * Resuelve los modificadores de Optimista y Pesimista combinando los DEFAULTS
+ * del código con la config del curso (si el docente la editó). Lo que esté en
+ * la config gana; lo que falte cae al default.
+ */
+export function resolverEscenariosDeCurso(
+  config: EscenariosConfig | null | undefined
+): { optimista: ModificadoresEscenario; pesimista: ModificadoresEscenario } {
+  return {
+    optimista: { ...DEFAULT_OPTIMISTA, ...(config?.optimista ?? {}) },
+    pesimista: { ...DEFAULT_PESIMISTA, ...(config?.pesimista ?? {}) },
+  };
 }
 
 /** Calcula los 4 escenarios (optimista, base, pesimista, personalizado). */

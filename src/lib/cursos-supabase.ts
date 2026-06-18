@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { normalizarUniversidad } from "./utils";
+import type { EscenariosConfig } from "./escenarios";
 
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
 export type EstadoCurso = "activo" | "cerrado" | "archivado";
@@ -42,6 +43,8 @@ export interface Curso {
   simulacion_caso_curso?: boolean;
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
+  /** Config de escenarios económicos por curso (FASE A.2 del Modo Escenarios). */
+  escenarios_config?: EscenariosConfig | null;
   creado_en: string;
 }
 
@@ -98,6 +101,25 @@ export async function actualizarTiposSimulables(
     supabase.from("cursos").update(cfg).eq("id", cursoId),
     10000,
     "guardando tipos simulables"
+  );
+  if (error) throw error;
+}
+
+/**
+ * Guarda la config de escenarios económicos por curso (Modo Escenarios A.2).
+ * Si se pasa `null`, vuelve a los defaults del código.
+ */
+export async function actualizarEscenariosConfig(
+  cursoId: string,
+  config: EscenariosConfig | null
+): Promise<void> {
+  const { error } = await conTimeout(
+    supabase
+      .from("cursos")
+      .update({ escenarios_config: config })
+      .eq("id", cursoId),
+    10000,
+    "guardando la configuración de escenarios"
   );
   if (error) throw error;
 }
@@ -245,6 +267,17 @@ export async function eliminarCurso(cursoId: string): Promise<void> {
     "borrando curso"
   );
   if (error) throw error;
+}
+
+/** Lee un curso por id. Si el usuario no tiene RLS para verlo, devuelve null. */
+export async function obtenerCursoPorId(cursoId: string): Promise<Curso | null> {
+  const { data, error } = await supabase
+    .from("cursos")
+    .select("*")
+    .eq("id", cursoId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Curso | null) ?? null;
 }
 
 export async function buscarCursoPorCodigo(codigo: string): Promise<Curso | null> {

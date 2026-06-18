@@ -17,6 +17,7 @@ import EntregasCurso from "@/components/docente/EntregasCurso";
 import GruposDocente from "@/components/curso/GruposDocente";
 import CasosCurso from "@/components/curso/CasosCurso";
 import PodioCurso from "@/components/curso/PodioCurso";
+import ConfigEscenariosCurso from "@/components/docente/ConfigEscenariosCurso";
 import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
@@ -424,7 +425,7 @@ function CursoCard({
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador">("ranking");
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios">("ranking");
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
@@ -455,7 +456,7 @@ function CursoCard({
   };
 
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
-  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador";
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
   const irA = (tab: Vista) => {
     setVista(tab);
     if (!expandido) onToggle();
@@ -521,6 +522,9 @@ function CursoCard({
           </button>
           <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
             🎲 Lanzar situación
+          </button>
+          <button onClick={() => irA("escenarios")} className={claseTab("escenarios")}>
+            📊 Escenarios
           </button>
           {expandido && (
             <button
@@ -607,6 +611,8 @@ function CursoCard({
           {vista === "casos" && <CasosCurso cursoId={curso.id} />}
 
           {vista === "lanzador" && <LanzadorEventos cursoId={curso.id} />}
+
+          {vista === "escenarios" && <ConfigEscenariosCurso cursoId={curso.id} />}
 
           {vista === "podio" && (
             <PodioCurso

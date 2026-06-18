@@ -21,10 +21,10 @@ import {
 import {
   compararEscenarios,
   esViable,
-  DEFAULT_OPTIMISTA,
-  DEFAULT_PESIMISTA,
+  resolverEscenariosDeCurso,
   ESCENARIO_NEUTRAL,
   type EscenarioCalculado,
+  type EscenariosConfig,
   type ModificadoresEscenario,
   type NombreEscenario,
 } from "@/lib/escenarios";
@@ -38,13 +38,28 @@ const COLORES: Record<NombreEscenario, string> = {
   personalizado: "#a855f7", // purple-500
 };
 
-export default function PanelEscenarios({ proyecto }: { proyecto: Proyecto }) {
+export default function PanelEscenarios({
+  proyecto,
+  configCurso,
+}: {
+  proyecto: Proyecto;
+  /** Config de escenarios que el docente definió para el curso. Si es null,
+   *  se usan los defaults pedagógicos del código. */
+  configCurso?: EscenariosConfig | null;
+}) {
   const [miEscenario, setMiEscenario] = useState<ModificadoresEscenario>(ESCENARIO_NEUTRAL);
   const [slidersAbierto, setSlidersAbierto] = useState(false);
 
+  // Resolución de optimista/pesimista: lo que el docente puso en el curso,
+  // con fallback a los defaults del código.
+  const { optimista, pesimista } = useMemo(
+    () => resolverEscenariosDeCurso(configCurso),
+    [configCurso]
+  );
+
   const escenarios = useMemo<EscenarioCalculado[]>(
-    () => compararEscenarios(proyecto, DEFAULT_OPTIMISTA, DEFAULT_PESIMISTA, miEscenario),
-    [proyecto, miEscenario]
+    () => compararEscenarios(proyecto, optimista, pesimista, miEscenario),
+    [proyecto, optimista, pesimista, miEscenario]
   );
 
   // Datos para el gráfico: flujo neto acumulado por escenario, año 0..5.
