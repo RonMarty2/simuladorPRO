@@ -50,6 +50,10 @@ export function pasosVisiblesDelProyecto(proyecto: Proyecto): number[] {
   return pasosParaNivelSemanaE(proyecto.nivelSemanaE);
 }
 
+export function esProyectoSemanaE(proyecto: Proyecto): boolean {
+  return proyecto.esSemanaE === true || Boolean(proyecto.nivelSemanaE);
+}
+
 export function versionParaNivelSemanaE(nivel: NivelSemanaE): VersionProyecto {
   return nivel === "avanzado" ? "v2" : "v1";
 }

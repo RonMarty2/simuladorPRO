@@ -72,6 +72,7 @@ export async function crearGrupoEstudiante(params: {
     modeloIngreso: params.modeloIngreso,
   });
   proyecto.tipo = "proyecto_grupal";
+  if (params.esSemanaE) proyecto.esSemanaE = true;
 
   // Los cursos normales mantienen el flujo histórico sin ningún cambio.
   if (!params.esSemanaE) {

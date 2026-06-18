@@ -12,7 +12,10 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
+import {
+  guardarProyectoActivo,
+  guardarProyectoSemanaEActivo,
+} from "@/components/constructor/SelectorProyecto";
 import { obtenerPromedioEstudiante } from "@/lib/proyecto-supabase";
 import { calcularNotaFinal } from "@/lib/notas";
 import type { Curso } from "@/lib/cursos-supabase";
@@ -157,6 +160,11 @@ export default function GruposEstudiante({
 
   const abrirProyecto = (proyectoId: string | null) => {
     if (!proyectoId) return;
+    if (curso.es_semana_e) {
+      guardarProyectoSemanaEActivo(estudianteId, proyectoId);
+      navigate(`/construir?semanae=1&proyecto=${encodeURIComponent(proyectoId)}`);
+      return;
+    }
     guardarProyectoActivo(estudianteId, proyectoId);
     navigate("/construir");
   };

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
@@ -11,7 +12,9 @@ import { BannerTipoProyecto } from "@/components/constructor/BadgeTipoProyecto";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import SelectorProyecto, {
   guardarProyectoActivo,
+  guardarProyectoSemanaEActivo,
   leerProyectoActivo,
+  leerProyectoSemanaEActivo,
 } from "@/components/constructor/SelectorProyecto";
 import type { Proyecto } from "@/types/proyecto";
 import Paso1Datos from "@/components/constructor/pasos/Paso1Datos";
@@ -25,7 +28,7 @@ import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamie
 import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
 import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
-import { pasosVisiblesDelProyecto } from "@/lib/semana-e";
+import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
 
 const TOTAL_PASOS = 9;
 
@@ -76,6 +79,7 @@ function guardarPaso(proyectoId: string | undefined, paso: number) {
 }
 
 export default function ConstruirProyecto() {
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const proyecto = useProyectoStore((s) => s.proyecto);
   const cargar = useProyectoStore((s) => s.cargar);
@@ -85,6 +89,9 @@ export default function ConstruirProyecto() {
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [todosProyectos, setTodosProyectos] = useState<Proyecto[]>([]);
   const estadoGuardado = useAutoGuardado(proyecto);
+  const paramsRuta = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const modoSemanaE = paramsRuta.get("semanae") === "1";
+  const proyectoSemanaEUrl = paramsRuta.get("proyecto");
   const pasosVisibles = useMemo(
     () => (proyecto ? pasosVisiblesDelProyecto(proyecto) : Array.from({ length: TOTAL_PASOS }, (_, i) => i + 1)),
     [proyecto]
@@ -107,20 +114,40 @@ export default function ConstruirProyecto() {
         // Evita duplicar el proyecto grupal si el usuario es el dueño (docente).
         const ids = new Set(mios.map((p) => p.id));
         const proyectos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
-        setTodosProyectos(proyectos);
-        if (proyectos.length > 0) {
-          // Elegir el proyecto activo: el guardado en localStorage (si existe
-          // y todavía está en la lista) o el más reciente como fallback.
-          const idActivo = leerProyectoActivo(user.id);
+        const proyectosNormales = proyectos.filter((p) => !esProyectoSemanaE(p));
+        const proyectosSemanaE = proyectos.filter(
+          (p) => esProyectoSemanaE(p) || p.id === proyectoSemanaEUrl
+        );
+        const listaElegible = modoSemanaE ? proyectosSemanaE : proyectosNormales;
+        // El selector superior es solo para el flujo normal. Semana E se abre
+        // desde su tarjeta/equipo y no debe mezclarse con proyectos del curso.
+        setTodosProyectos(proyectosNormales);
+        if (listaElegible.length > 0) {
+          // Elegir el proyecto activo: normal y Semana E usan claves separadas
+          // para que un evento no contamine el constructor general.
+          const idActivo = modoSemanaE
+            ? proyectoSemanaEUrl ?? leerProyectoSemanaEActivo(user.id)
+            : leerProyectoActivo(user.id);
           const elegido =
-            (idActivo && proyectos.find((p) => p.id === idActivo)) || proyectos[0];
+            (idActivo && listaElegible.find((p) => p.id === idActivo)) ||
+            (!modoSemanaE ? listaElegible[0] : null);
+          if (!elegido) {
+            limpiar();
+            return;
+          }
           cargar(elegido);
-          guardarProyectoActivo(user.id, elegido.id);
+          if (modoSemanaE) {
+            guardarProyectoSemanaEActivo(user.id, elegido.id);
+          } else {
+            guardarProyectoActivo(user.id, elegido.id);
+          }
           const pasoGuardado = leerPasoGuardado(elegido.id);
           const pasosElegidos = pasosVisiblesDelProyecto(elegido);
           setPasoActualState(
             pasosElegidos.includes(pasoGuardado) ? pasoGuardado : pasosElegidos[0]
           );
+        } else {
+          limpiar();
         }
         setErrorCarga(null);
       })
@@ -128,7 +155,7 @@ export default function ConstruirProyecto() {
         setErrorCarga(e?.message ?? String(e));
       })
       .finally(() => setIniciando(false));
-  }, [user, cargar]);
+  }, [user, cargar, limpiar, modoSemanaE, proyectoSemanaEUrl]);
 
   useEffect(() => {
     if (!proyecto || pasosVisibles.includes(pasoActual)) return;
@@ -182,8 +209,11 @@ export default function ConstruirProyecto() {
 
   return (
     <div className="space-y-4">
-      {/* Selector de proyecto múltiple */}
-      <SelectorProyecto proyectos={todosProyectos} />
+      {/* Selector de proyecto múltiple: solo flujo normal. Semana E se maneja
+          desde Mi panel/equipo para no mezclar proyectos fantasmas. */}
+      {!modoSemanaE && !esProyectoSemanaE(proyecto) && (
+        <SelectorProyecto proyectos={todosProyectos} />
+      )}
 
       {/* Banner del tipo de proyecto — separa visualmente el selector de la barra */}
       <BannerTipoProyecto tipo={proyecto.tipo} />
@@ -226,13 +256,15 @@ export default function ConstruirProyecto() {
             <BotonGuardarComoCaso />
             <BotonVistaPreviaEstudiante />
           </div>
-          <button
-            onClick={abandonarProyecto}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-            Borrar este proyecto
-          </button>
+          {!modoSemanaE && proyecto.tipo !== "proyecto_grupal" && (
+            <button
+              onClick={abandonarProyecto}
+              className="flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" />
+              Borrar este proyecto
+            </button>
+          )}
         </div>
 
         {indicePasoActual < pasosVisibles.length - 1 ? (

@@ -16,6 +16,7 @@ import {
 } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+import { esProyectoSemanaE } from "@/lib/semana-e";
 import BadgeTipoProyecto from "./BadgeTipoProyecto";
 
 // Las 6 fábricas de ejemplo, una por cada tipo de proyecto.
@@ -29,6 +30,7 @@ const FABRICAS_EJEMPLO: ((p: { estudiante_id: string }) => Proyecto)[] = [
 ];
 
 const LS_KEY_PROYECTO_ACTIVO = "simulador.proyectoActivo";
+const LS_KEY_PROYECTO_SEMANA_E_ACTIVO = "simulador.proyectoSemanaEActivo";
 
 export function guardarProyectoActivo(userId: string, proyectoId: string) {
   if (typeof window === "undefined") return;
@@ -41,6 +43,22 @@ export function leerProyectoActivo(userId: string): string | null {
   if (typeof window === "undefined") return null;
   try {
     return localStorage.getItem(`${LS_KEY_PROYECTO_ACTIVO}.${userId}`);
+  } catch {
+    return null;
+  }
+}
+
+export function guardarProyectoSemanaEActivo(userId: string, proyectoId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`${LS_KEY_PROYECTO_SEMANA_E_ACTIVO}.${userId}`, proyectoId);
+  } catch {}
+}
+
+export function leerProyectoSemanaEActivo(userId: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(`${LS_KEY_PROYECTO_SEMANA_E_ACTIVO}.${userId}`);
   } catch {
     return null;
   }
@@ -82,6 +100,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
   // Filtra proyectos del usuario que no sean caso_curso ni entregas
   // (esos no son "proyectos en construcción" sino plantillas o copias)
   const proyectosVisibles = proyectos.filter((p) => {
+    if (esProyectoSemanaE(p)) return false;
     // Mostrar los que el usuario está editando: libres + casos del docente
     // Las entregas también las muestro porque el estudiante puede querer
     // seguir trabajándolas

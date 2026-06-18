@@ -184,6 +184,9 @@ export interface Proyecto {
   /** Solo Semana E: controla qué etapas debe completar el equipo. */
   nivelSemanaE?: NivelSemanaE;
 
+  /** Marca explícita para mantener Semana E fuera del selector normal. */
+  esSemanaE?: boolean;
+
   /**
    * Modelo de cómo entra el ingreso. Ausente o 'unidades' = clásico
    * (productos con cantidad × precio). Los demás derivan los `productos` de

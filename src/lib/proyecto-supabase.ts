@@ -54,6 +54,7 @@ function deFilaSupabase(fila: any): Proyecto {
     tipo: fila.tipo ?? "libre",
     caso_origen_id: fila.caso_origen_id ?? null,
     paso_inicio_estudiante: fila.paso_inicio_estudiante ?? null,
+    esSemanaE: Boolean(fila.datos?.esSemanaE || fila.cursos?.es_semana_e),
     creado_en: fila.datos?.creado_en ?? fila.creado_en,
     actualizado_en: fila.datos?.actualizado_en ?? fila.actualizado_en,
   } as Proyecto;
@@ -130,7 +131,10 @@ export async function listarProyectosGrupales(estudianteId: string): Promise<Pro
   if (e1) throw e1;
   const gids = (mm ?? []).map((m: any) => m.grupo_id);
   if (gids.length === 0) return [];
-  const { data, error } = await supabase.from("proyectos").select("*").in("grupo_id", gids);
+  const { data, error } = await supabase
+    .from("proyectos")
+    .select("*, cursos(es_semana_e)")
+    .in("grupo_id", gids);
   if (error) throw error;
   return (data ?? []).map(deFilaSupabase);
 }
