@@ -111,7 +111,7 @@ export default function ModalRevisarEntrega({
                 positivo
               />
               <Indicador
-                titulo="Payback"
+                titulo="Periodo de recuperación"
                 valor={entrega.payback !== null ? `${entrega.payback.toFixed(1)} años` : "—"}
                 positivo={(entrega.payback ?? 99) > 0 && (entrega.payback ?? 99) <= 5}
               />

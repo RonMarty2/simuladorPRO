@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, Users, FolderOpen, Loader2, Save, Activity, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, Users, FolderOpen, Loader2, Save, Activity, BarChart3, ChevronDown, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import { actualizarPesosCurso, actualizarConfigGrupal, type Curso } from "@/lib/cursos-supabase";
@@ -265,6 +265,7 @@ function GrupoFila({
   onAbrir: (proyectoId: string | null) => void;
   onCambio: () => void;
 }) {
+  const navigate = useNavigate();
   const [nota, setNota] = useState<number | "">(grupo.nota ?? "");
   const [comentario, setComentario] = useState(grupo.comentario_docente ?? "");
   const [guardando, setGuardando] = useState(false);
@@ -318,6 +319,15 @@ function GrupoFila({
             <FolderOpen className="h-3 w-3" />
             Abrir / evaluar proyecto
           </button>
+          {grupo.proyecto_id && (
+            <button
+              onClick={() => navigate(`/presentar/${encodeURIComponent(grupo.proyecto_id!)}`)}
+              className="flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-800 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200"
+            >
+              <BarChart3 className="h-3 w-3" />
+              Presentación
+            </button>
+          )}
           {!confirmando ? (
             <button
               onClick={() => setConfirmando(true)}

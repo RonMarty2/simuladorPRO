@@ -443,7 +443,7 @@ function VisorPlantilla({
                 />
                 <Indicador titulo="WACC" valor={`${(calc.wacc * 100).toFixed(2)}%`} positivo />
                 <Indicador
-                  titulo="Payback"
+                  titulo="Periodo de recuperación"
                   valor={isFinite(calc.indicadores.payback) ? `${calc.indicadores.payback.toFixed(1)} años` : "—"}
                   positivo={calc.indicadores.payback > 0 && calc.indicadores.payback <= 5}
                 />

@@ -160,6 +160,16 @@ export type VersionProyecto = "v1" | "v2";
 /** Ruta pedagógica elegida por un equipo de Semana E. */
 export type NivelSemanaE = "basico" | "medio" | "avanzado";
 
+/** Textos editables que alimentan el modo Pitch del proyecto. */
+export interface PresentacionProyecto {
+  titulo: string;
+  subtitulo: string;
+  expositores: string;
+  problema: string;
+  propuestaValor: string;
+  conclusion: string;
+}
+
 /** Un plan de suscripción dentro de un negocio recurrente. */
 export interface PlanSuscripcion {
   id: string;
@@ -186,6 +196,9 @@ export interface Proyecto {
 
   /** Marca explícita para mantener Semana E fuera del selector normal. */
   esSemanaE?: boolean;
+
+  /** Configuración narrativa compartida por el modo Pitch. */
+  presentacion?: PresentacionProyecto;
 
   /**
    * Modelo de cómo entra el ingreso. Ausente o 'unidades' = clásico

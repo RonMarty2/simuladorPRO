@@ -21,6 +21,7 @@ import PodioCurso from "@/components/curso/PodioCurso";
 import BannerSemanaE from "@/components/curso/BannerSemanaE";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import CompletarNombreInicial from "@/components/auth/CompletarNombreInicial";
+import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
@@ -711,20 +712,20 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
   const esV2 = proyecto.version === "v2";
   const modelo = MODELO_LABEL[proyecto.modeloIngreso ?? "unidades"];
   return (
-    <button
-      onClick={onClick}
-      className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 text-left transition hover:border-primary hover:shadow-sm"
-    >
-      <BadgeTipoProyecto tipo={proyecto.tipo} tamaño="sm" className="self-start" />
-      <div className="truncate text-sm font-semibold">{proyecto.nombre}</div>
-      <div className="flex flex-wrap items-center gap-1">
-        <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>
-          {esV2 ? "+ Riesgo" : "Clásico"}
-        </span>
-        <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">{modelo}</span>
-        <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium", estado.clase)}>{estado.txt}</span>
-      </div>
-      <div className="text-[10px] text-primary">Abrir →</div>
-    </button>
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 text-left transition hover:border-primary/60 hover:shadow-sm">
+      <button onClick={onClick} className="flex flex-1 flex-col gap-2 text-left">
+        <BadgeTipoProyecto tipo={proyecto.tipo} tamaño="sm" className="self-start" />
+        <div className="truncate text-sm font-semibold">{proyecto.nombre}</div>
+        <div className="flex flex-wrap items-center gap-1">
+          <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>
+            {esV2 ? "+ Riesgo" : "Clásico"}
+          </span>
+          <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">{modelo}</span>
+          <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium", estado.clase)}>{estado.txt}</span>
+        </div>
+        <div className="text-[10px] font-medium text-primary">Abrir y editar →</div>
+      </button>
+      <AccionesProyecto proyecto={proyecto} compacto className="border-t border-border/60 pt-2" />
+    </div>
   );
 }

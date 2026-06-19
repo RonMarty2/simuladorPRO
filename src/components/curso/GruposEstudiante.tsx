@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check,
+  BarChart3,
   Copy,
   FolderOpen,
   LogIn,
@@ -277,6 +278,22 @@ export default function GruposEstudiante({
                   "Abrir proyecto"
                 )}
               </button>
+              {miGrupoDetalle.proyecto_id && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/presentar/${encodeURIComponent(miGrupoDetalle.proyecto_id!)}${
+                        curso.es_semana_e ? "?semanae=1" : ""
+                      }`
+                    )
+                  }
+                  className="flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-800 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200"
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Presentar proyecto
+                </button>
+              )}
               <button
                 onClick={() => salir(miGrupoDetalle.id)}
                 disabled={accion}

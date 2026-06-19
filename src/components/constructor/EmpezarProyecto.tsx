@@ -310,7 +310,7 @@ function FormularioProyectoLibre({
               activa={version === "v1"}
               onClick={() => setVersion("v1")}
               titulo="Clásico"
-              descripcion="VAN, TIR, Payback, IR, TRC, SD, RBC y WACC."
+              descripcion="VAN, TIR, periodo de recuperación, IR, TRC, SD, RBC y WACC."
             />
             <OpcionVersion
               activa={version === "v2"}

@@ -14,7 +14,6 @@ import {
   YAxis,
 } from "recharts";
 import { useProyectoStore } from "@/stores/proyecto-store";
-import { useAuthStore } from "@/stores/auth-store";
 import FichaPedagogica from "../FichaPedagogica";
 import {
   calcularFlujoInversionista,
@@ -60,7 +59,7 @@ export default function Paso9Resumen() {
             paso correspondiente — esta vista se recalcula sola.
           </p>
         </div>
-        <BotonExportarExcelAdmin proyecto={proyecto} />
+        <BotonExportarExcel proyecto={proyecto} />
       </div>
 
       {/* Indicadores principales — debajo del flujo */}
@@ -101,8 +100,8 @@ export default function Paso9Resumen() {
             explicacion="Es el rendimiento anual que da el proyecto, como un interés. Se compara con el WACC (lo mínimo que exiges): si la TIR es mayor, el proyecto vale la pena; si es menor, no conviene. Una TIR alta = el negocio rinde bien."
           />
           <CardIndicador
-            sigla="PAYBACK"
-            nombre="Período de recuperación"
+            sigla="PRI"
+            nombre="Periodo de recuperación de la inversión"
             valor={
               calc.indicadores.payback < 0
                 ? "No recupera"
@@ -118,7 +117,7 @@ export default function Paso9Resumen() {
                   : "⚠ Tarda más de 5 años"
             }
             tooltip="Cuántos años tarda el proyecto en devolverte la inversión inicial (suma de flujos hasta cruzar cero)."
-            explicacion="Cuánto tardas en recuperar la plata que invertiste, sumando lo que el negocio te devuelve año a año. Mientras más corto, menos tiempo tienes tu dinero en riesgo. No considera el valor del dinero en el tiempo (para eso está el Payback descontado)."
+            explicacion="Cuánto tardas en recuperar la plata que invertiste, sumando lo que el negocio te devuelve año a año. Mientras más corto, menos tiempo tienes tu dinero en riesgo. No considera el valor del dinero en el tiempo (para eso está el periodo de recuperación descontado)."
           />
           <CardIndicador
             sigla="TRC"
@@ -391,7 +390,7 @@ export default function Paso9Resumen() {
           <>
             <strong>VAN &gt; 0</strong> y <strong>TIR &gt; WACC</strong> son las dos
             condiciones para que el proyecto sea rentable a la tasa de costo de
-            capital actual. <strong>Payback</strong> indica cuán rápido recuperás la
+            capital actual. <strong>El periodo de recuperación</strong> indica cuán rápido recuperás la
             inversión.
             <br />
             <span className="text-amber-800/80 dark:text-amber-300/80">
@@ -441,7 +440,7 @@ function AnalisisAvanzadoV2({
         </span>
         <h3 className="text-base font-semibold tracking-tight">Análisis avanzado</h3>
         <span className="ml-auto text-[10px] font-normal text-muted-foreground">
-          {abierto ? "ocultar" : "PE · payback desc. · apalancamiento · sensibilidad · Monte Carlo"}
+          {abierto ? "ocultar" : "PE · recuperación desc. · apalancamiento · sensibilidad · Monte Carlo"}
         </span>
       </button>
 
@@ -463,7 +462,7 @@ function AnalisisAvanzadoV2({
             unidades debes vender para no ganar ni perder.
           </div>
           <div className="rounded bg-secondary/40 px-2 py-1">
-            <strong className="font-mono">PBD</strong> · Payback descontado — en cuántos
+            <strong className="font-mono">PRD</strong> · Periodo de recuperación descontado — en cuántos
             años recuperas la inversión, ya descontando el valor del dinero en el tiempo.
           </div>
           <div className="rounded bg-secondary/40 px-2 py-1">
@@ -528,7 +527,7 @@ function AnalisisAvanzadoV2({
 
         <V2Card
           sigla="PBD"
-          nombre="Payback descontado"
+          nombre="Periodo de recuperación descontado"
           valor={v2.paybackDescontado < 0 ? "No recupera" : `${v2.paybackDescontado.toFixed(1)} años`}
           positivo={v2.paybackDescontado > 0 && v2.paybackDescontado <= 5}
         >
@@ -536,7 +535,7 @@ function AnalisisAvanzadoV2({
             <strong>¿Qué es?</strong> En cuántos años recuperas tu inversión, pero contando
             que el dinero de mañana vale menos que el de hoy (lo "descuenta" al WACC{" "}
             {(calc.wacc * 100).toFixed(1)}%). Por eso siempre tarda un poco más que el
-            payback normal.
+            periodo de recuperación normal.
           </p>
           <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
             {v2.paybackDescontado < 0
@@ -1369,12 +1368,9 @@ function FilaFlujo({
 }
 
 
-// Botón de exportación a Excel — gateado por es_admin para pruebas internas.
-// Una vez verificado, se puede quitar la condición para exponerlo a todos.
-function BotonExportarExcelAdmin({ proyecto }: { proyecto: any }) {
-  const esAdmin = useAuthStore((s) => s.perfil?.es_admin === true);
+// Exportación global: disponible para Semana E, cursos normales y proyectos libres.
+function BotonExportarExcel({ proyecto }: { proyecto: any }) {
   const [exportando, setExportando] = useState(false);
-  if (!esAdmin) return null;
   // La librería xlsx-js-style (~150KB) se carga SOLO al hacer click, vía
   // import() dinámico, así no pesa en el bundle de todos los alumnos.
   const exportar = async () => {
@@ -1391,11 +1387,10 @@ function BotonExportarExcelAdmin({ proyecto }: { proyecto: any }) {
       type="button"
       onClick={exportar}
       disabled={exportando}
-      title="Descarga el proyecto en .xlsx con todas las etapas y fórmulas Excel. (Visible solo para admin durante pruebas.)"
+      title="Descarga el proyecto en .xlsx con todas las etapas, la presentación ejecutiva y fórmulas Excel."
       className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-emerald-400/60 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
     >
-      📊 {exportando ? "Generando…" : "Exportar a Excel"}{" "}
-      <span className="rounded bg-emerald-200 px-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">admin</span>
+      📊 {exportando ? "Generando…" : "Exportar a Excel"}
     </button>
   );
 }

@@ -139,6 +139,21 @@ export async function listarProyectosGrupales(estudianteId: string): Promise<Pro
   return (data ?? []).map(deFilaSupabase);
 }
 
+/** Carga un proyecto puntual respetando las políticas RLS del usuario actual. */
+export async function obtenerProyectoPorId(proyectoId: string): Promise<Proyecto> {
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .select("*, cursos(es_semana_e)")
+      .eq("id", proyectoId)
+      .single(),
+    10000,
+    "cargando el proyecto para presentar"
+  );
+  if (error) throw error;
+  return deFilaSupabase(data);
+}
+
 /** Upsert: inserta si no existe, actualiza si ya existe. */
 export async function guardarProyecto(p: Proyecto): Promise<void> {
   const fila = proyectoAFilaSupabase(p);
@@ -621,7 +636,7 @@ export function obtenerSugerenciaAutomatica(
     `TIR: ${okTir ? "✓" : "✗"} desvío ${(desvTir * 100).toFixed(1)}% vs referencia`
   );
   razones.push(
-    `Payback: ${okPayback ? "✓" : "✗"} desvío ${(desvPayback * 100).toFixed(1)}% vs referencia`
+    `Periodo de recuperación: ${okPayback ? "✓" : "✗"} desvío ${(desvPayback * 100).toFixed(1)}% vs referencia`
   );
 
   const desvioPromedio = (desvVan + desvTir + desvPayback) / 3;

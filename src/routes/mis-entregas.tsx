@@ -238,7 +238,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
               </div>
             </div>
             <div>
-              <div className="opacity-60">Payback</div>
+              <div className="opacity-60">Recuperación</div>
               <div className="font-bold">
                 {entrega.payback !== null ? `${entrega.payback.toFixed(1)}a` : "—"}
               </div>

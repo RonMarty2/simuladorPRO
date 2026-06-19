@@ -303,7 +303,7 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
       <div className="mt-2 grid grid-cols-2 gap-1 text-[10px]">
         <Stat label="VAN" v={formatearBolivianos(ind.van)} />
         <Stat label="TIR" v={ind.tir !== null ? `${(ind.tir * 100).toFixed(1)}%` : "—"} />
-        <Stat label="Payback" v={ind.payback !== null ? `${ind.payback.toFixed(1)} años` : "∞"} />
+        <Stat label="Recuperación" v={ind.payback !== null ? `${ind.payback.toFixed(1)} años` : "∞"} />
         <Stat label="WACC" v={`${(escenario.flujo.wacc * 100).toFixed(1)}%`} />
       </div>
       <div className="mt-2 text-[10px] text-muted-foreground">
@@ -344,7 +344,7 @@ function TablaIndicadores({ escenarios }: { escenarios: EscenarioCalculado[] }) 
             sel={(f) => (f.indicadores.tir !== null ? `${(f.indicadores.tir * 100).toFixed(2)}%` : "—")}
           />
           <FilaIndicador
-            label="Payback"
+            label="Recuperación"
             escenarios={escenarios}
             sel={(f) => (f.indicadores.payback !== null ? `${f.indicadores.payback.toFixed(2)} años` : "∞")}
           />

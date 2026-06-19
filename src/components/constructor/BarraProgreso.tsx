@@ -136,7 +136,7 @@ function BadgeVersion({ version }: { version?: VersionProyecto }) {
       title={
         esV2
           ? "Con análisis de riesgo: incluye punto de equilibrio, sensibilidad, apalancamiento, Monte Carlo"
-          : "Indicadores clásicos: VAN, TIR, Payback, IR, TRC, SD, RBC, WACC"
+          : "Indicadores clásicos: VAN, TIR, recuperación, IR, TRC, SD, RBC y WACC"
       }
     >
       {esV2 ? "+ Riesgo" : "Clásico"}

@@ -52,7 +52,7 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
           />
           <PasoChecklist
             n={3}
-            titulo="Mirá los indicadores (VAN, TIR, Payback)"
+            titulo="Mirá los indicadores (VAN, TIR y recuperación)"
             detalle="En el Paso 9 (Resumen) ves si tu proyecto da plata. VAN > 0 + TIR > WACC = viable. Si no da, volvé y ajustá precios o costos."
           />
           <PasoChecklist

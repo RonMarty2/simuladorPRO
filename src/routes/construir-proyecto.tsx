@@ -28,6 +28,7 @@ import Paso9Financiamiento from "@/components/constructor/pasos/Paso9Financiamie
 import Paso9Resumen from "@/components/constructor/pasos/Paso9Resumen";
 import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
+import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
 
 const TOTAL_PASOS = 9;
@@ -224,6 +225,17 @@ export default function ConstruirProyecto() {
 
       {/* Banner del tipo de proyecto — separa visualmente el selector de la barra */}
       <BannerTipoProyecto tipo={proyecto.tipo} />
+
+      {/* Acciones globales: disponibles en Semana E, cursos normales, grupos e individuales. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-emerald-50 p-3 dark:border-violet-900 dark:from-violet-950/30 dark:via-background dark:to-emerald-950/20">
+        <div>
+          <div className="text-xs font-bold">¿Listo para mostrar tu proyecto?</div>
+          <div className="text-[10px] text-muted-foreground">
+            Prepara una presentación profesional o descarga el modelo financiero completo.
+          </div>
+        </div>
+        <AccionesProyecto proyecto={proyecto} />
+      </div>
 
       <BarraProgreso
         pasoActual={pasoActual}

@@ -14,6 +14,7 @@
 import * as XLSX from "xlsx-js-style";
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { calcularAportesPatronales, obtenerTasasAportes, TASA_IUE } from "./calculo-financiero";
+import { obtenerPresentacionProyecto } from "./presentacion-proyecto";
 import type { Proyecto } from "@/types/proyecto";
 
 const FECHA_HOY = () => new Date().toLocaleDateString("es-BO");
@@ -169,10 +170,20 @@ const mergeRow = (r: number, c0: number, c1: number) => ({
 // ────────────────────────────────────────────────────────────────────────────
 
 export function exportarProyectoExcel(proyecto: Proyecto): void {
+  const wb = crearLibroProyectoExcel(proyecto);
+  const nombre =
+    (proyecto.nombre || "proyecto").replace(/[^a-z0-9_-]/gi, "_") +
+    `_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, nombre);
+}
+
+/** Construye el libro completo; se exporta para poder verificarlo en pruebas. */
+export function crearLibroProyectoExcel(proyecto: Proyecto): XLSX.WorkBook {
   const calc = construirFlujoCaja(proyecto);
   const wb = XLSX.utils.book_new();
 
   agregarPortada(wb, proyecto, calc);
+  agregarPresentacionEjecutiva(wb, proyecto, calc);
   agregarDatos(wb, proyecto);
   agregarInversiones(wb, proyecto);
   agregarPersonal(wb, proyecto);
@@ -183,11 +194,7 @@ export function exportarProyectoExcel(proyecto: Proyecto): void {
   agregarFlujoCaja(wb, calc);
   agregarIndicadores(wb, calc);
   agregarInterpretacion(wb);
-
-  const nombre =
-    (proyecto.nombre || "proyecto").replace(/[^a-z0-9_-]/gi, "_") +
-    `_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  XLSX.writeFile(wb, nombre);
+  return wb;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -206,8 +213,8 @@ function agregarPortada(
     [sec("INDICADORES PRINCIPALES")],
     [lbl("VAN (Bs)"), M(calc.indicadores.van)],
     [lbl("TIR"), P(calc.indicadores.tir)],
-    [lbl("WACC"), P(calc.wacc)],
-    [lbl("Payback (años)"), N(calc.indicadores.payback)],
+    [lbl("Costo promedio de capital (WACC)"), P(calc.wacc)],
+    [lbl("Periodo de recuperación (años)"), N(calc.indicadores.payback)],
     [lbl("IR (Índice de Rentabilidad)"), N(calc.indicadores.ir)],
     [lbl("RBC (Relación Beneficio/Costo)"), N(calc.indicadores.rbc)],
     [lbl("TRC (Tasa de Retorno Contable)"), P(calc.indicadores.trc)],
@@ -228,6 +235,43 @@ function agregarPortada(
   addSheet(wb, "Portada", aoa, {
     anchos: [42, 22],
     merges: [mergeRow(0, 0, 1), mergeRow(1, 0, 1), mergeRow(3, 0, 1), mergeRow(13, 0, 1)],
+  });
+}
+
+function agregarPresentacionEjecutiva(
+  wb: XLSX.WorkBook,
+  p: Proyecto,
+  calc: ReturnType<typeof construirFlujoCaja>
+) {
+  const pitch = obtenerPresentacionProyecto(p);
+  const viable =
+    calc.indicadores.van > 0 &&
+    Number.isFinite(calc.indicadores.tir) &&
+    calc.indicadores.tir > calc.wacc;
+  const textoLargo = {
+    ...ST.label,
+    alignment: { wrapText: true, vertical: "top" },
+  } as any;
+  const aoa: any[][] = [
+    [ti("PRESENTACIÓN EJECUTIVA DEL PROYECTO")],
+    [sub(`${pitch.titulo} · ${pitch.subtitulo}`)],
+    [],
+    [sec("NARRATIVA PARA PRESENTACIÓN")],
+    [lblB("Equipo / expositores"), { v: pitch.expositores, t: "s", s: textoLargo }],
+    [lblB("Problema u oportunidad"), { v: pitch.problema, t: "s", s: textoLargo }],
+    [lblB("Propuesta de valor"), { v: pitch.propuestaValor, t: "s", s: textoLargo }],
+    [lblB("Conclusión"), { v: pitch.conclusion, t: "s", s: textoLargo }],
+    [],
+    [sec("DECISIÓN FINANCIERA", true)],
+    [lblB("Resultado"), lbl(viable ? "PROYECTO VIABLE" : "REQUIERE AJUSTES")],
+    [lblB("VAN"), M(calc.indicadores.van)],
+    [lblB("TIR"), P(calc.indicadores.tir)],
+    [lblB("Costo promedio de capital (WACC)"), P(calc.wacc)],
+    [lblB("Periodo de recuperación"), N(calc.indicadores.payback)],
+  ];
+  addSheet(wb, "Presentación ejecutiva", aoa, {
+    anchos: [30, 92],
+    merges: [mergeRow(0, 0, 1), mergeRow(1, 0, 1), mergeRow(3, 0, 1), mergeRow(9, 0, 1)],
   });
 }
 
@@ -539,16 +583,16 @@ function agregarIndicadores(
     [ti("9. INDICADORES DE EVALUACIÓN")],
     [sub("VAN, TIR e IR están vinculados al Flujo de caja (cambian si tocas un valor de entrada).")],
     [],
-    [lblB("WACC (tasa de descuento)"), P(calc.wacc)],
+    [lblB("Costo promedio de capital — WACC"), P(calc.wacc)],
     [lblB("VAN (Bs)"), fMoneyBold(`=NPV(B4,${rangoAnios})+${refAno0}`)],
     [lblB("TIR"), fPercent(`=IRR(${rangoCompleto})`)],
-    [lblB("Payback (años)"), N(calc.indicadores.payback)],
+    [lblB("Periodo de recuperación (años)"), N(calc.indicadores.payback)],
     [lblB("IR — Índice de Rentabilidad"), { f: `=NPV(B4,${rangoAnios})/(-${refAno0})`, t: "n", s: { ...ST.num, font: { sz: 10, bold: true } } } as any],
     [lblB("RBC — Relación Beneficio/Costo"), N(calc.indicadores.rbc)],
     [lblB("TRC — Tasa de Retorno Contable"), P(calc.indicadores.trc)],
     [lblB("SD — Cobertura del Servicio de Deuda"), N(calc.indicadores.sd)],
     [],
-    [sub("Payback, RBC, TRC y SD se exportan como valores calculados por la app.")],
+    [sub("El periodo de recuperación, RBC, TRC y SD se exportan como valores calculados por la aplicación.")],
   ];
   addSheet(wb, "9. Indicadores", aoa, {
     anchos: [44, 22],
@@ -571,14 +615,14 @@ function agregarInterpretacion(wb: XLSX.WorkBook) {
     item("TIR — Tasa Interna de Retorno",
       "Rendimiento promedio anual del proyecto. Se compara con el WACC: si TIR > WACC, conviene; si TIR < WACC, no."
     ),
-    item("WACC — Costo Promedio Ponderado de Capital",
+    item("Costo Promedio Ponderado de Capital (WACC)",
       "Mezcla del costo de la deuda (banco, después de impuestos) y del costo del capital propio, ponderada por cuánto pones de cada uno. Es la 'vara' mínima que la TIR debe superar."
     ),
-    item("Payback",
+    item("Periodo de recuperación",
       "Cuántos años tarda el proyecto en devolverte la inversión inicial sumando flujos sin descontar. Mientras más corto, menor el riesgo de tiempo expuesto."
     ),
-    item("Payback descontado",
-      "Igual al payback pero descontando los flujos al WACC. Siempre es más largo que el payback simple."
+    item("Periodo de recuperación descontado",
+      "Igual al periodo de recuperación, pero descontando los flujos al WACC. Siempre es más largo que el periodo simple."
     ),
     item("IR — Índice de Rentabilidad",
       "VP(flujos futuros) ÷ |inversión inicial|. Si IR > 1, por cada Bs invertido recuperas más de un Bs."

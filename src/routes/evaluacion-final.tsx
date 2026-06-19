@@ -111,7 +111,7 @@ export default function EvaluacionFinal() {
           mejorEsMayor
         />
         <ComparativoCard
-          titulo="Payback"
+          titulo="Periodo de recuperación"
           proyectado={proyectado.payback}
           real={real.payback}
           formato="anios"
@@ -126,7 +126,7 @@ export default function EvaluacionFinal() {
         />
         {proyecto.version === "v2" && (
           <ComparativoCard
-            titulo="Payback descontado (V2)"
+            titulo="Recuperación descontada (V2)"
             proyectado={proyectado.paybackDescontado}
             real={real.paybackDescontado}
             formato="anios"

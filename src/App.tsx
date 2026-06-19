@@ -24,6 +24,7 @@ const GaleriaEjemplos = lazy(() => import("@/routes/galeria-ejemplos"));
 const Escenarios = lazy(() => import("@/routes/escenarios"));
 const AdminPanel = lazy(() => import("@/routes/admin"));
 const MiPerfil = lazy(() => import("@/routes/mi-perfil"));
+const PresentarProyecto = lazy(() => import("@/routes/presentar-proyecto"));
 
 function Cargando() {
   return (
@@ -39,7 +40,27 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/semanae" element={<SemanaEEntrada />} />
+      {import.meta.env.DEV && (
+        <Route
+          path="/presentar/demo"
+          element={
+            <Suspense fallback={<Cargando />}>
+              <PresentarProyecto />
+            </Suspense>
+          }
+        />
+      )}
       <Route element={<ProtectedRoute />}>
+        {/* Modo Pitch vive fuera del layout normal para proyectar en pantalla
+            completa, pero conserva la misma autenticación y permisos RLS. */}
+        <Route
+          path="/presentar/:proyectoId"
+          element={
+            <Suspense fallback={<Cargando />}>
+              <PresentarProyecto />
+            </Suspense>
+          }
+        />
         <Route element={<RootLayout />}>
           <Route
             path="/"
