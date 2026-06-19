@@ -21,14 +21,23 @@ import {
   ChevronRight,
   Clock3,
   FileSpreadsheet,
+  Gauge,
   Lightbulb,
   Maximize2,
   Minimize2,
+  RotateCcw,
+  SlidersHorizontal,
   Target,
   X,
 } from "lucide-react";
 import type { PresentacionProyecto, Proyecto } from "@/types/proyecto";
 import type { construirModeloPitch, IdDiapositivaPitch } from "@/lib/presentacion-proyecto";
+import {
+  analizarLimitesViabilidad,
+  calcularEscenarioLaboratorio,
+  crearAjustesLaboratorioIniciales,
+  type AjustesLaboratorio,
+} from "@/lib/laboratorio-viabilidad";
 
 type ModeloPitch = ReturnType<typeof construirModeloPitch>;
 
@@ -65,6 +74,9 @@ export default function VisorPitch({
   const [mostrarNotas, setMostrarNotas] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [segundos, setSegundos] = useState(0);
+  const [ajustesLaboratorio, setAjustesLaboratorio] = useState<AjustesLaboratorio>(
+    () => crearAjustesLaboratorioIniciales(proyecto)
+  );
   const diapositiva = modelo.diapositivas[indice];
 
   const anterior = () => setIndice((actual) => Math.max(0, actual - 1));
@@ -73,6 +85,13 @@ export default function VisorPitch({
 
   useEffect(() => {
     const alPresionar = (evento: KeyboardEvent) => {
+      const objetivo = evento.target as HTMLElement | null;
+      if (
+        objetivo &&
+        ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(objetivo.tagName)
+      ) {
+        return;
+      }
       if (["ArrowRight", "PageDown", " "].includes(evento.key)) {
         evento.preventDefault();
         siguiente();
@@ -169,6 +188,11 @@ export default function VisorPitch({
             presentacion={presentacion}
             modelo={modelo}
             etiqueta={diapositiva.etiqueta}
+            ajustesLaboratorio={ajustesLaboratorio}
+            onCambiarAjustes={setAjustesLaboratorio}
+            onReiniciarLaboratorio={() =>
+              setAjustesLaboratorio(crearAjustesLaboratorioIniciales(proyecto))
+            }
           />
           <div className="absolute bottom-4 right-5 z-20 text-[10px] font-bold tracking-[0.18em] text-slate-400 md:text-xs">
             {indice + 1} / {modelo.diapositivas.length}
@@ -223,22 +247,41 @@ function RenderDiapositiva({
   presentacion,
   modelo,
   etiqueta,
+  ajustesLaboratorio,
+  onCambiarAjustes,
+  onReiniciarLaboratorio,
 }: {
   id: IdDiapositivaPitch;
   proyecto: Proyecto;
   presentacion: PresentacionProyecto;
   modelo: ModeloPitch;
   etiqueta: string;
+  ajustesLaboratorio: AjustesLaboratorio;
+  onCambiarAjustes: (ajustes: AjustesLaboratorio) => void;
+  onReiniciarLaboratorio: () => void;
 }) {
   if (id === "portada") return <Portada proyecto={proyecto} presentacion={presentacion} modelo={modelo} />;
   if (id === "oportunidad") return <Oportunidad presentacion={presentacion} etiqueta={etiqueta} />;
   if (id === "mercado") return <Mercado modelo={modelo} etiqueta={etiqueta} />;
   if (id === "inversion") return <Inversion modelo={modelo} etiqueta={etiqueta} />;
   if (id === "operacion") return <Operacion modelo={modelo} etiqueta={etiqueta} />;
+  if (id === "equilibrio") return <Equilibrio proyecto={proyecto} etiqueta={etiqueta} />;
   if (id === "financiamiento") return <Financiamiento modelo={modelo} etiqueta={etiqueta} />;
   if (id === "flujo") return <Flujo modelo={modelo} etiqueta={etiqueta} />;
   if (id === "indicadores") return <Indicadores modelo={modelo} etiqueta={etiqueta} />;
   if (id === "riesgo") return <Riesgo modelo={modelo} etiqueta={etiqueta} />;
+  if (id === "laboratorio") {
+    return (
+      <LaboratorioViabilidad
+        proyecto={proyecto}
+        modelo={modelo}
+        etiqueta={etiqueta}
+        ajustes={ajustesLaboratorio}
+        onCambiar={onCambiarAjustes}
+        onReiniciar={onReiniciarLaboratorio}
+      />
+    );
+  }
   return <Cierre presentacion={presentacion} modelo={modelo} etiqueta={etiqueta} />;
 }
 
@@ -428,6 +471,324 @@ function Operacion({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string
   );
 }
 
+function Equilibrio({
+  proyecto,
+  etiqueta,
+}: {
+  proyecto: Proyecto;
+  etiqueta: string;
+}) {
+  const base = useMemo(
+    () =>
+      calcularEscenarioLaboratorio(
+        proyecto,
+        crearAjustesLaboratorioIniciales(proyecto)
+      ),
+    [proyecto]
+  );
+  const unidadesEquilibrio = base.equilibrio.unidades;
+  const alcanzaEquilibrio =
+    Number.isFinite(unidadesEquilibrio) &&
+    base.unidadesAnio1 >= unidadesEquilibrio;
+
+  return (
+    <Marco
+      etiqueta={etiqueta}
+      titulo="El punto exacto donde el proyecto deja de perder"
+      subtitulo="La intersección entre ingresos y costos muestra cuántas unidades deben venderse para cubrir toda la operación."
+    >
+      <div className="grid h-full grid-cols-[1fr_2.25fr] gap-[3%]">
+        <div className="flex flex-col justify-center gap-[5%]">
+          <Kpi
+            titulo="Equilibrio en unidades"
+            valor={
+              Number.isFinite(unidadesEquilibrio)
+                ? `${Math.ceil(unidadesEquilibrio).toLocaleString("es-BO")} u`
+                : "No se alcanza"
+            }
+            color={alcanzaEquilibrio ? "emerald" : "amber"}
+          />
+          <Kpi
+            titulo="Ventas de equilibrio"
+            valor={
+              Number.isFinite(base.equilibrio.ingresoBs)
+                ? fmtBs(base.equilibrio.ingresoBs)
+                : "Sin margen"
+            }
+            color="violet"
+          />
+          <Kpi
+            titulo="Margen de seguridad"
+            valor={
+              Number.isFinite(base.margenSeguridad)
+                ? fmtPct(base.margenSeguridad)
+                : "—"
+            }
+            color={base.margenSeguridad >= 0 ? "cyan" : "amber"}
+          />
+        </div>
+        <div className="rounded-[1.5vw] border border-slate-200 bg-white p-[3%] shadow-sm">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={base.graficoEquilibrio}
+              margin={{ top: 16, right: 28, left: 18, bottom: 4 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis
+                dataKey="unidades"
+                type="number"
+                tickFormatter={(valor) => Number(valor).toLocaleString("es-BO", { maximumFractionDigits: 0 })}
+                tick={{ fontSize: 11, fill: "#64748b" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={(valor) => fmtBs(valor).replace("Bs ", "")}
+                tick={{ fontSize: 11, fill: "#64748b" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                formatter={tooltipBs}
+                labelFormatter={(valor) => `${Number(valor).toLocaleString("es-BO", { maximumFractionDigits: 0 })} unidades`}
+              />
+              <Legend />
+              {Number.isFinite(unidadesEquilibrio) && (
+                <ReferenceLine
+                  x={unidadesEquilibrio}
+                  stroke="#7c3aed"
+                  strokeDasharray="6 4"
+                  label={{ value: "Punto de equilibrio", fill: "#7c3aed", fontSize: 11, position: "insideTopRight" }}
+                />
+              )}
+              <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke="#10b981" strokeWidth={4} dot={false} />
+              <Line type="monotone" dataKey="costos" name="Costos totales" stroke="#f43f5e" strokeWidth={4} dot={false} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </Marco>
+  );
+}
+
+function LaboratorioViabilidad({
+  proyecto,
+  modelo,
+  etiqueta,
+  ajustes,
+  onCambiar,
+  onReiniciar,
+}: {
+  proyecto: Proyecto;
+  modelo: ModeloPitch;
+  etiqueta: string;
+  ajustes: AjustesLaboratorio;
+  onCambiar: (ajustes: AjustesLaboratorio) => void;
+  onReiniciar: () => void;
+}) {
+  const analisis = useMemo(
+    () => analizarLimitesViabilidad(proyecto, modelo.nivel),
+    [proyecto, modelo.nivel]
+  );
+  const escenario = useMemo(
+    () => calcularEscenarioLaboratorio(proyecto, ajustes),
+    [proyecto, ajustes]
+  );
+  const base = analisis.base;
+  const resultado = escenario.resultado;
+  const actualizar = (campo: keyof AjustesLaboratorio, valor: number) =>
+    onCambiar({ ...ajustes, [campo]: valor });
+  const controles = [
+    { campo: "precioPct" as const, etiqueta: "Precio", minimo: -30, maximo: 50, paso: 1, sufijo: "%" },
+    { campo: "demandaPct" as const, etiqueta: "Ventas", minimo: -40, maximo: 50, paso: 1, sufijo: "%" },
+    { campo: "costoDirectoPct" as const, etiqueta: "Costos directos", minimo: -30, maximo: 50, paso: 1, sufijo: "%" },
+    ...(modelo.nivel !== "basico"
+      ? [{ campo: "costoFijoPct" as const, etiqueta: "Costos fijos", minimo: -30, maximo: 50, paso: 1, sufijo: "%" }]
+      : []),
+    ...(modelo.nivel === "avanzado"
+      ? [
+          { campo: "deudaPct" as const, etiqueta: "Deuda del proyecto", minimo: 0, maximo: 80, paso: 1, sufijo: "%" },
+          { campo: "tasaInteresPct" as const, etiqueta: "Interés anual", minimo: 0, maximo: 35, paso: 0.5, sufijo: "%" },
+        ]
+      : []),
+  ];
+
+  return (
+    <Marco
+      etiqueta={etiqueta}
+      titulo="¿Hasta dónde sigue siendo viable?"
+      subtitulo="Mueve las variables durante la exposición. Este ensayo no modifica los datos guardados del proyecto."
+    >
+      <div className="grid h-full grid-cols-[1.05fr_1.6fr] gap-[2.5%]">
+        <div className="flex min-h-0 flex-col rounded-[1.5vw] border border-violet-200 bg-white p-[4%] shadow-sm">
+          <div className="mb-[2%] flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[clamp(10px,0.95vw,15px)] font-black uppercase tracking-[0.12em] text-violet-700">
+              <SlidersHorizontal className="h-[1.2em] w-[1.2em]" /> Variables
+            </div>
+            <button
+              onClick={onReiniciar}
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[clamp(8px,0.72vw,11px)] font-bold text-slate-600 hover:bg-slate-200"
+            >
+              <RotateCcw className="h-3 w-3" /> Restablecer
+            </button>
+          </div>
+          <div className={`grid min-h-0 flex-1 content-center gap-x-[5%] gap-y-[3%] ${controles.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>
+            {controles.map((control) => (
+              <ControlLaboratorio
+                key={control.campo}
+                etiqueta={control.etiqueta}
+                valor={ajustes[control.campo]}
+                minimo={control.minimo}
+                maximo={control.maximo}
+                paso={control.paso}
+                sufijo={control.sufijo}
+                mostrarSigno={!(["deudaPct", "tasaInteresPct"] as string[]).includes(control.campo)}
+                onChange={(valor) => actualizar(control.campo, valor)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="grid min-h-0 grid-rows-[auto_auto_1fr] gap-[2.5%]">
+          <div className={`flex items-center justify-between rounded-[1.3vw] border px-[4%] py-[2.2%] ${escenario.viable ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+            <div className="flex items-center gap-3">
+              <div className={`flex h-[clamp(34px,3vw,52px)] w-[clamp(34px,3vw,52px)] items-center justify-center rounded-xl text-white ${escenario.viable ? "bg-emerald-500" : "bg-amber-500"}`}>
+                <Gauge className="h-1/2 w-1/2" />
+              </div>
+              <div>
+                <div className="text-[clamp(9px,0.8vw,12px)] font-black uppercase tracking-[0.16em] text-slate-500">Resultado del escenario</div>
+                <div className="text-[clamp(18px,2vw,32px)] font-black text-slate-950">
+                  {escenario.viable ? "Proyecto viable" : "Requiere ajustes"}
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[clamp(8px,0.7vw,11px)] font-bold uppercase text-slate-500">Variable más sensible</div>
+              <div className="text-[clamp(12px,1.15vw,18px)] font-black text-violet-700">{analisis.impactos[0]?.variable ?? "—"}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-[1.5%]">
+            <Comparador titulo="VAN" base={fmtBs(base.resultado.indicadores.van)} actual={fmtBs(resultado.indicadores.van)} positivo={resultado.indicadores.van > 0} />
+            <Comparador titulo="TIR" base={fmtPct(base.resultado.indicadores.tir)} actual={fmtPct(resultado.indicadores.tir)} positivo={resultado.indicadores.tir > resultado.wacc} />
+            <Comparador
+              titulo="Equilibrio"
+              base={Number.isFinite(base.equilibrio.unidades) ? `${Math.ceil(base.equilibrio.unidades).toLocaleString("es-BO")} u` : "—"}
+              actual={Number.isFinite(escenario.equilibrio.unidades) ? `${Math.ceil(escenario.equilibrio.unidades).toLocaleString("es-BO")} u` : "—"}
+              positivo={escenario.margenSeguridad >= 0}
+            />
+            <Comparador
+              titulo={modelo.nivel === "avanzado" ? "Cobertura deuda" : "Recuperación"}
+              base={modelo.nivel === "avanzado" ? formatoCobertura(base.resultado.indicadores.sd) : formatoRecuperacion(base.resultado.indicadores.payback)}
+              actual={modelo.nivel === "avanzado" ? formatoCobertura(resultado.indicadores.sd) : formatoRecuperacion(resultado.indicadores.payback)}
+              positivo={modelo.nivel === "avanzado" ? resultado.indicadores.sd >= 1 : resultado.indicadores.payback >= 0}
+            />
+          </div>
+
+          <div className="grid min-h-0 grid-cols-[0.8fr_1.2fr] gap-[2%]">
+            <div className="rounded-[1.2vw] border border-slate-200 bg-white p-[5%]">
+              <div className="text-[clamp(8px,0.72vw,11px)] font-black uppercase tracking-[0.15em] text-slate-500">Qué mueve el VAN</div>
+              <div className="mt-[5%] space-y-[5%]">
+                {analisis.impactos.map((impacto) => (
+                  <div key={impacto.variable}>
+                    <div className="mb-1 flex justify-between text-[clamp(8px,0.75vw,12px)] font-bold text-slate-700">
+                      <span>{impacto.variable}</span>
+                      <span>{fmtBs(impacto.impactoVan)}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500" style={{ width: `${impacto.porcentaje}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-[1.2vw] border border-slate-200 bg-slate-950 p-[4%] text-white">
+              <div className="text-[clamp(8px,0.72vw,11px)] font-black uppercase tracking-[0.15em] text-violet-300">Límites calculados</div>
+              <div className="mt-[3%] grid h-[82%] content-center gap-[3%]">
+                {analisis.umbrales.map((umbral) => (
+                  <div key={umbral.variable} className="flex items-start gap-2 text-[clamp(9px,0.82vw,13px)] leading-snug text-slate-200">
+                    <span className={`mt-[0.35em] h-2 w-2 shrink-0 rounded-full ${umbral.alcanzable ? "bg-emerald-400" : "bg-amber-400"}`} />
+                    {umbral.texto}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Marco>
+  );
+}
+
+function ControlLaboratorio({
+  etiqueta,
+  valor,
+  minimo,
+  maximo,
+  paso,
+  sufijo,
+  mostrarSigno,
+  onChange,
+}: {
+  etiqueta: string;
+  valor: number;
+  minimo: number;
+  maximo: number;
+  paso: number;
+  sufijo: string;
+  mostrarSigno: boolean;
+  onChange: (valor: number) => void;
+}) {
+  const textoValor = `${mostrarSigno && valor > 0 ? "+" : ""}${valor.toFixed(paso < 1 ? 1 : 0)}${sufijo}`;
+  return (
+    <label className="block rounded-xl bg-slate-50 px-[4%] py-[3%]">
+      <span className="flex items-center justify-between gap-2 text-[clamp(9px,0.82vw,13px)] font-bold text-slate-700">
+        <span>{etiqueta}</span>
+        <span className="rounded-md bg-white px-2 py-0.5 font-black text-violet-700 shadow-sm">{textoValor}</span>
+      </span>
+      <input
+        type="range"
+        min={minimo}
+        max={maximo}
+        step={paso}
+        value={valor}
+        onChange={(evento) => onChange(Number(evento.target.value))}
+        className="mt-[4%] h-2 w-full cursor-pointer accent-violet-600"
+        aria-label={etiqueta}
+      />
+    </label>
+  );
+}
+
+function Comparador({
+  titulo,
+  base,
+  actual,
+  positivo,
+}: {
+  titulo: string;
+  base: string;
+  actual: string;
+  positivo: boolean;
+}) {
+  return (
+    <div className={`rounded-[1vw] border p-[8%] ${positivo ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+      <div className="text-[clamp(7px,0.62vw,10px)] font-black uppercase tracking-[0.12em] text-slate-500">{titulo}</div>
+      <div className="mt-[5%] truncate text-[clamp(14px,1.55vw,25px)] font-black text-slate-950">{actual}</div>
+      <div className="mt-[3%] truncate text-[clamp(7px,0.68vw,10px)] text-slate-500">Original: {base}</div>
+    </div>
+  );
+}
+
+function formatoRecuperacion(valor: number) {
+  return Number.isFinite(valor) && valor >= 0 ? `${valor.toFixed(1)} años` : "No recupera";
+}
+
+function formatoCobertura(valor: number) {
+  if (!Number.isFinite(valor)) return "Sin deuda";
+  return `${valor.toFixed(2)} veces`;
+}
+
 function Financiamiento({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string }) {
   const deudaPct = modelo.totalProyecto > 0 ? modelo.deuda / modelo.totalProyecto : 0;
   return (
@@ -566,10 +927,12 @@ function notaDiapositiva(id: IdDiapositivaPitch, presentacion: PresentacionProye
     mercado: "Cuenta qué supuestos explican el crecimiento. Destaca la diferencia entre demanda física e ingresos monetarios.",
     inversion: `La inversión total es ${fmtBs(modelo.totalProyecto)}. Señala las dos categorías más importantes y por qué son necesarias.`,
     operacion: "Explica qué costo pesa más y qué control tendrá el equipo para evitar desviaciones durante la operación.",
+    equilibrio: "Muestra dónde se cruzan ingresos y costos. El margen de seguridad indica cuánto pueden caer las ventas antes de empezar a perder.",
     financiamiento: `Aclara cuánto aporta el equipo y cuánto proviene de deuda. El costo promedio de capital (WACC) es ${fmtPct(modelo.resultado.wacc)}.`,
     flujo: "La barra inicial negativa representa la inversión. Después muestra cuándo los flujos positivos compensan ese desembolso.",
     indicadores: `La regla principal es VAN mayor a cero y TIR mayor al costo promedio de capital (WACC). Conecta los indicadores con una decisión concreta.`,
     riesgo: "No presentes los escenarios como predicciones exactas. Son pruebas para identificar las variables que más afectan el resultado.",
+    laboratorio: "Mueve una variable a la vez, explica qué cambia y usa los límites calculados para defender hasta dónde resiste el proyecto. Restablece antes de probar otra variable.",
     cierre: "Termina con una recomendación clara y una acción siguiente. Después abre el espacio de preguntas.",
   };
   return notas[id];

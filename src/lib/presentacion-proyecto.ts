@@ -13,10 +13,12 @@ export type IdDiapositivaPitch =
   | "mercado"
   | "inversion"
   | "operacion"
+  | "equilibrio"
   | "financiamiento"
   | "flujo"
   | "indicadores"
   | "riesgo"
+  | "laboratorio"
   | "cierre";
 
 export interface DiapositivaPitch {
@@ -173,6 +175,14 @@ export function construirModeloPitch(proyecto: Proyecto) {
         ),
     },
     {
+      id: "equilibrio",
+      titulo: "Punto de equilibrio",
+      etiqueta: "06 · Umbral operativo",
+      visible:
+        mercado[0].demanda > 0 &&
+        Number.isFinite(resultado.puntoEquilibrio.unidades),
+    },
+    {
       id: "financiamiento",
       titulo: "Cómo se financia",
       etiqueta: "06 · Capital",
@@ -186,7 +196,13 @@ export function construirModeloPitch(proyecto: Proyecto) {
       etiqueta: "09 · Riesgo",
       visible: nivel !== "basico",
     },
-    { id: "cierre", titulo: "Conclusión", etiqueta: "10 · Cierre", visible: true },
+    {
+      id: "laboratorio",
+      titulo: "Laboratorio de viabilidad",
+      etiqueta: "10 · Prueba en vivo",
+      visible: true,
+    },
+    { id: "cierre", titulo: "Conclusión", etiqueta: "11 · Cierre", visible: true },
   ];
 
   const diapositivas = definiciones

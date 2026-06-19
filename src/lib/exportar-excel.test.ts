@@ -22,5 +22,7 @@ describe("Excel global del proyecto", () => {
 
     const presentacion = libro.Sheets["Presentación ejecutiva"];
     expect(presentacion?.B5?.v).toBe("Equipo de prueba");
+    expect(presentacion?.A16?.v).toBe("Punto de equilibrio (unidades)");
+    expect(Number(presentacion?.B16?.v)).toBeGreaterThan(0);
   });
 });

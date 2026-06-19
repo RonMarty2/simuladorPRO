@@ -45,6 +45,8 @@ describe("modo presentación", () => {
     expect(modelo.diapositivas.map((d) => d.id)).not.toContain("operacion");
     expect(modelo.diapositivas.map((d) => d.id)).not.toContain("financiamiento");
     expect(modelo.diapositivas.map((d) => d.id)).not.toContain("riesgo");
+    expect(modelo.diapositivas.map((d) => d.id)).toContain("equilibrio");
+    expect(modelo.diapositivas.map((d) => d.id)).toContain("laboratorio");
   });
 
   it("incluye operación y riesgo en nivel medio", () => {
@@ -54,6 +56,8 @@ describe("modo presentación", () => {
     const ids = construirModeloPitch(proyecto).diapositivas.map((d) => d.id);
     expect(ids).toContain("operacion");
     expect(ids).toContain("riesgo");
+    expect(ids).toContain("equilibrio");
+    expect(ids).toContain("laboratorio");
     expect(ids).not.toContain("financiamiento");
   });
 

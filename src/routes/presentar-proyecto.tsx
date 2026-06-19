@@ -244,7 +244,7 @@ export default function PresentarProyecto() {
                 <div className="mt-0.5 text-xs text-slate-500">Formato panorámico 16:9</div>
               </div>
               <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${modelo.viable ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                {modelo.viable ? "Viable" : "Ajustar"}
+                {modelo.viable ? "Estado: viable" : "Estado: requiere ajustes"}
               </span>
             </div>
             <div className="aspect-video overflow-hidden rounded-xl bg-[#0c1022] p-[7%] text-white shadow-xl">

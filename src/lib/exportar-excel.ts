@@ -15,6 +15,7 @@ import * as XLSX from "xlsx-js-style";
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { calcularAportesPatronales, obtenerTasasAportes, TASA_IUE } from "./calculo-financiero";
 import { obtenerPresentacionProyecto } from "./presentacion-proyecto";
+import { construirFlujoCajaProyecto } from "./finanzas/proyecto-financiero";
 import type { Proyecto } from "@/types/proyecto";
 
 const FECHA_HOY = () => new Date().toLocaleDateString("es-BO");
@@ -244,6 +245,7 @@ function agregarPresentacionEjecutiva(
   calc: ReturnType<typeof construirFlujoCaja>
 ) {
   const pitch = obtenerPresentacionProyecto(p);
+  const analisis = construirFlujoCajaProyecto(p);
   const viable =
     calc.indicadores.van > 0 &&
     Number.isFinite(calc.indicadores.tir) &&
@@ -268,6 +270,9 @@ function agregarPresentacionEjecutiva(
     [lblB("TIR"), P(calc.indicadores.tir)],
     [lblB("Costo promedio de capital (WACC)"), P(calc.wacc)],
     [lblB("Periodo de recuperación"), N(calc.indicadores.payback)],
+    [lblB("Punto de equilibrio (unidades)"), N(analisis.puntoEquilibrio.unidades)],
+    [lblB("Ventas en el punto de equilibrio"), M(analisis.puntoEquilibrio.ingresoBs)],
+    [lblB("Margen de contribución"), P(analisis.puntoEquilibrio.ratioMargenContribucion)],
   ];
   addSheet(wb, "Presentación ejecutiva", aoa, {
     anchos: [30, 92],
