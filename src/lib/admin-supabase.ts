@@ -51,6 +51,18 @@ export async function listarTodosLosCursos() {
   return data ?? [];
 }
 
+/** Cambia el estado de un curso desde el panel admin. */
+export async function cambiarEstadoCursoComoAdmin(cursoId: string, estado: string) {
+  const { data, error } = await supabase
+    .from("cursos")
+    .update({ estado })
+    .eq("id", cursoId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 /** Lista todos los proyectos del sistema (admin ve todo). */
 export async function listarTodosLosProyectos() {
   const { data, error } = await supabase

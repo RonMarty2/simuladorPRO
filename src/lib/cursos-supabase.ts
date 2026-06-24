@@ -90,6 +90,21 @@ export async function actualizarEsSemanaE(
   if (error) throw error;
 }
 
+/** Cambia el estado del curso. En Semana E se usa como llave de publicacion:
+ *  activo = visible/usable; archivado = oculto. */
+export async function actualizarEstadoCurso(
+  cursoId: string,
+  estado: EstadoCurso
+): Promise<Curso> {
+  const { data, error } = await conTimeout(
+    supabase.from("cursos").update({ estado }).eq("id", cursoId).select().single(),
+    10000,
+    "actualizando estado del curso"
+  );
+  if (error) throw error;
+  return data as Curso;
+}
+
 /** Habilita/deshabilita que los estudiantes creen su propio proyecto en el curso. */
 export async function actualizarPermiteProyectoLibre(
   cursoId: string,
@@ -235,6 +250,7 @@ export async function crearCurso(params: {
   simulacion_individual?: boolean;
   simulacion_grupal?: boolean;
   es_semana_e?: boolean;
+  estado?: EstadoCurso;
   // Config opcional de grupos al crear (útil para "Crear Semana E" que los
   // habilita de una; en cursos normales el docente los configura después).
   grupo_habilitado?: boolean;
@@ -264,6 +280,7 @@ export async function crearCurso(params: {
           simulacion_individual: params.simulacion_individual ?? false,
           simulacion_grupal: params.simulacion_grupal ?? true,
           es_semana_e: params.es_semana_e ?? false,
+          estado: params.estado ?? "activo",
           grupo_habilitado: params.grupo_habilitado ?? false,
           grupo_cupo_max: params.grupo_cupo_max ?? 4,
           grupo_modelo: params.grupo_modelo ?? "unidades",
@@ -398,10 +415,14 @@ export async function listarMisInscripciones(estudianteId: string): Promise<
     .in("id", cursoIds);
   if (errCursos) throw errCursos;
 
-  return inscripciones.map((i) => ({
-    inscrito_en: i.inscrito_en,
-    curso: cursos!.find((c) => c.id === i.curso_id) as Curso,
-  }));
+  return inscripciones.flatMap((i) => {
+    const curso = cursos!.find((c) => c.id === i.curso_id) as Curso | undefined;
+    if (!curso) return [];
+    // Semana E se oculta totalmente para estudiantes mientras este archivada.
+    // Los cursos normales no cambian su comportamiento.
+    if (curso.es_semana_e && curso.estado !== "activo") return [];
+    return [{ inscrito_en: i.inscrito_en, curso }];
+  });
 }
 
 export async function listarInscritosDeCurso(cursoId: string): Promise<InscripcionConPerfil[]> {

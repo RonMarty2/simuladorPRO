@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
+  actualizarEstadoCurso,
   crearCurso,
   eliminarCurso,
   listarInscritosDeCurso,
@@ -22,6 +23,7 @@ import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
+import { puedeAdministrarSemanaE } from "@/lib/permisos-admin";
 
 export default function DashboardDocente() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -42,10 +44,19 @@ export default function DashboardDocente() {
 
   if (perfil && perfil.rol !== "docente") return <Navigate to="/estudiante" replace />;
 
+  const adminSemanaE = puedeAdministrarSemanaE(perfil);
+  const cursosVisibles = adminSemanaE ? cursos : cursos.filter((c) => !c.es_semana_e);
+
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);
     setMostrarForm(false);
     setMostrarFormSemanaE(false);
+  };
+
+  const onCursoActualizado = (cursoActualizado: Curso) => {
+    setCursos((prev) =>
+      prev.map((curso) => (curso.id === cursoActualizado.id ? cursoActualizado : curso))
+    );
   };
 
   const onCursoEliminado = (cursoId: string) => {
@@ -72,9 +83,13 @@ export default function DashboardDocente() {
               Crear curso
             </button>
             <button
-              onClick={() => setMostrarFormSemanaE(true)}
-              className="flex items-center gap-1.5 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
-              title="Crea un evento Semana E aparte: sin notas, con grupos, guiado paso a paso. Independiente de tus cursos normales."
+              onClick={() => adminSemanaE && setMostrarFormSemanaE(true)}
+              disabled={!adminSemanaE}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90",
+                !adminSemanaE && "hidden"
+              )}
+              title="Crea un evento Semana E aparte: nace oculto y solo Ronald puede publicarlo."
             >
               🎓 Crear Semana E
             </button>
@@ -122,7 +137,7 @@ export default function DashboardDocente() {
 
       {cargando && <div className="text-sm text-muted-foreground">Cargando cursos…</div>}
 
-      {!cargando && cursos.length === 0 && !mostrarForm && (
+      {!cargando && cursosVisibles.length === 0 && !mostrarForm && (
         <div className="rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
           <GraduationCap className="mx-auto h-8 w-8 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
@@ -131,12 +146,14 @@ export default function DashboardDocente() {
         </div>
       )}
 
-      {cursos.map((c) => (
+      {cursosVisibles.map((c) => (
         <CursoCard
           key={c.id}
           curso={c}
+          adminSemanaE={adminSemanaE}
           expandido={cursoExpandido === c.id}
           onToggle={() => setCursoExpandido(cursoExpandido === c.id ? null : c.id)}
+          onActualizado={onCursoActualizado}
           onEliminado={() => onCursoEliminado(c.id)}
         />
       ))}
@@ -188,6 +205,7 @@ function FormCrearSemanaE({
         simulacion_individual: false,
         simulacion_grupal: true,
         es_semana_e: true,
+        estado: "archivado",
         // Grupos LISTOS al crear: el alumno entra y ya puede formar/unirse.
         grupo_habilitado: true,
         grupo_cupo_max: Math.max(1, Math.min(50, cupoGrupo)),
@@ -213,7 +231,7 @@ function FormCrearSemanaE({
         </h2>
         <p className="mt-0.5 text-[11px] text-fuchsia-900/80 dark:text-fuchsia-200/80">
           Curso especial sin calificaciones, con banner de bienvenida y checklist paso a paso.
-          Los alumnos trabajan en grupo. Independiente de tus otros cursos.
+          Nace oculto: publÃ­calo cuando quieras abrir la entrada a estudiantes.
         </p>
       </div>
 
@@ -267,7 +285,7 @@ function FormCrearSemanaE({
           disabled={creando || !nombre || !materia}
           className="rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
         >
-          {creando ? "Creando evento…" : "🎓 Crear evento Semana E"}
+          {creando ? "Creando evento…" : "Crear evento oculto"}
         </button>
         <button
           type="button"
@@ -570,13 +588,17 @@ function CampoTexto({
 
 function CursoCard({
   curso,
+  adminSemanaE,
   expandido,
   onToggle,
+  onActualizado,
   onEliminado,
 }: {
   curso: Curso;
+  adminSemanaE: boolean;
   expandido: boolean;
   onToggle: () => void;
+  onActualizado: (curso: Curso) => void;
   onEliminado: () => void;
 }) {
   const [inscritos, setInscritos] = useState<InscripcionConPerfil[] | null>(null);
@@ -589,7 +611,9 @@ function CursoCard({
   const [confirmando, setConfirmando] = useState(false);
   const [textoConfirm, setTextoConfirm] = useState("");
   const [borrando, setBorrando] = useState(false);
+  const [cambiandoEstado, setCambiandoEstado] = useState(false);
   const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
+  const [errorEstado, setErrorEstado] = useState<string | null>(null);
 
   const borrar = async () => {
     setBorrando(true);
@@ -615,6 +639,23 @@ function CursoCard({
     setTimeout(() => setCopiado(false), 1500);
   };
 
+  const alternarPublicacionSemanaE = async () => {
+    if (!curso.es_semana_e || !adminSemanaE) return;
+    const nuevoEstado = curso.estado === "activo" ? "archivado" : "activo";
+    setCambiandoEstado(true);
+    setErrorEstado(null);
+    try {
+      const actualizado = await actualizarEstadoCurso(curso.id, nuevoEstado);
+      onActualizado(actualizado);
+    } catch (e) {
+      setErrorEstado(
+        e instanceof Error ? e.message : "No se pudo cambiar la publicacion del evento."
+      );
+    } finally {
+      setCambiandoEstado(false);
+    }
+  };
+
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
   type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
   const irA = (tab: Vista) => {
@@ -635,6 +676,18 @@ function CursoCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold tracking-tight">{curso.nombre}</h3>
+            {curso.es_semana_e && (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                  curso.estado === "activo"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                    : "bg-slate-100 text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                )}
+              >
+                {curso.estado === "activo" ? "Publicado" : "Oculto"}
+              </span>
+            )}
             {curso.es_semana_e && (
               <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                 🎓 Semana E
@@ -717,20 +770,65 @@ function CursoCard({
             </button>
           )}
         </div>
-        {!confirmando && (
-          <button
-            onClick={() => {
-              setConfirmando(true);
-              setTextoConfirm("");
-              setErrorBorrar(null);
-            }}
-            className="flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Borrar curso
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {curso.es_semana_e && adminSemanaE && (
+            <button
+              onClick={alternarPublicacionSemanaE}
+              disabled={cambiandoEstado}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-bold shadow-sm transition disabled:opacity-50",
+                curso.estado === "activo"
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+                  : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-200"
+              )}
+              title={
+                curso.estado === "activo"
+                  ? "Oculta la entrada /semanae y el codigo del evento."
+                  : "Publica la entrada /semanae para que los estudiantes puedan entrar."
+              }
+            >
+              <span
+                className={cn(
+                  "relative inline-flex h-4 w-8 rounded-full transition",
+                  curso.estado === "activo" ? "bg-emerald-500" : "bg-slate-300"
+                )}
+                aria-hidden="true"
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all",
+                    curso.estado === "activo" ? "left-4" : "left-0.5"
+                  )}
+                />
+              </span>
+              {cambiandoEstado
+                ? "Guardando..."
+                : curso.estado === "activo"
+                  ? "Publicado: clic para ocultar"
+                  : "Oculto: clic para publicar"}
+            </button>
+          )}
+          {!confirmando && (
+            <button
+              onClick={() => {
+                setConfirmando(true);
+                setTextoConfirm("");
+                setErrorBorrar(null);
+              }}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Borrar curso
+            </button>
+          )}
+        </div>
       </div>
+
+      {errorEstado && (
+        <div className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {errorEstado}
+        </div>
+      )}
 
       {confirmando && (
         <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 p-3">

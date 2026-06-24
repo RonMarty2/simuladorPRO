@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import {
   borrarCursoComoAdmin,
+  cambiarEstadoCursoComoAdmin,
   cambiarRolUsuario,
   clonarProyectoAMiCuenta,
   listarTodosLosCursos,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/admin-supabase";
 import type { Perfil, Rol } from "@/types/usuario";
 import { cn } from "@/lib/utils";
+import { puedeAdministrarSemanaE } from "@/lib/permisos-admin";
 
 type Tab = "usuarios" | "cursos" | "proyectos";
 
@@ -253,8 +255,11 @@ function FilaUsuario({ usuario, onCambio }: { usuario: Perfil; onCambio: () => v
 // ════════════════════════════════════════════════════════════════════════════
 
 function TabCursos() {
+  const perfil = useAuthStore((s) => s.perfil);
+  const adminSemanaE = puedeAdministrarSemanaE(perfil);
   const [cursos, setCursos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [cambiandoEstado, setCambiandoEstado] = useState<string | null>(null);
 
   const cargar = async () => {
     setCargando(true);
@@ -273,6 +278,18 @@ function TabCursos() {
     if (!confirm(`¿Borrar definitivamente el curso "${nombre}" y TODOS sus proyectos y entregas?`)) return;
     await borrarCursoComoAdmin(id);
     cargar();
+  };
+
+  const alternarSemanaE = async (curso: any) => {
+    if (!adminSemanaE || !curso.es_semana_e) return;
+    const nuevoEstado = curso.estado === "activo" ? "archivado" : "activo";
+    setCambiandoEstado(curso.id);
+    try {
+      const actualizado = await cambiarEstadoCursoComoAdmin(curso.id, nuevoEstado);
+      setCursos((prev) => prev.map((c) => (c.id === curso.id ? actualizado : c)));
+    } finally {
+      setCambiandoEstado(null);
+    }
   };
 
   return (
@@ -308,9 +325,48 @@ function TabCursos() {
                     {c.materia} {c.paralelo && `· ${c.paralelo}`}
                   </td>
                   <td className="p-2 font-mono">{c.codigo}</td>
-                  <td className="p-2 text-center">{c.estado}</td>
+                  <td className="p-2 text-center">
+                    <span>{c.estado}</span>
+                    {c.es_semana_e && (
+                      <span className="ml-1 rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-800">
+                        Semana E
+                      </span>
+                    )}
+                  </td>
                   <td className="p-2 text-center">{c.frecuencia_turnos}</td>
                   <td className="p-2 text-right">
+                    {c.es_semana_e && adminSemanaE && (
+                      <button
+                        onClick={() => alternarSemanaE(c)}
+                        disabled={cambiandoEstado === c.id}
+                        className={cn(
+                          "mr-2 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold disabled:opacity-50",
+                          c.estado === "activo"
+                            ? "border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                            : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "relative inline-flex h-3.5 w-7 rounded-full",
+                            c.estado === "activo" ? "bg-emerald-500" : "bg-slate-300"
+                          )}
+                          aria-hidden="true"
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow transition-all",
+                              c.estado === "activo" ? "left-3.5" : "left-0.5"
+                            )}
+                          />
+                        </span>
+                        {cambiandoEstado === c.id
+                          ? "Guardando..."
+                          : c.estado === "activo"
+                            ? "Publicado"
+                            : "Oculto"}
+                      </button>
+                    )}
                     <button
                       onClick={() => borrar(c.id, c.nombre)}
                       className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
