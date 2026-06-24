@@ -142,6 +142,40 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
   });
 }
 
+/**
+ * Cache local del perfil: ante caídas intermitentes de Supabase preferimos
+ * servir un perfil viejo (hasta 30 días) antes que tirar al alumno a la
+ * pantalla de error. Se rehidrata en cada login exitoso.
+ */
+const CACHE_PERFIL_KEY = (userId: string) => `simulador.perfil.${userId}`;
+const CACHE_PERFIL_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function leerPerfilCacheado(userId: string): Perfil | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CACHE_PERFIL_KEY(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { perfil: Perfil; guardado_en: number };
+    if (!parsed?.perfil) return null;
+    if (Date.now() - parsed.guardado_en > CACHE_PERFIL_TTL_MS) return null;
+    return parsed.perfil;
+  } catch {
+    return null;
+  }
+}
+
+function guardarPerfilCacheado(userId: string, perfil: Perfil): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(
+      CACHE_PERFIL_KEY(userId),
+      JSON.stringify({ perfil, guardado_en: Date.now() })
+    );
+  } catch {
+    // Cuota llena u otro fallo del storage: no bloqueamos al usuario.
+  }
+}
+
 export async function obtenerPerfil(userId: string): Promise<Perfil | null> {
   // Retry interno: la primera query a Supabase suele colgarse justo después
   // de un login (OAuth o no). Reintentar una vez resuelve la mayoría.
@@ -159,13 +193,25 @@ export async function obtenerPerfil(userId: string): Promise<Perfil | null> {
     try {
       resp = await conTimeout(hacerQuery(), 8000, "cargando tu perfil (reintento)");
     } catch {
+      // Fallback: perfil cacheado de un login anterior. Cuando Supabase
+      // responde lento o falla intermitente preferimos mostrar el perfil
+      // viejo y dejar al alumno seguir trabajando antes que tirarlo a la
+      // pantalla "No pudimos cargar tu perfil". Si nunca se cacheó nada,
+      // el throw original sigue subiendo.
+      const cacheado = leerPerfilCacheado(userId);
+      if (cacheado) {
+        console.warn("[auth] obtenerPerfil cayó al cache local de emergencia");
+        return cacheado;
+      }
       throw primerError;
     }
   }
 
   const { data, error } = resp;
   if (error) throw error;
-  return (data as Perfil | null) ?? null;
+  const perfil = (data as Perfil | null) ?? null;
+  if (perfil) guardarPerfilCacheado(userId, perfil);
+  return perfil;
 }
 
 export async function obtenerPerfilConReintentos(
