@@ -19,8 +19,26 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error("Error no controlado en la interfaz:", error, info);
   }
 
+  limpiarYReiniciar = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if (window.indexedDB?.databases) {
+        const dbs = await window.indexedDB.databases();
+        for (const db of dbs) {
+          if (db.name) indexedDB.deleteDatabase(db.name);
+        }
+      }
+    } catch {
+      /* no bloquea: igual recargamos */
+    }
+    window.location.href = "/login";
+  };
+
   render() {
     if (!this.state.error) return this.props.children;
+
+    const mensaje = this.state.error?.message ?? String(this.state.error);
 
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
@@ -32,15 +50,32 @@ export class ErrorBoundary extends Component<Props, State> {
             No pudimos mostrar esta pantalla
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Tu información está guardada. Recarga la página para continuar.
+            Tu información está guardada. Probá recargar; si sigue sin entrar,
+            limpiá y volvé a loguearte.
           </p>
           <button
             type="button"
             className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-800"
             onClick={() => window.location.reload()}
           >
-            Recargar página
+            🔄 Recargar página
           </button>
+          <button
+            type="button"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            onClick={this.limpiarYReiniciar}
+          >
+            🧹 Limpiar todo y volver a login
+          </button>
+
+          <details className="mt-4 text-left">
+            <summary className="cursor-pointer text-[11px] text-slate-500">
+              Mostrar error técnico (mandalo a soporte)
+            </summary>
+            <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-100 p-2 text-[10px] text-slate-700">
+              {mensaje}
+            </pre>
+          </details>
         </section>
       </main>
     );
