@@ -240,6 +240,27 @@ export async function publicarPlantillaComoCaso(params: {
 }
 
 /** Lista los casos del curso disponibles (creados por el docente del curso). */
+/**
+ * Lista TODOS los proyectos de trabajo de los alumnos del curso (individuales
+ * y grupales), excluyendo las plantillas del docente (tipo caso_curso). El
+ * docente puede leerlos por RLS (proyectos_docente_lee_curso). Sirve para el
+ * panel de diagnóstico agregado del curso.
+ */
+export async function listarProyectosDelCurso(cursoId: string): Promise<Proyecto[]> {
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .select("*")
+      .eq("curso_id", cursoId)
+      .neq("tipo", "caso_curso")
+      .order("actualizado_en", { ascending: false }),
+    10000,
+    "listando proyectos del curso"
+  );
+  if (error) throw error;
+  return (data ?? []).map(deFilaSupabase);
+}
+
 export async function listarCasosDelCurso(cursoId: string): Promise<Proyecto[]> {
   const { data, error } = await conTimeout(
     supabase

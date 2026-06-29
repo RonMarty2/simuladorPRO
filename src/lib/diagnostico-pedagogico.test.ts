@@ -6,6 +6,7 @@ import {
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import {
   diagnosticarProyecto,
+  resumirDiagnosticoCurso,
   UMBRALES,
 } from "@/lib/diagnostico-pedagogico";
 
@@ -71,5 +72,40 @@ describe("diagnóstico pedagógico", () => {
   it("los umbrales son coherentes (deuda alta < 100, payback < horizonte)", () => {
     expect(UMBRALES.deudaAltaPct).toBeLessThan(100);
     expect(UMBRALES.paybackLentoAnios).toBeLessThanOrEqual(5);
+  });
+
+  describe("resumen del curso", () => {
+    it("curso vacío devuelve cero sin reventar", () => {
+      const r = resumirDiagnosticoCurso([]);
+      expect(r.totalProyectos).toBe(0);
+      expect(r.patrones).toEqual([]);
+    });
+
+    it("agrega patrones y calcula porcentaje sobre el total", () => {
+      const sano = ejemplo();
+      const conDemandaIrreal = ejemplo();
+      const base = conDemandaIrreal.productos[0].cantidades[0] || 100;
+      conDemandaIrreal.productos[0].cantidades = [
+        base,
+        base * 2,
+        base * 4,
+        base * 8,
+        base * 16,
+      ];
+      const r = resumirDiagnosticoCurso([sano, conDemandaIrreal]);
+      expect(r.totalProyectos).toBe(2);
+      const patron = r.patrones.find((p) => p.id === "demanda_irreal");
+      expect(patron).toBeDefined();
+      expect(patron!.cuenta).toBe(1);
+      expect(patron!.porcentaje).toBe(50);
+    });
+
+    it("los patrones vienen ordenados por frecuencia DESC", () => {
+      const proyectos = [ejemplo(), ejemplo(), ejemplo()];
+      const r = resumirDiagnosticoCurso(proyectos);
+      for (let i = 1; i < r.patrones.length; i++) {
+        expect(r.patrones[i - 1].cuenta).toBeGreaterThanOrEqual(r.patrones[i].cuenta);
+      }
+    });
   });
 });

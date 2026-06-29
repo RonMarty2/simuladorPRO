@@ -261,3 +261,73 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
     saludable: problemas === 0,
   };
 }
+
+export interface PatronCurso {
+  id: string;
+  titulo: string;
+  severidad: SeveridadAlerta;
+  etapa?: number;
+  /** Cuántos proyectos del curso disparan esta alerta. */
+  cuenta: number;
+  /** Porcentaje sobre el total de proyectos analizados (0..100). */
+  porcentaje: number;
+}
+
+export interface ResumenCurso {
+  totalProyectos: number;
+  /** Proyectos sin ningún crítico ni advertencia. */
+  saludables: number;
+  /** Patrones ordenados por frecuencia DESC (solo crítico/advertencia). */
+  patrones: PatronCurso[];
+}
+
+/**
+ * Corre el diagnóstico sobre todos los proyectos de un curso y agrega los
+ * resultados: "el 70% tiene mal el capital de trabajo". Le dice al docente
+ * QUÉ reforzar en clase, no solo quién va mal.
+ */
+export function resumirDiagnosticoCurso(proyectos: Proyecto[]): ResumenCurso {
+  const total = proyectos.length;
+  if (total === 0) {
+    return { totalProyectos: 0, saludables: 0, patrones: [] };
+  }
+
+  const acumulado = new Map<
+    string,
+    { titulo: string; severidad: SeveridadAlerta; etapa?: number; cuenta: number }
+  >();
+  let saludables = 0;
+
+  for (const p of proyectos) {
+    const { alertas, saludable } = diagnosticarProyecto(p);
+    if (saludable) saludables++;
+    // Una alerta por proyecto cuenta una vez (set de ids ya es único por proyecto).
+    for (const a of alertas) {
+      if (a.severidad !== "critico" && a.severidad !== "advertencia") continue;
+      const prev = acumulado.get(a.id);
+      if (prev) {
+        prev.cuenta++;
+      } else {
+        acumulado.set(a.id, {
+          titulo: a.titulo,
+          severidad: a.severidad,
+          etapa: a.etapa,
+          cuenta: 1,
+        });
+      }
+    }
+  }
+
+  const patrones: PatronCurso[] = Array.from(acumulado.entries())
+    .map(([id, v]) => ({
+      id,
+      titulo: v.titulo,
+      severidad: v.severidad,
+      etapa: v.etapa,
+      cuenta: v.cuenta,
+      porcentaje: Math.round((v.cuenta / total) * 100),
+    }))
+    .sort((a, b) => b.cuenta - a.cuenta);
+
+  return { totalProyectos: total, saludables, patrones };
+}
