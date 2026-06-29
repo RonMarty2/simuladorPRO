@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
+import PanelDiagnostico from "../PanelDiagnostico";
 import {
   calcularFlujoInversionista,
   calcularGAF,
@@ -60,6 +61,13 @@ export default function Paso9Resumen() {
           </p>
         </div>
         <BotonExportarExcel proyecto={proyecto} />
+      </div>
+
+      {/* Diagnóstico pedagógico automático — antes que los indicadores crudos,
+          para que el alumno lea "qué revisar" en criollo y recién después mire
+          los números. */}
+      <div className="order-3">
+        <PanelDiagnostico proyecto={proyecto} />
       </div>
 
       {/* Indicadores principales — debajo del flujo */}
