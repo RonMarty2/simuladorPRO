@@ -19,6 +19,7 @@ import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { mesesPorTurno } from "@/lib/motor-eventos";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
+import PanelPostmortem from "@/components/simulacion/PanelPostmortem";
 import type { OpcionDecision } from "@/types/evento";
 import type { Proyecto } from "@/types/proyecto";
 
@@ -439,6 +440,8 @@ function PantallaFinalizada({
           Empezar nueva simulación
         </button>
       </div>
+
+      <PanelPostmortem simulacion={simulacion} historial={historial} />
 
       {historial.length > 0 && <GraficosHistorial historial={historial} />}
     </div>
