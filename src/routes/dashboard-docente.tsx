@@ -19,6 +19,7 @@ import GruposDocente from "@/components/curso/GruposDocente";
 import CasosCurso from "@/components/curso/CasosCurso";
 import PodioCurso from "@/components/curso/PodioCurso";
 import ConfigEscenariosCurso from "@/components/docente/ConfigEscenariosCurso";
+import DiagnosticoCurso from "@/components/docente/DiagnosticoCurso";
 import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
@@ -605,7 +606,7 @@ function CursoCard({
   const [copiado, setCopiado] = useState(false);
   // En cursos normales arrancamos en Ranking. En Semana E ese tab está oculto,
   // arrancamos en Inscritos (lo más útil al inicio del evento: ver quién entró).
-  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios">(
+  const [vista, setVista] = useState<"inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios" | "diagnostico">(
     curso.es_semana_e ? "inscritos" : "ranking"
   );
   const [confirmando, setConfirmando] = useState(false);
@@ -657,7 +658,7 @@ function CursoCard({
   };
 
   // Ir a una pestaña: la selecciona y abre la tarjeta si estaba cerrada.
-  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios";
+  type Vista = "inscritos" | "ranking" | "entregas" | "grupos" | "casos" | "podio" | "lanzador" | "escenarios" | "diagnostico";
   const irA = (tab: Vista) => {
     setVista(tab);
     if (!expandido) onToggle();
@@ -760,6 +761,9 @@ function CursoCard({
           )}
           <button onClick={() => irA("escenarios")} className={claseTab("escenarios")}>
             📊 Escenarios
+          </button>
+          <button onClick={() => irA("diagnostico")} className={claseTab("diagnostico")}>
+            🔍 Diagnóstico
           </button>
           {expandido && (
             <button
@@ -893,6 +897,8 @@ function CursoCard({
           {vista === "lanzador" && <LanzadorEventos cursoId={curso.id} />}
 
           {vista === "escenarios" && <ConfigEscenariosCurso cursoId={curso.id} />}
+
+          {vista === "diagnostico" && <DiagnosticoCurso cursoId={curso.id} />}
 
           {vista === "podio" && (
             <PodioCurso
