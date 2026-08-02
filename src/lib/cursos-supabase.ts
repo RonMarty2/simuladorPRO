@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { normalizarUniversidad } from "./utils";
+import { esModoLocal } from "./modo-local";
 import type { EscenariosConfig } from "./escenarios";
 
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
@@ -387,6 +388,8 @@ export async function desinscribirseDeCurso(params: {
 export async function listarMisInscripciones(estudianteId: string): Promise<
   Array<{ curso: Curso; inscrito_en: string }>
 > {
+  // En modo local no hay cursos ni inscripciones (necesita backend).
+  if (esModoLocal()) return [];
   const hacerQuery = () =>
     supabase
       .from("inscripciones")
