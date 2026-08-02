@@ -9,7 +9,14 @@ import {
   procesarCallbackOAuthSiAplica,
   registrarUsuario,
 } from "@/lib/auth-helpers";
-import type { DatosRegistro, Perfil } from "@/types/usuario";
+import type { DatosRegistro, Perfil, Rol } from "@/types/usuario";
+import {
+  esModoLocal,
+  guardarRolLocal,
+  leerRolLocal,
+  perfilLocal,
+  usuarioLocal,
+} from "@/lib/modo-local";
 
 interface AuthState {
   user: User | null;
@@ -22,6 +29,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   recargarPerfil: () => Promise<void>;
+  /** Solo en modo local: cambia el rol del usuario ficticio al vuelo. */
+  cambiarRolLocal: (rol: Rol) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -33,6 +42,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   inicializar: async () => {
     if (get().inicializado) return;
+
+    // MODO LOCAL: sin Supabase. Inyectamos usuario + perfil ficticios y
+    // salimos. Nada de red, nada de login. El rol sale de localStorage.
+    if (esModoLocal()) {
+      const rol = leerRolLocal();
+      set({
+        user: usuarioLocal(),
+        session: null,
+        perfil: perfilLocal(rol),
+        cargando: false,
+        inicializado: true,
+      });
+      return;
+    }
+
     set({ cargando: true });
 
     // Hard timeout total: si después de 15 segundos no terminó, igual marcamos
@@ -156,6 +180,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    // En modo local no hay sesión que cerrar: mantenemos el usuario ficticio.
+    if (esModoLocal()) return;
     set({ cargando: true });
     try {
       await cerrarSesion();
@@ -166,9 +192,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   recargarPerfil: async () => {
+    if (esModoLocal()) {
+      set({ perfil: perfilLocal(leerRolLocal()) });
+      return;
+    }
     const u = get().user;
     if (!u) return;
     const perfil = await obtenerPerfilConReintentos(u.id).catch(() => null);
     set({ perfil });
+  },
+
+  cambiarRolLocal: (rol) => {
+    if (!esModoLocal()) return;
+    guardarRolLocal(rol);
+    set({ perfil: perfilLocal(rol) });
   },
 }));

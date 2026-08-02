@@ -1,9 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
+import { esModoLocal } from "./modo-local";
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!url || !anonKey) {
+if (esModoLocal()) {
+  console.info(
+    "[modo local] Corriendo sin Supabase: login desactivado, datos guardados " +
+      "en este navegador. Podés cambiar de rol con el selector abajo a la derecha."
+  );
+} else if (!url || !anonKey) {
   console.warn(
     "[supabase] Variables VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY no definidas. " +
       "Configurar .env.local en la FASE 1 antes de usar autenticación."

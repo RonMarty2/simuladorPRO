@@ -7,6 +7,7 @@ import { guardarProyecto, listarCasosDelCurso, tomarCasoDelCurso } from "@/lib/p
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import { cn } from "@/lib/utils";
+import { esModoLocal } from "@/lib/modo-local";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 
 interface CasoDisponible {
@@ -83,9 +84,10 @@ export default function EmpezarProyecto() {
         </div>
       )}
 
-      {/* Proyecto libre — por ahora SOLO docentes. El estudiante recibe su
-          proyecto vía caso del curso (arriba) o grupo (desde su panel). */}
-      {perfil?.rol === "docente" ? (
+      {/* Proyecto libre — docentes siempre; en modo local también el estudiante
+          (no hay cursos ni grupos de donde recibir un caso). En producción el
+          estudiante recibe su proyecto vía caso del curso (arriba) o grupo. */}
+      {perfil?.rol === "docente" || esModoLocal() ? (
         <FormularioProyectoLibre
           userId={user.id}
           onCreado={() => {

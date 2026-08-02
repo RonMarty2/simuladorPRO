@@ -1,5 +1,11 @@
 import { supabase } from "./supabase";
 import { registrarActividad } from "./proyecto-actividad-supabase";
+import {
+  esModoLocal,
+  guardarProyectoLocal,
+  eliminarProyectoLocal,
+  leerProyectosLocal,
+} from "./modo-local";
 import type {
   Entrega,
   EstadoEntrega,
@@ -92,6 +98,11 @@ function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Pro
  * manualmente.
  */
 export async function listarMisProyectos(estudianteId: string): Promise<Proyecto[]> {
+  if (esModoLocal()) {
+    return leerProyectosLocal()
+      .filter((p) => p.estudiante_id === estudianteId && p.tipo !== "caso_curso")
+      .sort((a, b) => (a.actualizado_en < b.actualizado_en ? 1 : -1));
+  }
   const hacerQuery = () =>
     supabase
       .from("proyectos")
@@ -123,6 +134,8 @@ export async function listarMisProyectos(estudianteId: string): Promise<Proyecto
  * eso no aparece en `listarMisProyectos`; las RLS de miembro permiten leerlo.
  */
 export async function listarProyectosGrupales(estudianteId: string): Promise<Proyecto[]> {
+  // En modo local no hay grupos (es multiusuario): devolvemos vacío.
+  if (esModoLocal()) return [];
   const { data: mm, error: e1 } = await supabase
     .from("grupo_miembros")
     .select("grupo_id")
@@ -137,6 +150,10 @@ export async function listarProyectosGrupales(estudianteId: string): Promise<Pro
 
 /** Upsert: inserta si no existe, actualiza si ya existe. */
 export async function guardarProyecto(p: Proyecto): Promise<void> {
+  if (esModoLocal()) {
+    guardarProyectoLocal(p);
+    return;
+  }
   const fila = aFilaSupabase(p);
   // El proyecto GRUPAL lo crea el docente (insertarProyecto). Los miembros solo
   // tienen permiso de UPDATE (no INSERT), así que para no romper su autoguardado
@@ -152,6 +169,10 @@ export async function guardarProyecto(p: Proyecto): Promise<void> {
 
 /** Inserta un proyecto nuevo (usado al crear el proyecto compartido de un grupo). */
 export async function insertarProyecto(p: Proyecto): Promise<void> {
+  if (esModoLocal()) {
+    guardarProyectoLocal(p);
+    return;
+  }
   const fila = aFilaSupabase(p);
   const { error } = await supabase.from("proyectos").insert(fila);
   if (error) throw error;
@@ -159,6 +180,10 @@ export async function insertarProyecto(p: Proyecto): Promise<void> {
 
 /** Elimina un proyecto (cascada borra simulaciones/turnos asociados en FASE 6). */
 export async function eliminarProyecto(id: string): Promise<void> {
+  if (esModoLocal()) {
+    eliminarProyectoLocal(id);
+    return;
+  }
   const { error } = await supabase.from("proyectos").delete().eq("id", id);
   if (error) throw error;
 }
@@ -440,6 +465,8 @@ export async function entregarProyecto(
  *  de cada grupo en el que es miembro (aunque las haya subido un compañero).
  *  Requiere migración 024 para que la RLS deje leer las grupales ajenas. */
 export async function listarMisEntregas(estudianteId: string): Promise<Entrega[]> {
+  // En modo local no hay flujo de entregas (necesita backend multiusuario).
+  if (esModoLocal()) return [];
   // 1. Proyectos grupales de los grupos donde soy miembro.
   const { data: misMembresias } = await supabase
     .from("grupo_miembros")
