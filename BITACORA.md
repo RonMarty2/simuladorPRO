@@ -421,6 +421,31 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       Calificar todas las pendientes del alumno desde el modal de UNA etapa.
       Ver §7.13.
 
+- [x] **Sesión 2026-10-14** (`ff4b7ed`, `7e78c1c`, `584b49e`):
+      - Semana E escondida del panel docente con el flag `SEMANA_E_OCULTA`
+        (`lib/permisos-admin.ts`). El código se conserva; se sigue gestionando
+        desde la pestaña Admin. Para mostrarla de nuevo: flag en `false`.
+      - Botón "Ver como estudiante" / "Volver a docente" en `RootLayout`
+        (store: `alternarVistaEstudiante`, `perfilReal`). Solo visual, en
+        memoria; `BotonEntregar` queda desactivado en esa vista.
+      - Modo local nunca se activa en el build de producción salvo
+        `VITE_LOCAL_MODE=true` (evita perder datos si faltan variables).
+      - ErrorBoundary "Limpiar todo" conserva `simulador.local.*`.
+      - Entregas "Por etapa": sin "Calificar todo igual" (mezcla alumnos).
+      - `local/sincronizar.sh|.bat`: confirmación al subir desde `main`.
+      - Review con `/code-review`; skills recomendadas guardadas en memoria.
+
+### Pendiente para después (hallazgos del review sin resolver)
+- [ ] **Modo local incompleto**: `obtenerProyectoPorId` (presentar proyecto) y
+      lecturas de cursos/grupos/entregas siguen llamando a Supabase.
+- [ ] **Botón "Salir" en modo local** no hace nada útil (redirige a /login y
+      vuelve al panel).
+- [ ] Extraer los bloques `es_semana_e` de `dashboard-docente.tsx` y
+      `GruposEstudiante.tsx` a componentes aparte (`/simplify`).
+- [ ] Skills propias: "preparar release" (tests + build + review + push) y
+      "nueva migración Supabase 024+".
+- [ ] "Ver como estudiante" no bloquea otras escrituras además de entregar.
+
 ### En consideración (no implementado)
 - [ ] **Detección automática de plagio** (proyectos muy similares entre
       alumnos). Para cursos grandes.
