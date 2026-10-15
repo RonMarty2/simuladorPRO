@@ -23,7 +23,7 @@ import LanzadorEventos from "@/components/docente/LanzadorEventos";
 import Recomendacion from "@/components/constructor/Recomendacion";
 import SelectorModoSimulacion from "@/components/docente/SelectorModoSimulacion";
 import type { ModoSimulacion } from "@/lib/cursos-supabase";
-import { puedeAdministrarSemanaE } from "@/lib/permisos-admin";
+import { puedeAdministrarSemanaE, SEMANA_E_OCULTA } from "@/lib/permisos-admin";
 
 export default function DashboardDocente() {
   const perfil = useAuthStore((s) => s.perfil);
@@ -44,9 +44,9 @@ export default function DashboardDocente() {
 
   if (perfil && perfil.rol !== "docente") return <Navigate to="/estudiante" replace />;
 
-  const adminSemanaE = puedeAdministrarSemanaE(perfil);
+  // Con SEMANA_E_OCULTA no se lista ni se crea Semana E aquí (se gestiona en Admin).
+  const adminSemanaE = puedeAdministrarSemanaE(perfil) && !SEMANA_E_OCULTA;
   const cursosVisibles = adminSemanaE ? cursos : cursos.filter((c) => !c.es_semana_e);
-  // (con SEMANA_E_OCULTA, adminSemanaE es false y los cursos Semana E no se listan)
 
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);

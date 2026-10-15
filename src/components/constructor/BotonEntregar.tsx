@@ -26,6 +26,7 @@ interface Props {
  */
 export default function BotonEntregar({ indicadores, paso }: Props) {
   const perfil = useAuthStore((s) => s.perfil);
+  const perfilReal = useAuthStore((s) => s.perfilReal);
   const proyecto = useProyectoStore((s) => s.proyecto);
 
   const [entregas, setEntregas] = useState<Entrega[]>([]);
@@ -103,6 +104,16 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
   };
 
   const yaEntregadas = entregas.length;
+  // Vista previa del docente ("Ver como estudiante"): no se permite entregar de verdad.
+  if (perfilReal) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+        Vista previa: aquí el estudiante vería el botón para entregar. Está desactivado
+        mientras ves la app como estudiante.
+      </div>
+    );
+  }
+
   const pendientes = entregas.filter((e) => e.estado === "pendiente").length;
   const aprobadas = entregas.filter((e) => e.estado === "aprobada").length;
   const reprobadas = entregas.filter((e) => e.estado === "reprobada").length;

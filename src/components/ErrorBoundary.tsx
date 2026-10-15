@@ -21,13 +21,24 @@ export class ErrorBoundary extends Component<Props, State> {
 
   limpiarYReiniciar = async () => {
     try {
-      localStorage.clear();
+      // Borra la sesión y cachés, pero conserva los proyectos del modo local.
+      for (const clave of Object.keys(localStorage)) {
+        if (!clave.startsWith("simulador.local.")) localStorage.removeItem(clave);
+      }
       sessionStorage.clear();
       if (window.indexedDB?.databases) {
         const dbs = await window.indexedDB.databases();
-        for (const db of dbs) {
-          if (db.name) indexedDB.deleteDatabase(db.name);
-        }
+        await Promise.all(
+          dbs
+            .filter((db) => db.name)
+            .map(
+              (db) =>
+                new Promise<void>((resolver) => {
+                  const req = indexedDB.deleteDatabase(db.name!);
+                  req.onsuccess = req.onerror = req.onblocked = () => resolver();
+                })
+            )
+        );
       }
     } catch {
       /* no bloquea: igual recargamos */

@@ -41,6 +41,9 @@ function urlEsPlaceholder(u: string | undefined): boolean {
 export function esModoLocal(): boolean {
   if (FLAG_LOCAL === "true") return true;
   if (FLAG_LOCAL === "false") return false;
+  // En el build de producción nunca se cae a modo local por error: si faltan
+  // las variables de Supabase debe fallar a la vista, no perder datos en silencio.
+  if (import.meta.env.PROD) return false;
   return urlEsPlaceholder(URL_SUPABASE);
 }
 

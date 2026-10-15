@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         void (async () => {
           // Logout o sin sesión: limpiar todo.
           if (evento === "SIGNED_OUT" || !nuevaSesion?.user) {
-            set({ session: null, user: null, perfil: null });
+            set({ session: null, user: null, perfil: null, perfilReal: null });
             return;
           }
 
@@ -217,6 +217,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const u = get().user;
     if (!u) return;
     const perfil = await obtenerPerfilConReintentos(u.id).catch(() => null);
+    // Si se está en "ver como estudiante", se actualiza el perfil real y se mantiene la vista.
+    if (get().perfilReal && perfil) {
+      set({ perfilReal: perfil, perfil: { ...perfil, rol: "estudiante" } });
+      return;
+    }
     set({ perfil });
   },
 
