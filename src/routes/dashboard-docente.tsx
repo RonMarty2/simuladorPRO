@@ -46,6 +46,7 @@ export default function DashboardDocente() {
 
   const adminSemanaE = puedeAdministrarSemanaE(perfil);
   const cursosVisibles = adminSemanaE ? cursos : cursos.filter((c) => !c.es_semana_e);
+  // (con SEMANA_E_OCULTA, adminSemanaE es false y los cursos Semana E no se listan)
 
   const onCursoCreado = (curso: Curso) => {
     setCursos((prev) => [curso, ...prev]);

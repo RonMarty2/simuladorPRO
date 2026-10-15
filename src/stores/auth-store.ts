@@ -31,12 +31,17 @@ interface AuthState {
   recargarPerfil: () => Promise<void>;
   /** Solo en modo local: cambia el rol del usuario ficticio al vuelo. */
   cambiarRolLocal: (rol: Rol) => void;
+  /** Perfil real del docente mientras mira la app "como estudiante". */
+  perfilReal: Perfil | null;
+  /** Solo visual (en memoria): un docente alterna entre su vista y la de estudiante. */
+  alternarVistaEstudiante: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   perfil: null,
+  perfilReal: null,
   cargando: false,
   inicializado: false,
 
@@ -198,7 +203,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ cargando: true });
     try {
       await cerrarSesion();
-      set({ user: null, session: null, perfil: null });
+      set({ user: null, session: null, perfil: null, perfilReal: null });
     } finally {
       set({ cargando: false });
     }
@@ -219,5 +224,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!esModoLocal()) return;
     guardarRolLocal(rol);
     set({ perfil: perfilLocal(rol) });
+  },
+
+  alternarVistaEstudiante: () => {
+    const { perfil, perfilReal } = get();
+    if (perfilReal) {
+      set({ perfil: perfilReal, perfilReal: null });
+    } else if (perfil?.rol === "docente") {
+      set({ perfilReal: perfil, perfil: { ...perfil, rol: "estudiante" } });
+    }
   },
 }));

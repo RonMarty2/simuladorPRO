@@ -318,7 +318,7 @@ function TabCursos() {
               </tr>
             </thead>
             <tbody>
-              {cursos.map((c) => (
+              {cursos.filter((c) => adminSemanaE || !c.es_semana_e).map((c) => (
                 <tr key={c.id} className="border-t border-border/40 hover:bg-secondary/20">
                   <td className="p-2 font-medium">{c.nombre}</td>
                   <td className="p-2 text-muted-foreground">

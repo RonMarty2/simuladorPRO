@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   BookOpenCheck,
   ChartScatter,
+  Eye,
   GraduationCap,
   Hammer,
   BookOpen,
@@ -20,6 +21,7 @@ import CreditoAutor from "@/components/layout/CreditoAutor";
 import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
 import BotonInstalarApp from "@/components/layout/BotonInstalarApp";
 import SelectorRolLocal from "@/components/layout/SelectorRolLocal";
+import { esModoLocal } from "@/lib/modo-local";
 import { useEsDispositivoMobil } from "@/hooks/useEsDispositivoMobil";
 
 const enlacesEstudiante = [
@@ -53,6 +55,8 @@ const enlacesDocente = [
 export default function RootLayout() {
   const perfil = useAuthStore((s) => s.perfil);
   const logout = useAuthStore((s) => s.logout);
+  const perfilReal = useAuthStore((s) => s.perfilReal);
+  const alternarVista = useAuthStore((s) => s.alternarVistaEstudiante);
   const navigate = useNavigate();
   const location = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -137,6 +141,21 @@ export default function RootLayout() {
                 {perfil.rol}
                 {perfil.es_admin && " · 🛡️"}
               </div>
+            </button>
+          )}
+          {(perfil?.rol === "docente" || perfilReal) && !esModoLocal() && (
+            <button
+              onClick={() => {
+                alternarVista();
+                navigate(perfilReal ? "/docente" : "/estudiante", { replace: true });
+              }}
+              className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition hover:bg-accent"
+              title={perfilReal ? "Volver a la vista docente" : "Ver la app como estudiante"}
+            >
+              {perfilReal ? <GraduationCap className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">
+                {perfilReal ? "Volver a docente" : "Ver como estudiante"}
+              </span>
             </button>
           )}
           <button
