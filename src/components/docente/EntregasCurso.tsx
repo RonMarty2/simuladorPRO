@@ -440,7 +440,8 @@ function TarjetaAgrupada({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-          {pendientes.length >= 2 && (
+          {/* En "por etapa" se mezclan alumnos distintos: una sola nota para todos no tiene sentido. */}
+          {pendientes.length >= 2 && !esVistaEtapa && (
             <button
               onClick={() => onCalificarTodoIgual(pendientes)}
               title="Misma nota y comentario para todas las pendientes (sin abrir tab por tab)"

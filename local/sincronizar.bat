@@ -40,6 +40,15 @@ goto menu
 
 :push
 echo.
+if "%RAMA%"=="main" (
+  echo ATENCION: estas en 'main'. Subir aqui publica en PRODUCCION ^(hay alumnos usando la app^).
+  set /p ok="Escribi SI para continuar: "
+  if /i not "%ok%"=="SI" (
+    echo Cancelado.
+    pause
+    goto menu
+  )
+)
 set /p msg="Describi en pocas palabras que cambiaste: "
 if "%msg%"=="" set msg=Cambios locales
 git add -A

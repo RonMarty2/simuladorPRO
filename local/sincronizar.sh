@@ -29,6 +29,11 @@ while true; do
       echo "Listo. Si hubo cambios, reinicia el simulador (iniciar.sh)."
       ;;
     2)
+      if [ "$RAMA" = "main" ]; then
+        echo "ATENCION: estas en 'main'. Subir aqui publica en PRODUCCION (hay alumnos usando la app)."
+        read -r -p "Escribi SI para continuar: " ok
+        [ "$ok" = "SI" ] || { echo "Cancelado."; continue; }
+      fi
       read -r -p "Describi en pocas palabras que cambiaste: " msg
       [ -z "$msg" ] && msg="Cambios locales"
       git add -A

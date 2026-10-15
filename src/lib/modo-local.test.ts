@@ -28,8 +28,9 @@ beforeEach(() => {
 
 describe("modo local", () => {
   it("sin credenciales (env de test) detecta modo local", () => {
-    // En el entorno de test no hay VITE_SUPABASE_URL → esModoLocal = true.
-    expect(esModoLocal()).toBe(true);
+    // Depende del entorno: si el dev tiene .env.local con Supabase real, no aplica.
+    const hayCredenciales = !!import.meta.env.VITE_SUPABASE_URL;
+    expect(esModoLocal()).toBe(!hayCredenciales);
   });
 
   it("el rol por defecto es estudiante y persiste el cambio", () => {
