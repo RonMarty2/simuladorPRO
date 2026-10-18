@@ -172,7 +172,7 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold">
               Simulación · Turno {data.simulacion.turno_actual}/{data.simulacion.turnos_totales}
-              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px]">
+              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[11px]">
                 {data.simulacion.estado}
               </span>
             </div>
@@ -198,7 +198,7 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
               {verHistorial && (
                 <ul className="mt-2 max-h-60 space-y-1.5 overflow-y-auto border-t border-border pt-2">
                   {data.historial.map((h) => (
-                    <li key={h.numero_turno} className="text-[10px]">
+                    <li key={h.numero_turno} className="text-[11px]">
                       <div className="font-medium">Turno {h.numero_turno}</div>
                       {h.eventos_aplicados && h.eventos_aplicados.length > 0 ? (
                         <div className="text-muted-foreground">
@@ -235,12 +235,12 @@ function CeldaMetrica({
 }) {
   return (
     <div className="rounded border border-border bg-card p-2">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
         {icon}
         {titulo}
       </div>
       <div className="mt-0.5 text-sm font-semibold">{valor}</div>
-      {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
+      {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
     </div>
   );
 }

@@ -262,7 +262,7 @@ function ModalPublicarCaso({
         ) : (
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Nombre que verán los alumnos
               </label>
               <input
@@ -273,7 +273,7 @@ function ModalPublicarCaso({
             </div>
 
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 ¿A qué curso?
               </label>
               <select
@@ -290,7 +290,7 @@ function ModalPublicarCaso({
             </div>
 
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 ¿Desde qué paso debe trabajar el alumno?
               </label>
               <select
@@ -304,7 +304,7 @@ function ModalPublicarCaso({
                 <option value={3}>Paso 3 — completa Inversiones en adelante</option>
                 <option value={1}>Paso 1 — recibe todo armado pero editable desde el inicio</option>
               </select>
-              <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
                 Los pasos anteriores al elegido le llegan al alumno con tus datos. Los pasos desde
                 el elegido en adelante los <strong>completa él</strong> usando tu ejemplo como
                 contexto.
@@ -427,7 +427,7 @@ function VisorPlantilla({
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {calc && (
             <div>
-              <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Indicadores del proyecto
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -459,7 +459,7 @@ function VisorPlantilla({
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border p-3">
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground">
             Ejemplo de referencia · No se guarda
           </span>
           {esDocente && (

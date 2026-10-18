@@ -30,6 +30,7 @@ import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
 import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
+import { datosFaltantes } from "@/lib/datos-faltantes";
 
 const TOTAL_PASOS = 9;
 
@@ -241,7 +242,7 @@ export default function ConstruirProyecto() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-emerald-50 p-3 dark:border-violet-900 dark:from-violet-950/30 dark:via-background dark:to-emerald-950/20">
         <div>
           <div className="text-xs font-bold">¿Listo para mostrar tu proyecto?</div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[11px] text-muted-foreground">
             Prepara una presentación profesional o descarga el modelo financiero completo.
           </div>
         </div>
@@ -260,6 +261,7 @@ export default function ConstruirProyecto() {
         onCambiarPaso={setPasoActual}
         titulos={titulosPasos}
         titulosCortos={titulosCortos}
+        pasosSinDatos={datosFaltantes(proyecto).map((d) => d.paso)}
       />
       </div>
 

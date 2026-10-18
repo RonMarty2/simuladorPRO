@@ -142,7 +142,7 @@ export default function Paso9Financiamiento() {
             <span className="text-xs font-semibold uppercase tracking-wide">
               Resumen de financiamiento
             </span>
-            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
+            <span className="text-[11px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
           <div className="-mx-1 overflow-x-auto md:mx-0">
           <table className="w-full min-w-[600px] text-xs md:min-w-0">
@@ -312,13 +312,13 @@ function BloquePrestamo({
           ) : (
             <ChevronRight className="h-4 w-4 flex-shrink-0" />
           )}
-          <span className={cn("rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap", estilo.chip)}>
+          <span className={cn("rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap", estilo.chip)}>
             {titulo}
           </span>
-          <span className="hidden truncate text-[10px] text-muted-foreground md:inline">{subtitulo}</span>
+          <span className="hidden truncate text-[11px] text-muted-foreground md:inline">{subtitulo}</span>
         </div>
         <div className="flex-shrink-0 pl-6 md:pl-0 md:text-right">
-          <div className="text-[10px] text-muted-foreground">Préstamo · cuota/mes</div>
+          <div className="text-[11px] text-muted-foreground">Préstamo · cuota/mes</div>
           <div className="text-sm font-bold tabular-nums">
             {formatearBolivianos(montoFinanciar)} · {formatearBolivianos(cuotaMensual)}
           </div>
@@ -333,7 +333,7 @@ function BloquePrestamo({
         <div className="grid grid-cols-1 gap-3 p-3 md:grid-cols-2">
           {/* COLUMNA IZQUIERDA: Estructura del financiamiento */}
           <div className="space-y-1 rounded-md border border-border bg-background/60 p-2">
-            <div className="border-b border-border pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="border-b border-border pb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Estructura del financiamiento
             </div>
 
@@ -370,7 +370,7 @@ function BloquePrestamo({
 
           {/* COLUMNA DERECHA: Condiciones del préstamo */}
           <div className="space-y-1 rounded-md border border-border bg-background/60 p-2">
-            <div className="border-b border-border pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="border-b border-border pb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Condiciones del préstamo
             </div>
 
@@ -448,7 +448,7 @@ function BloquePrestamo({
             </div>
 
             {plazoMayor5 && (
-              <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-[10px] text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+              <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
                 ⓘ Tu préstamo dura {(cfg.plazoMeses / 12).toFixed(1)} años. La tabla muestra
                 solo los primeros 5 (horizonte del proyecto). Al cierre del año 5 todavía
                 queda saldo por pagar.
@@ -699,7 +699,7 @@ function PanelCAPM({
     <details className="group rounded-md border-2 border-indigo-300 bg-indigo-50/40 dark:border-indigo-800 dark:bg-indigo-950/20">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
             V2
           </span>
           <h3 className="truncate text-sm font-bold uppercase tracking-wide">
@@ -730,7 +730,7 @@ function PanelCAPM({
         <p className="mt-1.5 rounded bg-card px-2 py-1 text-center font-mono text-xs">
           Ke = Rf + β × (Rm − Rf)
         </p>
-        <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
           En palabras: partes de lo que rinde una inversión <em>sin riesgo</em> (Rf) y le
           sumas un premio por el riesgo del negocio (β × prima de mercado). El resultado se
           usa automáticamente como Ke en el WACC de abajo.
@@ -767,7 +767,7 @@ function PanelCAPM({
             {(capm.primaMercado * 100).toFixed(1)}% =
           </div>
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Ke (costo del capital propio)
             </div>
             <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
@@ -797,7 +797,7 @@ function CampoCAPM({
 }) {
   return (
     <div className="rounded-md border border-border bg-background/60 p-2">
-      <label className="text-[10px] font-medium leading-tight text-foreground">
+      <label className="text-[11px] font-medium leading-tight text-foreground">
         {label}
       </label>
       <div className="mt-1 flex items-center gap-1">
@@ -895,11 +895,11 @@ function BloqueWACC({
           className="rounded-md bg-card px-3 py-2 text-right shadow-sm"
           title={`WACC = (D/V × Kd × (1-T)) + (E/V × Ke)\n     = ${(porcDeudaTotal * 100).toFixed(2)}% × ${(tasaPromedioDeuda * 100).toFixed(2)}% × ${(escudoFiscal * 100).toFixed(0)}% + ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n     = ${(contribDeuda * 100).toFixed(2)}% + ${(contribCapital * 100).toFixed(2)}%\n     = ${(wacc * 100).toFixed(2)}%`}
         >
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
             WACC del proyecto
           </div>
           <div className="text-3xl font-bold text-primary">{(wacc * 100).toFixed(2)}%</div>
-          <div className="text-[10px] text-muted-foreground">Tasa de descuento</div>
+          <div className="text-[11px] text-muted-foreground">Tasa de descuento</div>
         </div>
       </button>
 
@@ -925,7 +925,7 @@ function BloqueWACC({
         />
         <span className="text-xs text-muted-foreground">%</span>
         <span
-          className="ml-2 text-[10px] text-muted-foreground"
+          className="ml-2 text-[11px] text-muted-foreground"
           title="Es lo mínimo que ganarías si invirtieras esa plata en otra alternativa similar (DPF, bolsa, otro negocio). En Bolivia las PYMES usan 13-20% típico."
         >
           ⓘ ¿qué es esto?
@@ -1041,7 +1041,7 @@ function BloqueWACC({
               <strong className="text-base">{(contribDeuda * 100).toFixed(2)}%</strong>
             </div>
             {/* TRADUCCIÓN en palabras — refuerzo */}
-            <div className="mt-1 text-[10px] italic text-amber-900/70 dark:text-amber-100/70">
+            <div className="mt-1 text-[11px] italic text-amber-900/70 dark:text-amber-100/70">
               en palabras: (% financiado con préstamo) × (tasa del banco) × (1 menos el IUE 25%)
             </div>
           </div>
@@ -1065,7 +1065,7 @@ function BloqueWACC({
               <strong className="text-base">{(contribCapital * 100).toFixed(2)}%</strong>
             </div>
             {/* TRADUCCIÓN */}
-            <div className="mt-1 text-[10px] italic text-emerald-900/70 dark:text-emerald-100/70">
+            <div className="mt-1 text-[11px] italic text-emerald-900/70 dark:text-emerald-100/70">
               en palabras: (% que pones tú) × (rendimiento que te exiges)
             </div>
           </div>
@@ -1084,7 +1084,7 @@ function BloqueWACC({
               {"  =  "}
               <strong className="text-lg text-primary">{(wacc * 100).toFixed(2)}%</strong>
             </div>
-            <div className="mt-1 text-[10px] italic text-muted-foreground">
+            <div className="mt-1 text-[11px] italic text-muted-foreground">
               en palabras: lo que aporta la deuda + lo que aporta el capital propio
             </div>
           </div>
@@ -1136,13 +1136,13 @@ function IngredienteWACC({
         {sigla}
       </div>
       {/* Nombre en español como descripción debajo */}
-      <div className={cn("mt-0.5 text-[10px] font-medium leading-tight opacity-90", claseTexto)}>
+      <div className={cn("mt-0.5 text-[11px] font-medium leading-tight opacity-90", claseTexto)}>
         {nombre}
       </div>
       {/* Valor numérico destacado */}
       <div className={cn("mt-2 text-xl font-bold", claseTexto)}>{valor}</div>
       {/* Detalle de cómo se obtiene */}
-      <div className={cn("mt-0.5 text-[10px] opacity-75 leading-snug", claseTexto)}>{detalle}</div>
+      <div className={cn("mt-0.5 text-[11px] opacity-75 leading-snug", claseTexto)}>{detalle}</div>
     </div>
   );
 }

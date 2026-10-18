@@ -242,14 +242,14 @@ export default function GruposEstudiante({
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-primary" />
               <span className="text-sm font-semibold">{miGrupoDetalle.nombre}</span>
-              <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                 {miGrupoDetalle.miembros.length} / {miGrupoDetalle.cupo_max}
               </span>
-              <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
                 {curso.es_semana_e ? "Tu equipo" : "Tu grupo"}
               </span>
               {curso.es_semana_e && nivelActual && (
-                <span className="rounded bg-fuchsia-100 px-1.5 py-0.5 text-[10px] font-semibold text-fuchsia-800 dark:bg-fuchsia-950/50 dark:text-fuchsia-200">
+                <span className="rounded bg-fuchsia-100 px-1.5 py-0.5 text-[11px] font-semibold text-fuchsia-800 dark:bg-fuchsia-950/50 dark:text-fuchsia-200">
                   {nivelActual.emoji} Nivel {nivelActual.nombre}
                 </span>
               )}
@@ -267,7 +267,7 @@ export default function GruposEstudiante({
                 <FolderOpen className={curso.es_semana_e ? "h-7 w-7 shrink-0" : "h-3 w-3"} />
                 {curso.es_semana_e ? (
                   <span className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
+                    <span className="text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
                       Aquí está tu proyecto
                     </span>
                     <span className="text-base font-black leading-tight sm:text-lg">
@@ -316,7 +316,7 @@ export default function GruposEstudiante({
             <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-fuchsia-200 bg-fuchsia-50/70 p-2.5 text-xs dark:border-fuchsia-900 dark:bg-fuchsia-950/30">
               <div className="mr-auto">
                 <div className="font-semibold">Código para invitar a tu equipo</div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-[11px] text-muted-foreground">
                   Compártelo por WhatsApp; tus compañeros pueden buscarlo por este código.
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function GruposEstudiante({
             </div>
           )}
           <div className="mt-3 border-t border-border/50 pt-3">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Integrantes ({miGrupoDetalle.miembros.length})
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -370,7 +370,7 @@ export default function GruposEstudiante({
                   <strong>Comentario del docente:</strong> {miGrupo.comentario_docente}
                 </div>
               )}
-              <div className="mt-1 text-[10px] text-muted-foreground">
+              <div className="mt-1 text-[11px] text-muted-foreground">
                 Ponderación del curso: {Math.round((curso.peso_individual ?? 0.5) * 100)}% individual ·{" "}
                 {Math.round((curso.peso_grupal ?? 0.5) * 100)}% grupal.
               </div>
@@ -490,16 +490,16 @@ export default function GruposEstudiante({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="truncate text-sm font-bold">{grupo.nombre}</div>
-                          <code className="text-[10px] font-bold tracking-widest text-sky-700 dark:text-sky-300">
+                          <code className="text-[11px] font-bold tracking-widest text-sky-700 dark:text-sky-300">
                             {codigoCortoGrupo(grupo.id)}
                           </code>
                         </div>
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px]">
+                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">
                           {grupo.miembros.length}/{grupo.cupo_max}
                         </span>
                       </div>
                       {nivel && (
-                        <div className="mt-2 text-[10px] text-muted-foreground">
+                        <div className="mt-2 text-[11px] text-muted-foreground">
                           {nivel.emoji} Nivel {nivel.nombre} · {nivel.pasos} etapas
                         </div>
                       )}
@@ -555,7 +555,7 @@ export default function GruposEstudiante({
           </div>
 
           {grupos.length > 0 && (
-            <div className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
               Grupos del curso
             </div>
           )}
@@ -569,10 +569,10 @@ export default function GruposEstudiante({
                 <div className="flex items-center gap-2">
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium">{g.nombre}</span>
-                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                     {g.miembros.length} / {g.cupo_max}
                   </span>
-                  {lleno && <span className="text-[10px] text-amber-600">lleno</span>}
+                  {lleno && <span className="text-[11px] text-amber-600">lleno</span>}
                 </div>
                 <button
                   onClick={() => unirme(g.id)}
@@ -621,10 +621,10 @@ function SelectorNivelSemanaE({
               {nivel.pasos} etapas
             </span>
           </div>
-          <div className="mt-1 text-[10px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
+          <div className="mt-1 text-[11px] font-medium text-fuchsia-700 dark:text-fuchsia-300">
             {nivel.tiempo}
           </div>
-          <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
             {nivel.descripcion}
           </p>
         </button>

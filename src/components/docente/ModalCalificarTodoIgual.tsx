@@ -61,7 +61,7 @@ export default function ModalCalificarTodoIgual({
             sepa siempre a quién le está poniendo la nota. */}
         <div className="flex items-start justify-between gap-3 border-b border-border bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-4 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
               <Zap className="h-3 w-3" /> Calificando a
             </div>
             <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
@@ -104,7 +104,7 @@ export default function ModalCalificarTodoIgual({
 
         {/* Body: lista corta de qué etapas se van a calificar */}
         <div className="border-b border-border bg-secondary/20 px-4 py-2">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             Esto se aplica a:
           </div>
           <div className="mt-1 flex flex-wrap gap-1">
@@ -114,7 +114,7 @@ export default function ModalCalificarTodoIgual({
               .map((e) => (
                 <span
                   key={e.id}
-                  className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-100"
+                  className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-100"
                 >
                   {e.paso_entregado ? `Etapa ${e.paso_entregado}` : "Proyecto"}
                 </span>
@@ -156,7 +156,7 @@ export default function ModalCalificarTodoIgual({
 
           {/* Nota */}
           <div>
-            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Nota (0-100) — aplica a todas
             </label>
             <input
@@ -172,7 +172,7 @@ export default function ModalCalificarTodoIgual({
 
           {/* Comentario */}
           <div>
-            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Comentario para el estudiante (aplica a todas)
             </label>
             <textarea

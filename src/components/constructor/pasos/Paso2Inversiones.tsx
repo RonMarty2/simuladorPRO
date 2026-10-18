@@ -146,7 +146,7 @@ export default function Paso2Inversiones() {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Total inversiones
             </div>
             <div className="text-lg font-bold">{formatearBolivianos(totalGeneral)}</div>
@@ -208,7 +208,7 @@ export default function Paso2Inversiones() {
             <br />
             <br />
             <strong>Atajos:</strong> click en una celda selecciona el contenido.{" "}
-            <kbd className="rounded bg-secondary/50 px-1 text-[10px]">Enter</kbd> baja
+            <kbd className="rounded bg-secondary/50 px-1 text-[11px]">Enter</kbd> baja
             a la siguiente celda de la misma columna.
           </>
         }
@@ -262,7 +262,7 @@ function SeccionCategoria({
         <div className="flex items-center gap-2">
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              "rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
               chip
             )}
           >
@@ -359,7 +359,7 @@ function SeccionCategoria({
           {items.length > 0 && (
             <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
               <table className="w-full text-xs">
-                <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b border-border">
                     <th className={cn("p-1.5 text-left", COLS_ANCHO.descripcion)}>
                       Descripción
@@ -443,7 +443,7 @@ function SeccionCategoria({
                           onChange={(e) =>
                             onEditar(it.id, { creditoFiscalIVA: e.target.checked })
                           }
-                          title="Con factura valida para computar credito fiscal IVA"
+                          title="Con factura válida para computar crédito fiscal IVA"
                           className="h-3.5 w-3.5"
                         />
                       </td>
@@ -507,7 +507,7 @@ function SeccionCategoria({
                             >
                               {formatearBolivianos(vr)}
                               {totalmenteDepreciado && (
-                                <span className="ml-1 text-[10px]">⚠</span>
+                                <span className="ml-1 text-[11px]">⚠</span>
                               )}
                             </span>
                           );
@@ -604,7 +604,7 @@ function SeccionCategoria({
                         </label>
                       </div>
                     )}
-                    <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                    <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[11px] text-muted-foreground">
                       <input
                         type="checkbox"
                         checked={it.creditoFiscalIVA ?? config.valor !== "terreno"}
@@ -614,7 +614,7 @@ function SeccionCategoria({
                         className="h-3.5 w-3.5"
                       />
                       <span>
-                        <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                        <strong className="text-foreground">Factura IVA</strong> · da crédito fiscal
                       </span>
                     </label>
                     <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-0.5 border-t border-border/50 pt-1.5 text-[11px]">

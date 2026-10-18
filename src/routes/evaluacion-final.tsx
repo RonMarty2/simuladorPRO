@@ -254,11 +254,11 @@ function ComparativoCard({
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <div className="text-[10px] text-muted-foreground">Proyectado</div>
+          <div className="text-[11px] text-muted-foreground">Proyectado</div>
           <div className="font-medium">{fmt(proyectado)}</div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-foreground">Real</div>
+          <div className="text-[11px] text-muted-foreground">Real</div>
           <div
             className={`font-semibold ${
               fueMejor
@@ -270,7 +270,7 @@ function ComparativoCard({
           </div>
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+      <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
         {fueMejor ? (
           <CheckCircle2 className="h-3 w-3 text-emerald-600" />
         ) : (

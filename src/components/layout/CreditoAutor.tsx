@@ -10,7 +10,7 @@ export default function CreditoAutor({ variante = "publico" }: Props) {
   const anio = new Date().getFullYear();
   if (variante === "sutil") {
     return (
-      <p className="text-center text-[10px] leading-tight text-muted-foreground/60">
+      <p className="text-center text-[11px] leading-tight text-muted-foreground/60">
         Diseñado por
         <br />
         <span className="font-medium text-muted-foreground/80">

@@ -129,7 +129,7 @@ export default function BotonInstalarApp() {
         <Smartphone className="h-4 w-4 flex-shrink-0 text-amber-700 dark:text-amber-300" />
         <div className="text-xs">
           <div className="font-bold text-amber-900 dark:text-amber-100">Instala la app</div>
-          <div className="text-[10px] text-amber-800/80 dark:text-amber-300">
+          <div className="text-[11px] text-amber-800/80 dark:text-amber-300">
             Más rápido, ícono en tu pantalla, sin barra de navegador.
           </div>
         </div>

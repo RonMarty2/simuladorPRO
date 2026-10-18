@@ -208,7 +208,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             Configurar
           </button>
           <div className="rounded-md bg-white px-3 py-1.5 text-center text-xs shadow-sm dark:bg-amber-950/60">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Simulaciones activas
             </div>
             <div className="text-xl font-bold text-amber-900 dark:text-amber-100">
@@ -253,7 +253,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             </p>
             <button
               onClick={() => setExito(null)}
-              className="mt-1 text-[10px] font-bold underline"
+              className="mt-1 text-[11px] font-bold underline"
             >
               Cerrar
             </button>
@@ -264,7 +264,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
       {/* Selector de alcance (a quién le llega la situación) */}
       {alcancesDisponibles.length > 1 && (
         <div className="rounded-md border border-border bg-card p-2.5">
-          <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             ¿A quién le va a llegar la situación?
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -345,7 +345,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
                 <span className="text-[11px] text-muted-foreground">{e.codigo}</span>
               </div>
               <div className="text-xs font-bold leading-tight">{e.titulo}</div>
-              <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+              <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
                 {e.descripcion}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -386,7 +386,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               </span>
             ))}
           </div>
-          <p className="mb-2 text-[10px] leading-snug text-sky-800/80 dark:text-sky-200/80">
+          <p className="mb-2 text-[11px] leading-snug text-sky-800/80 dark:text-sky-200/80">
             De los <strong>{conteo?.totalDelAlcance ?? 0}</strong> alumnos con simulación,{" "}
             <strong>{conteo?.enSectoresAfectados ?? 0}</strong> tienen proyectos en sectores
             afectados. El resto tiene proyectos en otros sectores (ej. servicios, software).
@@ -412,7 +412,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
         <div className="min-w-0 flex-1">
           {seleccionado ? (
             <>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 Listo para lanzar
               </div>
               <div className="truncate text-sm font-bold">{seleccionado.titulo}</div>
@@ -451,7 +451,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
       {/* Historial */}
       {historial.length > 0 && (
         <div>
-          <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             <History className="h-3 w-3" />
             Historial reciente
           </div>
@@ -471,7 +471,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
                       {h.simulaciones_afectadas} alumno
                       {h.simulaciones_afectadas === 1 ? "" : "s"}
                     </span>
-                    <span className="flex flex-shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <span className="flex flex-shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground">
                       <BarChart3 className="h-3 w-3 text-primary" />
                       {hace}
                     </span>
@@ -712,13 +712,13 @@ function BarraRespuesta({
     <div className="rounded-md border border-border bg-background p-2.5">
       <div className="mb-1 flex items-center justify-between gap-2 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
             {letra}
           </span>
           <span className="font-medium">{texto}</span>
         </span>
         <span className="flex-shrink-0 font-bold tabular-nums">
-          {n} <span className="text-[10px] font-normal text-muted-foreground">({pct}%)</span>
+          {n} <span className="text-[11px] font-normal text-muted-foreground">({pct}%)</span>
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-secondary">

@@ -131,7 +131,7 @@ export default function Paso7GastosOperativos() {
             onChange={(e) => setCrecCostos(Number(e.target.value) / 100)}
             className="mt-1.5 w-full"
           />
-          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
             <span>0%</span>
             <span>5%</span>
             <span>10%</span>
@@ -145,7 +145,7 @@ export default function Paso7GastosOperativos() {
             <span className="text-xs font-semibold uppercase tracking-wide">
               Proyección 5 años
             </span>
-            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
+            <span className="text-[11px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
           <div className="-mx-1 overflow-x-auto md:mx-0">
           <table className="w-full min-w-[480px] text-xs md:min-w-0">
@@ -241,16 +241,16 @@ function SeccionGastos({
           )}
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap",
+              "rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider md:flex-shrink-0 md:whitespace-nowrap",
               config.chip
             )}
           >
             {config.label}
           </span>
-          <span className="hidden truncate text-[10px] text-foreground/70 md:inline">{config.sugerencia}</span>
+          <span className="hidden truncate text-[11px] text-foreground/70 md:inline">{config.sugerencia}</span>
         </div>
         <div className="flex-shrink-0 pl-6 md:pl-0 md:text-right">
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[11px] text-muted-foreground">
             Total año 1 · {items.length} ítem{items.length === 1 ? "" : "s"}
           </div>
           <div className="text-sm font-bold">{formatearBolivianos(totalAnio1)}</div>
@@ -262,7 +262,7 @@ function SeccionGastos({
         {items.length > 0 && (
           <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
             <table className="w-full text-xs">
-              <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                 <tr className="border-b border-border">
                   <th className="p-1.5 text-left w-[35%]">Descripción</th>
                   <th className="p-1.5 text-center w-[12%]">Unidad</th>
@@ -332,7 +332,7 @@ function SeccionGastos({
                           onChange={(e) =>
                             onEditar(c.id, { creditoFiscalIVA: e.target.checked })
                           }
-                          title="Con factura valida para computar credito fiscal IVA"
+                          title="Con factura válida para computar crédito fiscal IVA"
                           className="h-3.5 w-3.5"
                         />
                       </td>
@@ -405,7 +405,7 @@ function SeccionGastos({
                       />
                     </label>
                   </div>
-                  <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                  <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[11px] text-muted-foreground">
                     <input
                       type="checkbox"
                       checked={c.creditoFiscalIVA ?? true}
@@ -415,7 +415,7 @@ function SeccionGastos({
                       className="h-3.5 w-3.5"
                     />
                     <span>
-                      <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                      <strong className="text-foreground">Factura IVA</strong> · da crédito fiscal
                     </span>
                   </label>
                   <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">

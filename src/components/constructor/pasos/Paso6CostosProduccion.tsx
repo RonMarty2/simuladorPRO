@@ -206,7 +206,7 @@ export default function Paso6CostosProduccion() {
                   {itemsHuerfanos.map((it) => (
                     <li key={it.id} className="flex items-center justify-between gap-2">
                       <span>
-                        <span className="font-mono text-[10px] text-amber-700">
+                        <span className="font-mono text-[11px] text-amber-700">
                           [{it.categoria}]
                         </span>{" "}
                         <strong>{it.descripcion || "(sin nombre)"}</strong> —{" "}
@@ -232,7 +232,7 @@ export default function Paso6CostosProduccion() {
             <span className="text-xs font-semibold uppercase tracking-wide">
               Costos directos consolidados (todos los productos)
             </span>
-            <span className="text-[10px] text-muted-foreground md:hidden">Desliza →</span>
+            <span className="text-[11px] text-muted-foreground md:hidden">Desliza →</span>
           </div>
           <div className="-mx-1 overflow-x-auto md:mx-0">
           <table className="w-full min-w-[480px] text-xs md:min-w-0">
@@ -281,7 +281,7 @@ export default function Paso6CostosProduccion() {
             </tbody>
           </table>
           </div>
-          <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+          <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
             Cada año = cantidades del Paso 2 × costo unitario
             {g > 0 && (
               <>
@@ -362,13 +362,13 @@ function BloqueProducto({
           )}
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              "rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
               color.chip
             )}
           >
             Producto {productoIndex + 1}: {producto.nombre || "(sin nombre)"}
           </span>
-          <span className="text-[10px] text-foreground/70">
+          <span className="text-[11px] text-foreground/70">
             {producto.unidadMedida} · {formatearBolivianos(producto.precios[0])}/u
           </span>
           {totalItems > 0 && (
@@ -405,7 +405,7 @@ function BloqueProducto({
       <>
       {/* Demanda año por año del producto */}
       <div className="border-b border-border/60 bg-card/50 px-3 py-1.5">
-        <div className="flex flex-wrap items-center gap-2 text-[10px]">
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="font-semibold uppercase tracking-wide text-muted-foreground">
             Demanda proyectada:
           </span>
@@ -428,10 +428,10 @@ function BloqueProducto({
             <div key={sub.valor} className="rounded-md border border-border bg-card">
               <div className="flex items-center justify-between border-b border-border bg-secondary/40 px-2 py-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
                     {sub.label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">{sub.ejemplos}</span>
+                  <span className="text-[11px] text-muted-foreground">{sub.ejemplos}</span>
                 </div>
                 <span className="text-xs font-semibold">{formatearBolivianos(subtotal)}/u</span>
               </div>
@@ -439,7 +439,7 @@ function BloqueProducto({
               {items.length > 0 && (
                 <div className="hidden overflow-x-auto md:block">
                   <table className="w-full min-w-[900px] text-xs">
-                    <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                       <tr className="border-b border-border">
                         <th className="p-1.5 text-left">Descripción</th>
                         <th className="p-1.5 text-left">Unidad</th>
@@ -532,7 +532,7 @@ function BloqueProducto({
                               onChange={(e) =>
                                 onEditar(it.id, { creditoFiscalIVA: e.target.checked })
                               }
-                              title="Con factura valida para computar credito fiscal IVA"
+                              title="Con factura válida para computar crédito fiscal IVA"
                               className="h-3.5 w-3.5"
                             />
                           </td>
@@ -623,7 +623,7 @@ function BloqueProducto({
                           />
                         </label>
                       </div>
-                      <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+                      <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[11px] text-muted-foreground">
                         <input
                           type="checkbox"
                           checked={
@@ -636,7 +636,7 @@ function BloqueProducto({
                           className="h-3.5 w-3.5"
                         />
                         <span>
-                          <strong className="text-foreground">Factura IVA</strong> · da credito fiscal
+                          <strong className="text-foreground">Factura IVA</strong> · da crédito fiscal
                         </span>
                       </label>
                       <div className="mt-2 border-t border-border/50 pt-1.5 text-right text-[11px]">

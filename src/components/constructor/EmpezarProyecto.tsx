@@ -401,7 +401,7 @@ function OpcionVersion({
         </span>
         <span className="text-xs font-semibold">{titulo}</span>
       </div>
-      <span className="mt-1 text-[10px] leading-snug text-muted-foreground">
+      <span className="mt-1 text-[11px] leading-snug text-muted-foreground">
         {descripcion}
       </span>
     </button>

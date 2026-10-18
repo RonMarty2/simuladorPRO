@@ -91,7 +91,7 @@ export default function Login() {
         {/* Botón Google primero (opción recomendada) */}
         <BotonGoogle />
 
-        <div className="my-4 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="my-4 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
           o con email
           <div className="h-px flex-1 bg-border" />
@@ -157,7 +157,7 @@ export default function Login() {
           token expirado, etc.) puede limpiar todo y volver a entrar desde 0
           sin tener que abrir la consola del browser. */}
       <details className="mt-4 text-center">
-        <summary className="cursor-pointer text-[10px] text-muted-foreground">
+        <summary className="cursor-pointer text-[11px] text-muted-foreground">
           ¿No te deja entrar? Limpiar sesión y reintentar
         </summary>
         <button

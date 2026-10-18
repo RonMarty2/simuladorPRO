@@ -62,7 +62,7 @@ export default function MiPerfil() {
               disabled
               className="w-full rounded-md border border-input bg-secondary/30 px-3 py-2 text-sm text-muted-foreground"
             />
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               El email no se puede cambiar (es el identificador de tu cuenta).
             </p>
           </div>
@@ -110,7 +110,7 @@ export default function MiPerfil() {
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               El rol solo puede cambiarlo un administrador del sistema.
             </p>
           </div>

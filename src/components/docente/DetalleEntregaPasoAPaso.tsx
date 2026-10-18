@@ -36,7 +36,7 @@ const ICONOS: Record<number, string> = {
 export default function DetalleEntregaPasoAPaso({ proyecto, pasoEntregado }: Props) {
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
         Ver paso a paso · todo lo que llenó el estudiante
       </div>
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((paso) => (
@@ -91,7 +91,7 @@ function PasoAccordion({
             </span>
           )}
         </span>
-        <span className="text-[10px] text-muted-foreground">{abierto ? "▾ ocultar" : "▸ ver"}</span>
+        <span className="text-[11px] text-muted-foreground">{abierto ? "▾ ocultar" : "▸ ver"}</span>
       </button>
       {abierto && (
         <div className="border-t border-border bg-background/60 p-3">
@@ -124,7 +124,7 @@ function ContenidoPaso({ paso, proyecto }: { paso: number; proyecto: Proyecto })
 function Campo({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</span>
       <span className="text-xs">{v ?? <em className="text-muted-foreground">—</em>}</span>
     </div>
   );
@@ -196,7 +196,7 @@ function Paso1({ p }: { p: Proyecto }) {
       </GridCampos>
       {p.descripcion && (
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Descripción</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Descripción</div>
           <div className="mt-0.5 whitespace-pre-wrap text-xs">{p.descripcion}</div>
         </div>
       )}
@@ -204,7 +204,7 @@ function Paso1({ p }: { p: Proyecto }) {
         const planes = obtenerPlanesSuscripcion(p);
         return (
           <div className="space-y-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Planes de suscripción ({planes.length})
             </div>
             {planes.map((plan, idx) => (
@@ -225,7 +225,7 @@ function Paso1({ p }: { p: Proyecto }) {
       })()}
       {modelo === "publicidad" && p.publicidadV2 && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros publicidad</div>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros publicidad</div>
           <GridCampos>
             <Campo k="Audiencia mensual" v={p.publicidadV2.audienciaMensual.toLocaleString("es-BO")} />
             <Campo k="Crecimiento mensual" v={`${(p.publicidadV2.crecimientoMensual * 100).toFixed(2)}%`} />
@@ -236,7 +236,7 @@ function Paso1({ p }: { p: Proyecto }) {
       )}
       {modelo === "costo_beneficio" && p.costoBeneficioV2 && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros costo-beneficio</div>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Parámetros costo-beneficio</div>
           <GridCampos>
             <Campo k="Beneficio anual base" v={formatearBolivianos(p.costoBeneficioV2.beneficioAnualBase)} />
             <Campo k="Crecimiento anual" v={`${(p.costoBeneficioV2.crecimientoAnual * 100).toFixed(2)}%`} />
@@ -257,7 +257,7 @@ function Paso2({ p }: { p: Proyecto }) {
   return (
     <div className="space-y-3">
       <div>
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Productos · cantidades y precios por año
         </div>
         <TablaWrap>
@@ -282,7 +282,7 @@ function Paso2({ p }: { p: Proyecto }) {
                 </tr>
                 <tr>
                   <Td>
-                    <span className="text-[10px] italic text-muted-foreground">↳ precio</span>
+                    <span className="text-[11px] italic text-muted-foreground">↳ precio</span>
                   </Td>
                   <Td>Bs</Td>
                   {prod.precios.map((pr, i) => (
@@ -297,7 +297,7 @@ function Paso2({ p }: { p: Proyecto }) {
 
       {(p.tasasCrecCantidad || p.tasasCrecPrecio) && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             Tasas de crecimiento (de un año al siguiente)
           </div>
           <TablaWrap>
@@ -362,7 +362,7 @@ function Paso3({ p }: { p: Proyecto }) {
         return (
           <div key={c.key}>
             <div className="mb-1 flex items-center justify-between">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{c.titulo}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{c.titulo}</div>
               <div className="text-[11px] font-bold">{formatearBolivianos(subtotal)}</div>
             </div>
             <TablaWrap>
@@ -445,12 +445,12 @@ function Paso4({ p }: { p: Proyecto }) {
           </tr>
         </tfoot>
       </TablaWrap>
-      <div className="text-[10px] text-muted-foreground">
+      <div className="text-[11px] text-muted-foreground">
         Anual sin contar aportes patronales (riesgo prof, salud, vivienda, aguinaldo, indemnización).
       </div>
       {ov && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             Tasas patronales personalizadas (override)
           </div>
           <GridCampos>
@@ -518,7 +518,7 @@ function Paso6({ p }: { p: Proyecto }) {
     return (
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{titulo}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titulo}</div>
           <div className="text-[11px] font-bold">{formatearBolivianos(totalAnual)} / año</div>
         </div>
         <TablaWrap>
@@ -570,7 +570,7 @@ function Paso7({ p }: { p: Proyecto }) {
   return (
     <div className="space-y-3">
       <div>
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Préstamo para activo fijo
         </div>
         <GridCampos>
@@ -582,7 +582,7 @@ function Paso7({ p }: { p: Proyecto }) {
       </div>
       {f.prestamoCapitalTrabajo && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             Préstamo para capital de trabajo
           </div>
           <GridCampos>
@@ -594,14 +594,14 @@ function Paso7({ p }: { p: Proyecto }) {
         </div>
       )}
       <div>
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Costo del capital</div>
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Costo del capital</div>
         <GridCampos>
           <Campo k="Costo oportunidad accionista (Koa)" v={`${(f.costoOportunidadAccionista * 100).toFixed(2)}%`} />
         </GridCampos>
       </div>
       {p.capmV2 && (
         <div>
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">CAPM (V2)</div>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">CAPM (V2)</div>
           <GridCampos>
             <Campo k="Tasa libre de riesgo (Rf)" v={`${(p.capmV2.tasaLibreRiesgo * 100).toFixed(2)}%`} />
             <Campo k="Beta (β)" v={p.capmV2.beta.toFixed(2)} />

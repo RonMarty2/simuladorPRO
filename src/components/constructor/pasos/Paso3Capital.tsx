@@ -209,7 +209,7 @@ export default function Paso3Capital() {
         <div className="rounded-md border border-border">
           <div className="border-b border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wide flex items-center justify-between">
             <span>Gastos anuales (calculados de pasos anteriores)</span>
-            <span className="text-[10px] font-normal normal-case text-muted-foreground">
+            <span className="text-[11px] font-normal normal-case text-muted-foreground">
               Click en cada fila para ver de dónde sale el número
             </span>
           </div>
@@ -471,7 +471,7 @@ export default function Paso3Capital() {
             onChange={(e) => setImprevistos(Number(e.target.value) / 100)}
             className="mt-1.5 w-full"
           />
-          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
             <span>0%</span>
             <span>5% (típico)</span>
             <span>10%</span>
@@ -488,20 +488,20 @@ export default function Paso3Capital() {
 
           <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2">
             <div className="rounded-md bg-card p-2">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
                 Costo mensual de operación
               </div>
               <div className="text-base font-bold">{formatearBolivianos(totalMensual)}</div>
-              <div className="text-[10px] text-muted-foreground">= Total operativo anual ÷ 12 meses</div>
+              <div className="text-[11px] text-muted-foreground">= Total operativo anual ÷ 12 meses</div>
             </div>
             <div className="rounded-md bg-card p-2">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
                 Capital de trabajo requerido
               </div>
               <div className="text-base font-bold text-primary">
                 {formatearBolivianos(capitalTrabajoCalculado)}
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[11px] text-muted-foreground">
                 = Costo mensual × {mesesBuffer} {mesesBuffer === 1 ? "mes" : "meses"}
               </div>
             </div>
@@ -627,17 +627,17 @@ function FilaGastoDetalle({
         ) : (
           <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
         )}
-        <span className="w-5 text-right text-[10px] font-bold text-muted-foreground">{n}.</span>
+        <span className="w-5 text-right text-[11px] font-bold text-muted-foreground">{n}.</span>
         <div className="min-w-0 flex-1">
           <div className="font-medium">{label}</div>
-          <div className="text-[10px] text-muted-foreground">{origen}</div>
+          <div className="text-[11px] text-muted-foreground">{origen}</div>
         </div>
         <div className="text-right font-semibold tabular-nums">{formatearBolivianos(valor)}</div>
       </button>
 
       {abierto && (
         <div className="space-y-2 border-t border-border/60 bg-background/60 px-3 py-2">
-          <div className="rounded-md bg-secondary/40 px-2 py-1 text-[10px] text-muted-foreground">
+          <div className="rounded-md bg-secondary/40 px-2 py-1 text-[11px] text-muted-foreground">
             <span className="font-semibold text-foreground">Fórmula:</span> {formula}
           </div>
           {tieneDetalle ? (

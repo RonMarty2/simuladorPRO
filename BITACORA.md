@@ -469,10 +469,13 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         de /assets; recharts ya no es chunk manual (no se precarga en el
         arranque); confirmaciones al entregar, abandonar simulación y lanzar
         evento; barras de gráficos en verde/rojo según signo.
+      - Textos: voseo pasado a español neutro (tuteo) en toda la UI; tildes de
+        "crédito fiscal", "válida", "publicación", "código".
+      - Stepper: pasos recorridos sin datos (3-6) se marcan en ámbar con "!" y el
+        % completado los descuenta. Escenarios también avisa "Resultado
+        provisional". Texto de 10px pasó a 11px.
 
 ### Pendiente para después (hallazgos del review sin resolver)
-- [ ] Decisión pendiente del owner: unificar voseo/tuteo en los textos (hoy
-      mezclados) y tildes faltantes.
 - [ ] Ideas UX NO implementadas (cambian la forma de usar, requieren OK del
       owner): panel del alumno con una sola lista, "Continuar mi proyecto",
       constructor a dos columnas con tarjeta "Tu proyecto hoy", paso final

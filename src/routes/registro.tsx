@@ -72,7 +72,7 @@ export default function Registro() {
         {/* Botón Google primero (recomendado para estudiantes) */}
         <BotonGoogle texto="Crear cuenta con Google" />
 
-        <div className="my-4 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="my-4 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
           o con email
           <div className="h-px flex-1 bg-border" />

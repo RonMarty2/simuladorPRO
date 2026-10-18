@@ -138,7 +138,7 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
               Cargando tus entregas previas…
             </div>
           ) : yaEntregadas > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
               <span className="rounded-full bg-secondary px-2 py-0.5">
                 Total: <strong>{yaEntregadas}</strong>
               </span>

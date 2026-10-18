@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <summary className="cursor-pointer text-[11px] text-slate-500">
               Mostrar error técnico (mandalo a soporte)
             </summary>
-            <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-100 p-2 text-[10px] text-slate-700">
+            <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-100 p-2 text-[11px] text-slate-700">
               {mensaje}
             </pre>
           </details>

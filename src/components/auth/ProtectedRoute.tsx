@@ -88,10 +88,10 @@ export default function ProtectedRoute() {
           </div>
 
           <details className="pt-2 text-left">
-            <summary className="cursor-pointer text-[10px] text-muted-foreground">
+            <summary className="cursor-pointer text-[11px] text-muted-foreground">
               Ver detalles técnicos
             </summary>
-            <p className="mt-2 text-[10px] text-muted-foreground">
+            <p className="mt-2 text-[11px] text-muted-foreground">
               Si el reintento no funciona, podría faltar la migración SQL de FASE 1 en
               Supabase, o las tablas <code>perfiles/cursos/inscripciones</code> no existen.
             </p>

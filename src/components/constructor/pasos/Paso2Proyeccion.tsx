@@ -129,7 +129,7 @@ export default function Paso2Proyeccion() {
           <p className="mt-0.5 text-sm text-muted-foreground">
             Las tasas de arriba aplican a <strong>todos los productos por igual</strong>.
             Puedes editar valores individuales en cada celda.{" "}
-            <kbd className="rounded bg-secondary px-1 text-[10px]">Enter</kbd> baja a la
+            <kbd className="rounded bg-secondary px-1 text-[11px]">Enter</kbd> baja a la
             siguiente celda. Click en una celda selecciona el contenido para escribir.
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function Paso2Proyeccion() {
                     )}
                     📈 Tasas de crecimiento (aplican a todos)
                     {!tasasAbierto && (
-                      <span className="ml-1 normal-case text-[10px] font-normal opacity-70">
+                      <span className="ml-1 normal-case text-[11px] font-normal opacity-70">
                         — clic para editar
                       </span>
                     )}
@@ -292,7 +292,7 @@ export default function Paso2Proyeccion() {
                 { label: "Precio (% por año)", tasas: tasasPrec, set: setTasaPrec },
               ].map((fila) => (
                 <div key={fila.label}>
-                  <div className="text-[10px] font-semibold text-muted-foreground">{fila.label}</div>
+                  <div className="text-[11px] font-semibold text-muted-foreground">{fila.label}</div>
                   <div className="mt-1 grid grid-cols-4 gap-1">
                     {fila.tasas.map((t, i) => (
                       <label key={i} className="text-center text-[11px] text-muted-foreground">
@@ -332,7 +332,7 @@ export default function Paso2Proyeccion() {
                     ) : (
                       <ChevronRight className="h-4 w-4 flex-shrink-0" />
                     )}
-                    <span className={cn("flex-shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", color.chip)}>
+                    <span className={cn("flex-shrink-0 rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider", color.chip)}>
                       Producto {pi + 1}
                     </span>
                     {!expandidos[p.id] && (
@@ -355,7 +355,7 @@ export default function Paso2Proyeccion() {
                 {expandidos[p.id] && (
                 <div className="space-y-2 p-2">
                   <div className="grid grid-cols-2 gap-2">
-                    <label className="text-[10px] text-muted-foreground">
+                    <label className="text-[11px] text-muted-foreground">
                       Nombre
                       <input
                         type="text"
@@ -366,7 +366,7 @@ export default function Paso2Proyeccion() {
                         className="mt-0.5 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
                       />
                     </label>
-                    <label className="text-[10px] text-muted-foreground">
+                    <label className="text-[11px] text-muted-foreground">
                       Unidad
                       <input
                         type="text"
@@ -391,7 +391,7 @@ export default function Paso2Proyeccion() {
                   </label>
                   {[0, 1, 2, 3, 4].map((i) => (
                     <div key={i} className="rounded-md border border-border bg-background/60 p-2">
-                      <div className="mb-1 text-[10px] font-semibold text-muted-foreground">Año {i + 1}</div>
+                      <div className="mb-1 text-[11px] font-semibold text-muted-foreground">Año {i + 1}</div>
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-[11px] text-muted-foreground">
                           Cantidad
@@ -430,7 +430,7 @@ export default function Paso2Proyeccion() {
                 <div key={i} className="flex justify-between border-b border-border/40 py-0.5">
                   <span className="text-muted-foreground">
                     Año {i + 1}{" "}
-                    <span className="text-[10px]">({unidadesPorAnio[i].toLocaleString()} u)</span>
+                    <span className="text-[11px]">({unidadesPorAnio[i].toLocaleString()} u)</span>
                   </span>
                   <span className="font-semibold tabular-nums">{formatearBolivianos(ing)}</span>
                 </div>
@@ -525,7 +525,7 @@ export default function Paso2Proyeccion() {
             <strong>Atajo:</strong> click en una celda{" "}
             <em>selecciona todo el contenido</em>, así escribes y reemplazas
             directamente.{" "}
-            <kbd className="rounded bg-secondary/50 px-1 text-[10px]">Enter</kbd>{" "}
+            <kbd className="rounded bg-secondary/50 px-1 text-[11px]">Enter</kbd>{" "}
             baja a la siguiente celda.
           </>
         }
@@ -585,7 +585,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
                 <div className="mb-2 flex items-center gap-2">
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                      "rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
                       color.chip
                     )}
                   >
@@ -648,7 +648,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
                 </div>
 
                 {/* Mini-indicadores por plan */}
-                <div className="mt-2 grid grid-cols-1 gap-1.5 text-[10px] sm:grid-cols-3">
+                <div className="mt-2 grid grid-cols-1 gap-1.5 text-[11px] sm:grid-cols-3">
                   <div className="rounded-md border border-border bg-secondary/20 p-1.5">
                     <span className="text-muted-foreground">LTV: </span>
                     <span className="font-semibold tabular-nums">
@@ -1028,7 +1028,7 @@ function CampoSus({
       <label className="text-[11px] font-medium text-foreground">{label}</label>
       <div className="mt-1 flex items-center gap-1">
         <input type="number" min={0} step={paso} value={valor} onChange={(e) => onChange(acotarNumero(Number(e.target.value) || 0, 0))} onFocus={(e) => e.currentTarget.select()} className={clase} />
-        <span className="whitespace-nowrap text-[10px] text-muted-foreground">{sufijo}</span>
+        <span className="whitespace-nowrap text-[11px] text-muted-foreground">{sufijo}</span>
       </div>
       <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{ayuda}</p>
     </div>
@@ -1084,7 +1084,7 @@ function ProductoFilas({
               )}
               <span
                 className={cn(
-                  "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  "flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                   color.chip
                 )}
               >

@@ -110,7 +110,7 @@ export default function BadgeRevisionesNuevas() {
       <span className="hidden sm:inline">
         {pendientesVer} {pendientesVer === 1 ? "revisión" : "revisiones"}
       </span>
-      <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white sm:hidden">
+      <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[11px] font-bold text-white sm:hidden">
         {pendientesVer}
       </span>
     </Link>

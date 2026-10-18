@@ -65,7 +65,7 @@ export default function ModalRevisarEntrega({
             docente no lo pierda mientras revisa y habla con él. */}
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
               {yaRevisada ? "👁 Viendo revisión de" : "📝 Revisando a"}
             </div>
             <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
@@ -91,7 +91,7 @@ export default function ModalRevisarEntrega({
         <div className="max-h-[calc(90vh-160px)] space-y-4 overflow-y-auto p-4">
           {/* Indicadores del estudiante */}
           <div>
-            <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Indicadores de esta entrega
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -237,7 +237,7 @@ export default function ModalRevisarEntrega({
                     <Layers className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
                     Aplicar también a {otrasPendientes.length} etapa{otrasPendientes.length === 1 ? "" : "s"} pendiente{otrasPendientes.length === 1 ? "" : "s"} del alumno
                   </div>
-                  <div className="mt-0.5 text-[10px] text-muted-foreground">
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
                     {otrasPendientes
                       .map((e) => (e.paso_entregado ? `Etapa ${e.paso_entregado}` : "Proyecto"))
                       .join(", ")}
@@ -248,7 +248,7 @@ export default function ModalRevisarEntrega({
             )}
 
             {yaRevisada && entrega.revisado_en && (
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[11px] text-muted-foreground">
                 Revisada el {new Date(entrega.revisado_en).toLocaleString("es-BO")}
               </div>
             )}

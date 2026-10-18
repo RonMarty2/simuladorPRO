@@ -215,7 +215,7 @@ function ModalGuardar({
           {/* Vista previa */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="rounded-md border border-emerald-400/60 bg-emerald-50 p-2 dark:bg-emerald-950/20">
-              <div className="text-[10px] font-bold uppercase tracking-wide text-emerald-900 dark:text-emerald-100">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-900 dark:text-emerald-100">
                 ✓ Recibe ya armado ({pasosEntregados.length})
               </div>
               <ul className="mt-1 space-y-0.5 text-[11px] text-emerald-900/80 dark:text-emerald-100/80">
@@ -231,7 +231,7 @@ function ModalGuardar({
               </ul>
             </div>
             <div className="rounded-md border border-sky-400/60 bg-sky-50 p-2 dark:bg-sky-950/20">
-              <div className="text-[10px] font-bold uppercase tracking-wide text-sky-900 dark:text-sky-100">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-sky-900 dark:text-sky-100">
                 ✎ Debe completar ({pasosACompletar.length})
               </div>
               <ul className="mt-1 space-y-0.5 text-[11px] text-sky-900/80 dark:text-sky-100/80">

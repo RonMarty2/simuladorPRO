@@ -227,11 +227,11 @@ export default function Paso9Resumen() {
       <div className="order-3 overflow-x-auto rounded-lg border border-border bg-card p-4">
         <h3 className="mb-1 text-sm font-semibold">
           Flujo de caja proyectado (Bs){" "}
-          <span className="font-normal text-[10px] text-muted-foreground">
+          <span className="font-normal text-[11px] text-muted-foreground">
             — clic en cada barra de color para contraer/expandir
           </span>
         </h3>
-        <div className="mb-2 text-[10px] text-muted-foreground md:hidden">
+        <div className="mb-2 text-[11px] text-muted-foreground md:hidden">
           👉 Desliza la tabla para ver los 5 años (el concepto queda fijo).
         </div>
         <table className="w-full min-w-[700px] text-xs">
@@ -338,7 +338,7 @@ export default function Paso9Resumen() {
         </table>
 
         {/* Leyenda de colores */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
           <span className="font-semibold">Leyenda:</span>
           <LeyendaColor color="emerald" texto="1 · Ingresos" />
           <LeyendaColor color="rose" texto="2 · Costos operativos" />
@@ -458,11 +458,11 @@ function AnalisisAvanzadoV2({
         aria-expanded={abierto}
       >
         <span className="text-xs text-indigo-600">{abierto ? "▾" : "▸"}</span>
-        <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+        <span className="rounded bg-indigo-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
           + Riesgo
         </span>
         <h3 className="text-base font-semibold tracking-tight">Análisis avanzado</h3>
-        <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+        <span className="ml-auto text-[11px] font-normal text-muted-foreground">
           {abierto ? "ocultar" : "PE · recuperación desc. · apalancamiento · sensibilidad · Monte Carlo"}
         </span>
       </button>
@@ -530,7 +530,7 @@ function AnalisisAvanzadoV2({
             <FilaDetalle k="Margen de contribución" v={`${(v2.puntoEquilibrio.ratioMargenContribucion * 100).toFixed(1)}% del precio`} />
             <FilaDetalle k="Tu venta del año 1" v={`${v2.unidadesAnio1.toLocaleString("es-BO")} u`} />
           </div>
-          <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
+          <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">
             {!isFinite(v2.puntoEquilibrio.unidades)
               ? "✗ Cada unidad pierde plata (sin margen)."
               : v2.puntoEquilibrio.unidades <= v2.unidadesAnio1
@@ -560,7 +560,7 @@ function AnalisisAvanzadoV2({
             {(calc.wacc * 100).toFixed(1)}%). Por eso siempre tarda un poco más que el
             periodo de recuperación normal.
           </p>
-          <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
+          <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">
             {v2.paybackDescontado < 0
               ? "✗ No recupera en los 5 años."
               : v2.paybackDescontado <= 5
@@ -586,7 +586,7 @@ function AnalisisAvanzadoV2({
             <FilaDetalle k="GAF · por la deuda" v={fmtRatio(v2.gaf)} />
             <FilaDetalle k="GAT · total (GAO × GAF)" v={fmtRatio(v2.gat)} />
           </div>
-          <div className="mt-1.5 text-[10px] font-medium leading-snug text-muted-foreground">
+          <div className="mt-1.5 text-[11px] font-medium leading-snug text-muted-foreground">
             {isFinite(v2.gat)
               ? `En palabras: si tus ventas suben (o bajan) 1%, la ganancia del dueño sube (o baja) ~${v2.gat.toFixed(1)}%.`
               : "No calculable con los datos actuales."}
@@ -622,7 +622,7 @@ function AnalisisAvanzadoV2({
               <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span>
             </div>
           </div>
-          <div className="mt-1.5 text-[10px] font-medium leading-snug text-muted-foreground">
+          <div className="mt-1.5 text-[11px] font-medium leading-snug text-muted-foreground">
             {v2.flujoInv.vanAccionista > v2.flujoInv.vanProyecto
               ? "✓ Tu parte vale más que el negocio entero: la deuda te conviene."
               : "⚠ Tu parte no supera al negocio entero: la deuda no te suma valor."}
@@ -636,7 +636,7 @@ function AnalisisAvanzadoV2({
           <span className="text-sm font-semibold">
             Análisis de sensibilidad del VAN — "¿qué pasaría si…?"
           </span>
-          <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
+          <span className="flex-shrink-0 text-[11px] text-muted-foreground">▸ ver / ▾ ocultar</span>
         </summary>
         <div className="overflow-x-auto p-4 pt-0">
         <p className="mb-1 text-[11px] leading-snug text-muted-foreground">
@@ -645,7 +645,7 @@ function AnalisisAvanzadoV2({
           <strong>subiera o bajara</strong> ese porcentaje, dejando todo lo demás igual.
           La columna del medio (<strong>Base</strong>) es tu VAN actual sin cambios.
         </p>
-        <p className="mb-3 text-[10px] italic text-muted-foreground">
+        <p className="mb-3 text-[11px] italic text-muted-foreground">
           Sirve para ver qué variable es más peligrosa. Es estático — distinto de la
           simulación con eventos (inflación, bloqueos…).
         </p>
@@ -692,7 +692,7 @@ function AnalisisAvanzadoV2({
           </div>
         </div>
 
-        <div className="mt-2 text-[10px] text-muted-foreground">
+        <div className="mt-2 text-[11px] text-muted-foreground">
           Verde = el proyecto sigue creando valor (VAN &gt; 0) · Rojo = destruye valor
           (VAN &lt; 0). VAN base: <strong>{formatearBolivianos(calc.indicadores.van)}</strong> ·
           descontado al WACC {fmtPct(calc.wacc)}.
@@ -731,7 +731,7 @@ function GraficoEquilibrio({
   });
   return (
     <div className="mt-2 border-t border-border/50 pt-2">
-      <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
+      <div className="mb-1 text-[11px] font-semibold text-muted-foreground">
         Gráfico de equilibrio (ingresos vs costo total)
       </div>
       <ResponsiveContainer width="100%" height={190}>
@@ -766,7 +766,7 @@ function GraficoEquilibrio({
           <Line type="monotone" dataKey="Costo total" stroke="#ef4444" dot={false} strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
         Donde la línea verde (ingresos) cruza la roja (costo total) está el{" "}
         <strong>punto de equilibrio</strong>: a la izquierda pierdes, a la derecha ganas. La
         marca <em>"Tu venta"</em> muestra dónde estás el año 1.
@@ -846,7 +846,7 @@ function PanelMonteCarlo({
         <span className="text-sm font-semibold">
           🎲 Análisis de riesgo (Monte Carlo) — ¿qué tan probable es ganar?
         </span>
-        <span className="flex-shrink-0 text-[10px] text-muted-foreground">▸ ver / ▾ ocultar</span>
+        <span className="flex-shrink-0 text-[11px] text-muted-foreground">▸ ver / ▾ ocultar</span>
       </summary>
       <div className="p-4 pt-0">
         <p className="mb-3 text-[11px] leading-snug text-muted-foreground">
@@ -897,13 +897,13 @@ function PanelMonteCarlo({
         {/* Resultado estrella */}
         <div className="mb-3 flex flex-wrap items-center gap-4 rounded-md bg-secondary/30 p-3">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Probabilidad de VAN positivo
             </div>
             <div className={cn("text-3xl font-bold", colorProb)}>
               {(prob * 100).toFixed(0)}%
             </div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-[11px] text-muted-foreground">
               {prob >= 0.7
                 ? "Riesgo bajo: gana en la mayoría de escenarios."
                 : prob >= 0.4
@@ -935,7 +935,7 @@ function PanelMonteCarlo({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-        <div className="mt-1 text-center text-[10px] text-muted-foreground">
+        <div className="mt-1 text-center text-[11px] text-muted-foreground">
           Cada barra = cuántos de los 1.000 escenarios cayeron en ese rango de VAN.
           Rojo = pérdida (VAN &lt; 0), verde = ganancia.
         </div>
@@ -993,7 +993,7 @@ function V2Card({
       <summary className="flex cursor-pointer list-none items-center gap-2 p-2.5 hover:bg-secondary/40">
         <span className="min-w-0 flex-1">
           <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
-          <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+          <span className="ml-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
             {nombre}
           </span>
           <span
@@ -1005,7 +1005,7 @@ function V2Card({
             {valor}
           </span>
         </span>
-        <span className="flex-shrink-0 text-[10px] text-muted-foreground">
+        <span className="flex-shrink-0 text-[11px] text-muted-foreground">
           <span className="group-open:hidden">▸ ver</span>
           <span className="hidden group-open:inline">▾ ocultar</span>
         </span>
@@ -1223,13 +1223,13 @@ function CardIndicador({
       {/* Encabezado: sigla técnica + nombre completo */}
       <div className="flex items-baseline gap-2">
         <span className="font-mono text-sm font-bold tracking-tight">{sigla}</span>
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
           {nombre}
         </span>
       </div>
 
       {/* Pregunta que responde, en lenguaje simple */}
-      <div className="mt-1 text-[10px] italic text-muted-foreground">{pregunta}</div>
+      <div className="mt-1 text-[11px] italic text-muted-foreground">{pregunta}</div>
 
       {/* Valor numérico destacado */}
       <div
@@ -1244,7 +1244,7 @@ function CardIndicador({
       {/* Interpretación en lenguaje plano (verde si bien, rojo si mal) */}
       <div
         className={cn(
-          "mt-1 text-[10px] font-medium",
+          "mt-1 text-[11px] font-medium",
           positivo ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
         )}
       >
@@ -1254,12 +1254,12 @@ function CardIndicador({
       {/* Explicación desplegable "¿Qué es?" + cómo se calcula */}
       {(explicacion || tooltip) && (
         <details className="group mt-2 border-t border-border/60 pt-1.5">
-          <summary className="cursor-pointer list-none text-[10px] font-medium text-primary">
+          <summary className="cursor-pointer list-none text-[11px] font-medium text-primary">
             <span className="group-open:hidden">▸ ¿qué es?</span>
             <span className="hidden group-open:inline">▾ ocultar</span>
           </summary>
           {explicacion && (
-            <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
+            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
               {explicacion}
             </p>
           )}
@@ -1319,7 +1319,7 @@ function FilaSeccion({
         colSpan={7}
         onClick={onToggle}
         className={cn(
-          "px-2 py-1 text-[10px] font-bold uppercase tracking-wider",
+          "px-2 py-1 text-[11px] font-bold uppercase tracking-wider",
           SECCION_BG[color],
           onToggle && "cursor-pointer select-none"
         )}

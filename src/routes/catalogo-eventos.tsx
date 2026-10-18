@@ -131,7 +131,7 @@ export default function CatalogoEventos() {
                   <span className="text-xs font-mono text-muted-foreground">{e.codigo}</span>
                 </div>
                 <span
-                  className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+                  className={`rounded px-2 py-0.5 text-[11px] font-medium ${
                     coloresCategoria[e.categoria as CategoriaEvento] ?? ""
                   }`}
                 >
@@ -142,7 +142,7 @@ export default function CatalogoEventos() {
               <h3 className="mt-2 text-sm font-semibold tracking-tight">{e.titulo}</h3>
               <p className="mt-1 text-xs text-muted-foreground line-clamp-3">{e.descripcion}</p>
 
-              <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+              <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
                 <span>Prob: {(e.probabilidad * 100).toFixed(0)}%</span>
                 <span>·</span>
                 <span>Desde turno {e.turno_minimo}</span>
@@ -162,7 +162,7 @@ export default function CatalogoEventos() {
                   {e.opciones_decision.map((op) => (
                     <div key={op.letra} className="text-xs">
                       <div className="font-medium">
-                        <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px]">
+                        <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[11px]">
                           {op.letra}
                         </span>
                         {op.texto}

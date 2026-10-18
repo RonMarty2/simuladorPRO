@@ -132,7 +132,7 @@ function SelectorEventosCurados({
         <div className="mt-2 space-y-2">
           {/* Filtro de categoría */}
           {!cargando && eventos.length > 0 && (
-            <div className="flex flex-wrap gap-1 text-[10px]">
+            <div className="flex flex-wrap gap-1 text-[11px]">
               <button
                 type="button"
                 onClick={() => setFiltroCategoria("todas")}
@@ -202,7 +202,7 @@ function SelectorEventosCurados({
                         <span className="font-mono opacity-60">{e.codigo}</span>{" "}
                         {e.titulo}
                       </div>
-                      <div className="text-[10px] text-muted-foreground line-clamp-2">
+                      <div className="text-[11px] text-muted-foreground line-clamp-2">
                         {e.descripcion}
                       </div>
                       <div className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -215,7 +215,7 @@ function SelectorEventosCurados({
             </div>
           )}
 
-          <div className="rounded bg-background px-2 py-1 text-[10px] text-muted-foreground">
+          <div className="rounded bg-background px-2 py-1 text-[11px] text-muted-foreground">
             💡 Tip: los eventos seleccionados se aplicarán <strong>en orden</strong> a lo
             largo de los turnos del curso. Si eliges más eventos que turnos, los últimos
             se omiten.

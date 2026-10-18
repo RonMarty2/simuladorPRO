@@ -31,6 +31,7 @@ import {
 } from "@/lib/escenarios";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
+import { datosFaltantes } from "@/lib/datos-faltantes";
 
 const COLORES: Record<NombreEscenario, string> = {
   optimista: "#10b981",     // emerald-500
@@ -62,6 +63,7 @@ export default function PanelEscenarios({
     () => compararEscenarios(proyecto, optimista, pesimista, miEscenario),
     [proyecto, optimista, pesimista, miEscenario]
   );
+  const faltantes = useMemo(() => datosFaltantes(proyecto), [proyecto]);
 
   // Datos para el gráfico: flujo neto acumulado por escenario, año 0..5.
   const datosGrafico = useMemo(() => {
@@ -88,6 +90,18 @@ export default function PanelEscenarios({
           El proyecto base es <strong>{proyecto.nombre}</strong>.
         </p>
       </div>
+
+      {faltantes.length > 0 && (
+        <div
+          role="status"
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+        >
+          <strong>Resultado provisional.</strong> Aún no cargaste datos en:{" "}
+          {faltantes.map((f) => `paso ${f.paso} (${f.etiqueta})`).join(", ")}. Los escenarios
+          pueden no ser confiables. Si tu proyecto realmente no tiene alguno de estos rubros,
+          puedes ignorar este aviso.
+        </div>
+      )}
 
       {/* Tarjetas resumen de cada escenario */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -134,7 +148,7 @@ export default function PanelEscenarios({
             ))}
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[10px] text-muted-foreground">
+        <p className="mt-1 text-[11px] text-muted-foreground">
           Cada línea muestra cuánto va dejando (o gastando) el proyecto acumulado año por año.
           Si una línea cruza el cero hacia arriba, el proyecto se recuperó.
         </p>
@@ -290,24 +304,24 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
           {escenario.etiqueta}
         </span>
         {viable ? (
-          <span className="flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="h-3 w-3" />
             VIABLE
           </span>
         ) : (
-          <span className="flex items-center gap-0.5 text-[10px] font-semibold text-rose-700 dark:text-rose-300">
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
             <XCircle className="h-3 w-3" />
             NO VIABLE
           </span>
         )}
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-1 text-[10px]">
+      <div className="mt-2 grid grid-cols-2 gap-1 text-[11px]">
         <Stat label="VAN" v={formatearBolivianos(ind.van)} />
         <Stat label="TIR" v={tirCalculable(ind.tir) ? `${(ind.tir * 100).toFixed(1)}%` : "—"} />
         <Stat label="Recuperación" v={ind.payback !== null && ind.payback >= 0 ? `${ind.payback.toFixed(1)} años` : "∞"} />
         <Stat label="WACC" v={`${(escenario.flujo.wacc * 100).toFixed(1)}%`} />
       </div>
-      <div className="mt-2 text-[10px] text-muted-foreground">
+      <div className="mt-2 text-[11px] text-muted-foreground">
         {resumirModificadores(escenario.modificadores)}
       </div>
     </div>

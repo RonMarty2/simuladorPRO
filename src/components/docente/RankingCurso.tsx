@@ -168,7 +168,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                 <td className="p-2">
                   <div className="font-medium">{f.nombre_completo}</div>
                   {f.universidad && (
-                    <div className="text-[10px] text-muted-foreground">{f.universidad}</div>
+                    <div className="text-[11px] text-muted-foreground">{f.universidad}</div>
                   )}
                 </td>
                 <td className="p-2">
@@ -263,7 +263,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
         </table>
       </div>
 
-      <div className="text-[10px] text-muted-foreground">
+      <div className="text-[11px] text-muted-foreground">
         Última actualización: {actualizandoEn.toLocaleTimeString("es-BO")}
       </div>
     </div>
@@ -312,7 +312,7 @@ function UltimaActividadCell({
     const diasDesdeInscripcion = (ahora - new Date(inscritoEn).getTime()) / (1000 * 60 * 60 * 24);
     return (
       <div className="flex flex-col">
-        <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+        <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
           ✗ sin actividad
         </span>
         <span className="mt-0.5 text-[11px] text-muted-foreground">
@@ -346,7 +346,7 @@ function UltimaActividadCell({
 
   return (
     <div className="flex flex-col">
-      <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", clase)}>
+      <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-semibold", clase)}>
         {relativo}
       </span>
       <span className="mt-0.5 text-[11px] text-muted-foreground">{fechaFmt}</span>
@@ -385,28 +385,28 @@ function EstadoChip({
 }) {
   if (!tieneSimulacion) {
     return (
-      <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+      <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
         sin iniciar
       </span>
     );
   }
   if (estado === "activa") {
     return (
-      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[11px] text-blue-800 dark:bg-blue-950 dark:text-blue-300">
         simulando
       </span>
     );
   }
   if (estado === "finalizada") {
     return (
-      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
         finalizada
       </span>
     );
   }
   if (estado === "quebrada") {
     return (
-      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-800 dark:bg-red-950 dark:text-red-300">
+      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[11px] text-red-800 dark:bg-red-950 dark:text-red-300">
         quebrada
       </span>
     );

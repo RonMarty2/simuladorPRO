@@ -124,7 +124,7 @@ export default function Paso4Personal() {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Costo anual total
             </div>
             <div className="text-lg font-bold">{formatearBolivianos(costoAnualTotal)}</div>
@@ -150,7 +150,7 @@ export default function Paso4Personal() {
               <Receipt className="h-3.5 w-3.5" />
               <span
                 className={cn(
-                  "rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  "rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                   BLOQUE_APORTES.chip
                 )}
               >
@@ -160,7 +160,7 @@ export default function Paso4Personal() {
                 — total {(totalTasa * 100).toFixed(2)}%
               </span>
               {tasasModificadas && (
-                <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-700 dark:text-amber-100">
+                <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[11px] font-semibold text-amber-950 dark:bg-amber-700 dark:text-amber-100">
                   Modificadas
                 </span>
               )}
@@ -181,7 +181,7 @@ export default function Paso4Personal() {
 
               <div className="overflow-x-auto rounded border border-border bg-card">
                 <table className="w-full text-xs">
-                  <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                     <tr className="border-b border-border">
                       <th className="p-1.5 text-left w-[30%]">Aporte</th>
                       <th className="p-1.5 text-left w-[35%]">Descripción</th>
@@ -255,7 +255,7 @@ export default function Paso4Personal() {
           >
             <div className="flex min-w-0 items-center gap-2">
               <Users className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className={cn("flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", BLOQUE_PERSONAL.chip)}>
+              <span className={cn("flex-shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider", BLOQUE_PERSONAL.chip)}>
                 2. Personal
               </span>
               <span className="text-xs font-medium text-foreground/70">
@@ -279,7 +279,7 @@ export default function Paso4Personal() {
             {proyecto.personal.length > 0 && (
               <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
                 <table className="w-full text-xs">
-                  <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                     <tr className="border-b border-border">
                       <th className="p-1.5 text-left w-[32%]">Puesto</th>
                       <th className="p-1.5 text-right w-[12%]">Cantidad</th>
@@ -419,7 +419,7 @@ export default function Paso4Personal() {
               </div>
             )}
 
-            <p className="rounded bg-secondary/30 px-2 py-1.5 text-[10px] leading-snug text-muted-foreground">
+            <p className="rounded bg-secondary/30 px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
               <strong className="text-foreground">¿De dónde sale cada número?</strong>{" "}
               <strong>Aportes/mes</strong> = sueldo × {(totalTasa * 100).toFixed(2)}% (riesgo{" "}
               {(tasas.riesgoProfesional * 100).toFixed(2)}% + salud{" "}

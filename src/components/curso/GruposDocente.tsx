@@ -143,7 +143,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
           </button>
           {pesosOk && <span className="text-[11px] text-emerald-600">Guardado ✓</span>}
           {pInd + pGrp !== 100 && (
-            <span className="text-[10px] text-amber-600">
+            <span className="text-[11px] text-amber-600">
               (No suman 100%: se renormaliza al calcular)
             </span>
           )}
@@ -302,11 +302,11 @@ function GrupoFila({
         <div className="flex items-center gap-2">
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-sm font-semibold">{grupo.nombre}</span>
-          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
             {grupo.miembros.length} / {grupo.cupo_max} cupos
           </span>
           {grupo.nota != null && (
-            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
               Nota: {grupo.nota}
             </span>
           )}
@@ -337,7 +337,7 @@ function GrupoFila({
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           ) : (
-            <span className="flex items-center gap-1 text-[10px]">
+            <span className="flex items-center gap-1 text-[11px]">
               <button onClick={borrar} disabled={borrando} className="rounded bg-destructive px-1.5 py-0.5 font-semibold text-destructive-foreground">
                 {borrando ? "…" : "Borrar"}
               </button>
@@ -438,7 +438,7 @@ function PanelActividadGrupo({ grupo }: { grupo: GrupoConMiembros }) {
         {abierto ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         <Activity className="h-3 w-3" />
         Actividad del grupo · quién trabajó en el proyecto
-        {!abierto && <span className="ml-auto text-[10px] opacity-60">click para ver</span>}
+        {!abierto && <span className="ml-auto text-[11px] opacity-60">click para ver</span>}
       </button>
 
       {abierto && (
@@ -454,7 +454,7 @@ function PanelActividadGrupo({ grupo }: { grupo: GrupoConMiembros }) {
             <div className="text-[11px] text-muted-foreground">Sin datos.</div>
           ) : (
             <>
-              <p className="text-[10px] italic text-muted-foreground">
+              <p className="text-[11px] italic text-muted-foreground">
                 Una fila por miembro. "Sin actividad" = nunca abrió ni guardó el
                 proyecto. Si la migración 025 no fue aplicada todavía, todos van
                 a aparecer sin actividad.
@@ -492,11 +492,11 @@ function PanelActividadGrupo({ grupo }: { grupo: GrupoConMiembros }) {
                         <td className="py-0.5 text-center tabular-nums">{m.diasActivos}</td>
                         <td className="py-0.5 text-center">
                           {m.entrego ? (
-                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
                               sí
                             </span>
                           ) : (
-                            <span className="text-[10px]">—</span>
+                            <span className="text-[11px]">—</span>
                           )}
                         </td>
                       </tr>

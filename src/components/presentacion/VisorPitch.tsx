@@ -140,7 +140,7 @@ export default function VisorPitch({
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/80 px-3 backdrop-blur md:px-5">
         <div className="min-w-0">
           <div className="truncate text-xs font-bold md:text-sm">{presentacion.titulo}</div>
-          <div className="hidden text-[10px] text-slate-400 sm:block">
+          <div className="hidden text-[11px] text-slate-400 sm:block">
             Presentación · usa ← → para avanzar
           </div>
         </div>
@@ -194,14 +194,14 @@ export default function VisorPitch({
               setAjustesLaboratorio(crearAjustesLaboratorioIniciales(proyecto))
             }
           />
-          <div className="absolute bottom-4 right-5 z-20 text-[10px] font-bold tracking-[0.18em] text-slate-400 md:text-xs">
+          <div className="absolute bottom-4 right-5 z-20 text-[11px] font-bold tracking-[0.18em] text-slate-400 md:text-xs">
             {indice + 1} / {modelo.diapositivas.length}
           </div>
         </div>
 
         {mostrarNotas && (
           <div className="absolute bottom-5 left-1/2 z-30 w-[min(760px,90%)] -translate-x-1/2 rounded-xl border border-amber-300/30 bg-slate-950/95 p-4 text-sm text-slate-100 shadow-2xl backdrop-blur">
-            <div className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-300">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-300">
               <Lightbulb className="h-3.5 w-3.5" /> Nota del expositor
             </div>
             {nota}

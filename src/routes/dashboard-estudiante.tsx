@@ -260,9 +260,9 @@ export default function DashboardEstudiante() {
                       Nuevo aquí
                     </button>
                   )}
-                  <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[10px]">{curso.codigo}</span>
+                  <span className="rounded bg-secondary px-2 py-0.5 font-mono text-[11px]">{curso.codigo}</span>
                   {!curso.es_semana_e && (confirmandoSalida === curso.id ? (
-                    <span className="flex items-center gap-1 text-[10px]">
+                    <span className="flex items-center gap-1 text-[11px]">
                       <button
                         onClick={() => salirDelCurso(curso.id)}
                         disabled={saliendoDeCurso === curso.id}
@@ -286,7 +286,7 @@ export default function DashboardEstudiante() {
                     <button
                       onClick={() => setConfirmandoSalida(curso.id)}
                       title={`Salir del curso. Tus entregas, proyectos y grupos quedan guardados. Si vuelves a ingresar el código ${curso.codigo} recuperas todo.`}
-                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:border-rose-900 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:border-rose-900 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
                     >
                       <DoorOpen className="h-3 w-3" />
                       Salir
@@ -349,7 +349,7 @@ export default function DashboardEstudiante() {
                       <span className="text-base">🎓</span>
                       <span>Caso del curso</span>
                       {(casosDisponibles.length + casosTomados.length) > 0 && (
-                        <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">
+                        <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[11px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">
                           {casosDisponibles.length + casosTomados.length}
                         </span>
                       )}
@@ -379,7 +379,7 @@ export default function DashboardEstudiante() {
                   {casosDisponibles.length > 0 && (
                     <div className="space-y-1.5">
                       {casosTomados.length > 0 && (
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
                           Disponibles para tomar
                         </div>
                       )}
@@ -392,7 +392,7 @@ export default function DashboardEstudiante() {
                           >
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-semibold">{c.nombre}</div>
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[11px] text-muted-foreground">
                                 {pasoInicio === 1
                                   ? "Lo armas desde cero (el docente solo dio el contexto)."
                                   : pasoInicio === 9
@@ -427,7 +427,7 @@ export default function DashboardEstudiante() {
                       <span className="text-base">📁</span>
                       <span>Caso individual</span>
                       {proyectosLibres.length > 0 && (
-                        <span className="rounded bg-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-900 dark:bg-sky-800 dark:text-sky-100">
+                        <span className="rounded bg-sky-200 px-1.5 py-0.5 text-[11px] font-bold text-sky-900 dark:bg-sky-800 dark:text-sky-100">
                           {proyectosLibres.length}
                         </span>
                       )}
@@ -660,7 +660,7 @@ function ModalCrearMiProyecto({
               )}
             >
               <div className="font-semibold">{v === "v2" ? "Con análisis de riesgo" : "Clásico"}</div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[11px] text-muted-foreground">
                 {v === "v2" ? "VAN/TIR + equilibrio, sensibilidad, etc." : "VAN, TIR, payback, etc."}
               </div>
             </button>
@@ -682,7 +682,7 @@ function ModalCrearMiProyecto({
               )}
             >
               <div className="font-semibold">{m.t}</div>
-              <div className="text-[10px] leading-snug text-muted-foreground">{m.d}</div>
+              <div className="text-[11px] leading-snug text-muted-foreground">{m.d}</div>
             </button>
           ))}
         </div>
@@ -723,7 +723,7 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
           <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">{modelo}</span>
           <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-medium", estado.clase)}>{estado.txt}</span>
         </div>
-        <div className="text-[10px] font-medium text-primary">Abrir y editar →</div>
+        <div className="text-[11px] font-medium text-primary">Abrir y editar →</div>
       </button>
       <AccionesProyecto proyecto={proyecto} compacto className="border-t border-border/60 pt-2" />
     </div>

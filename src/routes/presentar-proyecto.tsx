@@ -246,7 +246,7 @@ export default function PresentarProyecto() {
                 <div className="text-xs font-black uppercase tracking-[0.15em] text-violet-600">Vista previa</div>
                 <div className="mt-0.5 text-xs text-slate-500">Formato panorámico 16:9</div>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${modelo.viable ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${modelo.viable ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
                 {modelo.viable ? "Estado: viable" : "Estado: requiere ajustes"}
               </span>
             </div>
@@ -269,10 +269,10 @@ export default function PresentarProyecto() {
             <ol className="mt-4 space-y-2">
               {modelo.diapositivas.map((diapositiva) => (
                 <li key={diapositiva.id} className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-[10px] font-black text-white">{String(diapositiva.numero).padStart(2, "0")}</span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-[11px] font-black text-white">{String(diapositiva.numero).padStart(2, "0")}</span>
                   <div className="min-w-0">
                     <div className="truncate text-xs font-bold">{diapositiva.titulo}</div>
-                    <div className="truncate text-[10px] text-slate-500">{diapositiva.etiqueta}</div>
+                    <div className="truncate text-[11px] text-slate-500">{diapositiva.etiqueta}</div>
                   </div>
                 </li>
               ))}

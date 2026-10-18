@@ -126,7 +126,7 @@ export default function MisEntregas() {
               {/* Card de promedio */}
               {promedio && promedio.entregas_revisadas > 0 && (
                 <div className="rounded-md border-2 border-primary bg-primary/10 px-3 py-2 text-center">
-                  <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <div className="flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
                     <TrendingUp className="h-3 w-3" />
                     Promedio
                   </div>
@@ -201,7 +201,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
             Intento #{entrega.numero_intento} ·{" "}
             <span className="capitalize">{entrega.estado}</span>
           </div>
-          <div className="text-[10px] opacity-75">
+          <div className="text-[11px] opacity-75">
             Entregada: {new Date(entrega.entregado_en).toLocaleString("es-BO")}
             {entrega.revisado_en &&
               ` · Revisada: ${new Date(entrega.revisado_en).toLocaleString("es-BO")}`}
@@ -263,7 +263,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
           {/* Comentario del docente */}
           {entrega.comentario_docente && (
             <div className="rounded bg-white/60 p-2 dark:bg-black/30">
-              <div className="text-[10px] font-semibold opacity-75">
+              <div className="text-[11px] font-semibold opacity-75">
                 💬 Comentario del docente:
               </div>
               <div className="mt-0.5">{entrega.comentario_docente}</div>

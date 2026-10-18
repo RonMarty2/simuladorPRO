@@ -250,7 +250,7 @@ export default function SemanaEEntrada() {
           )}
         </button>
 
-        <div className="text-center text-[10px] text-muted-foreground">
+        <div className="text-center text-[11px] text-muted-foreground">
           ¿Eres docente o estudiante regular?{" "}
           <Link to="/login" className="font-medium text-foreground underline">
             Ingresar normal

@@ -102,7 +102,7 @@ function StatCard({ label, valor, icon }: { label: string; valor: number; icon: 
     <div className="rounded-md border border-border bg-card p-2 text-center">
       <div className="text-base">{icon}</div>
       <div className="text-xl font-bold tabular-nums">{valor}</div>
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -166,7 +166,7 @@ function TabUsuarios() {
       ) : (
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
-            <thead className="bg-secondary/30 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-secondary/30 text-[11px] uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="p-2 text-left">Email</th>
                 <th className="p-2 text-left">Nombre</th>
@@ -234,7 +234,7 @@ function FilaUsuario({ usuario, onCambio }: { usuario: Perfil; onCambio: () => v
           onClick={toggleAdmin}
           disabled={cambiando}
           className={cn(
-            "rounded px-2 py-0.5 text-[10px] font-bold uppercase",
+            "rounded px-2 py-0.5 text-[11px] font-bold uppercase",
             usuario.es_admin
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-muted-foreground hover:bg-secondary/70"
@@ -243,7 +243,7 @@ function FilaUsuario({ usuario, onCambio }: { usuario: Perfil; onCambio: () => v
           {usuario.es_admin ? "🛡️ Admin" : "—"}
         </button>
       </td>
-      <td className="p-2 text-right text-[10px] text-muted-foreground">
+      <td className="p-2 text-right text-[11px] text-muted-foreground">
         {cambiando && <Loader2 className="ml-auto h-3 w-3 animate-spin" />}
       </td>
     </tr>
@@ -307,7 +307,7 @@ function TabCursos() {
       ) : (
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
-            <thead className="bg-secondary/30 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-secondary/30 text-[11px] uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="p-2 text-left">Nombre</th>
                 <th className="p-2 text-left">Materia · paralelo</th>
@@ -340,7 +340,7 @@ function TabCursos() {
                         onClick={() => alternarSemanaE(c)}
                         disabled={cambiandoEstado === c.id}
                         className={cn(
-                          "mr-2 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-semibold disabled:opacity-50",
+                          "mr-2 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold disabled:opacity-50",
                           c.estado === "activo"
                             ? "border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                             : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -442,7 +442,7 @@ function TabProyectos() {
       ) : (
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
-            <thead className="bg-secondary/30 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-secondary/30 text-[11px] uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="p-2 text-left">Nombre</th>
                 <th className="p-2 text-center">Tipo</th>
@@ -457,13 +457,13 @@ function TabProyectos() {
               {proyectos.map((p) => (
                 <tr key={p.id} className="border-t border-border/40 hover:bg-secondary/20">
                   <td className="p-2 font-medium">{p.nombre}</td>
-                  <td className="p-2 text-center text-[10px]">
+                  <td className="p-2 text-center text-[11px]">
                     {p.tipo === "caso_curso" ? "🎓 caso" : p.tipo === "entrega_estudiante" ? "📝 entrega" : "📁 libre"}
                   </td>
-                  <td className="p-2 font-mono text-[10px]">{p.estudiante_id?.slice(0, 8) ?? "—"}</td>
-                  <td className="p-2 font-mono text-[10px]">{p.curso_id?.slice(0, 8) ?? "—"}</td>
+                  <td className="p-2 font-mono text-[11px]">{p.estudiante_id?.slice(0, 8) ?? "—"}</td>
+                  <td className="p-2 font-mono text-[11px]">{p.curso_id?.slice(0, 8) ?? "—"}</td>
                   <td className="p-2 text-center">{p.estado}</td>
-                  <td className="p-2 text-right text-[10px] text-muted-foreground">
+                  <td className="p-2 text-right text-[11px] text-muted-foreground">
                     {p.actualizado_en
                       ? new Date(p.actualizado_en).toLocaleDateString("es-BO")
                       : "—"}
@@ -472,7 +472,7 @@ function TabProyectos() {
                     <button
                       onClick={() => traerAMisProyectos(p)}
                       disabled={clonandoId === p.id}
-                      className="rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[10px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                      className="rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
                     >
                       {clonandoId === p.id ? "Copiando…" : "📥 Traer a los míos"}
                     </button>

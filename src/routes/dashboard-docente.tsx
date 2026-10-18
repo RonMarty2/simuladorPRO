@@ -650,7 +650,7 @@ function CursoCard({
       onActualizado(actualizado);
     } catch (e) {
       setErrorEstado(
-        e instanceof Error ? e.message : "No se pudo cambiar la publicacion del evento."
+        e instanceof Error ? e.message : "No se pudo cambiar la publicación del evento."
       );
     } finally {
       setCambiandoEstado(false);
@@ -680,7 +680,7 @@ function CursoCard({
             {curso.es_semana_e && (
               <span
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                  "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                   curso.estado === "activo"
                     ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
                     : "bg-slate-100 text-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
@@ -690,7 +690,7 @@ function CursoCard({
               </span>
             )}
             {curso.es_semana_e && (
-              <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
                 🎓 Semana E
               </span>
             )}
@@ -702,7 +702,7 @@ function CursoCard({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Código inscripción
           </div>
           <button
@@ -713,7 +713,7 @@ function CursoCard({
             <Copy className="h-3 w-3" />
           </button>
           {copiado && (
-            <div className="mt-0.5 text-[10px] text-emerald-600">Copiado ✓</div>
+            <div className="mt-0.5 text-[11px] text-emerald-600">Copiado ✓</div>
           )}
         </div>
       </div>
@@ -784,7 +784,7 @@ function CursoCard({
               )}
               title={
                 curso.estado === "activo"
-                  ? "Oculta la entrada /semanae y el codigo del evento."
+                  ? "Oculta la entrada /semanae y el código del evento."
                   : "Publica la entrada /semanae para que los estudiantes puedan entrar."
               }
             >

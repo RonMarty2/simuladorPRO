@@ -92,11 +92,11 @@ export default function ConfigEscenariosCurso({ cursoId }: { cursoId: string }) 
           Define qué tan duro o blando es cada escenario en este curso. Los alumnos los van a
           ver en su pestaña <strong>📊 Escenarios</strong> al analizar el proyecto.
           {esDefault ? (
-            <span className="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+            <span className="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
               Usando defaults del sistema
             </span>
           ) : (
-            <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
               Personalizado por ti
             </span>
           )}

@@ -221,7 +221,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         >
           <User className="h-3.5 w-3.5" />
           Entregas individuales
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
+          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
             {individuales.length}
           </span>
         </button>
@@ -236,7 +236,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         >
           <Users className="h-3.5 w-3.5" />
           Entregas grupales
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
+          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
             {grupales.length}
           </span>
         </button>
@@ -439,7 +439,7 @@ function TarjetaAgrupada({
               : ""}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           {/* En "por etapa" se mezclan alumnos distintos: una sola nota para todos no tiene sentido. */}
           {pendientes.length >= 2 && !esVistaEtapa && (
             <button
@@ -524,7 +524,7 @@ function ChipEtapa({
       onClick={onClick}
       title={`Intento #${entrega.numero_intento} — ${entrega.estado}${entrega.nota != null ? ` · Nota ${entrega.nota}` : ""}`}
       className={cn(
-        "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition hover:brightness-95",
+        "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition hover:brightness-95",
         estiloEstado
       )}
     >

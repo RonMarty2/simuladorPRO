@@ -149,7 +149,7 @@ export default function ModalRevisionMasiva({
             docente no lo pierda mientras revisa y habla con el alumno. */}
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
               📚 Revisando a
             </div>
             <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
@@ -379,7 +379,7 @@ function FormEtapa({
 
         <div className="grid gap-2 sm:grid-cols-3">
           <div className="sm:col-span-1">
-            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Nota (0-100)
             </label>
             <input
@@ -397,7 +397,7 @@ function FormEtapa({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Comentario para el estudiante
             </label>
             <textarea

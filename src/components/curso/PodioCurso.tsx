@@ -205,7 +205,7 @@ function SeccionPodio({
             )}
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
               {esIndividual ? "Top individuales" : "Top grupos"}
             </div>
             <h3 className="text-sm font-bold leading-tight">
@@ -213,7 +213,7 @@ function SeccionPodio({
             </h3>
           </div>
         </div>
-        <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+        <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
           Mostrando top 3 de {totalCalificados}
         </span>
       </header>
@@ -332,7 +332,7 @@ function ColumnaPodio({
       </div>
       <div
         className={cn(
-          "mb-2 text-[10px] font-bold uppercase tracking-widest",
+          "mb-2 text-[11px] font-bold uppercase tracking-widest",
           puesto === 1 ? "text-amber-700" : "text-muted-foreground"
         )}
       >
@@ -630,7 +630,7 @@ function TuTarjetaIndividual({ mi }: { mi: import("@/lib/podio-supabase").MiPosi
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-sm font-bold text-violet-900 dark:text-violet-100">Tu posición</span>
-            <span className="rounded border border-violet-300 bg-white px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-violet-700 dark:border-violet-700 dark:bg-violet-900/50 dark:text-violet-200">
+            <span className="rounded border border-violet-300 bg-white px-1.5 py-0.5 text-[11px] font-bold tracking-wider text-violet-700 dark:border-violet-700 dark:bg-violet-900/50 dark:text-violet-200">
               {mi.puesto}.° de {mi.total}
             </span>
           </div>

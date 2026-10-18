@@ -315,7 +315,7 @@ function Metrica({
 }) {
   return (
     <div className="rounded-md border border-border p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div
         className={`text-sm font-semibold ${
           positivo ? "text-foreground" : "text-destructive"
@@ -325,7 +325,7 @@ function Metrica({
       </div>
       {delta !== undefined && Math.abs(delta) > 0.01 && (
         <div
-          className={`text-[10px] ${
+          className={`text-[11px] ${
             delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"
           }`}
         >
@@ -457,7 +457,7 @@ function PantallaFinalizada({
 function ResumenCelda({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="rounded-md border border-border bg-card p-3 text-left">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div className="text-sm font-semibold">{valor}</div>
     </div>
   );
@@ -488,7 +488,7 @@ function SelectorProyectoSimular({
 
   return (
     <div className="rounded-lg border border-border bg-card p-3">
-      <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
         ¿Qué proyecto quieres simular?
       </div>
       <div className="flex flex-wrap gap-1.5">

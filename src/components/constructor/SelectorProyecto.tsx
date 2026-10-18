@@ -189,7 +189,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
                       <span className="truncate font-medium">{p.nombre}</span>
                       <BadgeTipoProyecto tipo={p.tipo} tamaño="sm" />
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[11px] text-muted-foreground">
                       Última edición:{" "}
                       {new Date(p.actualizado_en ?? p.creado_en).toLocaleString("es-BO", {
                         dateStyle: "short",
@@ -372,7 +372,7 @@ function ModalNuevoProyecto({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-[10px] text-muted-foreground">
+              <p className="mt-1 text-[11px] text-muted-foreground">
                 Quedará registrado en ese curso; tus entregas irán ahí.
               </p>
             </div>
@@ -408,7 +408,7 @@ function ModalNuevoProyecto({
               <OpcionModelo activa={modelo === "publicidad"} onClick={() => setModelo("publicidad")} titulo="Publicidad" descripcion="Ingreso por audiencia × CPM. Radio, canal, podcast con sponsors." />
               <OpcionModelo activa={modelo === "costo_beneficio"} onClick={() => setModelo("costo_beneficio")} titulo="Costo-beneficio" descripcion="No vende; se evalúa por el beneficio que genera. Plan de marketing interno." />
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 text-[11px] text-muted-foreground">
               Sale <strong>vacío</strong> con los campos de ese modelo, listo para llenar.
             </p>
           </div>
@@ -555,7 +555,7 @@ function OpcionModelo({
       )}
     >
       <span className="text-xs font-semibold">{titulo}</span>
-      <span className="mt-0.5 text-[10px] leading-snug text-muted-foreground">{descripcion}</span>
+      <span className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{descripcion}</span>
     </button>
   );
 }
@@ -594,7 +594,7 @@ function OpcionVersionModal({
         </span>
         <span className="text-xs font-semibold">{titulo}</span>
       </div>
-      <span className="mt-1 text-[10px] leading-snug text-muted-foreground">
+      <span className="mt-1 text-[11px] leading-snug text-muted-foreground">
         {descripcion}
       </span>
     </button>
