@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-18 — `2c6c5dd`
+> **Última actualización**: 2026-10-18 — cierre de sesión (ver "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -64,10 +64,10 @@ Arquitectura preparada para escalar a cientos.
 ✅ **Live en producción**: `https://simulador-pro-seven.vercel.app`
 ✅ **Base de datos**: Supabase project `syfbgauvictgykdptamb` (region `us-east-2`)
 ✅ **PWA instalable** en Android, iOS y desktop (con auto-update OTA)
-✅ **Tests verdes** (201/201), TypeScript clean, build OK
+✅ **Tests verdes** (266/266), TypeScript clean, build OK
 ✅ **Seguridad RLS**: todas las tablas protegidas, escalada de privilegios
    bloqueada por trigger (migración 018)
-✅ **23 migraciones SQL** aplicadas (ver §6)
+✅ **Migraciones SQL** aplicadas hasta la 033 (ver §6)
 
 **Pendientes opcionales** (gated, app funciona sin ellos — ver §10):
 - Activar Sentry (5 min): crear cuenta y agregar `VITE_SENTRY_DSN` a Vercel.
@@ -260,6 +260,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 025 | `proyecto_actividad.sql` | Tabla de actividad por usuario + RLS. Audit de quién editó/entregó proyectos grupales. |
 | 026 | `escenarios_config_por_curso.sql` | Columna `cursos.escenarios_config` (JSONB). El docente ajusta los % de Optimista/Pesimista por curso. NULL = defaults del código. |
 | 027 | `curso_semana_e.sql` | Columna `cursos.es_semana_e` (BOOL). Modo evento universitario: oculta entregas/notas/podio, muestra banner + checklist al estudiante. |
+| 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
 
@@ -487,6 +488,38 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         lanzador de eventos (tras 033), grupos (unirse), catálogo, ejemplos,
         Admin y Excel. TIR no calculable / "No recupera" también en la revisión
         del docente y en Mis entregas. Sin errores de consola.
+
+### Retomar aquí (cierre de sesión 2026-10-18)
+Estado: producción al día, 266 tests, build OK, migración 033 aplicada.
+Probado end-to-end en producción con las cuentas del owner (docente
+`ronaldmartinezjimenes@gmail.com`, alumno `rnd261190@gmail.com`).
+
+Datos de prueba que quedaron en producción (el owner dijo que los alumnos del
+curso PROYECTOS II ya no están vigentes y el curso se borrará): notas de la
+cuenta alumno en etapas 1-4 y entrega grupal "GRUPO PRUEBA" (90), cuenta alumno
+1.º en el podio con 73, un evento EVT001 lanzado a 8 simulaciones. Nada se
+borra desde la IA: el docente borra el curso con "Borrar curso" (pide escribir
+el código) y la cascada elimina inscripciones, proyectos, entregas, grupos,
+simulaciones y turnos. Las cuentas de alumno y sus proyectos libres sin curso
+NO se borran.
+
+Preguntas abiertas para el owner (preguntar al retomar):
+1. ¿Hacemos los rediseños grandes? (panel del alumno con una sola lista y
+   "Continuar mi proyecto"; constructor a dos columnas; paso final "Revisar y
+   entregar"; pestañas del docente agrupadas). No se tocó nada de esto.
+2. Criterio financiero con la cátedra: IVA como costo en el flujo, doble
+   beneficio de deuda en el VAN (WACC + flujo neto de intereses), préstamo >60
+   meses sin cancelar saldo, SD con valor terminal, punto de equilibrio
+   duplicado, tasa 0 -> 10%.
+3. ¿Se cambia la clave `WEBAPP_API_KEY` en algún programa externo que use
+   `export-artifact`? Se rotó (secret de GitHub); la vieja sigue en el
+   historial de git.
+4. Pendientes técnicos sin hacer: `select("*")` en listas de proyectos,
+   modo oscuro (407 `dark:` sin activar), Semana E oculta (decisión previa),
+   probar en un celular físico, aviso de versión nueva en vez de recarga OTA.
+Reglas del owner confirmadas: las etapas (9) y las fórmulas no se cambian sin
+su OK; español neutro con tuteo; la IA no ejecuta SQL de permisos ni borra
+datos: prepara y el owner hace el clic final.
 
 ### Pendiente para después (hallazgos del review sin resolver)
 - [ ] Ideas UX NO implementadas (cambian la forma de usar, requieren OK del
