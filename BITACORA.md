@@ -480,7 +480,13 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         no afectaba filas. Migración 033: función SECURITY DEFINER
         `lanzar_evento_a_simulaciones` (solo escribe evento_forzado_id en
         simulaciones activas de cursos del docente). El cliente usa `rpc` y avisa
-        si hay 0 afectadas. HAY QUE APLICAR 033 en Supabase (SQL Editor).
+        si hay 0 afectadas. 033 YA APLICADA en Supabase (2026-10-18).
+      - Prueba end-to-end en producción (2026-10-18, cuentas docente y alumno del
+        owner): entrega individual y grupal, calificación (revisión por etapa,
+        "calificar todo igual", entrega grupal), podio, simulación 60 meses,
+        lanzador de eventos (tras 033), grupos (unirse), catálogo, ejemplos,
+        Admin y Excel. TIR no calculable / "No recupera" también en la revisión
+        del docente y en Mis entregas. Sin errores de consola.
 
 ### Pendiente para después (hallazgos del review sin resolver)
 - [ ] Ideas UX NO implementadas (cambian la forma de usar, requieren OK del
