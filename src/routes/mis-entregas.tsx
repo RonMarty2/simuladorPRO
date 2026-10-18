@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { tirCalculable } from "@/lib/acotar-numero";
 import {
   CheckCircle2,
   ChevronDown,
@@ -228,7 +229,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
             <div>
               <div className="opacity-60">TIR</div>
               <div className="font-bold">
-                {entrega.tir !== null ? `${(entrega.tir * 100).toFixed(1)}%` : "—"}
+                {tirCalculable(entrega.tir) ? `${(entrega.tir * 100).toFixed(1)}%` : "—"}
               </div>
             </div>
             <div>
@@ -240,7 +241,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
             <div>
               <div className="opacity-60">Recuperación</div>
               <div className="font-bold">
-                {entrega.payback !== null ? `${entrega.payback.toFixed(1)}a` : "—"}
+                {entrega.payback !== null && entrega.payback >= 0 ? `${entrega.payback.toFixed(1)}a` : "No recupera"}
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tirCalculable } from "@/lib/acotar-numero";
 import { CheckCircle2, Layers, Loader2, X, XCircle } from "lucide-react";
 import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
@@ -102,7 +103,7 @@ export default function ModalRevisarEntrega({
               />
               <Indicador
                 titulo="TIR"
-                valor={entrega.tir !== null ? `${(entrega.tir * 100).toFixed(2)}%` : "—"}
+                valor={tirCalculable(entrega.tir) ? `${(entrega.tir * 100).toFixed(2)}%` : "—"}
                 positivo={(entrega.tir ?? 0) > (entrega.wacc ?? 0)}
               />
               <Indicador
@@ -112,7 +113,7 @@ export default function ModalRevisarEntrega({
               />
               <Indicador
                 titulo="Periodo de recuperación"
-                valor={entrega.payback !== null ? `${entrega.payback.toFixed(1)} años` : "—"}
+                valor={entrega.payback !== null && entrega.payback >= 0 ? `${entrega.payback.toFixed(1)} años` : "No recupera"}
                 positivo={(entrega.payback ?? 99) > 0 && (entrega.payback ?? 99) <= 5}
               />
             </div>
