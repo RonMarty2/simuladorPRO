@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-06-09 — `76fceb5` (+ §13–§16 agregadas)
+> **Última actualización**: 2026-10-18 — `2c6c5dd`
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -435,7 +435,41 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - `local/sincronizar.sh|.bat`: confirmación al subir desde `main`.
       - Review con `/code-review`; skills recomendadas guardadas en memoria.
 
+- [x] **Sesión 2026-10-18** (`be812ff`, `2c6c5dd`) — prueba con 4 "estudiantes"
+      simulados (novato, intermedio, experto en finanzas, técnico) en modo local:
+      - `InputNumero` y los inputs de Paso2Proyeccion acotan valores
+        (`lib/acotar-numero.ts`: tope ±1e12, tasas de crecimiento -100..1000,
+        cantidades/costos >= 0). Evita "BsNaN" y desbordes.
+      - TIR no calculable (0 exacto del motor) se muestra "—" y payback < 0
+        como "∞" (`tirCalculable`, Paso9Resumen y PanelEscenarios).
+      - Ruta inexistente ya no deja pantalla en blanco (`Hub` redirige a
+        /login o al panel). Doble clic en "Empezar a construir" protegido.
+      - `leerProyectosLocal` descarta entradas inválidas. Errores legibles en
+        presentar proyecto y en simulación (modo local).
+      - Paso 1: nombre marcado como obligatorio; botón de empezar explica por qué
+        está deshabilitado.
+      - Workflow `keep-alive-supabase.yml`: consulta a la base cada 2 días para
+        evitar la pausa del plan gratuito. Usa los secrets `SUPABASE_URL` y
+        `SUPABASE_ANON_KEY` (ya cargados en GitHub).
+      - `deploy-edge-functions.yml` toma `WEBAPP_API_KEY` del secret de GitHub
+        (antes estaba en texto plano; la clave vieja sigue en el historial de
+        git pero fue reemplazada por una nueva).
+
 ### Pendiente para después (hallazgos del review sin resolver)
+- [ ] **Criterio financiero a decidir con la cátedra** (hallazgos del experto
+      simulado, `lib/flujo-proyecto.ts`): (1) el flujo resta el IVA neto como
+      costo sin sumar el IVA cobrado ni restar el pagado; (2) el VAN con deuda
+      descuenta al WACC un flujo ya neto de intereses (doble beneficio de la
+      deuda); (3) préstamo > 60 meses no cancela el saldo en el año 5; (4) SD
+      usa el flujo del año 5 con residual y capital de trabajo; (5) dos puntos
+      de equilibrio con definiciones distintas; (6) tasa 0 se reemplaza por 10%;
+      (7) `evaluacion-final.tsx` cuenta doble capital de trabajo y residual.
+- [ ] Vida útil por defecto = 1 año en inversiones; avisar o dejar vacío.
+- [ ] Jerga sin explicar (VAN, WACC, "Sistema francés", "Factura IVA"): tooltips.
+- [ ] Probar en producción el lado del alumno (inscripción, entrega, simulación,
+      podio) con una cuenta de estudiante de prueba.
+- [ ] Sentry Replay con `maskAllText:false` y `vercel.json` sin headers de
+      seguridad (CSP, X-Frame-Options).
 - [ ] **Modo local incompleto**: `obtenerProyectoPorId` (presentar proyecto) y
       lecturas de cursos/grupos/entregas siguen llamando a Supabase.
 - [ ] **Botón "Salir" en modo local** no hace nada útil (redirige a /login y
