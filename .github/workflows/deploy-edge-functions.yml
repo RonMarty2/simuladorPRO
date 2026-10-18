@@ -2,7 +2,8 @@ name: Deploy Supabase Edge Functions
 
 # Se ejecuta automáticamente en cada push a main.
 # No requiere instalar nada localmente.
-# Setea el secret WEBAPP_API_KEY via API (no necesita Vault de pago).
+# Setea el secret WEBAPP_API_KEY en Supabase tomandolo del secret de GitHub
+# WEBAPP_API_KEY (Settings > Secrets > Actions). No escribir la clave aca.
 
 on:
   push:
@@ -26,7 +27,7 @@ jobs:
             "https://api.supabase.com/v1/projects/${{ secrets.SUPABASE_PROJECT_REF }}/secrets" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '[{"name":"WEBAPP_API_KEY","value":"_RjDBe0cYazoqIHPX073KOHg0osP8IUgqidID3IIuHdySuH2ouv3RFnb9h31A41M"}]'
+            -d "[{\"name\":\"WEBAPP_API_KEY\",\"value\":\"${{ secrets.WEBAPP_API_KEY }}\"}]"
           echo "✓ WEBAPP_API_KEY seteado en Supabase"
         continue-on-error: true
 
