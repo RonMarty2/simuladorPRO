@@ -165,13 +165,21 @@ export async function dispararEventoAlCurso(params: {
   if (proyectoIds.length > 0) {
     // 2) Setear evento_forzado_id en las simulaciones activas de esos
     // proyectos. Postgres devuelve la cantidad con count='exact'.
-    const { error: e2, count } = await supabase
-      .from("simulaciones")
-      .update({ evento_forzado_id: params.eventoId }, { count: "exact" })
-      .in("proyecto_id", proyectoIds)
-      .eq("estado", "activa");
-    if (e2) throw e2;
-    afectadas = count ?? 0;
+    // El docente solo puede LEER simulaciones; la escritura de evento_forzado_id
+    // va por la función SECURITY DEFINER de la migración 033.
+    const { data: n, error: e2 } = await supabase.rpc("lanzar_evento_a_simulaciones", {
+      p_proyecto_ids: proyectoIds,
+      p_evento_id: params.eventoId,
+    });
+    if (e2) {
+      if (e2.code === "PGRST202" || /lanzar_evento_a_simulaciones/.test(e2.message ?? "")) {
+        throw new Error(
+          "Falta aplicar la migración 033 en Supabase (función lanzar_evento_a_simulaciones)."
+        );
+      }
+      throw e2;
+    }
+    afectadas = typeof n === "number" ? n : 0;
   }
 
   // 3) Insertar registro de auditoría con alcance y modo sectorial.

@@ -172,6 +172,12 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
         sectoresAfectados: seleccionado.sectores_afectados,
         forzarATodos,
       });
+      if (r.afectadas === 0) {
+        setError(
+          "El evento no llegó a ningún alumno: no hay simulaciones activas en ese alcance o sector."
+        );
+        return;
+      }
       setExito({ titulo: seleccionado.titulo, afectadas: r.afectadas });
       setSeleccionado(null);
       setForzarATodos(false);

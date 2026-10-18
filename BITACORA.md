@@ -474,6 +474,13 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - Stepper: pasos recorridos sin datos (3-6) se marcan en ámbar con "!" y el
         % completado los descuenta. Escenarios también avisa "Resultado
         provisional". Texto de 10px pasó a 11px.
+      - BUG encontrado probando en producción (2026-10-18): el lanzador de
+        situaciones decía "llegó a 0 alumnos" porque el docente solo tenía
+        SELECT sobre `simulaciones` (008) y el UPDATE de `evento_forzado_id`
+        no afectaba filas. Migración 033: función SECURITY DEFINER
+        `lanzar_evento_a_simulaciones` (solo escribe evento_forzado_id en
+        simulaciones activas de cursos del docente). El cliente usa `rpc` y avisa
+        si hay 0 afectadas. HAY QUE APLICAR 033 en Supabase (SQL Editor).
 
 ### Pendiente para después (hallazgos del review sin resolver)
 - [ ] Ideas UX NO implementadas (cambian la forma de usar, requieren OK del
