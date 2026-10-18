@@ -454,6 +454,12 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - `deploy-edge-functions.yml` toma `WEBAPP_API_KEY` del secret de GitHub
         (antes estaba en texto plano; la clave vieja sigue en el historial de
         git pero fue reemplazada por una nueva).
+      - Simulador (`motor-eventos.ts > calcularBaseProyecto`): los costos de
+        insumos ahora se calculan POR PRODUCTO como en el constructor (antes
+        sumaba todos los costos directos y los multiplicaba por las unidades de
+        todos los productos, inflando los costos en proyectos con varios
+        productos). Test de consistencia: `motor-simulacion-consistencia.test.ts`.
+        Nota: el simulador no incluye imprevistos ni IT 3% (simplificacion).
 
 ### Pendiente para después (hallazgos del review sin resolver)
 - [ ] **Criterio financiero a decidir con la cátedra** (hallazgos del experto

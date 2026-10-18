@@ -306,10 +306,22 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     (acc, prod: any) => acc + (prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0),
     0
   );
-  const costoInsumosPorUnidad = p.costosDirectos.reduce(
-    (acc, c) => acc + c.cantidadPorUnidad * c.costoUnitario,
-    0
-  );
+  // Costos directos POR PRODUCTO (igual que flujo-proyecto): cada costo se aplica
+  // solo a las unidades de su producto; los costos legados sin producto aplican
+  // a la suma de unidades. Se expresa como costo promedio por unidad para
+  // mantener la forma de MetricasProyectoBase.
+  const costoUnitDe = (productoId: string | null) =>
+    p.costosDirectos
+      .filter((c) => (c.productoId ?? null) === productoId)
+      .reduce((acc, c) => acc + c.cantidadPorUnidad * c.costoUnitario, 0);
+  const costoInsumosAnual =
+    p.productos.reduce(
+      (acc, prod: any) => acc + (prod.cantidades?.[0] ?? prod.cantidadAnio1 ?? 0) * costoUnitDe(prod.id),
+      0
+    ) +
+    cantidadAnualUnidades * costoUnitDe(null);
+  const costoInsumosPorUnidad =
+    cantidadAnualUnidades > 0 ? costoInsumosAnual / cantidadAnualUnidades : 0;
   const inversionTotal =
     Object.values(p.inversiones)
       .flat()
