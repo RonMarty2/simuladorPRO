@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { acotarNumero } from "@/lib/acotar-numero";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
@@ -185,7 +186,7 @@ export default function Paso2Proyeccion() {
                           type="number"
                           step="0.5"
                           value={t}
-                          onChange={(e) => setTasaCant(i, Number(e.target.value) || 0)}
+                          onChange={(e) => setTasaCant(i, acotarNumero(Number(e.target.value) || 0, -100, 1000))}
                           onKeyDown={onKeyEnter}
                           onFocus={selectOnFocus}
                           data-col={`anio-${i + 2}`}
@@ -206,7 +207,7 @@ export default function Paso2Proyeccion() {
                           type="number"
                           step="0.5"
                           value={t}
-                          onChange={(e) => setTasaPrec(i, Number(e.target.value) || 0)}
+                          onChange={(e) => setTasaPrec(i, acotarNumero(Number(e.target.value) || 0, -100, 1000))}
                           onKeyDown={onKeyEnter}
                           onFocus={selectOnFocus}
                           data-col={`anio-${i + 2}`}
@@ -1026,7 +1027,7 @@ function CampoSus({
     <div className="rounded-md border border-border bg-background/60 p-2">
       <label className="text-[11px] font-medium text-foreground">{label}</label>
       <div className="mt-1 flex items-center gap-1">
-        <input type="number" min={0} step={paso} value={valor} onChange={(e) => onChange(Number(e.target.value) || 0)} onFocus={(e) => e.currentTarget.select()} className={clase} />
+        <input type="number" min={0} step={paso} value={valor} onChange={(e) => onChange(acotarNumero(Number(e.target.value) || 0, 0))} onFocus={(e) => e.currentTarget.select()} className={clase} />
         <span className="whitespace-nowrap text-[10px] text-muted-foreground">{sufijo}</span>
       </div>
       <p className="mt-1 text-[9px] leading-snug text-muted-foreground">{ayuda}</p>
@@ -1150,7 +1151,7 @@ function ProductoFilas({
                 <input
                   type="number"
                   value={c}
-                  onChange={(e) => onChangeCantidad(i, Number(e.target.value) || 0)}
+                  onChange={(e) => onChangeCantidad(i, acotarNumero(Number(e.target.value) || 0, 0))}
                   onKeyDown={onKeyEnter}
                   onFocus={(e) => e.currentTarget.select()}
                   data-col={`anio-${i + 1}`}
@@ -1171,7 +1172,7 @@ function ProductoFilas({
                   type="number"
                   step="0.01"
                   value={pr}
-                  onChange={(e) => onChangePrecio(i, Number(e.target.value) || 0)}
+                  onChange={(e) => onChangePrecio(i, acotarNumero(Number(e.target.value) || 0, 0))}
                   onKeyDown={onKeyEnter}
                   onFocus={(e) => e.currentTarget.select()}
                   data-col={`anio-${i + 1}`}

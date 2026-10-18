@@ -1,4 +1,13 @@
 import { create } from "zustand";
+import { esModoLocal } from "@/lib/modo-local";
+
+function mensajeError(e: unknown): string {
+  if (esModoLocal()) {
+    return "La simulación necesita conexión con Supabase y no está disponible en modo local.";
+  }
+  const msg = (e as { message?: unknown } | null)?.message;
+  return typeof msg === "string" && msg ? msg : "No se pudo completar la operación.";
+}
 import {
   actualizarSimulacion,
   crearSimulacion,
@@ -93,7 +102,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
       // Generar evento del próximo turno si no es el primer turno o si no terminó
       get().prepararSiguienteTurno(proyecto);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error";
+      const msg = mensajeError(e);
       set({ error: msg, cargando: false });
     }
   },
@@ -196,7 +205,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
         get().prepararSiguienteTurno(proyecto);
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error";
+      const msg = mensajeError(e);
       set({ error: msg, cargando: false });
     }
   },

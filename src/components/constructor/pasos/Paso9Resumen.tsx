@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { tirCalculable } from "@/lib/acotar-numero";
 import {
   Bar,
   BarChart,
@@ -83,14 +84,14 @@ export default function Paso9Resumen() {
             sigla="TIR"
             nombre="Tasa Interna de Retorno"
             valor={
-              isFinite(calc.indicadores.tir)
+              tirCalculable(calc.indicadores.tir)
                 ? `${(calc.indicadores.tir * 100).toFixed(2)}%`
                 : "—"
             }
-            positivo={isFinite(calc.indicadores.tir) && calc.indicadores.tir > calc.wacc}
+            positivo={tirCalculable(calc.indicadores.tir) && calc.indicadores.tir > calc.wacc}
             pregunta="¿Cuánto rinde el proyecto al año?"
             interpretacion={
-              !isFinite(calc.indicadores.tir)
+              !tirCalculable(calc.indicadores.tir)
                 ? "✗ No se puede calcular (flujos malos)"
                 : calc.indicadores.tir > calc.wacc
                   ? `✓ Supera el WACC (${(calc.wacc * 100).toFixed(2)}%)`

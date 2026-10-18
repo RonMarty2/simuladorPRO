@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { tirCalculable } from "@/lib/acotar-numero";
 import {
   CartesianGrid,
   Legend,
@@ -302,8 +303,8 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
       </div>
       <div className="mt-2 grid grid-cols-2 gap-1 text-[10px]">
         <Stat label="VAN" v={formatearBolivianos(ind.van)} />
-        <Stat label="TIR" v={ind.tir !== null ? `${(ind.tir * 100).toFixed(1)}%` : "—"} />
-        <Stat label="Recuperación" v={ind.payback !== null ? `${ind.payback.toFixed(1)} años` : "∞"} />
+        <Stat label="TIR" v={tirCalculable(ind.tir) ? `${(ind.tir * 100).toFixed(1)}%` : "—"} />
+        <Stat label="Recuperación" v={ind.payback !== null && ind.payback >= 0 ? `${ind.payback.toFixed(1)} años` : "∞"} />
         <Stat label="WACC" v={`${(escenario.flujo.wacc * 100).toFixed(1)}%`} />
       </div>
       <div className="mt-2 text-[10px] text-muted-foreground">
@@ -341,12 +342,12 @@ function TablaIndicadores({ escenarios }: { escenarios: EscenarioCalculado[] }) 
           <FilaIndicador
             label="TIR"
             escenarios={escenarios}
-            sel={(f) => (f.indicadores.tir !== null ? `${(f.indicadores.tir * 100).toFixed(2)}%` : "—")}
+            sel={(f) => (tirCalculable(f.indicadores.tir) ? `${(f.indicadores.tir * 100).toFixed(2)}%` : "—")}
           />
           <FilaIndicador
             label="Recuperación"
             escenarios={escenarios}
-            sel={(f) => (f.indicadores.payback !== null ? `${f.indicadores.payback.toFixed(2)} años` : "∞")}
+            sel={(f) => (f.indicadores.payback !== null && f.indicadores.payback >= 0 ? `${f.indicadores.payback.toFixed(2)} años` : "∞")}
           />
           <FilaIndicador label="IR (Índice de rentabilidad)" escenarios={escenarios} sel={(f) => f.indicadores.ir.toFixed(2)} />
           <FilaIndicador label="RBC (Beneficio/Costo)" escenarios={escenarios} sel={(f) => f.indicadores.rbc.toFixed(2)} />

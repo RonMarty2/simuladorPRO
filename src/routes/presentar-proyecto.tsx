@@ -58,7 +58,10 @@ export default function PresentarProyecto() {
         setProyecto(proyectoCargado);
         setPresentacion(obtenerPresentacionProyecto(proyectoCargado));
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => {
+        const msg = (e as { message?: unknown } | null)?.message;
+        setError(typeof msg === "string" && msg ? msg : "No se pudo cargar el proyecto.");
+      })
       .finally(() => setCargando(false));
   }, [esDemo, proyectoId, user]);
 

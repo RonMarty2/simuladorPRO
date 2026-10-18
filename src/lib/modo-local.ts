@@ -112,7 +112,12 @@ export function leerProyectosLocal(): Proyecto[] {
     const raw = localStorage.getItem(CLAVE_PROYECTOS);
     if (!raw) return [];
     const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? (arr as Proyecto[]) : [];
+    return Array.isArray(arr)
+      ? (arr as unknown[]).filter(
+          (p): p is Proyecto =>
+            typeof p === "object" && p !== null && typeof (p as Proyecto).id === "string"
+        )
+      : [];
   } catch {
     return [];
   }

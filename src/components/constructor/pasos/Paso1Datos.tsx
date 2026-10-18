@@ -27,7 +27,7 @@ export default function Paso1Datos() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Campo
             id="p1-nombre"
-            label="Nombre del proyecto"
+            label={proyecto.nombre.trim() ? "Nombre del proyecto" : "Nombre del proyecto (obligatorio)"}
             valor={proyecto.nombre}
             onChange={(v) => actualizar({ nombre: v })}
           />

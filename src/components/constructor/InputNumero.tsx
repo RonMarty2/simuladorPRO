@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { acotarNumero as acotar } from "@/lib/acotar-numero";
 
 type Props = {
   value: number;
@@ -33,7 +34,7 @@ export default function InputNumero({ value, onChange, ...rest }: Props) {
       }}
       onChange={(e) => {
         setTxt(e.target.value);
-        onChange(Number(e.target.value) || 0);
+        onChange(acotar(Number(e.target.value) || 0, rest.min, rest.max));
       }}
       onBlur={() => {
         setEnfocado(false);
@@ -46,7 +47,7 @@ export default function InputNumero({ value, onChange, ...rest }: Props) {
           // 22/30 sin redondear → queda 0.7333). 4 decimales cubre cualquier
           // caso legítimo (tasas al 0.01%, ratios, montos con milésimas).
           // Los números que ya tienen 4 o menos decimales NO cambian.
-          const redondeado = Math.round(Number(txt) * 10000) / 10000;
+          const redondeado = acotar(Math.round(Number(txt) * 10000) / 10000, rest.min, rest.max);
           setTxt(String(redondeado));
           if (redondeado !== Number(txt)) onChange(redondeado);
         }

@@ -406,6 +406,7 @@ function SeccionCategoria({
                       </td>
                       <td className="p-1">
                         <InputNumero
+                          min={0}
                           value={it.cantidad}
                           onChange={(n) => onEditar(it.id, { cantidad: n })}
                           onKeyDown={onKeyEnter}
@@ -416,6 +417,7 @@ function SeccionCategoria({
                       <td className="p-1">
                         <InputNumero
                           step="0.01"
+                          min={0}
                           value={it.costoUnitario}
                           onChange={(n) => onEditar(it.id, { costoUnitario: n })}
                           onKeyDown={onKeyEnter}
@@ -558,6 +560,7 @@ function SeccionCategoria({
                       <label className="text-[9px] text-muted-foreground">
                         Cantidad
                         <InputNumero
+                          min={0}
                           value={it.cantidad}
                           onChange={(n) => onEditar(it.id, { cantidad: n })}
                           className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
@@ -566,6 +569,7 @@ function SeccionCategoria({
                       <label className="text-[9px] text-muted-foreground">
                         Costo unit. (Bs)
                         <InputNumero
+                          min={0}
                           value={it.costoUnitario}
                           step="0.01"
                           onChange={(n) => onEditar(it.id, { costoUnitario: n })}

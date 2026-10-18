@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, BookOpen, GraduationCap, Hammer, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -214,6 +214,7 @@ function FormularioProyectoLibre({
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [cursoId, setCursoId] = useState<string>("");
   const [creando, setCreando] = useState(false);
+  const enCurso = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -244,7 +245,8 @@ function FormularioProyectoLibre({
 
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId || !nombre.trim()) return;
+    if (!userId || !nombre.trim() || enCurso.current) return;
+    enCurso.current = true;
     setCreando(true);
     setError(null);
     try {
@@ -256,6 +258,7 @@ function FormularioProyectoLibre({
       const msg = e instanceof Error ? e.message : "Error al crear el proyecto";
       setError(msg);
     } finally {
+      enCurso.current = false;
       setCreando(false);
     }
   };
@@ -354,6 +357,11 @@ function FormularioProyectoLibre({
         >
           {creando ? "Creando…" : "Empezar a construir"}
         </button>
+        {!nombre.trim() && (
+          <p className="text-center text-[11px] text-muted-foreground">
+            Escribe un nombre para tu proyecto para poder empezar.
+          </p>
+        )}
       </form>
     </div>
   );
