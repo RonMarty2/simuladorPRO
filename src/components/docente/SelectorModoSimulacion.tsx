@@ -205,7 +205,7 @@ function SelectorEventosCurados({
                       <div className="text-[10px] text-muted-foreground line-clamp-2">
                         {e.descripcion}
                       </div>
-                      <div className="mt-0.5 text-[9px] uppercase tracking-wide text-muted-foreground">
+                      <div className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
                         {e.categoria} · prob. {(e.probabilidad * 100).toFixed(0)}% · desde turno {e.turno_minimo}
                       </div>
                     </div>

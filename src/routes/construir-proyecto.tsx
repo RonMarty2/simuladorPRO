@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -98,6 +98,17 @@ export default function ConstruirProyecto() {
     [proyecto]
   );
   const indicePasoActual = Math.max(0, pasosVisibles.indexOf(pasoActual));
+
+  // Al cambiar de paso, volver al inicio de la pantalla (no quedar a mitad del contenido).
+  const inicioRef = useRef<HTMLDivElement>(null);
+  const primerPaso = useRef(true);
+  useEffect(() => {
+    if (primerPaso.current) {
+      primerPaso.current = false;
+      return;
+    }
+    inicioRef.current?.scrollIntoView({ block: "start" });
+  }, [pasoActual]);
 
   // Setter que también persiste en localStorage
   const setPasoActual = (paso: number | ((prev: number) => number)) => {
@@ -216,7 +227,7 @@ export default function ConstruirProyecto() {
   }
 
   return (
-    <div className="space-y-4">
+    <div ref={inicioRef} className="space-y-4">
       {/* Selector de proyecto múltiple: solo flujo normal. Semana E se maneja
           desde Mi panel/equipo para no mezclar proyectos fantasmas. */}
       {!modoSemanaE && !esProyectoSemanaE(proyecto) && (
@@ -237,6 +248,7 @@ export default function ConstruirProyecto() {
         <AccionesProyecto proyecto={proyecto} />
       </div>
 
+      <div className="sticky top-0 z-20 -mx-1 bg-background/95 px-1 pb-1 backdrop-blur">
       <BarraProgreso
         pasoActual={pasoActual}
         totalPasos={TOTAL_PASOS}
@@ -249,12 +261,13 @@ export default function ConstruirProyecto() {
         titulos={titulosPasos}
         titulosCortos={titulosCortos}
       />
+      </div>
 
       <ContenidoPaso paso={pasoActual} />
 
       <EntregarPasoActual pasoActual={pasoActual} />
 
-      <div className="flex items-center justify-between">
+      <div className="sticky bottom-0 z-20 -mx-1 flex items-center justify-between gap-2 border-t border-border bg-background/95 px-1 py-2 backdrop-blur">
         {indicePasoActual > 0 ? (
           <button
             onClick={() => setPasoActual(pasosVisibles[indicePasoActual - 1])}
@@ -275,15 +288,6 @@ export default function ConstruirProyecto() {
             <BotonGuardarComoCaso />
             <BotonVistaPreviaEstudiante />
           </div>
-          {!modoSemanaE && proyecto.tipo !== "proyecto_grupal" && (
-            <button
-              onClick={abandonarProyecto}
-              className="flex items-center gap-1.5 text-[10px] text-muted-foreground transition hover:text-destructive"
-            >
-              <Trash2 className="h-3 w-3" />
-              Borrar este proyecto
-            </button>
-          )}
         </div>
 
         {indicePasoActual < pasosVisibles.length - 1 ? (
@@ -298,6 +302,18 @@ export default function ConstruirProyecto() {
           <span />
         )}
       </div>
+
+      {!modoSemanaE && proyecto.tipo !== "proyecto_grupal" && (
+        <div className="flex justify-center pb-4 pt-6">
+          <button
+            onClick={abandonarProyecto}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-destructive"
+          >
+            <Trash2 className="h-3 w-3" />
+            Borrar este proyecto
+          </button>
+        </div>
+      )}
     </div>
   );
 }

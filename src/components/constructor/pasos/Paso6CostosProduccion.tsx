@@ -255,7 +255,7 @@ export default function Paso6CostosProduccion() {
                     <td className="p-1">
                       <span
                         className={cn(
-                          "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase",
+                          "rounded px-1.5 py-0.5 text-[11px] font-bold uppercase",
                           color.chip
                         )}
                       >
@@ -372,20 +372,20 @@ function BloqueProducto({
             {producto.unidadMedida} · {formatearBolivianos(producto.precios[0])}/u
           </span>
           {totalItems > 0 && (
-            <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
               {totalItems} {totalItems === 1 ? "item" : "items"}
             </span>
           )}
         </div>
         <div className="flex items-center gap-4 text-right text-[11px]">
           <div>
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Costo directo /u
             </div>
             <div className="font-bold">{formatearBolivianos(costoUnit)}</div>
           </div>
           <div>
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Margen /u
             </div>
             <div
@@ -395,7 +395,7 @@ function BloqueProducto({
               )}
             >
               {formatearBolivianos(margen)}{" "}
-              <span className="text-[9px]">({margenPct.toFixed(0)}%)</span>
+              <span className="text-[11px]">({margenPct.toFixed(0)}%)</span>
             </div>
           </div>
         </div>
@@ -453,14 +453,14 @@ function BloqueProducto({
                         <th className="p-1.5 text-right">Subtotal/u</th>
                         <th className="p-1.5 text-center">Factura IVA</th>
                         <th
-                          className="p-1.5 text-center text-[9px] font-bold uppercase tracking-wide text-foreground/60"
+                          className="p-1.5 text-center text-[11px] font-bold uppercase tracking-wide text-foreground/60"
                           colSpan={5}
                         >
                           Total necesario para la demanda
                         </th>
                         <th className="w-8 p-1.5"></th>
                       </tr>
-                      <tr className="border-b border-border text-[9px]">
+                      <tr className="border-b border-border text-[11px]">
                         <th colSpan={6}></th>
                         {[1, 2, 3, 4, 5].map((a) => (
                           <th key={a} className="bg-secondary/40 p-1 text-right">
@@ -550,7 +550,7 @@ function BloqueProducto({
                                     maximumFractionDigits: 2,
                                   })}
                                 </span>
-                                <span className="ml-0.5 text-[9px] text-muted-foreground">
+                                <span className="ml-0.5 text-[11px] text-muted-foreground">
                                   {it.unidadMedida}
                                 </span>
                               </td>
@@ -594,7 +594,7 @@ function BloqueProducto({
                         </button>
                       </div>
                       <div className="mt-2 grid grid-cols-3 gap-2">
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Unidad
                           <input
                             type="text"
@@ -605,7 +605,7 @@ function BloqueProducto({
                             className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
                           />
                         </label>
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Cant./u producto
                           <CantidadFraccionInput
                             valorInicial={it.cantidadPorUnidad}
@@ -613,7 +613,7 @@ function BloqueProducto({
                             className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
                           />
                         </label>
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Costo unit. (Bs)
                           <InputNumero
                             value={it.costoUnitario}

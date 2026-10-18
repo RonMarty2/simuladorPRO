@@ -32,7 +32,7 @@ export default function SelectorRolLocal() {
 
   return (
     <div className="fixed bottom-3 right-3 z-[60] flex flex-col items-end gap-1">
-      <div className="rounded-md bg-amber-500/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow">
+      <div className="rounded-md bg-amber-500/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white shadow">
         Modo local
       </div>
       <div className="flex overflow-hidden rounded-full border border-border bg-card shadow-lg">

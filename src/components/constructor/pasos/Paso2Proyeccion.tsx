@@ -295,7 +295,7 @@ export default function Paso2Proyeccion() {
                   <div className="text-[10px] font-semibold text-muted-foreground">{fila.label}</div>
                   <div className="mt-1 grid grid-cols-4 gap-1">
                     {fila.tasas.map((t, i) => (
-                      <label key={i} className="text-center text-[9px] text-muted-foreground">
+                      <label key={i} className="text-center text-[11px] text-muted-foreground">
                         Año {i + 2}
                         <InputNumero
                           value={t}
@@ -393,7 +393,7 @@ export default function Paso2Proyeccion() {
                     <div key={i} className="rounded-md border border-border bg-background/60 p-2">
                       <div className="mb-1 text-[10px] font-semibold text-muted-foreground">Año {i + 1}</div>
                       <div className="grid grid-cols-2 gap-2">
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Cantidad
                           <InputNumero
                             value={p.cantidades[i]}
@@ -401,7 +401,7 @@ export default function Paso2Proyeccion() {
                             className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
                           />
                         </label>
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Precio (Bs)
                           <InputNumero
                             value={p.precios[i]}
@@ -1030,7 +1030,7 @@ function CampoSus({
         <input type="number" min={0} step={paso} value={valor} onChange={(e) => onChange(acotarNumero(Number(e.target.value) || 0, 0))} onFocus={(e) => e.currentTarget.select()} className={clase} />
         <span className="whitespace-nowrap text-[10px] text-muted-foreground">{sufijo}</span>
       </div>
-      <p className="mt-1 text-[9px] leading-snug text-muted-foreground">{ayuda}</p>
+      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{ayuda}</p>
     </div>
   );
 }

@@ -31,6 +31,7 @@ import {
 } from "@/lib/calculo-financiero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
+import { datosFaltantes } from "@/lib/datos-faltantes";
 
 const ANIOS = [1, 2, 3, 4, 5] as const;
 
@@ -38,6 +39,7 @@ export default function Paso9Resumen() {
   const proyecto = useProyectoStore((s) => s.proyecto)!;
 
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
+  const faltantes = useMemo(() => datosFaltantes(proyecto), [proyecto]);
 
   // El IVA afecta caja, no resultado contable; por eso vive en ajustes de caja.
   // Dejamos abiertos los bloques clave para que IT/IUE/IVA sean visibles al cargar.
@@ -52,6 +54,22 @@ export default function Paso9Resumen() {
 
   return (
     <div className="flex flex-col gap-4">
+      {faltantes.length > 0 && (
+        <div
+          role="status"
+          className="order-1 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+        >
+          <strong>Resultado provisional.</strong> Aún no cargaste datos en:{" "}
+          {faltantes.map((f, i) => (
+            <span key={f.paso}>
+              {i > 0 && ", "}
+              paso {f.paso} ({f.etiqueta})
+            </span>
+          ))}
+          . Los indicadores de abajo pueden no ser confiables. Si tu proyecto realmente no
+          tiene alguno de estos rubros, puedes ignorar este aviso.
+        </div>
+      )}
       <div className="order-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold tracking-tight">Paso 9 · Resumen y flujo de caja</h2>
@@ -349,7 +367,11 @@ export default function Paso9Resumen() {
               <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip formatter={(v: number) => formatearBolivianos(v)} />
-              <Bar dataKey="valor" fill="hsl(var(--primary))" />
+              <Bar dataKey="valor">
+                {calc.flujoCaja.map((v, i) => (
+                  <Cell key={i} fill={v < 0 ? "#ef4444" : "#10b981"} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -588,14 +610,14 @@ function AnalisisAvanzadoV2({
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
                 VAN del proyecto<br />
-                <span className="text-[9px] opacity-70">negocio entero · descontado al WACC {(calc.wacc * 100).toFixed(1)}%</span>
+                <span className="text-[11px] opacity-70">negocio entero · descontado al WACC {(calc.wacc * 100).toFixed(1)}%</span>
               </span>
               <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanProyecto >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanProyecto)}</span>
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
                 VAN de tu parte (accionista)<br />
-                <span className="text-[9px] opacity-70">tras pagar la deuda · descontado al Ke {(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%</span>
+                <span className="text-[11px] opacity-70">tras pagar la deuda · descontado al Ke {(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%</span>
               </span>
               <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span>
             </div>
@@ -629,7 +651,7 @@ function AnalisisAvanzadoV2({
         </p>
 
         {/* Leyenda de dirección */}
-        <div className="mb-1 flex items-center justify-end gap-3 text-[9px] uppercase tracking-wide text-muted-foreground">
+        <div className="mb-1 flex items-center justify-end gap-3 text-[11px] uppercase tracking-wide text-muted-foreground">
           <span>← la variable BAJA</span>
           <span>sin cambio</span>
           <span>la variable SUBE →</span>
@@ -1242,7 +1264,7 @@ function CardIndicador({
             </p>
           )}
           {tooltip && (
-            <p className="mt-1.5 whitespace-pre-line border-t border-border/40 pt-1.5 text-[9px] leading-snug text-muted-foreground">
+            <p className="mt-1.5 whitespace-pre-line border-t border-border/40 pt-1.5 text-[11px] leading-snug text-muted-foreground">
               <strong>Cómo se calcula:</strong>
               {"\n"}
               {tooltip}

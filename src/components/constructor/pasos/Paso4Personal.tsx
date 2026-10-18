@@ -288,13 +288,13 @@ export default function Paso4Personal() {
                         className="p-1.5 text-right w-[15%] cursor-help"
                         title={`Aporte patronal mensual = sueldo × ${(totalTasa * 100).toFixed(2)}% (riesgo + salud + vivienda + aguinaldo + indemnización). Pasa el cursor sobre cada celda para ver el desglose de ese sueldo.`}
                       >
-                        Aportes / mes <span className="text-[9px]">ⓘ</span>
+                        Aportes / mes <span className="text-[11px]">ⓘ</span>
                       </th>
                       <th
                         className="p-1.5 text-right w-[20%] cursor-help"
                         title="Costo anual total = (sueldo + aportes patronales) × 12 meses × cantidad de personas."
                       >
-                        Costo anual total <span className="text-[9px]">ⓘ</span>
+                        Costo anual total <span className="text-[11px]">ⓘ</span>
                       </th>
                       <th className="w-8 p-1.5"></th>
                     </tr>
@@ -339,14 +339,14 @@ export default function Paso4Personal() {
                             title={detalleAportes(aportes, tasas)}
                           >
                             {formatearBolivianos(aportes.totalAportes)}{" "}
-                            <span className="text-[9px]">ⓘ</span>
+                            <span className="text-[11px]">ⓘ</span>
                           </td>
                           <td
                             className="p-1 text-right text-xs font-semibold cursor-help"
                             title={detalleCostoAnual(p.sueldoMensual, p.cantidad, aportes)}
                           >
                             {formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}{" "}
-                            <span className="text-[9px] font-normal">ⓘ</span>
+                            <span className="text-[11px] font-normal">ⓘ</span>
                           </td>
                           <td className="p-1 text-right">
                             <button
@@ -389,7 +389,7 @@ export default function Paso4Personal() {
                         </button>
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2">
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Cantidad
                           <InputNumero
                             value={p.cantidad}
@@ -397,7 +397,7 @@ export default function Paso4Personal() {
                             className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
                           />
                         </label>
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Sueldo mensual (Bs)
                           <InputNumero
                             value={p.sueldoMensual}
@@ -410,7 +410,7 @@ export default function Paso4Personal() {
                         <span><span className="text-muted-foreground">Aportes/mes:</span> {formatearBolivianos(aportes.totalAportes)}</span>
                         <span><span className="text-muted-foreground">Costo anual:</span> <strong>{formatearBolivianos(aportes.costoTotalAnual * p.cantidad)}</strong></span>
                       </div>
-                      <div className="mt-1 text-[9px] leading-snug text-muted-foreground">
+                      <div className="mt-1 text-[11px] leading-snug text-muted-foreground">
                         Aportes = sueldo × {(totalTasa * 100).toFixed(2)}% · Costo anual = (sueldo + aportes) × 12 × {p.cantidad}
                       </div>
                     </div>

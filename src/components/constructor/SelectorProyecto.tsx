@@ -131,7 +131,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
       >
         <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
         <div className="text-left">
-          <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Proyecto activo
           </div>
           <div className="max-w-[200px] truncate font-medium">
@@ -140,7 +140,7 @@ export default function SelectorProyecto({ proyectos }: Props) {
         </div>
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         {proyectosVisibles.length > 1 && (
-          <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+          <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
             {proyectosVisibles.length}
           </span>
         )}
@@ -528,7 +528,7 @@ function BotonEjemplo({
       className="flex flex-col items-center rounded-md border border-indigo-300 bg-card px-2 py-1.5 text-center transition hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:hover:bg-indigo-900/30"
     >
       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">{titulo}</span>
-      <span className="text-[9px] uppercase tracking-wide text-muted-foreground">{sub}</span>
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{sub}</span>
     </button>
   );
 }

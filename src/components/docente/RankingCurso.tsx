@@ -315,7 +315,7 @@ function UltimaActividadCell({
         <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
           ✗ sin actividad
         </span>
-        <span className="mt-0.5 text-[9px] text-muted-foreground">
+        <span className="mt-0.5 text-[11px] text-muted-foreground">
           inscrito hace {Math.round(diasDesdeInscripcion)}d
         </span>
       </div>
@@ -349,7 +349,7 @@ function UltimaActividadCell({
       <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", clase)}>
         {relativo}
       </span>
-      <span className="mt-0.5 text-[9px] text-muted-foreground">{fechaFmt}</span>
+      <span className="mt-0.5 text-[11px] text-muted-foreground">{fechaFmt}</span>
     </div>
   );
 }

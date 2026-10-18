@@ -133,7 +133,7 @@ export default function MisEntregas() {
                   <div className="text-2xl font-bold text-primary">
                     {promedio.promedio_nota ?? "—"}
                   </div>
-                  <div className="text-[9px] text-muted-foreground">
+                  <div className="text-[11px] text-muted-foreground">
                     sobre {promedio.entregas_revisadas} entrega
                     {promedio.entregas_revisadas !== 1 ? "s" : ""}
                   </div>
@@ -209,7 +209,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
         </div>
         {entrega.nota !== null && (
           <div className="text-right">
-            <div className="text-[9px] uppercase opacity-75">Nota</div>
+            <div className="text-[11px] uppercase opacity-75">Nota</div>
             <div className="text-lg font-bold">{entrega.nota}/100</div>
           </div>
         )}

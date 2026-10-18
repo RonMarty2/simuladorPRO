@@ -608,7 +608,7 @@ function FilaAmortAnio({
       )}
     >
       <td className="p-1.5 font-medium" title={tooltipBase}>
-        {label} <span className="text-[9px] text-muted-foreground">ⓘ</span>
+        {label} <span className="text-[11px] text-muted-foreground">ⓘ</span>
       </td>
       {filas.map((f) => (
         <td
@@ -708,7 +708,7 @@ function PanelCAPM({
         </div>
         <div className="flex flex-shrink-0 items-center gap-3">
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Ke</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Ke</div>
             <div className="text-base font-bold text-indigo-700 dark:text-indigo-300">
               {(ke * 100).toFixed(2)}%
             </div>
@@ -812,7 +812,7 @@ function CampoCAPM({
         />
         <span className="text-xs text-muted-foreground">{sufijo}</span>
       </div>
-      <p className="mt-1 text-[9px] leading-snug text-muted-foreground">{ayuda}</p>
+      <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{ayuda}</p>
     </div>
   );
 }

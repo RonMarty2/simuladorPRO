@@ -154,6 +154,13 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
 
   const lanzar = async () => {
     if (!seleccionado || !user) return;
+    if (
+      !window.confirm(
+        `¿Lanzar «${seleccionado.titulo}» al curso ahora? Afecta a los alumnos en vivo y no se puede deshacer.`
+      )
+    ) {
+      return;
+    }
     setConfirmando(true);
     setError(null);
     try {
@@ -332,28 +339,28 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               )}
             >
               <div className="mb-1 flex items-center gap-1.5">
-                <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                   {e.categoria}
                 </span>
-                <span className="text-[9px] text-muted-foreground">{e.codigo}</span>
+                <span className="text-[11px] text-muted-foreground">{e.codigo}</span>
               </div>
               <div className="text-xs font-bold leading-tight">{e.titulo}</div>
               <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
                 {e.descripcion}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1">
-                <span className="text-[9px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   {e.opciones_decision.length} decisiones · 🎯
                 </span>
                 {e.sectores_afectados.includes("todos") ? (
-                  <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                  <span className="rounded bg-emerald-100 px-1 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
                     todos los sectores
                   </span>
                 ) : (
                   e.sectores_afectados.map((s) => (
                     <span
                       key={s}
-                      className="rounded bg-sky-100 px-1 py-0.5 text-[9px] font-semibold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+                      className="rounded bg-sky-100 px-1 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
                     >
                       {s}
                     </span>
@@ -373,7 +380,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             {seleccionado.sectores_afectados.map((s) => (
               <span
                 key={s}
-                className="rounded bg-sky-200 px-1.5 py-0.5 text-[9px] uppercase dark:bg-sky-800/60"
+                className="rounded bg-sky-200 px-1.5 py-0.5 text-[11px] uppercase dark:bg-sky-800/60"
               >
                 {s}
               </span>

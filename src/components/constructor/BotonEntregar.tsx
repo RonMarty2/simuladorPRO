@@ -80,6 +80,7 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
 
   const entregar = async () => {
     if (!proyecto) return;
+    if (!window.confirm("¿Entregar esta etapa al docente para su revisión?")) return;
     setEntregando(true);
     setMensaje(null);
     try {

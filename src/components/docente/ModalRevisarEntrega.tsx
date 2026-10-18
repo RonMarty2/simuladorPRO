@@ -303,7 +303,7 @@ function Indicador({
 }) {
   return (
     <div className="rounded-md border border-border bg-card p-2">
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div
         className={cn(
           "text-sm font-bold tabular-nums",

@@ -29,7 +29,7 @@ export default function ProtectedRoute() {
 
   if (!inicializado) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-app w-screen items-center justify-center text-sm text-muted-foreground">
         Cargando sesión…
       </div>
     );
@@ -41,7 +41,7 @@ export default function ProtectedRoute() {
 
   if (!perfil) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background p-6">
+      <div className="flex h-app w-screen items-center justify-center bg-background p-6">
         <div className="max-w-md space-y-4 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <div className="text-3xl">🤔</div>
           <h2 className="text-base font-semibold text-foreground">

@@ -122,7 +122,7 @@ export default function PresentarProyecto() {
 
   if (cargando) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-950 text-slate-200">
+      <div className="flex h-app w-screen items-center justify-center bg-slate-950 text-slate-200">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-violet-400" />
           <p className="mt-3 text-sm font-medium">Preparando tu presentación…</p>
@@ -133,7 +133,7 @@ export default function PresentarProyecto() {
 
   if (error && (!proyecto || !presentacion || !modelo)) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-950 p-6 text-white">
+      <div className="flex h-app w-screen items-center justify-center bg-slate-950 p-6 text-white">
         <div className="max-w-md rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-center">
           <h1 className="text-lg font-black">No pudimos preparar la presentación</h1>
           <p className="mt-2 text-sm text-rose-100/80">{error}</p>
@@ -253,7 +253,7 @@ export default function PresentarProyecto() {
             <div className="aspect-video overflow-hidden rounded-xl bg-[#0c1022] p-[7%] text-white shadow-xl">
               <div className="text-[8px] font-black uppercase tracking-[0.22em] text-violet-300">Presentación de inversión</div>
               <div className="mt-[18%] text-[clamp(18px,2.4vw,34px)] font-black leading-none tracking-tight">{presentacion.titulo}</div>
-              <div className="mt-[4%] text-[9px] text-violet-200">{presentacion.subtitulo}</div>
+              <div className="mt-[4%] text-[11px] text-violet-200">{presentacion.subtitulo}</div>
               <div className="mt-[10%] border-t border-white/15 pt-[4%] text-[8px] text-slate-400">{presentacion.expositores}</div>
             </div>
           </section>

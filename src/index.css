@@ -59,3 +59,30 @@
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   }
 }
+
+/* Altura real de pantalla en celular (la barra del navegador no tapa el contenido). */
+.h-app {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Sin flechitas/rueda en campos numericos (molestan en escritorio y ocupan lugar en celular). */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Celular: letra de 16px evita el zoom automatico de iOS al tocar un campo, y alto comodo. */
+@media (pointer: coarse) and (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+    min-height: 40px;
+  }
+}

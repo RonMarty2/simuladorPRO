@@ -377,7 +377,7 @@ function SeccionGastos({
                     </button>
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-2">
-                    <label className="text-[9px] text-muted-foreground">
+                    <label className="text-[11px] text-muted-foreground">
                       Unidad
                       <select
                         value={c.unidadMedida}
@@ -388,7 +388,7 @@ function SeccionGastos({
                         <option value="año">Año</option>
                       </select>
                     </label>
-                    <label className="text-[9px] text-muted-foreground">
+                    <label className="text-[11px] text-muted-foreground">
                       Cantidad
                       <InputNumero
                         value={c.cantidad}
@@ -396,7 +396,7 @@ function SeccionGastos({
                         className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
                       />
                     </label>
-                    <label className="text-[9px] text-muted-foreground">
+                    <label className="text-[11px] text-muted-foreground">
                       Costo unit.
                       <InputNumero
                         value={c.costoUnitario}

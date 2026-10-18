@@ -460,8 +460,24 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         todos los productos, inflando los costos en proyectos con varios
         productos). Test de consistencia: `motor-simulacion-consistencia.test.ts`.
         Nota: el simulador no incluye imprevistos ni IT 3% (simplificacion).
+      - UX y velocidad (prueba con 4 agentes UX, sin cambiar etapas ni fórmulas):
+        Resumen avisa "Resultado provisional" cuando faltan datos en pasos 3-6
+        (`lib/datos-faltantes.ts`); stepper y barra Anterior/Siguiente fijos en
+        el constructor, "Borrar proyecto" fuera de la barra, scroll al inicio al
+        cambiar de paso; celular: campos 16px/40px, `inputMode="decimal"`,
+        `.h-app` (100dvh), texto 9px -> 11px; `vercel.json` con cache inmutable
+        de /assets; recharts ya no es chunk manual (no se precarga en el
+        arranque); confirmaciones al entregar, abandonar simulación y lanzar
+        evento; barras de gráficos en verde/rojo según signo.
 
 ### Pendiente para después (hallazgos del review sin resolver)
+- [ ] Decisión pendiente del owner: unificar voseo/tuteo en los textos (hoy
+      mezclados) y tildes faltantes.
+- [ ] Ideas UX NO implementadas (cambian la forma de usar, requieren OK del
+      owner): panel del alumno con una sola lista, "Continuar mi proyecto",
+      constructor a dos columnas con tarjeta "Tu proyecto hoy", paso final
+      "Revisar y entregar", agrupar pestañas del docente, consultas sin
+      select("*"), aviso de versión nueva en vez de recarga OTA (§7.7).
 - [ ] **Criterio financiero a decidir con la cátedra** (hallazgos del experto
       simulado, `lib/flujo-proyecto.ts`): (1) el flujo resta el IVA neto como
       costo sin sumar el IVA cobrado ni restar el pagado; (2) el VAN con deuda

@@ -118,10 +118,10 @@ export default function GaleriaEjemplos() {
                       </div>
                       <div className="text-sm font-bold leading-tight">{pl.titulo}</div>
                       <div className="flex flex-wrap gap-1">
-                        <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                        <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
                           {pl.modeloLabel}
                         </span>
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                           {pl.sector}
                         </span>
                       </div>
@@ -380,7 +380,7 @@ function ChipEscala({ escala }: { escala: "Pequeño" | "Mediano" | "Grande" }) {
         ? "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200"
         : "bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200";
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-[9px] font-bold uppercase", clase)}>
+    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold uppercase", clase)}>
       {escala}
     </span>
   );
@@ -482,7 +482,7 @@ function VisorPlantilla({
 function Indicador({ titulo, valor, positivo }: { titulo: string; valor: string; positivo: boolean }) {
   return (
     <div className="rounded-md border border-border bg-card p-2">
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div
         className={cn(
           "text-sm font-bold tabular-nums",

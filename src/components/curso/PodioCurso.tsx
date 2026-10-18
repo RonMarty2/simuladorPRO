@@ -315,7 +315,7 @@ function ColumnaPodio({
 
       {/* Tag "TU GRUPO" (opcional, va debajo del medallón) */}
       {data.tag && (
-        <span className="relative z-10 -mt-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2 py-0.5 text-[9px] font-extrabold tracking-wider text-white shadow-md shadow-violet-500/40">
+        <span className="relative z-10 -mt-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2 py-0.5 text-[11px] font-extrabold tracking-wider text-white shadow-md shadow-violet-500/40">
           ★ {data.tag}
         </span>
       )}
@@ -362,7 +362,7 @@ function ColumnaPodio({
           >
             {data.nota.toFixed(0)}
           </span>
-          <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] opacity-90">
+          <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] opacity-90">
             {puesto === 1 ? "1.er puesto" : puesto === 2 ? "2.° puesto" : "3.er puesto"}
           </span>
         </div>
@@ -473,7 +473,7 @@ function Medallon({
       {/* Tag (LEGENDARIO/ÉPICO/RARO) */}
       <span
         className={cn(
-          "absolute -top-2 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded px-2.5 py-0.5 text-[9px] font-extrabold tracking-[0.2em] shadow-md",
+          "absolute -top-2 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded px-2.5 py-0.5 text-[11px] font-extrabold tracking-[0.2em] shadow-md",
           tagBg
         )}
       >
@@ -652,7 +652,7 @@ function TuTarjetaIndividual({ mi }: { mi: import("@/lib/podio-supabase").MiPosi
           <div className="text-2xl font-extrabold leading-none text-violet-900 dark:text-violet-100">
             {mi.nota.toFixed(0)}
           </div>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-violet-700 dark:text-violet-300">
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-violet-700 dark:text-violet-300">
             tu nota
           </div>
         </div>

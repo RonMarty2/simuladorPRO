@@ -103,7 +103,7 @@ export default function RootLayout() {
     ));
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
+    <div className="flex h-app w-screen flex-col bg-background text-foreground">
       <header className="flex h-14 items-center justify-between gap-2 border-b border-border px-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           {/* Botón menú hamburguesa — siempre visible en mobile (sobrescribe

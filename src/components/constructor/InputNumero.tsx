@@ -26,6 +26,7 @@ export default function InputNumero({ value, onChange, ...rest }: Props) {
     <input
       {...rest}
       type="number"
+      inputMode="decimal"
       value={txt}
       onFocus={(e) => {
         setEnfocado(true);

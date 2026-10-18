@@ -617,7 +617,7 @@ function SelectorNivelSemanaE({
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-bold">{nivel.emoji} {nivel.nombre}</span>
-            <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] font-semibold">
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold">
               {nivel.pasos} etapas
             </span>
           </div>
@@ -713,7 +713,7 @@ function TarjetaIntegrante({
           {nombreCompleto}
         </div>
         {!tieneNombre && (
-          <div className="text-[9px] italic text-muted-foreground">sin nombre</div>
+          <div className="text-[11px] italic text-muted-foreground">sin nombre</div>
         )}
       </div>
     </div>
@@ -731,7 +731,7 @@ function Nota({
 }) {
   return (
     <div className={"rounded-md p-1.5 " + (destacada ? "bg-primary/10" : "bg-secondary/30")}>
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{etiqueta}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{etiqueta}</div>
       <div className={"font-bold " + (destacada ? "text-base text-primary" : "text-sm")}>
         {valor == null ? "—" : valor}
       </div>

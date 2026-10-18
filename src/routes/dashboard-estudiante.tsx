@@ -717,11 +717,11 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
         <BadgeTipoProyecto tipo={proyecto.tipo} tamaño="sm" className="self-start" />
         <div className="truncate text-sm font-semibold">{proyecto.nombre}</div>
         <div className="flex flex-wrap items-center gap-1">
-          <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>
+          <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider", esV2 ? "bg-indigo-600 text-white" : "bg-secondary text-muted-foreground")}>
             {esV2 ? "+ Riesgo" : "Clásico"}
           </span>
-          <span className="rounded bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">{modelo}</span>
-          <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium", estado.clase)}>{estado.txt}</span>
+          <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">{modelo}</span>
+          <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-medium", estado.clase)}>{estado.txt}</span>
         </div>
         <div className="text-[10px] font-medium text-primary">Abrir y editar →</div>
       </button>

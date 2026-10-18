@@ -328,7 +328,7 @@ function TabCursos() {
                   <td className="p-2 text-center">
                     <span>{c.estado}</span>
                     {c.es_semana_e && (
-                      <span className="ml-1 rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-800">
+                      <span className="ml-1 rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold uppercase text-violet-800">
                         Semana E
                       </span>
                     )}

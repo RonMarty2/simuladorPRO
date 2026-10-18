@@ -317,7 +317,7 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
 function Stat({ label, v }: { label: string; v: string }) {
   return (
     <div className="rounded bg-secondary/40 px-1.5 py-1">
-      <div className="text-[9px] uppercase text-muted-foreground">{label}</div>
+      <div className="text-[11px] uppercase text-muted-foreground">{label}</div>
       <div className="font-bold tabular-nums">{v}</div>
     </div>
   );
@@ -476,7 +476,7 @@ function SliderPorcentual({
         onChange={(e) => onChange(Number(e.target.value))}
         className="mt-1 w-full"
       />
-      <p className="mt-0.5 text-[9px] text-muted-foreground">{ayuda}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{ayuda}</p>
     </div>
   );
 }
@@ -501,7 +501,7 @@ function SliderTasaInteres({ valor, onChange }: { valor: number; onChange: (v: n
         onChange={(e) => onChange(Number(e.target.value))}
         className="mt-1 w-full"
       />
-      <p className="mt-0.5 text-[9px] text-muted-foreground">
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
         Suma o resta a la tasa del préstamo. +3pp simula riesgo país alto.
       </p>
     </div>
@@ -526,7 +526,7 @@ function SliderPlazo({ valor, onChange }: { valor: number; onChange: (v: number)
         onChange={(e) => onChange(Number(e.target.value))}
         className="mt-1 w-full"
       />
-      <p className="mt-0.5 text-[9px] text-muted-foreground">
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
         Más plazo = cuotas más chicas pero más intereses totales.
       </p>
     </div>
@@ -562,7 +562,7 @@ function SliderPrestamoPorcentaje({
         }}
         className="mt-1 w-full"
       />
-      <p className="mt-0.5 text-[9px] text-muted-foreground">
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
         Original: {original}%. Más préstamo = más apalancamiento + más riesgo.
       </p>
     </div>

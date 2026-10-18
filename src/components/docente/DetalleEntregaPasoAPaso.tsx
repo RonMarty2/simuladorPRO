@@ -86,7 +86,7 @@ function PasoAccordion({
           <span className="text-muted-foreground">·</span>
           <span className="font-medium">{TITULOS[paso]}</span>
           {esEntregado && (
-            <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-950">
+            <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-950">
               Esta entrega
             </span>
           )}

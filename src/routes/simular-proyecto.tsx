@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -181,7 +182,11 @@ export default function SimularProyecto() {
             </div>
           </div>
           <button
-            onClick={abandonar}
+            onClick={() => {
+              if (window.confirm("¿Abandonar la simulación? Se perderá el avance de esta simulación.")) {
+                abandonar();
+              }
+            }}
             className="text-xs text-muted-foreground transition hover:text-destructive"
           >
             Abandonar simulación
@@ -363,12 +368,16 @@ function GraficosHistorial({ historial }: { historial: ReturnType<typeof useSimu
           <BarChart data={datos}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis dataKey="turno" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} />
             <Tooltip
               formatter={(v: number) => formatearBolivianos(v)}
               labelFormatter={(l) => `Turno ${l}`}
             />
-            <Bar dataKey="delta" fill="hsl(var(--primary))" />
+            <Bar dataKey="delta" maxBarSize={48}>
+              {datos.map((d, i) => (
+                <Cell key={i} fill={d.delta < 0 ? "#ef4444" : "#10b981"} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -500,7 +509,7 @@ function SelectorProyectoSimular({
             >
               <span>{meta.emoji}</span>
               <span className="max-w-[160px] truncate font-semibold">{p.nombre}</span>
-              <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider dark:bg-white/10">
+              <span className="rounded bg-black/10 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider dark:bg-white/10">
                 {meta.label}
               </span>
             </button>

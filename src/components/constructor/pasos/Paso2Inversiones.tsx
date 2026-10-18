@@ -349,6 +349,14 @@ function SeccionCategoria({
           })()}
 
           {items.length > 0 && (
+            <p className="hidden text-xs text-muted-foreground md:block">
+              <strong className="text-foreground">Factura IVA:</strong> marca si la compra tiene
+              factura (así recuperas el IVA como crédito fiscal).{" "}
+              <strong className="text-foreground">Vida útil:</strong> años que dura el bien antes
+              de cambiarlo.
+            </p>
+          )}
+          {items.length > 0 && (
             <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
               <table className="w-full text-xs">
                 <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -546,7 +554,7 @@ function SeccionCategoria({
                       </button>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-2">
-                      <label className="text-[9px] text-muted-foreground">
+                      <label className="text-[11px] text-muted-foreground">
                         Unidad
                         <input
                           type="text"
@@ -557,7 +565,7 @@ function SeccionCategoria({
                           className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
                         />
                       </label>
-                      <label className="text-[9px] text-muted-foreground">
+                      <label className="text-[11px] text-muted-foreground">
                         Cantidad
                         <InputNumero
                           min={0}
@@ -566,7 +574,7 @@ function SeccionCategoria({
                           className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
                         />
                       </label>
-                      <label className="text-[9px] text-muted-foreground">
+                      <label className="text-[11px] text-muted-foreground">
                         Costo unit. (Bs)
                         <InputNumero
                           min={0}
@@ -579,7 +587,7 @@ function SeccionCategoria({
                     </div>
                     {!sinDepreciacion && (
                       <div className="mt-2">
-                        <label className="text-[9px] text-muted-foreground">
+                        <label className="text-[11px] text-muted-foreground">
                           Vida útil (años)
                           <InputNumero
                             value={it.vidaUtilAnios ?? 0}

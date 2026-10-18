@@ -163,7 +163,7 @@ function PasoPreview({
             </span>
             <span
               className={cn(
-                "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                "rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                 llega
                   ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100"
                   : "bg-sky-200 text-sky-900 dark:bg-sky-900 dark:text-sky-100"

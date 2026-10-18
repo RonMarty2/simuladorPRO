@@ -101,9 +101,10 @@ export default defineConfig({
       output: {
         // Separa las librerías pesadas en chunks propios para que el navegador
         // las cachee aparte y no se re-descarguen en cada deploy del código.
+        // recharts NO va como chunk manual: forzarlo hacia que el arranque lo
+        // descargara aunque login/paneles no lo usen. Vite lo separa solo por ruta.
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-charts": ["recharts"],
           "vendor-supabase": ["@supabase/supabase-js"],
         },
       },

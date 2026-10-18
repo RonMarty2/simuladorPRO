@@ -136,7 +136,7 @@ export default function VisorPitch({
   );
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#070b17] text-white">
+    <div className="flex h-app w-screen flex-col overflow-hidden bg-[#070b17] text-white">
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/80 px-3 backdrop-blur md:px-5">
         <div className="min-w-0">
           <div className="truncate text-xs font-bold md:text-sm">{presentacion.titulo}</div>
