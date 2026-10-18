@@ -1049,7 +1049,7 @@ function BloqueWACC({
           {/* Línea 2: aporte del capital propio */}
           <div
             className="rounded bg-emerald-50 px-2 py-2 dark:bg-emerald-950/30"
-            title={`Aporte del capital propio al WACC:\n(E/V) × Ke\n= ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n= ${(contribCapital * 100).toFixed(2)}%\n\nAcá NO hay escudo fiscal porque los dividendos al dueño NO bajan el IUE (a diferencia de los intereses).`}
+            title={`Aporte del capital propio al WACC:\n(E/V) × Ke\n= ${(porcCapitalTotal * 100).toFixed(2)}% × ${(koa * 100).toFixed(2)}%\n= ${(contribCapital * 100).toFixed(2)}%\n\nAquí NO hay escudo fiscal porque los dividendos al dueño NO bajan el IUE (a diferencia de los intereses).`}
           >
             <div className="font-semibold text-emerald-900 dark:text-emerald-100">
               2) Aporte del capital propio al WACC (sin escudo fiscal)
