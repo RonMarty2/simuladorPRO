@@ -561,7 +561,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Aquí no vendes "unidades": tienes una <strong>base de suscriptores</strong> que
-            crece con las altas y baja con el churn (los que se van). Podés definir{" "}
+            crece con las altas y baja con el churn (los que se van). Puedes definir{" "}
             <strong>varios planes</strong> (básico, VIP, premium…) y el ingreso anual sale de
             sumar lo que aporta cada uno.
           </p>
@@ -724,7 +724,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
 
         <Recomendacion titulo="💡 Varios planes: ¿cuándo conviene?">
           <p>
-            <strong>Un solo plan</strong> es lo más simple y suele alcanzar para empezar. Usá
+            <strong>Un solo plan</strong> es lo más simple y suele alcanzar para empezar. Usa
             varios planes cuando tu producto sirva a perfiles muy distintos (ej. lector ocasional
             vs. empresa que necesita licencias).
           </p>
@@ -747,7 +747,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
           </p>
           <p className="border-t border-sky-200 pt-1.5 dark:border-sky-900">
             <strong>Regla de oro:</strong> cada plan se estabiliza en <em>altas ÷ churn</em>. Si
-            captás 40 al mes pero perdés el 4% de 1.000, te estancás en ~1.000.
+            captas 40 al mes pero pierdes el 4% de 1.000, te estancas en ~1.000.
           </p>
         </Recomendacion>
       </div>

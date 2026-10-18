@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * etapas pendientes que entregó, sin abrir tab por tab.
  *
  * Diferente al ModalRevisionMasiva (que permite calificar etapa por etapa):
- * acá no hay tabs, hay un solo formulario que se aplica a todo el lote.
+ * aquí no hay tabs, hay un solo formulario que se aplica a todo el lote.
  */
 export default function ModalCalificarTodoIgual({
   entregas,
@@ -31,7 +31,7 @@ export default function ModalCalificarTodoIgual({
   const guardar = async () => {
     if (entregas.length === 0) return;
     if (!confirm(
-      `Vas a poner ${decision === "aprobada" ? "APROBADA" : "REPROBADA"} con nota ${nota} a las ${entregas.length} etapas pendientes de ${titular}. ¿Confirmás?`
+      `Vas a poner ${decision === "aprobada" ? "APROBADA" : "REPROBADA"} con nota ${nota} a las ${entregas.length} etapas pendientes de ${titular}. ¿Confirmas?`
     )) return;
     setGuardando(true);
     setError(null);
@@ -96,7 +96,7 @@ export default function ModalCalificarTodoIgual({
             ) : (
               <span>
                 ⚠ Se calificaron {resultado.ok} de {entregas.length}. Faltaron{" "}
-                {resultado.fallidas} (problema de red, reintentá).
+                {resultado.fallidas} (problema de red, reintenta).
               </span>
             )}
           </div>
@@ -180,7 +180,7 @@ export default function ModalCalificarTodoIgual({
               onChange={(e) => setComentario(e.target.value)}
               disabled={guardando}
               rows={3}
-              placeholder="Ej: Buen trabajo general. Revisá el cálculo de depreciación en próximas entregas."
+              placeholder="Ej: Buen trabajo general. Revisa el cálculo de depreciación en próximas entregas."
               className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs disabled:opacity-50"
             />
           </div>

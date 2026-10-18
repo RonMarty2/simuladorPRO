@@ -256,7 +256,7 @@ function ModalPublicarCaso({
           </div>
         ) : cursos.length === 0 ? (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-            No tenés cursos creados. Andá al <strong>Panel del docente</strong> y creá un curso
+            No tienes cursos creados. Ve al <strong>Panel del docente</strong> y crea un curso
             primero.
           </div>
         ) : (

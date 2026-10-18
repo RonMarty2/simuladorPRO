@@ -7,7 +7,7 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (esModoLocal()) {
   console.info(
     "[modo local] Corriendo sin Supabase: login desactivado, datos guardados " +
-      "en este navegador. Podés cambiar de rol con el selector abajo a la derecha."
+      "en este navegador. Puedes cambiar de rol con el selector abajo a la derecha."
   );
 } else if (!url || !anonKey) {
   console.warn(

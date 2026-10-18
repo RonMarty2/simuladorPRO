@@ -45,7 +45,7 @@ export default function ModalRevisarEntrega({
       );
       const fallos = resultados.filter((r) => r.status === "rejected").length;
       if (fallos > 0) {
-        setError(`${fallos} de ${objetivos.length} no se pudo guardar. Revisá tu conexión y reintentá.`);
+        setError(`${fallos} de ${objetivos.length} no se pudo guardar. Revisa tu conexión y reintenta.`);
         // Igual cerramos como "actualizada" para refrescar lo que sí pasó.
       }
       onCerrar(true);

@@ -24,7 +24,7 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
           🎓 Semana E · {curso.nombre}
         </div>
         <p className="mt-1 text-xs text-fuchsia-900/80 dark:text-fuchsia-200/80">
-          Bienvenida/o al evento. Acá vas a <strong>armar tu proyecto, simularlo y ver si es
+          Bienvenida/o al evento. Aquí vas a <strong>armar tu proyecto, simularlo y ver si es
           viable</strong>. No hay notas, no hay calificaciones — el objetivo es que aprendas
           jugando con los números reales.
         </p>
@@ -42,32 +42,32 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
         <ol className="space-y-1.5 border-t border-fuchsia-200 px-4 py-3 text-xs dark:border-fuchsia-900">
           <PasoChecklist
             n={1}
-            titulo="Unite o creá tu grupo"
-            detalle="Bajá hasta “Forma tu equipo”. Podés crear uno y compartir su código, o buscar el equipo de tus compañeros por nombre o código."
+            titulo="Únete o crea tu grupo"
+            detalle="Baja hasta “Forma tu equipo”. Puedes crear uno y compartir su código, o buscar el equipo de tus compañeros por nombre o código."
           />
           <PasoChecklist
             n={2}
-            titulo="Elegí el nivel y armá el proyecto"
+            titulo="Elige el nivel y arma el proyecto"
             detalle="Básico tiene 5 etapas, Medio 7 y Avanzado 9. Elijan según su experiencia y el tiempo disponible; todo el equipo seguirá la misma ruta."
           />
           <PasoChecklist
             n={3}
-            titulo="Mirá los indicadores (VAN, TIR y recuperación)"
-            detalle="En el Paso 9 (Resumen) ves si tu proyecto da plata. VAN > 0 + TIR > WACC = viable. Si no da, volvé y ajustá precios o costos."
+            titulo="Mira los indicadores (VAN, TIR y recuperación)"
+            detalle="En el Paso 9 (Resumen) ves si tu proyecto da plata. VAN > 0 + TIR > WACC = viable. Si no da, vuelve y ajusta precios o costos."
           />
           <PasoChecklist
             n={4}
-            titulo="Probá cambios en los supuestos"
-            detalle="Volvé a precios, demanda o costos y probá: '¿qué pasa si la harina sube 20%?' o '¿si vendo menos?'. Después compará nuevamente los indicadores."
+            titulo="Prueba cambios en los supuestos"
+            detalle="Vuelve a precios, demanda o costos y prueba: '¿qué pasa si la harina sube 20%?' o '¿si vendo menos?'. Después compara nuevamente los indicadores."
           />
           <PasoChecklist
             n={5}
-            titulo="Cerrá el análisis con tu equipo"
+            titulo="Cierra el análisis con tu equipo"
             detalle="Revisen juntos el Resumen, expliquen qué cambiarían para mejorar la viabilidad y comparen el resultado con otro grupo."
           />
           <div className="mt-2 rounded-md border border-sky-200 bg-sky-50/70 p-2 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-            🎯 <strong>Meta del evento</strong>: terminar los 5 pasos. Si te trabás, pregntale
-            a tu docente o intercambiá con otro grupo. NO hay nota — hay aprendizaje.
+            🎯 <strong>Meta del evento</strong>: terminar los 5 pasos. Si te trabas, pregúntale
+            a tu docente o intercambia con otro grupo. NO hay nota — hay aprendizaje.
           </div>
         </ol>
       )}

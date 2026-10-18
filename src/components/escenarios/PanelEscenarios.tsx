@@ -84,7 +84,7 @@ export default function PanelEscenarios({
       <div>
         <h1 className="text-xl font-bold tracking-tight">📊 Escenarios — análisis de sensibilidad</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Compará cómo se mueven los indicadores del proyecto si cambian las variables clave.
+          Compara cómo se mueven los indicadores del proyecto si cambian las variables clave.
           El proyecto base es <strong>{proyecto.nombre}</strong>.
         </p>
       </div>
@@ -149,7 +149,7 @@ export default function PanelEscenarios({
           <div className="flex items-center gap-2">
             {slidersAbierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             <Sliders className="h-4 w-4 text-purple-700 dark:text-purple-300" />
-            <span className="text-sm font-semibold">Mi escenario · armá tu propio stress test</span>
+            <span className="text-sm font-semibold">Mi escenario · arma tu propio stress test</span>
           </div>
           <span className="text-[11px] text-muted-foreground">
             {sonNeutrales(miEscenario) ? "Sin cambios" : "Con ajustes activos"}
@@ -258,8 +258,8 @@ export default function PanelEscenarios({
               TIR mayor al WACC, tu proyecto es <strong>robusto</strong> — soporta turbulencias.
             </p>
             <p>
-              Si el VAN se hace negativo en el pesimista, hay variables que tenés que controlar
-              antes de invertir: o bajás riesgo, o renegociás financiamiento, o reforzás márgenes.
+              Si el VAN se hace negativo en el pesimista, hay variables que tienes que controlar
+              antes de invertir: o bajas riesgo, o renegocias financiamiento, o refuerzas márgenes.
             </p>
           </div>
         </div>

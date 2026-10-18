@@ -7,13 +7,13 @@ import type { Proyecto } from "@/types/proyecto";
  * MODO LOCAL · usar el simulador sin Supabase ni credenciales
  * ============================================================================
  *
- * Cuando corrés la app en tu compu sin configurar Supabase (sin `.env.local`),
+ * Cuando corres la app en tu compu sin configurar Supabase (sin `.env.local`),
  * la app entra en "modo local":
  *
  *   - No pide login. Te crea un usuario ficticio.
- *   - Podés entrar como DOCENTE o ESTUDIANTE y cambiar de rol cuando quieras
+ *   - Puedes entrar como DOCENTE o ESTUDIANTE y cambiar de rol cuando quieras
  *     (selector flotante abajo a la derecha).
- *   - Los proyectos se guardan en el navegador (localStorage), así no perdés
+ *   - Los proyectos se guardan en el navegador (localStorage), así no pierdes
  *     el trabajo aunque cierres la pestaña.
  *
  * Lo que NO hay en modo local (necesita backend real): multiusuario de verdad,
@@ -55,7 +55,7 @@ const CLAVE_ROL = "simulador.local.rol";
 const CLAVE_PROYECTOS = "simulador.local.proyectos";
 
 /** ID estable del usuario local. Compartido entre roles: un proyecto creado
- *  como docente también aparece cuando cambiás a estudiante (misma persona). */
+ *  como docente también aparece cuando cambias a estudiante (misma persona). */
 export const ID_USUARIO_LOCAL = "local-user-0000-0000-0000-000000000000";
 
 export function leerRolLocal(): Rol {

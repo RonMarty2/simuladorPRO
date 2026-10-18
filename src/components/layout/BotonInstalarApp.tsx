@@ -128,7 +128,7 @@ export default function BotonInstalarApp() {
       <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2.5 shadow-xl shadow-amber-500/30 backdrop-blur dark:border-amber-700 dark:from-amber-950/80 dark:to-orange-950/80">
         <Smartphone className="h-4 w-4 flex-shrink-0 text-amber-700 dark:text-amber-300" />
         <div className="text-xs">
-          <div className="font-bold text-amber-900 dark:text-amber-100">Instalá la app</div>
+          <div className="font-bold text-amber-900 dark:text-amber-100">Instala la app</div>
           <div className="text-[10px] text-amber-800/80 dark:text-amber-300">
             Más rápido, ícono en tu pantalla, sin barra de navegador.
           </div>
@@ -167,7 +167,7 @@ export default function BotonInstalarApp() {
                   1
                 </span>
                 <span>
-                  Tocá el botón <strong>Compartir</strong>{" "}
+                  Toca el botón <strong>Compartir</strong>{" "}
                   <span className="inline-block align-middle text-base">⎙</span> de Safari
                   (abajo en el centro).
                 </span>
@@ -177,7 +177,7 @@ export default function BotonInstalarApp() {
                   2
                 </span>
                 <span>
-                  Bajá y tocá <strong>"Añadir a pantalla de inicio"</strong>.
+                  Baja y toca <strong>"Añadir a pantalla de inicio"</strong>.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -185,7 +185,7 @@ export default function BotonInstalarApp() {
                   3
                 </span>
                 <span>
-                  Confirmá tocando <strong>"Añadir"</strong>. Vas a ver el ícono de SIMPRO en tu
+                  Confirma tocando <strong>"Añadir"</strong>. Vas a ver el ícono de SIMPRO en tu
                   pantalla de inicio.
                 </span>
               </li>

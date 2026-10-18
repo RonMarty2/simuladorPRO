@@ -633,7 +633,7 @@ function Paso9({ p }: { p: Proyecto }) {
     <div className="space-y-2 text-[11px]">
       <div className="text-muted-foreground">
         Los <strong>indicadores</strong> (VAN, TIR, WACC y recuperación) y la <strong>sugerencia</strong> ya
-        se muestran arriba del modal. Acá podés ver el resumen estructural del proyecto entregado.
+        se muestran arriba del modal. Aquí puedes ver el resumen estructural del proyecto entregado.
       </div>
       <GridCampos>
         <Campo k="Sector" v={p.sector} />

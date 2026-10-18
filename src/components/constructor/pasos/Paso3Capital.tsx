@@ -364,7 +364,7 @@ export default function Paso3Capital() {
           <FilaGastoDetalle
             n={5}
             label={`Imprevistos (${(porcImprevistos * 100).toFixed(1)}% sobre operativos)`}
-            origen="Editable acá abajo · se aplica al subtotal operativo (filas 1-4)"
+            origen="Editable aquí abajo · se aplica al subtotal operativo (filas 1-4)"
             valor={imprevistosAnual}
             formula="(personal + producción + admin + comerc) × % imprevistos"
             color="amber"
@@ -565,7 +565,7 @@ export default function Paso3Capital() {
             <br />
             <br />
             <strong>Fórmula:</strong> (operativos + imprevistos) ÷ 12 × meses de buffer. La
-            cuota del préstamo no entra acá: es financiamiento y se paga con el flujo de cada
+            cuota del préstamo no entra aquí: es financiamiento y se paga con el flujo de cada
             año.
             <br />
             <br />

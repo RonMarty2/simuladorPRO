@@ -85,7 +85,7 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
     setMensaje(null);
     try {
       // Por ahora la sugerencia automática solo aplica reglas duras (VAN>0,
-      // TIR>WACC). En el futuro acá podríamos comparar contra el caso del
+      // TIR>WACC). En el futuro aquí podríamos comparar contra el caso del
       // docente cuando exista referencia para entrega_estudiante.
       // Pasamos perfil.id como "submitter": para proyectos grupales el dueño
       // del proyecto (creador del grupo) puede ser otro alumno. El RLS exige

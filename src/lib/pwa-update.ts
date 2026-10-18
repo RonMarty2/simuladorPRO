@@ -4,7 +4,7 @@ import { registerSW } from "virtual:pwa-register";
 /**
  * Actualización OTA (over-the-air) de la PWA.
  *
- * Cuando publicás una versión nueva, la app la detecta y se recarga sola al
+ * Cuando publicas una versión nueva, la app la detecta y se recarga sola al
  * abrirla/enfocarla, sin que el usuario reinstale ni cierre nada. La recarga
  * ocurre UNA sola vez (vite-plugin-pwa guarda internamente un flag sobre el
  * evento `controllerchange`, así que no hay loops).

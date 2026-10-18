@@ -131,7 +131,7 @@ export default function SimularProyecto() {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
         {proyectosDisponibles.length === 0
-          ? "Por ahora no tenés ningún proyecto habilitado para simular. Tu docente decide qué tipos de proyecto se pueden simular en cada curso."
+          ? "Por ahora no tienes ningún proyecto habilitado para simular. Tu docente decide qué tipos de proyecto se pueden simular en cada curso."
           : "Primero construye un proyecto antes de simular."}
       </div>
     );
@@ -489,7 +489,7 @@ function SelectorProyectoSimular({
   return (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        ¿Qué proyecto querés simular?
+        ¿Qué proyecto quieres simular?
       </div>
       <div className="flex flex-wrap gap-1.5">
         {proyectos.map((p) => {

@@ -208,7 +208,7 @@ export default function DashboardEstudiante() {
           </div>
           <div className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
             Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
-            Mirá ejemplos completos antes de armar el tuyo.
+            Mira ejemplos completos antes de armar el tuyo.
           </div>
         </div>
         <span className="hidden flex-shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white sm:inline">
@@ -285,7 +285,7 @@ export default function DashboardEstudiante() {
                   ) : (
                     <button
                       onClick={() => setConfirmandoSalida(curso.id)}
-                      title={`Salir del curso. Tus entregas, proyectos y grupos quedan guardados. Si volvés a ingresar el código ${curso.codigo} recuperás todo.`}
+                      title={`Salir del curso. Tus entregas, proyectos y grupos quedan guardados. Si vuelves a ingresar el código ${curso.codigo} recuperas todo.`}
                       className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:border-rose-900 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
                     >
                       <DoorOpen className="h-3 w-3" />
@@ -297,7 +297,7 @@ export default function DashboardEstudiante() {
               {!curso.es_semana_e && confirmandoSalida === curso.id && (
                 <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                   <strong>¿Salir del curso?</strong> Tus <strong>entregas, proyectos y grupos
-                  quedan guardados</strong>. Cuando quieras volver, ingresá el código{" "}
+                  quedan guardados</strong>. Cuando quieras volver, ingresa el código{" "}
                   <code className="rounded bg-amber-200 px-1 font-mono dark:bg-amber-900">
                     {curso.codigo}
                   </code>{" "}
@@ -336,7 +336,7 @@ export default function DashboardEstudiante() {
                       <div className="rounded-md border border-dashed border-border bg-card/50 p-3 text-center text-xs text-muted-foreground">
                         Tu docente todavía no habilitó ninguna actividad en este curso. Cuando
                         publique casos, habilite el proyecto individual o el grupal, vas a verlo
-                        acá.
+                        aquí.
                       </div>
                     )}
                     {hayCasos && (
@@ -596,7 +596,7 @@ function ModalCrearMiProyecto({
   const [err, setErr] = useState<string | null>(null);
 
   const modelos: { v: ModeloIngreso; t: string; d: string }[] = [
-    { v: "unidades", t: "Unidades × precio", d: "Vendés productos o servicios por unidad." },
+    { v: "unidades", t: "Unidades × precio", d: "Vendes productos o servicios por unidad." },
     { v: "suscripcion", t: "Suscripción", d: "Clientes recurrentes (altas y churn)." },
     { v: "publicidad", t: "Publicidad", d: "Ingreso por audiencia × CPM." },
     { v: "costo_beneficio", t: "Costo-beneficio", d: "No vende; se evalúa por el beneficio." },

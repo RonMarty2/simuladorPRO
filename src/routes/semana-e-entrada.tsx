@@ -199,10 +199,10 @@ export default function SemanaEEntrada() {
         </div>
 
         <div className="rounded-md border border-sky-200 bg-sky-50/70 p-3 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-          <strong>¿Qué vas a hacer acá?</strong>
+          <strong>¿Qué vas a hacer aquí?</strong>
           <ol className="ml-4 mt-1 list-decimal space-y-0.5">
-            <li>Entrás con tu cuenta Google en segundos.</li>
-            <li>Te unís o formás un grupo con tus compañeros.</li>
+            <li>Entras con tu cuenta Google en segundos.</li>
+            <li>Te unes o formas un grupo con tus compañeros.</li>
             <li>Arman juntos un proyecto: producto, costos, inversión.</li>
             <li>Ven si el VAN/TIR cierra y simulan 5 años.</li>
             <li>NO hay notas. Hay aprendizaje.</li>
@@ -251,7 +251,7 @@ export default function SemanaEEntrada() {
         </button>
 
         <div className="text-center text-[10px] text-muted-foreground">
-          ¿Sos docente o estudiante regular?{" "}
+          ¿Eres docente o estudiante regular?{" "}
           <Link to="/login" className="font-medium text-foreground underline">
             Ingresar normal
           </Link>

@@ -250,7 +250,7 @@ export async function confirmarNombreSemanaE(
   const nombre = datos.nombre.trim();
   const apellido = datos.apellido?.trim() ?? "";
   if (nombre.length < 2) {
-    throw new Error("Escribí un nombre de al menos 2 caracteres.");
+    throw new Error("Escribe un nombre de al menos 2 caracteres.");
   }
 
   await actualizarMiPerfil(userId, { nombre, apellido });
@@ -308,7 +308,7 @@ export async function entrarAEventoSemanaE(opciones?: {
   cursoId?: string;
 }): Promise<{ userId: string; cursoId: string }> {
   // 1. Semana E usa una cuenta Google persistente. No creamos usuarios
-  // anónimos acá: así nadie vuelve a terminar con un nombre Invitado-xxxxxx.
+  // anónimos aquí: así nadie vuelve a terminar con un nombre Invitado-xxxxxx.
   const { data: sesionActual } = await supabase.auth.getSession();
   const userId = sesionActual.session?.user?.id;
   if (!userId) {
@@ -330,12 +330,12 @@ export async function entrarAEventoSemanaE(opciones?: {
     cursoId = cursos?.[0]?.id ?? null;
   }
   if (!cursoId) {
-    throw new Error("No hay ningún evento Semana E activo. Pedile al docente que cree uno.");
+    throw new Error("No hay ningún evento Semana E activo. Pídele al docente que cree uno.");
   }
 
   // 3. Auto-inscripción al curso. Si ya estaba inscripto (porque el usuario
   // refrescó), ignoramos el error de unique constraint. Cualquier otro error
-  // se muestra acá, antes de que termine convertido en un error RLS al crear
+  // se muestra aquí, antes de que termine convertido en un error RLS al crear
   // el grupo.
   const { error: errIns } = await supabase
     .from("inscripciones")

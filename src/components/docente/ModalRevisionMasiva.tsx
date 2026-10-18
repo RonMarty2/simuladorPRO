@@ -13,10 +13,10 @@ import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
  * UX:
  *   - Nota y comentario por etapa, independientes.
  *   - Botón "Aplicar a todas" copia la nota+comentario+decisión actual a las
- *     demás etapas (override). Para cuando querés calificar todo igual de un
+ *     demás etapas (override). Para cuando quieres calificar todo igual de un
  *     bombazo.
  *   - "Guardar todas" dispara todas las revisiones en paralelo y cierra.
- *   - Las que NO querés calificar ahora las marcás como 'saltear'; el guardar
+ *   - Las que NO quieres calificar ahora las marcas como 'saltear'; el guardar
  *     final solo persiste las que tengan decisión.
  */
 
@@ -98,7 +98,7 @@ export default function ModalRevisionMasiva({
       return s && s.decision !== "saltear";
     });
     if (aGuardar.length === 0) {
-      setErrorGuardar("No hay ninguna etapa con decisión. Decidí al menos una o cerrá el modal.");
+      setErrorGuardar("No hay ninguna etapa con decisión. Decide al menos una o cierra el modal.");
       setGuardando(false);
       return;
     }
@@ -122,8 +122,8 @@ export default function ModalRevisionMasiva({
         if (fallidas < aGuardar.length) setHuboGuardado(true);
         setErrorGuardar(
           `Se guardaron ${aGuardar.length - fallidas} de ${aGuardar.length}. ` +
-            `${fallidas} no se pudieron guardar (revisá tu conexión y reintentá). ` +
-            `Las que ya se guardaron no se vuelven a enviar — podés cerrar y reabrir para ver el estado.`
+            `${fallidas} no se pudieron guardar (revisa tu conexión y reintenta). ` +
+            `Las que ya se guardaron no se vuelven a enviar — puedes cerrar y reabrir para ver el estado.`
         );
         // No cerramos: el docente lee el error. Al cerrar manualmente, el flag
         // huboGuardado hace que el padre recargue y muestre lo que sí quedó.
@@ -157,7 +157,7 @@ export default function ModalRevisionMasiva({
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {ordenadas.length} etapa{ordenadas.length === 1 ? "" : "s"} pendiente
-              {ordenadas.length === 1 ? "" : "s"} · Calificá una por una o aplicá la misma decisión a todas.
+              {ordenadas.length === 1 ? "" : "s"} · Califica una por una o aplica la misma decisión a todas.
             </p>
           </div>
           <button

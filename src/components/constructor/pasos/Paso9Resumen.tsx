@@ -413,7 +413,7 @@ export default function Paso9Resumen() {
           <>
             <strong>VAN &gt; 0</strong> y <strong>TIR &gt; WACC</strong> son las dos
             condiciones para que el proyecto sea rentable a la tasa de costo de
-            capital actual. <strong>El periodo de recuperación</strong> indica cuán rápido recuperás la
+            capital actual. <strong>El periodo de recuperación</strong> indica cuán rápido recuperas la
             inversión.
             <br />
             <span className="text-amber-800/80 dark:text-amber-300/80">

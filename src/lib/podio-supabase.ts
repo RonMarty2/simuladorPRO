@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
  * Podio del curso (FASE 18):
  *  - Top 3 individuales por promedio de notas de entregas.
  *  - Top 3 grupos por nota grupal asignada por el docente.
- *  - Tu posición (si sos estudiante).
+ *  - Tu posición (si eres estudiante).
  *  - Tu racha (entregas consecutivas SIN reprobar).
  *
  * Se calcula en una sola función para minimizar round-trips.

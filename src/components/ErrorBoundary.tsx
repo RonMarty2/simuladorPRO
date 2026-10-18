@@ -61,8 +61,8 @@ export class ErrorBoundary extends Component<Props, State> {
             No pudimos mostrar esta pantalla
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Tu información está guardada. Probá recargar; si sigue sin entrar,
-            limpiá y volvé a loguearte.
+            Tu información está guardada. Prueba recargar; si sigue sin entrar,
+            limpia y vuelve a loguearte.
           </p>
           <button
             type="button"

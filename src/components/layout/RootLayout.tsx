@@ -228,7 +228,7 @@ export default function RootLayout() {
         </main>
       </div>
 
-      {/* Banner flotante "Instalá la app" — solo aparece si el navegador
+      {/* Banner flotante "Instala la app" — solo aparece si el navegador
           permite instalar la PWA y el usuario aún no la instaló ni la
           cerró en esta sesión. */}
       <BotonInstalarApp />

@@ -40,8 +40,8 @@ export default function Escenarios() {
           <ChartScatter className="mx-auto h-10 w-10 text-muted-foreground" />
           <h2 className="mt-3 text-base font-semibold">No hay proyecto activo</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Para usar el modo Escenarios necesitás un proyecto cargado.
-            Andá a tu panel, elegí uno y volvé.
+            Para usar el modo Escenarios necesitas un proyecto cargado.
+            Ve a tu panel, elige uno y vuelve.
           </p>
           <Link
             to="/estudiante"

@@ -163,7 +163,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
             <strong>Habilitar el proyecto grupal en este curso</strong>
             <span className="mt-0.5 block text-[11px] text-muted-foreground">
               Si está habilitado, los estudiantes <strong>crean sus propios grupos</strong> con
-              el formato y cupo que definas acá. Vos no creás los grupos: los arman ellos.
+              el formato y cupo que definas aquí. Tú no creas los grupos: los arman ellos.
             </span>
           </span>
         </label>
@@ -242,7 +242,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
       ) : gruposVisibles.length === 0 ? (
         <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
           {habilitado
-            ? "Los estudiantes aún no crearon grupos. Cuando lo hagan, los verás acá."
+            ? "Los estudiantes aún no crearon grupos. Cuando lo hagan, los verás aquí."
             : "El proyecto grupal está deshabilitado. Activalo arriba para que los estudiantes puedan armar grupos."}
         </div>
       ) : (

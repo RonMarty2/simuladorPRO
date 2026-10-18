@@ -102,7 +102,7 @@ export default function EmpezarProyecto() {
         casosDisponibles.length === 0 && (
           <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-center text-xs text-muted-foreground space-y-3">
             <p>
-              No tenés un proyecto activo cargado en esta pantalla. Tus proyectos viven en{" "}
+              No tienes un proyecto activo cargado en esta pantalla. Tus proyectos viven en{" "}
               <strong>Mi panel</strong>: ahí está tu grupo, el caso del curso (si el docente lo
               publicó) y tu historial.
             </p>

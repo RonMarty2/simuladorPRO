@@ -148,7 +148,7 @@ export default function GruposEstudiante({
       const mensaje = e?.message ?? String(e);
       setError(
         mensaje.toLowerCase().includes("row-level security")
-          ? "No pudimos crear el grupo. Recargá la página e intentá otra vez; si continúa, avisale al docente."
+          ? "No pudimos crear el grupo. Recarga la página e intenta otra vez; si continúa, avísale al docente."
           : mensaje
       );
     } finally {
@@ -531,7 +531,7 @@ export default function GruposEstudiante({
             </div>
           )}
           <div className="text-[11px] text-muted-foreground">
-            Podés <strong>crear tu propio grupo</strong> o unirte a uno existente (solo uno
+            Puedes <strong>crear tu propio grupo</strong> o unirte a uno existente (solo uno
             por curso). Cupo máximo: <strong>{curso.grupo_cupo_max ?? 4}</strong> integrantes.
           </div>
 

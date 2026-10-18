@@ -51,7 +51,7 @@ export default function AdminPanel() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Panel admin</h1>
             <p className="text-xs text-muted-foreground">
-              Vista global del simulador. Aquí ves y modificás todo el sistema.
+              Vista global del simulador. Aquí ves y modificas todo el sistema.
             </p>
           </div>
         </div>

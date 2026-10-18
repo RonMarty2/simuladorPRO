@@ -109,11 +109,11 @@ export async function crearGrupoEstudiante(params: {
   // utilizable en ese instante y refreshSession los rechazaba por error.
   const { data: sesionActual, error: errorSesion } = await supabase.auth.getSession();
   if (errorSesion || !sesionActual.session?.user) {
-    throw new Error("No encontramos una sesión activa. Salí y vuelve a ingresar con Google.");
+    throw new Error("No encontramos una sesión activa. Sal y vuelve a ingresar con Google.");
   }
   const { data: usuarioValidado, error: errorUsuario } = await supabase.auth.getUser();
   if (errorUsuario || !usuarioValidado.user) {
-    throw new Error("No pudimos validar tu sesión con Google. Salí y vuelve a ingresar.");
+    throw new Error("No pudimos validar tu sesión con Google. Sal y vuelve a ingresar.");
   }
 
   const filaProyecto = proyectoAFilaSupabase(proyecto);
@@ -233,7 +233,7 @@ export async function unirseAGrupo(grupoId: string, estudianteId: string): Promi
   const yaTengo = await obtenerMiGrupo(estudianteId, (grupo as any).curso_id);
   if (yaTengo) {
     if (yaTengo.id === grupoId) return; // ya está en este grupo
-    throw new Error("Ya estás en otro grupo de este curso. Salí de ese grupo primero.");
+    throw new Error("Ya estás en otro grupo de este curso. Sal de ese grupo primero.");
   }
 
   // ¿Hay cupo?

@@ -53,7 +53,7 @@ export default function Login() {
           <h2 className="text-sm font-semibold">Cargando tu perfil…</h2>
           <p className="text-xs text-muted-foreground">
             Ya estás logueado como <strong>{user.email}</strong>. Conectando con tu cuenta.
-            Si tarda más de 30 segundos, refrescá la página.
+            Si tarda más de 30 segundos, refresca la página.
           </p>
         </div>
       </div>

@@ -176,7 +176,7 @@ export async function guardarProyecto(p: Proyecto): Promise<void> {
   const fila = proyectoAFilaSupabase(p);
   // El proyecto GRUPAL lo crea el docente (insertarProyecto). Los miembros solo
   // tienen permiso de UPDATE (no INSERT), así que para no romper su autoguardado
-  // acá siempre EDITAMOS (update), nunca upsert.
+  // aquí siempre EDITAMOS (update), nunca upsert.
   if (p.tipo === "proyecto_grupal") {
     const { error } = await supabase.from("proyectos").update(fila).eq("id", p.id);
     if (error) throw error;

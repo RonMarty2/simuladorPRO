@@ -83,7 +83,7 @@ export default function MisEntregas() {
         </div>
         <h2 className="text-base font-semibold">Sin entregas aún</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Cuando completes un caso del curso y lo entregues para revisión, aparecerá acá
+          Cuando completes un caso del curso y lo entregues para revisión, aparecerá aquí
           su historial.
         </p>
       </div>

@@ -144,7 +144,7 @@ export default function Registro() {
               defaultValues). Para crear un docente, un admin lo promueve desde
               el panel /admin. Así un alumno no puede registrarse como docente
               por error y quedar fuera del ranking.
-              La UNIVERSIDAD ya no se pide acá: la define el docente al crear
+              La UNIVERSIDAD ya no se pide aquí: la define el docente al crear
               el curso, así no hay 'ucatec / Ucatec / UCATEC' en la lista. */}
 
           {errorServidor && (

@@ -194,7 +194,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               Lanzador de situaciones en vivo
             </div>
             <div className="text-[11px] text-amber-800/80 dark:text-amber-300">
-              Elegí una situación y mandala a todos los alumnos que estén simulando ahora.
+              Elige una situación y mándala a todos los alumnos que estén simulando ahora.
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             />
             <span>
               <strong>Forzar a TODOS los alumnos del alcance</strong> aunque no sea
-              sectorialmente relevante (útil si querés que los del sector NO afectado
+              sectorialmente relevante (útil si quieres que los del sector NO afectado
               discutan en clase <em>por qué</em> no les aplica).
             </span>
           </label>
@@ -419,7 +419,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
             </>
           ) : (
             <div className="text-xs text-muted-foreground">
-              Elegí un evento de la lista para lanzarlo.
+              Elige un evento de la lista para lanzarlo.
             </div>
           )}
         </div>
@@ -553,7 +553,7 @@ function ModalConfigSimulacion({
         </div>
 
         <p className="mb-3 text-[11px] text-muted-foreground">
-          El alumno solo va a ver en su pantalla "Simular" los tipos que marques acá. El
+          El alumno solo va a ver en su pantalla "Simular" los tipos que marques aquí. El
           lanzador de situaciones también respeta esta configuración.
         </p>
 
@@ -655,7 +655,7 @@ function ModalRespuestas({
             </div>
           ) : total === 0 ? (
             <div className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-              Todavía ningún alumno respondió a esta situación. Volvé a abrir esto en unos
+              Todavía ningún alumno respondió a esta situación. Vuelve a abrir esto en unos
               minutos cuando hayan avanzado el turno.
             </div>
           ) : (

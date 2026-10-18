@@ -644,7 +644,7 @@ function TuTarjetaIndividual({ mi }: { mi: import("@/lib/podio-supabase").MiPosi
             </div>
           ) : (
             <div className="mt-0.5 text-[11px] text-violet-800 dark:text-violet-300">
-              Ya estás en el top 5 — apuntá al podio.
+              Ya estás en el top 5 — apunta al podio.
             </div>
           )}
         </div>
