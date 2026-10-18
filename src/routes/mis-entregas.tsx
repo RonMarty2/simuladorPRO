@@ -115,7 +115,7 @@ export default function MisEntregas() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">
-                  {curso?.nombre ?? `Curso ${cursoId.slice(0, 6)}`}
+                  {curso?.nombre ?? "Curso en el que ya no estás inscrito"}
                 </div>
                 <div className="text-[11px] text-muted-foreground">
                   {curso?.materia ?? ""}
