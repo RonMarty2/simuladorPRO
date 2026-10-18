@@ -239,7 +239,7 @@ export default function ConstruirProyecto() {
       <BannerTipoProyecto tipo={proyecto.tipo} />
 
       {/* Acciones globales: disponibles en Semana E, cursos normales, grupos e individuales. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-emerald-50 p-3 dark:border-violet-900 dark:from-violet-950/30 dark:via-background dark:to-emerald-950/20">
+      <div className="hidden flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-emerald-50 p-3 dark:border-violet-900 dark:from-violet-950/30 dark:via-background dark:to-emerald-950/20 md:flex">
         <div>
           <div className="text-xs font-bold">¿Listo para mostrar tu proyecto?</div>
           <div className="text-[11px] text-muted-foreground">
