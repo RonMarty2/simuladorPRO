@@ -47,6 +47,7 @@ const enlacesEstudianteSemanaE = [
 const enlacesDocente = [
   { to: "/docente", label: "Panel docente", icon: GraduationCap },
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
+  { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/escenarios", label: "Escenarios", icon: ChartScatter },
   { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },

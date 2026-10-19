@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { BarChart3, Download, Loader2 } from "lucide-react";
+import { BarChart3, ChartScatter, Download, Loader2, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Proyecto } from "@/types/proyecto";
+import { useProyectoStore } from "@/stores/proyecto-store";
 import { cn } from "@/lib/utils";
 
 export default function AccionesProyecto({
@@ -15,6 +16,14 @@ export default function AccionesProyecto({
 }) {
   const navigate = useNavigate();
   const [exportando, setExportando] = useState(false);
+  const cargarProyecto = useProyectoStore((s) => s.cargar);
+
+  // Escenarios y Simular trabajan sobre el proyecto activo del store: lo
+  // cargamos antes de navegar para que nunca aparezca "no hay proyecto".
+  const irA = (ruta: "/escenarios" | "/simular") => {
+    cargarProyecto(proyecto);
+    navigate(ruta);
+  };
 
   const abrirPitch = () => {
     const query = proyecto.esSemanaE ? "?semanae=1" : "";
@@ -44,6 +53,32 @@ export default function AccionesProyecto({
         <BarChart3 className={compacto ? "h-3.5 w-3.5" : "h-4 w-4"} />
         Presentar proyecto
       </button>
+      {!proyecto.esSemanaE && (
+        <>
+          <button
+            type="button"
+            onClick={() => irA("/escenarios")}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-lg border border-sky-300 bg-sky-50 font-semibold text-sky-800 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200",
+              compacto ? "px-2.5 py-1.5 text-[11px]" : "px-4 py-2.5 text-sm"
+            )}
+          >
+            <ChartScatter className={compacto ? "h-3.5 w-3.5" : "h-4 w-4"} />
+            Escenarios
+          </button>
+          <button
+            type="button"
+            onClick={() => irA("/simular")}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 font-semibold text-amber-800 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200",
+              compacto ? "px-2.5 py-1.5 text-[11px]" : "px-4 py-2.5 text-sm"
+            )}
+          >
+            <PlayCircle className={compacto ? "h-3.5 w-3.5" : "h-4 w-4"} />
+            Simular 5 años
+          </button>
+        </>
+      )}
       <button
         type="button"
         onClick={exportar}

@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChartScatter, ArrowLeft } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
+import type { Proyecto } from "@/types/proyecto";
 import PanelEscenarios from "@/components/escenarios/PanelEscenarios";
 import { obtenerCursoPorId } from "@/lib/cursos-supabase";
 import type { EscenariosConfig } from "@/lib/escenarios";
@@ -14,7 +17,25 @@ import type { EscenariosConfig } from "@/lib/escenarios";
  */
 export default function Escenarios() {
   const proyecto = useProyectoStore((s) => s.proyecto);
+  const cargarProyecto = useProyectoStore((s) => s.cargar);
+  const user = useAuthStore((s) => s.user);
   const [configCurso, setConfigCurso] = useState<EscenariosConfig | null>(null);
+  const [disponibles, setDisponibles] = useState<Proyecto[] | null>(null);
+
+  // Sin proyecto activo, ofrecemos elegir uno en vez de mandar al panel.
+  useEffect(() => {
+    if (proyecto || !user) return;
+    Promise.all([
+      listarMisProyectos(user.id),
+      listarProyectosGrupales(user.id).catch(() => [] as Proyecto[]),
+    ])
+      .then(([mios, grupales]) => {
+        const ids = new Set(mios.map((p) => p.id));
+        const todos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
+        setDisponibles(todos.filter((p) => !p.esSemanaE));
+      })
+      .catch(() => setDisponibles([]));
+  }, [proyecto, user]);
 
   // useMemo aquí: el proyecto puede tener docenas de campos; evitamos que el
   // panel recompute todos los escenarios mientras el alumno arrastra sliders
@@ -40,9 +61,29 @@ export default function Escenarios() {
           <ChartScatter className="mx-auto h-10 w-10 text-muted-foreground" />
           <h2 className="mt-3 text-base font-semibold">No hay proyecto activo</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Para usar el modo Escenarios necesitas un proyecto cargado.
-            Ve a tu panel, elige uno y vuelve.
+            Elegí un proyecto para comparar sus escenarios optimista, base y pesimista.
           </p>
+          {disponibles === null && (
+            <p className="mt-3 text-xs text-muted-foreground">Cargando tus proyectos…</p>
+          )}
+          {disponibles && disponibles.length > 0 && (
+            <div className="mt-4 flex flex-col gap-2">
+              {disponibles.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => cargarProyecto(p)}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-left text-sm font-medium hover:border-primary/60 hover:bg-secondary"
+                >
+                  {p.nombre}
+                </button>
+              ))}
+            </div>
+          )}
+          {disponibles && disponibles.length === 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Todavía no tenés proyectos. Creá uno desde tu panel.
+            </p>
+          )}
           <Link
             to="/estudiante"
             className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
