@@ -32,6 +32,7 @@ import {
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 import { datosFaltantes } from "@/lib/datos-faltantes";
+import AnalisisRiesgo from "@/components/escenarios/AnalisisRiesgo";
 
 const COLORES: Record<NombreEscenario, string> = {
   optimista: "#10b981",     // emerald-500
@@ -153,6 +154,9 @@ export default function PanelEscenarios({
           Si una línea cruza el cero hacia arriba, el proyecto se recuperó.
         </p>
       </div>
+
+      {/* Tornado, simulación de riesgo y tabla precio × demanda */}
+      <AnalisisRiesgo proyecto={proyecto} optimista={optimista} pesimista={pesimista} />
 
       {/* Sliders de "Mi escenario" */}
       <div className="rounded-lg border border-purple-200 bg-purple-50/40 dark:border-purple-900 dark:bg-purple-950/20">
