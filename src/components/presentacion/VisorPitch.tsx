@@ -30,6 +30,7 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { tirCalculable } from "@/lib/acotar-numero";
 import type { PresentacionProyecto, Proyecto } from "@/types/proyecto";
 import type { construirModeloPitch, IdDiapositivaPitch } from "@/lib/presentacion-proyecto";
 import {
@@ -38,6 +39,11 @@ import {
   crearAjustesLaboratorioIniciales,
   type AjustesLaboratorio,
 } from "@/lib/laboratorio-viabilidad";
+import {
+  emitirVeredicto,
+  simularMontecarlo,
+  type ResultadoMontecarlo,
+} from "@/lib/analisis-riesgo";
 
 type ModeloPitch = ReturnType<typeof construirModeloPitch>;
 
@@ -77,7 +83,25 @@ export default function VisorPitch({
   const [ajustesLaboratorio, setAjustesLaboratorio] = useState<AjustesLaboratorio>(
     () => crearAjustesLaboratorioIniciales(proyecto)
   );
+  const [montecarlo, setMontecarlo] = useState<ResultadoMontecarlo | null>(null);
   const diapositiva = modelo.diapositivas[indice];
+
+  // La simulación de riesgo es la parte pesada: corre una sola vez al abrir la
+  // presentación (en segundo plano, cediendo el hilo) y la diapositiva la usa
+  // cuando llega.
+  const hayMontecarlo = modelo.diapositivas.some((d) => d.id === "montecarlo");
+  useEffect(() => {
+    if (!hayMontecarlo) return;
+    let cancelado = false;
+    simularMontecarlo(proyecto, { corridas: 500 })
+      .then((r) => {
+        if (!cancelado) setMontecarlo(r);
+      })
+      .catch(() => {});
+    return () => {
+      cancelado = true;
+    };
+  }, [proyecto, hayMontecarlo]);
 
   const anterior = () => setIndice((actual) => Math.max(0, actual - 1));
   const siguiente = () =>
@@ -188,6 +212,7 @@ export default function VisorPitch({
             presentacion={presentacion}
             modelo={modelo}
             etiqueta={diapositiva.etiqueta}
+            montecarlo={montecarlo}
             ajustesLaboratorio={ajustesLaboratorio}
             onCambiarAjustes={setAjustesLaboratorio}
             onReiniciarLaboratorio={() =>
@@ -250,6 +275,7 @@ function RenderDiapositiva({
   ajustesLaboratorio,
   onCambiarAjustes,
   onReiniciarLaboratorio,
+  montecarlo,
 }: {
   id: IdDiapositivaPitch;
   proyecto: Proyecto;
@@ -259,6 +285,7 @@ function RenderDiapositiva({
   ajustesLaboratorio: AjustesLaboratorio;
   onCambiarAjustes: (ajustes: AjustesLaboratorio) => void;
   onReiniciarLaboratorio: () => void;
+  montecarlo: ResultadoMontecarlo | null;
 }) {
   if (id === "portada") return <Portada proyecto={proyecto} presentacion={presentacion} modelo={modelo} />;
   if (id === "oportunidad") return <Oportunidad presentacion={presentacion} etiqueta={etiqueta} />;
@@ -270,6 +297,8 @@ function RenderDiapositiva({
   if (id === "flujo") return <Flujo modelo={modelo} etiqueta={etiqueta} />;
   if (id === "indicadores") return <Indicadores modelo={modelo} etiqueta={etiqueta} />;
   if (id === "riesgo") return <Riesgo modelo={modelo} etiqueta={etiqueta} />;
+  if (id === "escenarios") return <Escenarios modelo={modelo} etiqueta={etiqueta} />;
+  if (id === "montecarlo") return <SimulacionRiesgo modelo={modelo} etiqueta={etiqueta} montecarlo={montecarlo} />;
   if (id === "laboratorio") {
     return (
       <LaboratorioViabilidad
@@ -885,6 +914,135 @@ function Riesgo({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string })
   );
 }
 
+const COLOR_ESCENARIO: Record<string, string> = {
+  optimista: "#10b981",
+  base: "#3b82f6",
+  pesimista: "#f43f5e",
+};
+
+function Escenarios({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string }) {
+  const filas = [0, 1, 2, 3, 4, 5].map((i) => {
+    const fila: Record<string, number | string> = { anio: modelo.escenarios[0].acumulado[i]?.anio ?? "" };
+    for (const e of modelo.escenarios) fila[e.nombre] = e.acumulado[i]?.valor ?? 0;
+    return fila;
+  });
+  return (
+    <Marco etiqueta={etiqueta} titulo="Tres futuros posibles" subtitulo="El mismo proyecto si el mercado acompaña, si todo sale como se planificó o si las condiciones se complican.">
+      <div className="grid h-full grid-cols-[2fr_3fr] gap-[2.5%]">
+        <div className="flex flex-col gap-[3%]">
+          {modelo.escenarios.map((e) => (
+            <div key={e.clave} className="flex flex-1 flex-col justify-center rounded-[1.2vw] border-l-[0.5vw] bg-white px-[6%] shadow-sm" style={{ borderColor: COLOR_ESCENARIO[e.clave] }}>
+              <div className="flex items-center justify-between">
+                <span className="text-[clamp(10px,1vw,16px)] font-black uppercase tracking-[0.18em]" style={{ color: COLOR_ESCENARIO[e.clave] }}>{e.nombre}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[clamp(8px,0.75vw,12px)] font-black ${e.viable ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{e.viable ? "Viable" : "No viable"}</span>
+              </div>
+              <div className="text-[clamp(20px,2.6vw,44px)] font-black leading-tight tracking-tight text-slate-950">{fmtBs(e.van)}</div>
+              <div className="text-[clamp(9px,0.9vw,15px)] font-semibold text-slate-500">
+                VAN · TIR {tirCalculable(e.tir) ? fmtPct(e.tir) : "no calculable"} · {Number.isFinite(e.payback) && e.payback >= 0 ? `recupera en ${e.payback.toFixed(1)} años` : "no recupera"}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-[1.5vw] border border-slate-200 bg-white p-[3%] shadow-sm">
+          <div className="mb-1 text-[clamp(10px,0.95vw,15px)] font-bold text-slate-600">Dinero acumulado año a año</div>
+          <ResponsiveContainer width="100%" height="92%">
+            <ComposedChart data={filas} margin={{ top: 8, right: 18, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="anio" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v) => fmtBs(v).replace("Bs ", "")} tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={tooltipBs} />
+              <Legend />
+              <ReferenceLine y={0} stroke="#64748b" />
+              {modelo.escenarios.map((e) => (
+                <Line key={e.clave} type="monotone" dataKey={e.nombre} stroke={COLOR_ESCENARIO[e.clave]} strokeWidth={4} dot={{ r: 4 }} />
+              ))}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </Marco>
+  );
+}
+
+const COLOR_VEREDICTO: Record<string, string> = {
+  robusto: "text-emerald-600",
+  sensible: "text-amber-600",
+  riesgoso: "text-orange-600",
+  inviable: "text-rose-600",
+};
+
+function SimulacionRiesgo({
+  modelo,
+  etiqueta,
+  montecarlo,
+}: {
+  modelo: ModeloPitch;
+  etiqueta: string;
+  montecarlo: ResultadoMontecarlo | null;
+}) {
+  const veredicto = emitirVeredicto(modelo.tornado, montecarlo);
+  const histograma = (montecarlo?.histograma ?? []).map((b) => ({
+    etiqueta: fmtBs((b.desde + b.hasta) / 2).replace("Bs ", ""),
+    centro: (b.desde + b.hasta) / 2,
+    cantidad: b.cantidad,
+  }));
+  const tornado = [...modelo.tornado.filas]
+    .reverse()
+    .map((f) => ({ variable: f.variable, rango: [f.vanBajo, f.vanAlto] as [number, number] }));
+  return (
+    <Marco etiqueta={etiqueta} titulo="¿Qué tan seguro es?" subtitulo="Probamos 500 futuros al azar variando precios, demanda y costos, y medimos en cuántos el proyecto gana dinero.">
+      <div className="grid h-full grid-cols-[2fr_3fr_3fr] gap-[2.5%]">
+        <div className="flex flex-col justify-center rounded-[1.5vw] border border-slate-200 bg-white p-[8%] text-center shadow-sm">
+          <div className="text-[clamp(9px,0.85vw,14px)] font-black uppercase tracking-[0.18em] text-slate-500">Probabilidad de ganar</div>
+          <div className={`text-[clamp(36px,6vw,104px)] font-black leading-none tracking-tight ${COLOR_VEREDICTO[veredicto.nivel]}`}>
+            {montecarlo ? `${Math.round(montecarlo.probVanPositivo * 100)}%` : "…"}
+          </div>
+          <div className={`mt-[4%] text-[clamp(14px,1.8vw,30px)] font-black ${COLOR_VEREDICTO[veredicto.nivel]}`}>{veredicto.titulo}</div>
+          <div className="mt-[3%] text-[clamp(9px,0.95vw,16px)] leading-snug text-slate-500">{veredicto.detalle}</div>
+          {montecarlo && (
+            <div className="mt-[5%] grid grid-cols-2 gap-2 text-[clamp(8px,0.8vw,13px)] font-semibold text-slate-600">
+              <div className="rounded-lg bg-rose-50 p-2">Peor 5%<div className="text-[clamp(11px,1.15vw,19px)] font-black text-rose-700">{fmtBs(montecarlo.p5)}</div></div>
+              <div className="rounded-lg bg-emerald-50 p-2">Mejor 5%<div className="text-[clamp(11px,1.15vw,19px)] font-black text-emerald-700">{fmtBs(montecarlo.p95)}</div></div>
+            </div>
+          )}
+        </div>
+        <div className="rounded-[1.5vw] border border-slate-200 bg-white p-[3%] shadow-sm">
+          <div className="mb-1 text-[clamp(10px,0.95vw,15px)] font-bold text-slate-600">Resultados de los futuros simulados (VAN)</div>
+          {montecarlo ? (
+            <ResponsiveContainer width="100%" height="90%">
+              <BarChart data={histograma} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="etiqueta" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip formatter={(v: number | string) => [`${v} futuros`, "Frecuencia"]} />
+                <Bar dataKey="cantidad" radius={[4, 4, 0, 0]}>
+                  {histograma.map((d, i) => <Cell key={i} fill={d.centro >= 0 ? "#10b981" : "#f43f5e"} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[85%] items-center justify-center text-[clamp(11px,1.1vw,18px)] text-slate-400">Simulando futuros…</div>
+          )}
+        </div>
+        <div className="rounded-[1.5vw] border border-slate-200 bg-white p-[3%] shadow-sm">
+          <div className="mb-1 text-[clamp(10px,0.95vw,15px)] font-bold text-slate-600">Qué variable mueve más el VAN (±10%)</div>
+          <ResponsiveContainer width="100%" height="90%">
+            <BarChart data={tornado} layout="vertical" margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+              <XAxis type="number" tickFormatter={(v) => fmtBs(v).replace("Bs ", "")} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="variable" width={110} tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={(v: number[]) => `${fmtBs(v[0])} a ${fmtBs(v[1])}`} />
+              <ReferenceLine x={0} stroke="#f43f5e" />
+              <ReferenceLine x={modelo.tornado.vanBase} stroke="#64748b" strokeDasharray="4 3" />
+              <Bar dataKey="rango" fill="#7c3aed" radius={4} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </Marco>
+  );
+}
+
 function Cierre({ presentacion, modelo, etiqueta }: { presentacion: PresentacionProyecto; modelo: ModeloPitch; etiqueta: string }) {
   return (
     <div className={`relative flex h-full flex-col justify-between overflow-hidden p-[6%] text-white ${modelo.viable ? "bg-gradient-to-br from-emerald-950 via-slate-950 to-violet-950" : "bg-gradient-to-br from-amber-950 via-slate-950 to-violet-950"}`}>
@@ -932,6 +1090,8 @@ function notaDiapositiva(id: IdDiapositivaPitch, presentacion: PresentacionProye
     flujo: "La barra inicial negativa representa la inversión. Después muestra cuándo los flujos positivos compensan ese desembolso.",
     indicadores: `La regla principal es VAN mayor a cero y TIR mayor al costo promedio de capital (WACC). Conecta los indicadores con una decisión concreta.`,
     riesgo: "No presentes los escenarios como predicciones exactas. Son pruebas para identificar las variables que más afectan el resultado.",
+    escenarios: "Presenta los tres escenarios como un rango, no como predicciones. Pregunta al público qué tan probable creen cada uno y vuelve al base como el más razonable.",
+    montecarlo: "Explica el porcentaje como la proporción de futuros simulados en los que el proyecto gana dinero. Señala la variable más sensible del tornado y qué harían para controlarla.",
     laboratorio: "Mueve una variable a la vez, explica qué cambia y usa los límites calculados para defender hasta dónde resiste el proyecto. Restablece antes de probar otra variable.",
     cierre: "Termina con una recomendación clara y una acción siguiente. Después abre el espacio de preguntas.",
   };

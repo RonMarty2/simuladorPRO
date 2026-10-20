@@ -72,4 +72,26 @@ describe("modo presentación", () => {
     expect(modelo.flujo).toHaveLength(6);
     expect(modelo.riesgo.length).toBeGreaterThanOrEqual(4);
   });
+
+  it("agrega escenarios y simulación de riesgo, y numera las etiquetas en orden", () => {
+    const proyecto = ejemplo();
+    proyecto.nivelSemanaE = "medio";
+    const modelo = construirModeloPitch(proyecto);
+
+    const ids = modelo.diapositivas.map((d) => d.id);
+    expect(ids).toContain("escenarios");
+    expect(ids).toContain("montecarlo");
+    expect(modelo.escenarios.map((e) => e.clave)).toEqual(["optimista", "base", "pesimista"]);
+    expect(modelo.escenarios[0].van).toBeGreaterThan(modelo.escenarios[2].van);
+    expect(modelo.tornado.filas.length).toBeGreaterThan(0);
+
+    modelo.diapositivas.forEach((d, i) => {
+      expect(d.etiqueta.startsWith(String(i + 1).padStart(2, "0") + " · ")).toBe(true);
+    });
+
+    proyecto.nivelSemanaE = "basico";
+    const basico = construirModeloPitch(proyecto).diapositivas.map((d) => d.id);
+    expect(basico).not.toContain("escenarios");
+    expect(basico).not.toContain("montecarlo");
+  });
 });

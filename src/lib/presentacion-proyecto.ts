@@ -1,5 +1,7 @@
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import { analizarSensibilidadProyecto } from "@/lib/finanzas/sensibilidad";
+import { compararEscenarios, esViable } from "@/lib/escenarios";
+import { calcularTornado } from "@/lib/analisis-riesgo";
 import type {
   CategoriaInversion,
   NivelSemanaE,
@@ -18,6 +20,8 @@ export type IdDiapositivaPitch =
   | "flujo"
   | "indicadores"
   | "riesgo"
+  | "escenarios"
+  | "montecarlo"
   | "laboratorio"
   | "cierre";
 
@@ -149,6 +153,25 @@ export function construirModeloPitch(proyecto: Proyecto) {
     viable: escenario.esViable,
   }));
 
+  // Optimista / Base / Pesimista con los valores por defecto (la presentación
+  // no conoce la config del curso). Mismo cálculo que la pantalla Escenarios.
+  const escenarios = compararEscenarios(proyecto).map((e) => {
+    let acumulado = 0;
+    return {
+      nombre: e.etiqueta,
+      clave: e.nombre,
+      van: finito(e.flujo.indicadores.van),
+      tir: e.flujo.indicadores.tir,
+      payback: e.flujo.indicadores.payback,
+      viable: esViable(e.flujo),
+      acumulado: e.flujo.flujoCaja.map((valor, indice) => {
+        acumulado += finito(valor);
+        return { anio: indice === 0 ? "Inicio" : `Año ${indice}`, valor: Math.round(acumulado) };
+      }),
+    };
+  });
+  const tornado = calcularTornado(proyecto, 0.1);
+
   const definiciones: Array<Omit<DiapositivaPitch, "numero"> & { visible: boolean }> = [
     { id: "portada", titulo: "El proyecto", etiqueta: "01 · Apertura", visible: true },
     { id: "oportunidad", titulo: "Problema y propuesta", etiqueta: "02 · Oportunidad", visible: true },
@@ -197,6 +220,18 @@ export function construirModeloPitch(proyecto: Proyecto) {
       visible: nivel !== "basico",
     },
     {
+      id: "escenarios",
+      titulo: "Tres futuros posibles",
+      etiqueta: "Escenarios",
+      visible: nivel !== "basico",
+    },
+    {
+      id: "montecarlo",
+      titulo: "¿Qué tan seguro es?",
+      etiqueta: "Simulación de riesgo",
+      visible: nivel !== "basico",
+    },
+    {
       id: "laboratorio",
       titulo: "Laboratorio de viabilidad",
       etiqueta: "10 · Prueba en vivo",
@@ -209,6 +244,9 @@ export function construirModeloPitch(proyecto: Proyecto) {
     .filter((diapositiva) => diapositiva.visible)
     .map(({ visible: _visible, ...diapositiva }, indice) => ({
       ...diapositiva,
+      // Numeración automática: así agregar o quitar diapositivas no deja
+      // etiquetas repetidas o salteadas.
+      etiqueta: `${String(indice + 1).padStart(2, "0")} · ${diapositiva.etiqueta.replace(/^d+ · /, "")}`,
       numero: indice + 1,
     }));
 
@@ -222,6 +260,8 @@ export function construirModeloPitch(proyecto: Proyecto) {
     flujo,
     financiamiento,
     riesgo,
+    escenarios,
+    tornado,
     diapositivas,
     totalProyecto,
     capitalPropio,
