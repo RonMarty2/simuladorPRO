@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronRight, Newspaper, PlayCircle, Trophy, XCircle } from "lucide-react";
 import {
   Bar,
@@ -18,7 +19,9 @@ import { useSimulacionStore } from "@/stores/simulacion-store";
 import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
-import { mesesPorTurno } from "@/lib/motor-eventos";
+import { calcularBaseProyecto, mesesPorTurno } from "@/lib/motor-eventos";
+import { construirFlujoCaja } from "@/lib/flujo-proyecto";
+import { tirCalculable } from "@/lib/acotar-numero";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import type { OpcionDecision } from "@/types/evento";
 import type { Proyecto } from "@/types/proyecto";
@@ -40,6 +43,9 @@ export default function SimularProyecto() {
   );
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<OpcionDecision | null>(null);
   const [iniciando, setIniciando] = useState(true);
+  // Proyecto para el que el alumno ya pasó la pantalla de bienvenida. Se guarda
+  // el id (no un booleano) para que al cambiar de proyecto vuelva a mostrarse.
+  const [bienvenidaVista, setBienvenidaVista] = useState<string | null>(null);
   const [proyectosDisponibles, setProyectosDisponibles] = useState<Proyecto[]>([]);
 
   // Cargar TODOS los proyectos del usuario al entrar + los cursos donde está
@@ -142,6 +148,23 @@ export default function SimularProyecto() {
       <div className="text-sm text-muted-foreground">
         {error ? `Error: ${error}` : "Preparando simulación…"}
       </div>
+    );
+  }
+
+  // Bienvenida: solo si la simulación es nueva (ningún turno jugado todavía).
+  if (
+    sim.estado === "activa" &&
+    sim.turno_actual === 0 &&
+    historial.length === 0 &&
+    bienvenidaVista !== proyecto.id
+  ) {
+    return (
+      <PantallaInicio
+        proyecto={proyecto}
+        turnosTotales={sim.turnos_totales}
+        frecuencia={sim.frecuencia}
+        onComenzar={() => setBienvenidaVista(proyecto.id)}
+      />
     );
   }
 
@@ -450,6 +473,179 @@ function PantallaFinalizada({
       </div>
 
       {historial.length > 0 && <GraficosHistorial historial={historial} />}
+      <InformeFinal historial={historial} />
+    </div>
+  );
+}
+
+// ============================================================================
+// PantallaInicio — explica qué va a pasar antes del primer turno
+// ============================================================================
+function PantallaInicio({
+  proyecto,
+  turnosTotales,
+  frecuencia,
+  onComenzar,
+}: {
+  proyecto: Proyecto;
+  turnosTotales: number;
+  frecuencia: Parameters<typeof mesesPorTurno>[0];
+  onComenzar: () => void;
+}) {
+  const meses = mesesPorTurno(frecuencia);
+  const totalMeses = turnosTotales * meses;
+  const base = calcularBaseProyecto(proyecto);
+  const indicadores = construirFlujoCaja(proyecto).indicadores;
+  const pasos = [
+    {
+      titulo: "Operás tu proyecto mes a mes",
+      texto: `Vas a manejar ${proyecto.nombre} durante ${totalMeses} meses, empezando con la caja que planificaste.`,
+    },
+    {
+      titulo: "Aparecen noticias reales de Bolivia",
+      texto: "Dólar paralelo, sequías, bloqueos, cambios de normativa. Algunas te favorecen y otras te complican.",
+    },
+    {
+      titulo: "Vos decidís cómo responder",
+      texto: "Cada noticia trae opciones. Tu decisión cambia la caja, la demanda y la reputación del negocio.",
+    },
+    {
+      titulo: "Al final ves cómo te fue",
+      texto: "Recibís un informe con lo que enfrentaste y decidiste. Después podés volver a Escenarios para comparar.",
+    },
+  ];
+  return (
+    <div className="mx-auto max-w-3xl space-y-4">
+      <div className="rounded-lg border border-border bg-card p-6">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">Antes de empezar</div>
+        <h1 className="mt-1 text-xl font-bold tracking-tight">Simulación de {proyecto.nombre}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tu plan funciona sobre el papel. Acá lo ponés a prueba contra la realidad.
+        </p>
+        <ol className="mt-5 space-y-3">
+          {pasos.map((paso, i) => (
+            <li key={paso.titulo} className="flex gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {i + 1}
+              </span>
+              <div>
+                <div className="text-sm font-semibold">{paso.titulo}</div>
+                <div className="text-sm text-muted-foreground">{paso.texto}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="mb-2 text-sm font-semibold">Tu punto de partida</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <ResumenCelda titulo="Caja inicial" valor={formatearBolivianos(base.capitalInicial)} />
+          <ResumenCelda titulo="Ingresos año 1 (plan)" valor={formatearBolivianos(base.ingresosAnuales)} />
+          <ResumenCelda titulo="VAN del plan" valor={formatearBolivianos(indicadores.van)} />
+          <ResumenCelda
+            titulo="TIR del plan"
+            valor={tirCalculable(indicadores.tir) ? `${(indicadores.tir * 100).toFixed(1)}%` : "No calculable"}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={onComenzar}
+          className="flex items-center gap-1.5 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+        >
+          <PlayCircle className="h-4 w-4" />
+          Comenzar simulación
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// InformeFinal — qué enfrentó y decidió el alumno durante la simulación
+// ============================================================================
+function InformeFinal({
+  historial,
+}: {
+  historial: ReturnType<typeof useSimulacionStore.getState>["historial"];
+}) {
+  const eventos = historial.flatMap((h) =>
+    (h.eventos_aplicados ?? []).map((e) => ({
+      turno: h.numero_turno,
+      titulo: e.titulo,
+      decision: h.decision_tomada?.opcion ?? null,
+    }))
+  );
+  const turnosConDelta = historial.filter((h) => Math.abs(h.estado_despues.delta_caja) > 0.01);
+  const mejor = turnosConDelta.reduce<(typeof historial)[number] | null>(
+    (acc, h) => (!acc || h.estado_despues.delta_caja > acc.estado_despues.delta_caja ? h : acc),
+    null
+  );
+  const peor = turnosConDelta.reduce<(typeof historial)[number] | null>(
+    (acc, h) => (!acc || h.estado_despues.delta_caja < acc.estado_despues.delta_caja ? h : acc),
+    null
+  );
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <h2 className="text-sm font-semibold">Tu informe</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Enfrentaste {eventos.length} {eventos.length === 1 ? "noticia" : "noticias"} en {historial.length}{" "}
+        {historial.length === 1 ? "turno" : "turnos"}.
+      </p>
+
+      {(mejor || peor) && (
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {mejor && mejor.estado_despues.delta_caja > 0 && (
+            <ResumenCelda
+              titulo={`Mejor turno (${mejor.numero_turno})`}
+              valor={`+${formatearBolivianos(mejor.estado_despues.delta_caja)}`}
+            />
+          )}
+          {peor && peor.estado_despues.delta_caja < 0 && (
+            <ResumenCelda
+              titulo={`Peor turno (${peor.numero_turno})`}
+              valor={formatearBolivianos(peor.estado_despues.delta_caja)}
+            />
+          )}
+        </div>
+      )}
+
+      {eventos.length > 0 ? (
+        <ul className="mt-3 divide-y divide-border rounded-md border border-border">
+          {eventos.map((e, i) => (
+            <li key={i} className="p-3 text-sm">
+              <div className="font-medium">
+                <span className="text-muted-foreground">Turno {e.turno} · </span>
+                {e.titulo}
+              </div>
+              {e.decision ? (
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  Elegiste: {e.decision.letra}. {e.decision.texto}
+                  {e.decision.feedback_corto ? ` — ${e.decision.feedback_corto}` : ""}
+                </div>
+              ) : (
+                <div className="mt-0.5 text-xs text-muted-foreground">Sin decisión registrada.</div>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          No hubo noticias relevantes en esta simulación.
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link
+          to="/escenarios"
+          className="inline-flex items-center gap-1.5 rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+        >
+          Comparar con tus escenarios
+        </Link>
+      </div>
     </div>
   );
 }
