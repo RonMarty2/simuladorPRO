@@ -530,10 +530,25 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         de sus rangos (`npm update --ignore-scripts`): @remix-run/router 1.23.4,
         react-router-dom 6.30.6, nanoid, postcss, supabase-js 2.118, sentry
         10.76. Se usó `env -u npm_config_allow_scripts` porque ese entorno
-        bloquea `npm update`.
+        bloquea `npm update`. El lockfile se regeneró con npm 10 porque el CI
+        (Node 22) rechazaba el generado por npm 11 (faltaba esbuild).
+      - Unida la rama `claude/mejoras-pedagogicas` (4 mejoras, sin migraciones):
+        diagnóstico pedagógico en vivo y boletín de autoevaluación en el Paso 9
+        (`lib/diagnostico-pedagogico.ts`, `lib/boletin-proyecto.ts`), post-mortem
+        al terminar la simulación (`lib/postmortem-simulacion.ts`,
+        `PanelPostmortem`, convive con `InformeFinal` y repite algo de
+        información) y pestaña "Diagnóstico" en el curso del docente
+        (`DiagnosticoCurso`, usa `listarProyectosDelCurso` con
+        `select("*")`). 293 tests. Falta revisar cómo se ven en producción.
+      - Rama `claude/financial-admin-review-iXwmO`: su contenido ya está en
+        main; se puede borrar (decisión del owner en GitHub).
+      - Hallazgo previo, no causado por esta sesión: en modo local de desarrollo
+        (`npm run dev` sin `.env`), abrir `/construir` con un proyecto cargado
+        en localStorage congela el navegador; ocurre también con el código del
+        2026-10-18. No se investigó (producción usa Supabase y funciona).
 
 ### Retomar aquí (cierre de sesión 2026-10-19)
-Estado: producción al día, 274 tests, build OK, migración 033 aplicada. Sesión
+Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión
 2026-10-19: ver el bloque de arriba (recorrido, análisis de riesgo,
 simulación, presentación, CI).
 
