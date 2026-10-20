@@ -498,7 +498,7 @@ function PantallaInicio({
   const indicadores = construirFlujoCaja(proyecto).indicadores;
   const pasos = [
     {
-      titulo: "Operás tu proyecto mes a mes",
+      titulo: "Operas tu proyecto mes a mes",
       texto: `Vas a manejar ${proyecto.nombre} durante ${totalMeses} meses, empezando con la caja que planificaste.`,
     },
     {
@@ -506,12 +506,12 @@ function PantallaInicio({
       texto: "Dólar paralelo, sequías, bloqueos, cambios de normativa. Algunas te favorecen y otras te complican.",
     },
     {
-      titulo: "Vos decidís cómo responder",
+      titulo: "Tú decides cómo responder",
       texto: "Cada noticia trae opciones. Tu decisión cambia la caja, la demanda y la reputación del negocio.",
     },
     {
       titulo: "Al final ves cómo te fue",
-      texto: "Recibís un informe con lo que enfrentaste y decidiste. Después podés volver a Escenarios para comparar.",
+      texto: "Recibes un informe con lo que enfrentaste y decidiste. Después puedes volver a Escenarios para comparar.",
     },
   ];
   return (
@@ -520,7 +520,7 @@ function PantallaInicio({
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Antes de empezar</div>
         <h1 className="mt-1 text-xl font-bold tracking-tight">Simulación de {proyecto.nombre}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tu plan funciona sobre el papel. Acá lo ponés a prueba contra la realidad.
+          Tu plan funciona sobre el papel. Aquí lo pones a prueba contra la realidad.
         </p>
         <ol className="mt-5 space-y-3">
           {pasos.map((paso, i) => (

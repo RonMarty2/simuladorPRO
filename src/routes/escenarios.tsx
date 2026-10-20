@@ -61,7 +61,7 @@ export default function Escenarios() {
           <ChartScatter className="mx-auto h-10 w-10 text-muted-foreground" />
           <h2 className="mt-3 text-base font-semibold">No hay proyecto activo</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Elegí un proyecto para comparar sus escenarios optimista, base y pesimista.
+            Elige un proyecto para comparar sus escenarios optimista, base y pesimista.
           </p>
           {disponibles === null && (
             <p className="mt-3 text-xs text-muted-foreground">Cargando tus proyectos…</p>
@@ -81,7 +81,7 @@ export default function Escenarios() {
           )}
           {disponibles && disponibles.length === 0 && (
             <p className="mt-3 text-xs text-muted-foreground">
-              Todavía no tenés proyectos. Creá uno desde tu panel.
+              Todavía no tienes proyectos. Crea uno desde tu panel.
             </p>
           )}
           <Link

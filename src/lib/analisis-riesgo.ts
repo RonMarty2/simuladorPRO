@@ -273,12 +273,12 @@ export function emitirVeredicto(
       ? {
           nivel: "sensible",
           titulo: "Sensible",
-          detalle: `Un cambio de ${pct}% en ${principal} puede cambiar la conclusión del proyecto. Corré la simulación de riesgo para medir la probabilidad.`,
+          detalle: `Un cambio de ${pct}% en ${principal} puede cambiar la conclusión del proyecto. Corre la simulación de riesgo para medir la probabilidad.`,
         }
       : {
           nivel: tornado.vanBase > 0 ? "robusto" : "inviable",
           titulo: tornado.vanBase > 0 ? "Robusto" : "Inviable",
-          detalle: `Ninguna variable individual cambia el signo del VAN con ${pct}% de variación. Corré la simulación de riesgo para confirmarlo.`,
+          detalle: `Ninguna variable individual cambia el signo del VAN con ${pct}% de variación. Corre la simulación de riesgo para confirmarlo.`,
         };
   }
 
@@ -295,7 +295,7 @@ export function emitirVeredicto(
     return {
       nivel: "sensible",
       titulo: "Sensible",
-      detalle: `El VAN es positivo en ${porc}% de los futuros simulados. Vigilá especialmente ${principal}.`,
+      detalle: `El VAN es positivo en ${porc}% de los futuros simulados. Vigila especialmente ${principal}.`,
     };
   }
   if (p >= 0.2) {

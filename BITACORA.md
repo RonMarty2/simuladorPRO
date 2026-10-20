@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-18 — cierre de sesión (ver "Retomar aquí" en §10)
+> **Última actualización**: 2026-10-19 — recorrido, análisis de riesgo y presentación (ver "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -88,7 +88,8 @@ Arquitectura preparada para escalar a cientos.
 | Constructor proyecto (9 pasos) | `/construir` | `routes/construir-proyecto.tsx` + `components/constructor/pasos/*` |
 | Galería de 26 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` + `lib/plantillas.ts` |
 | Simular (5 años, eventos) | `/simular` | `routes/simular-proyecto.tsx` |
-| Escenarios (análisis de sensibilidad) | `/escenarios` | `routes/escenarios.tsx` |
+| Escenarios + análisis de riesgo (veredicto, tornado, Montecarlo, tabla precio × demanda) | `/escenarios` | `routes/escenarios.tsx` + `components/escenarios/PanelEscenarios.tsx` + `AnalisisRiesgo.tsx` + `lib/analisis-riesgo.ts` |
+| Presentar proyecto (14 diapositivas, incluye escenarios y simulación de riesgo) | `/presentar/:id` | `routes/presentar-proyecto.tsx` + `components/presentacion/VisorPitch.tsx` + `lib/presentacion-proyecto.ts` |
 | Mis entregas | `/mis-entregas` | `routes/mis-entregas.tsx` |
 | Evaluación final | `/evaluacion` | `routes/evaluacion-final.tsx` |
 | Mi perfil | `/perfil` | `routes/mi-perfil.tsx` |
@@ -489,8 +490,75 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         Admin y Excel. TIR no calculable / "No recupera" también en la revisión
         del docente y en Mis entregas. Sin errores de consola.
 
-### Retomar aquí (cierre de sesión 2026-10-18)
-Estado: producción al día, 266 tests, build OK, migración 033 aplicada.
+- [x] **Sesión 2026-10-19** (`73e279e`, `13f9f72`, `89df3f4`, `2705e33` + CI y dependencias):
+      Motivo: el owner usaba solo el constructor; Escenarios y Simular existían
+      pero la app no llevaba a ellos ("No hay proyecto activo", sin acceso desde
+      el proyecto). Se hicieron cuatro fases, sin migraciones ni cambios de
+      fórmulas:
+      - Fase 1 (recorrido): `AccionesProyecto` suma "Escenarios" y "Simular 5
+        años" (cargan el proyecto al store antes de navegar; ocultos en Semana
+        E). La barra del constructor ahora se ve también en celular. Escenarios
+        sin proyecto activo ofrece elegir uno. "Simular" en el menú del docente.
+      - Fase 2 (análisis): `lib/analisis-riesgo.ts` (funciones puras sobre
+        `aplicarModificadores` + `construirFlujoCaja`): `calcularTornado`
+        (±10% por variable), `tablaPrecioDemanda`, `simularMontecarlo`
+        (triangular entre pesimista, base y optimista del curso; semilla fija
+        = reproducible; 1000 corridas en Escenarios, 500 en la presentación) y
+        `emitirVeredicto` (Robusto / Sensible / Riesgoso / Inviable según la
+        probabilidad de VAN > 0: 80% / 50% / 20%). UI en
+        `components/escenarios/AnalisisRiesgo.tsx`. Tests en
+        `analisis-riesgo.test.ts`. Nota: la BITÁCORA anterior mencionaba
+        Montecarlo pero no existía en el código hasta ahora.
+      - Fase 3 (simulación): `routes/simular-proyecto.tsx` suma
+        `PantallaInicio` (bienvenida antes del primer turno, solo si
+        `turno_actual === 0` y sin historial) e `InformeFinal` (noticias
+        enfrentadas, decisión elegida, mejor y peor turno, enlace a
+        Escenarios). Solo front: el motor y la BD no se tocaron. No probado de
+        punta a punta porque la simulación exige Supabase (no corre en modo
+        local); sí se probó el render con datos de prueba.
+      - Fase 4 (presentación): diapositivas `escenarios` ("Tres futuros
+        posibles") y `montecarlo` ("¿Qué tan seguro es?") en nivel medio y
+        avanzado (no en Semana E básica). Etiquetas "NN · …" ahora se numeran
+        solas en `construirModeloPitch`. Usa los % optimista/pesimista por
+        defecto (la presentación no lee la config del curso). El Montecarlo de
+        la presentación corre en segundo plano al abrirla.
+      - Verificado: `construirFlujoCaja` y `construirFlujoCajaProyecto` dan el
+        mismo VAN/TIR (uno envuelve al otro), así que Escenarios, presentación
+        y constructor no se contradicen.
+      - GitHub: nuevo `.github/workflows/ci.yml` (tests + build en cada push a
+        main y en cada PR, Node 22, `npm ci`). Dependencias actualizadas dentro
+        de sus rangos (`npm update --ignore-scripts`): @remix-run/router 1.23.4,
+        react-router-dom 6.30.6, nanoid, postcss, supabase-js 2.118, sentry
+        10.76. Se usó `env -u npm_config_allow_scripts` porque ese entorno
+        bloquea `npm update`.
+
+### Retomar aquí (cierre de sesión 2026-10-19)
+Estado: producción al día, 274 tests, build OK, migración 033 aplicada. Sesión
+2026-10-19: ver el bloque de arriba (recorrido, análisis de riesgo,
+simulación, presentación, CI).
+
+Pendientes del OWNER en GitHub (la IA no puede o no debe hacerlos): (a) activar
+protección de la rama `main` exigiendo que pase el CI (Settings > Branches);
+(b) decidir qué hacer con las ramas `claude/financial-admin-review-iXwmO` (39
+commits detrás de main, 4 propios) y `claude/mejoras-pedagogicas` (19 detrás,
+4 propios); (c) confirmar si el repo es público: la clave vieja
+`WEBAPP_API_KEY` sigue en el historial de git aunque ya se rotó.
+
+Avisos de seguridad que quedan (`npm audit --omit=dev`): tailwindcss 3 y su
+cadena (braces, micromatch…) y fast-glob: solo herramientas de build, no llegan
+al navegador; arreglarlo exige tailwindcss 4 (cambio mayor, no hecho).
+react-router: aviso de hidratación SSR, la app es SPA, exige react-router 7
+(mayor). xlsx: sin parche; la app solo escribe Excel (`xlsx-js-style`), no
+lee archivos de terceros.
+
+Ideas sin hacer de la sesión 2026-10-19: rediseño visual de las diapositivas
+viejas (el owner las encontró "simplonas": falta saber si es diseño, contenido
+o interactividad), modo oscuro para proyector, "qué hubiera pasado con otras
+decisiones" en la simulación (exige reejecutar el motor), tornado/Montecarlo
+en el resumen del constructor (Paso 9), usar la config de escenarios del curso
+en la presentación.
+
+--- Estado del cierre anterior (2026-10-18) ---
 Probado end-to-end en producción con las cuentas del owner (docente
 `ronaldmartinezjimenes@gmail.com`, alumno `rnd261190@gmail.com`).
 
@@ -890,6 +958,23 @@ Inicialización: `proyecto-factory.ts::aplicarModeloIngresoInicial()`.
 4. **`costo_beneficio`** — sin ventas reales, justifica por beneficio
    incremental estimado. Producto portador: `cantidades = [1,1,1,1,1]`,
    `precios = beneficioBase × (1+g)^i`.
+
+### 15.1b Análisis de riesgo (`lib/analisis-riesgo.ts`)
+Funciones puras que reutilizan `aplicarModificadores` (`lib/escenarios.ts`) y
+`construirFlujoCaja`; nunca tocan el proyecto original.
+- `calcularTornado(proyecto, variacion = 0.1)`: mueve de a una variable
+  (precio, demanda, costos directos, gastos generales, sueldos, inversión) y
+  devuelve filas ordenadas por amplitud del VAN.
+- `tablaPrecioDemanda(proyecto, cambios)`: matriz de VAN 5 × 5.
+- `simularMontecarlo(proyecto, { corridas, semilla, optimista, pesimista,
+  onProgreso })`: asíncrona (cede el hilo cada 25 corridas). Cada variable se
+  sortea con distribución triangular (mínimo, 1, máximo) entre los
+  modificadores pesimista y optimista del curso. Devuelve probabilidad de VAN
+  > 0, probabilidad de viabilidad (VAN > 0 y TIR > WACC), media, percentiles
+  5/50/95, mínimo, máximo e histograma.
+- `emitirVeredicto(tornado, montecarlo | null)`: texto simple para el alumno.
+- `crearAleatorio(semilla)` (mulberry32) y `muestraTriangular`: reproducible.
+Usos: `AnalisisRiesgo.tsx` (Escenarios) y `VisorPitch.tsx` (presentación).
 
 ### 15.2 Motor de simulación (`motor-eventos.ts` + `lanzador-eventos.ts`)
 

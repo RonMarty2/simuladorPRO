@@ -1,0 +1,32 @@
+name: CI
+
+# Corre tests y build en cada push a main y en cada pull request.
+# No usa secretos: el build funciona en modo local (sin Supabase).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tests
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
