@@ -23,6 +23,7 @@ import { calcularBaseProyecto, mesesPorTurno } from "@/lib/motor-eventos";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { tirCalculable } from "@/lib/acotar-numero";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
+import PanelPostmortem from "@/components/simulacion/PanelPostmortem";
 import type { OpcionDecision } from "@/types/evento";
 import type { Proyecto } from "@/types/proyecto";
 
@@ -471,6 +472,8 @@ function PantallaFinalizada({
           Empezar nueva simulación
         </button>
       </div>
+
+      <PanelPostmortem simulacion={simulacion} historial={historial} />
 
       {historial.length > 0 && <GraficosHistorial historial={historial} />}
       <InformeFinal historial={historial} />
