@@ -547,6 +547,20 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         en localStorage congela el navegador; ocurre también con el código del
         2026-10-18. No se investigó (producción usa Supabase y funciona).
 
+- [x] **Sesión 2026-10-21** (`c3e549a`) — dos hallazgos reportados por el owner:
+      - Proyecto grupal huérfano (grupo borrado al borrar el curso): Mi panel lo
+        listaba pero `construir-proyecto.tsx` lo descartaba y caía en
+        `EmpezarProyecto` sin salida. Ahora el constructor acepta los
+        `proyecto_grupal` propios sin membresía vigente (se pueden abrir y
+        borrar). Efecto: también reaparecen proyectos de grupos de los que el
+        alumno salió (antes se ocultaban a propósito).
+      - "Caso individual" no se podía quitar de un curso: `permite_proyecto_libre`
+        solo se fijaba al crearlo (el texto prometía "lo puedes cambiar después"
+        sin UI). Casilla "Caso individual" en la cabecera del curso del docente
+        (`alternarProyectoIndividual`). Ojo: los "Tipos de proyecto simulables"
+        del Lanzador solo afectan la pantalla Simular, no el panel del alumno.
+        Sin migraciones; 293 tests. No probado en producción.
+
 ### Retomar aquí (cierre de sesión 2026-10-19)
 Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión
 2026-10-19: ver el bloque de arriba (recorrido, análisis de riesgo,
