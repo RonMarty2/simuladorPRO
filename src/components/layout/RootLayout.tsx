@@ -12,6 +12,8 @@ import {
   LogOut,
   Menu,
   Newspaper,
+  PanelLeftClose,
+  PanelLeftOpen,
   PlayCircle,
   ShieldCheck,
   X,
@@ -61,6 +63,23 @@ export default function RootLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // Barra lateral de escritorio: se puede esconder para dar más espacio a las
+  // tablas. La preferencia se recuerda en este navegador.
+  const [lateralOculto, setLateralOculto] = useState(() => {
+    try {
+      return localStorage.getItem("simulador.lateralOculto") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const alternarLateral = () => {
+    setLateralOculto((v) => {
+      try {
+        localStorage.setItem("simulador.lateralOculto", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  };
   // Detección robusta de dispositivo móvil. Sobrescribe cualquier hack del
   // navegador (ej. "Sitio para escritorio") para forzar el layout mobile.
   const esMobil = useEsDispositivoMobil();
@@ -119,6 +138,17 @@ export default function RootLayout() {
           >
             <Menu className="h-5 w-5" />
           </button>
+          {/* Escritorio: esconde o muestra la barra lateral */}
+          {!esMobil && (
+            <button
+              onClick={alternarLateral}
+              className="-ml-1 hidden rounded-md p-1.5 text-foreground hover:bg-accent md:block"
+              aria-label={lateralOculto ? "Mostrar menú lateral" : "Ocultar menú lateral"}
+              title={lateralOculto ? "Mostrar menú lateral" : "Ocultar menú lateral"}
+            >
+              {lateralOculto ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </button>
+          )}
           <div className="h-6 w-6 flex-shrink-0 rounded bg-primary" />
           <span className="truncate text-sm font-semibold tracking-tight">
             Simulador de Proyectos de Inversión
@@ -173,7 +203,7 @@ export default function RootLayout() {
         {/* Barra lateral — solo escritorio. Si detectamos dispositivo móvil
             (UA, screen estrecho o PWA standalone con touch) NUNCA se muestra
             aunque el viewport reporte ancho de desktop. */}
-        {!esMobil && (
+        {!esMobil && !lateralOculto && (
           <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-secondary/30 p-3 md:flex">
             <nav className="flex flex-col gap-1">{navItems()}</nav>
             <div className="mt-auto pt-4">
