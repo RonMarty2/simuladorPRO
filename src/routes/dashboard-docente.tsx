@@ -5,6 +5,7 @@ import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from 
 import { useAuthStore } from "@/stores/auth-store";
 import {
   actualizarEstadoCurso,
+  actualizarPermiteProyectoLibre,
   crearCurso,
   eliminarCurso,
   listarInscritosDeCurso,
@@ -641,6 +642,19 @@ function CursoCard({
     setTimeout(() => setCopiado(false), 1500);
   };
 
+  const alternarProyectoIndividual = async (permite: boolean) => {
+    setCambiandoEstado(true);
+    setErrorEstado(null);
+    try {
+      await actualizarPermiteProyectoLibre(curso.id, permite);
+      onActualizado({ ...curso, permite_proyecto_libre: permite });
+    } catch (e) {
+      setErrorEstado(e instanceof Error ? e.message : "No se pudo guardar el cambio.");
+    } finally {
+      setCambiandoEstado(false);
+    }
+  };
+
   const alternarPublicacionSemanaE = async () => {
     if (!curso.es_semana_e || !adminSemanaE) return;
     const nuevoEstado = curso.estado === "activo" ? "archivado" : "activo";
@@ -812,6 +826,20 @@ function CursoCard({
                   ? "Publicado: clic para ocultar"
                   : "Oculto: clic para publicar"}
             </button>
+          )}
+          {!curso.es_semana_e && (
+            <label
+              className="flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground"
+              title="Si lo desmarcas, los alumnos nuevos no ven 'Caso individual'. Quien ya tiene proyecto lo conserva."
+            >
+              <input
+                type="checkbox"
+                checked={curso.permite_proyecto_libre !== false}
+                disabled={cambiandoEstado}
+                onChange={(e) => alternarProyectoIndividual(e.target.checked)}
+              />
+              Caso individual
+            </label>
           )}
           {!confirmando && (
             <button

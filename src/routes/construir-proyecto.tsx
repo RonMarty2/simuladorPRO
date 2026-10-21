@@ -124,12 +124,10 @@ export default function ConstruirProyecto() {
     if (!user) return;
     Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
       .then(([mios, grupales]) => {
-        // Los grupales que aparecen como "propios" pueden ser equipos antiguos
-        // creados por el usuario. Solo aceptamos grupales devueltos por su
-        // membresía ACTUAL; así no se muestran grupos de los que ya salió.
-        const proyectosNoGrupales = mios.filter(
-          (p) => p.tipo !== "proyecto_grupal" && !esProyectoSemanaE(p)
-        );
+        // Los grupales "propios" sin membresía actual (grupo borrado o dejado)
+        // se conservan para que el alumno pueda abrirlos o borrarlos: Mi panel
+        // los lista y, si el constructor los descartara, quedarían inaccesibles.
+        const proyectosNoGrupales = mios.filter((p) => !esProyectoSemanaE(p));
         const grupalesNormales = grupales.filter((p) => !esProyectoSemanaE(p));
         const idsNormales = new Set(proyectosNoGrupales.map((p) => p.id));
         const proyectosNormales = [
