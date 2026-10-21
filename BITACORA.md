@@ -560,6 +560,9 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         (`alternarProyectoIndividual`). Ojo: los "Tipos de proyecto simulables"
         del Lanzador solo afectan la pantalla Simular, no el panel del alumno.
         Sin migraciones; 293 tests. No probado en producción.
+      - Barra lateral de escritorio plegable (`RootLayout`): botón con ícono de
+        panel en la cabecera, preferencia en `localStorage`
+        (`simulador.lateralOculto`). No cambia el menú móvil. Commit `75cb318`.
 
 ### Retomar aquí (cierre de sesión 2026-10-19)
 Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión
