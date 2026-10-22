@@ -63,7 +63,7 @@ posterior a la 033.
 |---|---|---|
 | hoteleria-turismo | turismo | HECHO (034) |
 | suscripcion-saas | suscripcion | HECHO (035) |
-| producto-unidades | gastronomia, produccion, comercio | pendiente |
+| producto-unidades | gastronomia, produccion, comercio | ESCRITO (036), falta aplicar |
 | publicidad-medios | medios | pendiente |
 | eventos-servicios-sorpresa | eventos | pendiente |
 | marketing + comunicacion-institucional | marketing | pendiente |
@@ -102,7 +102,7 @@ Nota: la categoría `tecnologia` mezcla SaaS (suscripción) y app de delivery
 ### Fase 2. Eventos propios por tipo (capa 1, no toca fórmulas)
 Un paso por fila de la tabla del §3. Procedimiento por tipo en el §5.
 - [x] 2.1 turismo (034)   - [x] 2.2 suscripcion (035)
-- [ ] 2.3 gastronomia + produccion + comercio (producto-unidades)
+- [x] 2.3 gastronomia + produccion + comercio (producto-unidades): migracion 036, 12 eventos. ESCRITA, FALTA APLICAR en Supabase y publicar.
 - [ ] 2.4 medios   - [ ] 2.5 eventos   - [ ] 2.6 marketing   - [ ] 2.7 social
 - [ ] 2.8 costo_beneficio   - [ ] 2.9 alquiler   - [ ] 2.10 agricultura
 - [ ] 2.11 servicios   - [ ] 2.12 tecnologia
