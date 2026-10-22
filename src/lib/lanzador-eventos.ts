@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { eventoAplicaAProyecto } from "./motor-eventos";
 
 /**
  * Lanzador de eventos en vivo (modo "docente_dispara").
@@ -36,6 +37,8 @@ type ProyectoMin = {
   caso_origen_id: string | null;
   /** datos.sector del proyecto (JSONB). Lo extraemos en la query. */
   sector?: string | null;
+  /** datos.tipoNegocio del proyecto (JSONB). */
+  tipoNegocio?: string | null;
 };
 
 /** Filtra una lista de proyectos según el alcance. */
@@ -58,8 +61,7 @@ function filtrarPorSector(
   proyectos: ProyectoMin[],
   sectoresAfectados: string[]
 ): ProyectoMin[] {
-  if (sectoresAfectados.includes("todos")) return proyectos;
-  return proyectos.filter((p) => p.sector && sectoresAfectados.includes(p.sector));
+  return proyectos.filter((p) => eventoAplicaAProyecto(sectoresAfectados, p.sector, p.tipoNegocio));
 }
 
 export interface ConteoSimulacionesCurso {
@@ -90,6 +92,7 @@ export async function contarSimulacionesActivasDelCurso(
     tipo: p.tipo,
     caso_origen_id: p.caso_origen_id,
     sector: p.datos?.sector ?? null,
+    tipoNegocio: p.datos?.tipoNegocio ?? null,
   }));
   const delAlcance = filtrarPorAlcance(conSector, alcance);
   const idsAlcance = delAlcance.map((p) => p.id);
@@ -153,6 +156,7 @@ export async function dispararEventoAlCurso(params: {
     tipo: p.tipo,
     caso_origen_id: p.caso_origen_id,
     sector: p.datos?.sector ?? null,
+    tipoNegocio: p.datos?.tipoNegocio ?? null,
   }));
   let candidatos = filtrarPorAlcance(conSector, alcance);
   // Filtro sectorial salvo que el docente fuerce el envío a todos.

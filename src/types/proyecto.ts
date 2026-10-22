@@ -273,6 +273,12 @@ export interface Proyecto {
   ubicacion: string;
   descripcion: string;
   sector: Sector;
+  /**
+   * Tipo de negocio (categoría de la plantilla: turismo, suscripcion, social...).
+   * Los eventos con "tipo:xxx" en sectores_afectados solo le llegan a este tipo.
+   * Proyectos viejos o libres no lo tienen: reciben solo eventos por sector.
+   */
+  tipoNegocio?: string;
 
   // Inversiones (cada categoría es una lista)
   inversiones: Record<CategoriaInversion, ItemInversion[]>;

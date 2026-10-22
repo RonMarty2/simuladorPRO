@@ -2111,7 +2111,7 @@ const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
 export const PLANTILLAS: PlantillaMeta[] = PLANTILLAS_SIN_COLCHON.map((pl) => ({
   ...pl,
   crear: () => {
-    const p = pl.crear();
+    const p: Proyecto = { ...pl.crear(), tipoNegocio: pl.categoria };
     return construirFlujoCaja(p).indicadores.van > 0 ? conColchonDeCaja(p) : p;
   },
 }));

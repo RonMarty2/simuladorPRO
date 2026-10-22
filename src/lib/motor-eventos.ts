@@ -89,6 +89,26 @@ export interface ConfigSeleccionEvento {
   modoSimulacion?: ModoSimulacionMotor;
   /** Si modo='curado': lista ordenada de IDs de eventos a aplicar. */
   eventosCurados?: string[] | null;
+  /** Tipo de negocio del proyecto (para eventos propios de un tipo). */
+  tipoNegocio?: string | null;
+}
+
+/**
+ * Regla de relevancia de un evento para un proyecto.
+ * - "todos" aplica a cualquiera.
+ * - Tokens "tipo:xxx": el evento es propio de ese tipo de negocio y solo aplica
+ *   si el proyecto es de ese tipo (el sector se ignora).
+ * - Sin tokens de tipo: la regla de siempre, por sector.
+ */
+export function eventoAplicaAProyecto(
+  sectoresAfectados: string[],
+  sector: string | null | undefined,
+  tipoNegocio?: string | null
+): boolean {
+  if (sectoresAfectados.includes("todos")) return true;
+  const tipos = sectoresAfectados.filter((s) => s.startsWith("tipo:"));
+  if (tipos.length > 0) return !!tipoNegocio && tipos.includes("tipo:" + tipoNegocio);
+  return !!sector && sectoresAfectados.includes(sector);
 }
 
 export function seleccionarEventoTurno(
@@ -125,8 +145,7 @@ export function seleccionarEventoTurno(
     (e) =>
       turnoActual >= e.turno_minimo &&
       !eventosYaUsados.includes(e.id) &&
-      (e.sectores_afectados.includes("todos") ||
-        e.sectores_afectados.includes(sectorProyecto))
+      eventoAplicaAProyecto(e.sectores_afectados, sectorProyecto, config.tipoNegocio)
   );
   if (candidatos.length === 0) return null;
 

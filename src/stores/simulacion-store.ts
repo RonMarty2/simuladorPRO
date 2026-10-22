@@ -137,7 +137,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
       eventos,
       eventosYaUsados,
       Math.random,
-      { modoSimulacion: modo, eventosCurados }
+      { modoSimulacion: modo, eventosCurados, tipoNegocio: proyecto.tipoNegocio }
     );
     set({ eventoActual: evento });
   },
