@@ -24,6 +24,7 @@ import {
   calcularCuotaPrestamoFrancesa,
   obtenerTasasAportes,
 } from "./calculo-financiero";
+import { construirFlujoCaja } from "./flujo-proyecto";
 
 // ============================================================================
 // INICIALIZACIÓN
@@ -289,6 +290,12 @@ export interface MetricasProyectoBase {
   cantidadAnualUnidades: number;
   cuotaPrestamoMensual: number;
   capitalInicial: number;
+  /**
+   * Plan año por año tomado del flujo del constructor (crecimiento, suscripciones,
+   * publicidad, costo-beneficio). Sin esto el simulador repetía el año 1 cinco veces
+   * y los proyectos que crecen quebraban aunque su VAN fuera positivo.
+   */
+  porAnio?: { ingresos: number; costosInsumos: number; costosFijos: number }[];
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -338,6 +345,7 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
       .flat()
       .reduce((acc, it) => acc + it.costoTotal, 0) + p.capitalTrabajo;
   const montoPrestamo = inversionTotal * p.financiamiento.porcentajePrestamo;
+  const flujo = construirFlujoCaja(p);
   const cuotaPrestamoMensual = calcularCuotaPrestamoFrancesa(
     montoPrestamo,
     p.financiamiento.tasaInteresAnual,
@@ -351,6 +359,12 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     cantidadAnualUnidades,
     cuotaPrestamoMensual,
     capitalInicial: p.capitalTrabajo,
+    porAnio: [0, 1, 2, 3, 4].map((i) => ({
+      ingresos: flujo.ingresos[i],
+      costosInsumos: flujo.costosProduccion[i],
+      costosFijos:
+        flujo.personal[i] + flujo.gastosAdmin[i] + flujo.gastosComerc[i] + flujo.imprevistos[i],
+    })),
   };
 }
 
@@ -361,20 +375,24 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
 export function aplicarOperacionDelTurno(
   estado: EstadoSimulacion,
   base: MetricasProyectoBase,
-  freq: Frecuencia
+  freq: Frecuencia,
+  turno = 0
 ): EstadoSimulacion {
   const meses = mesesPorTurno(freq);
+  // Año del plan al que pertenece este turno (turno = índice desde 0)
+  const anio = Math.min(4, Math.floor((turno * meses) / 12));
+  const plan = base.porAnio?.[anio];
+  const ingresosAnio = plan ? plan.ingresos : base.ingresosAnuales;
+  const insumosAnio = plan
+    ? plan.costosInsumos
+    : base.cantidadAnualUnidades * base.costoInsumosPorUnidad;
+  const fijosAnio = plan ? plan.costosFijos : base.costosAnualesFijos;
 
   const ingresoMes =
-    (base.ingresosAnuales / 12) *
-    estado.precio_venta_multiplicador *
-    estado.demanda_multiplicador;
+    (ingresosAnio / 12) * estado.precio_venta_multiplicador * estado.demanda_multiplicador;
   const costoInsumosMes =
-    (base.cantidadAnualUnidades / 12) *
-    base.costoInsumosPorUnidad *
-    estado.demanda_multiplicador *
-    estado.costos_multiplicador;
-  const costoFijoMes = (base.costosAnualesFijos / 12) * estado.costos_multiplicador;
+    (insumosAnio / 12) * estado.demanda_multiplicador * estado.costos_multiplicador;
+  const costoFijoMes = (fijosAnio / 12) * estado.costos_multiplicador;
   const cuotaMes = base.cuotaPrestamoMensual;
 
   const ingresoPeriodo = ingresoMes * meses;
@@ -411,7 +429,8 @@ export function avanzarTurnoConDecision(
   base: MetricasProyectoBase,
   freq: Frecuencia,
   evento: Evento | null,
-  decision: OpcionDecision | null
+  decision: OpcionDecision | null,
+  turno = 0
 ): ResultadoTurno {
   let nuevo = estado;
   let decisionOut: ResultadoTurno["decision"] = null;
@@ -427,7 +446,7 @@ export function avanzarTurnoConDecision(
   }
 
   // 2. Calcular operación del período
-  nuevo = aplicarOperacionDelTurno(nuevo, base, freq);
+  nuevo = aplicarOperacionDelTurno(nuevo, base, freq, turno);
 
   const quiebra = nuevo.caja < 0;
 

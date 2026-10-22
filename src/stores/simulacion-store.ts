@@ -153,7 +153,8 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
         base,
         simulacion.frecuencia,
         eventoActual,
-        opcion
+        opcion,
+        simulacion.turno_actual
       );
 
       const nuevoTurno = simulacion.turno_actual + 1;
