@@ -246,7 +246,7 @@ export function construirModeloPitch(proyecto: Proyecto) {
       ...diapositiva,
       // Numeración automática: así agregar o quitar diapositivas no deja
       // etiquetas repetidas o salteadas.
-      etiqueta: `${String(indice + 1).padStart(2, "0")} · ${diapositiva.etiqueta.replace(/^d+ · /, "")}`,
+      etiqueta: `${String(indice + 1).padStart(2, "0")} · ${diapositiva.etiqueta.replace(/^\d+ · /, "")}`,
       numero: indice + 1,
     }));
 
