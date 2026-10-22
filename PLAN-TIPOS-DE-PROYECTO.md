@@ -69,7 +69,7 @@ posterior a la 033.
 | marketing (+ comunicacion-institucional) | marketing | HECHO (039, solo marketing; falta usar la ficha de comunicacion-institucional) |
 | social-ong + educacion-publica + salud-publica | social | PARCIAL (040 solo social-ong, aplicado) |
 | ahorro-eficiencia | costo_beneficio | HECHO (041) |
-| alquiler-activos | alquiler | pendiente |
+| alquiler-activos | alquiler | ESCRITO (042), falta aplicar |
 | agro-campana | agricultura | pendiente |
 | servicios-software-a-medida | servicios, tecnologia | pendiente |
 | plataforma-marketplace | tecnologia (app delivery) | pendiente |
@@ -104,7 +104,7 @@ Un paso por fila de la tabla del §3. Procedimiento por tipo en el §5.
 - [x] 2.1 turismo (034)   - [x] 2.2 suscripcion (035)
 - [x] 2.3 gastronomia + produccion + comercio (producto-unidades): migracion 036, 12 eventos. APLICADA 2026-10-22.
 - [x] 2.4 medios (037, 10 eventos, APLICADA 2026-10-22)   - [x] 2.5 eventos (038, 10 eventos, APLICADA 2026-10-22)   - [x] 2.6 marketing (039, 11 eventos, APLICADA 2026-10-22)   - [x] 2.7 social (040, 11 eventos de social-ong, APLICADA 2026-10-22; faltan usar las fichas educacion-publica y salud-publica)
-- [x] 2.8 costo_beneficio (041, 11 eventos, APLICADA 2026-10-22)   - [ ] 2.9 alquiler   - [ ] 2.10 agricultura
+- [x] 2.8 costo_beneficio (041, 11 eventos, APLICADA 2026-10-22)   - [x] 2.9 alquiler (042, 11 eventos, FALTA APLICAR)   - [ ] 2.10 agricultura
 - [ ] 2.11 servicios   - [ ] 2.12 tecnologia
 
 ### Fase 3. Plantillas de ejemplo nuevas (datos simulados)
