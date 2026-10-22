@@ -119,7 +119,7 @@ export function analizarPostmortem(
         "suele ser poco margen + poco colchón + un evento fuerte juntos.",
     });
     consejos.push(
-      "Volvé al constructor y mejorá el margen (precio/costos) antes de simular de nuevo."
+      "Vuelve al constructor y mejora el margen (precio/costos) antes de simular de nuevo."
     );
   } else if (estadoFinal.utilidad_acumulada > 0) {
     hallazgos.push({

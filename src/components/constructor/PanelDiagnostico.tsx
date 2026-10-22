@@ -74,7 +74,7 @@ export default function PanelDiagnostico({ proyecto }: { proyecto: Proyecto }) {
 
       <p className="mb-3 text-[11px] text-muted-foreground">
         Esto NO es tu nota. Son señales automáticas para que entiendas si tus
-        decisiones cierran. Mejorá lo que puedas y volvé a mirar.
+        decisiones cierran. Mejora lo que puedas y vuelve a mirar.
       </p>
 
       <div className="space-y-2">

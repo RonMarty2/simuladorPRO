@@ -33,7 +33,7 @@ export default function BoletinProyecto({ proyecto }: { proyecto: Proyecto }) {
         )}
       </div>
       <p className="mb-3 text-[11px] text-muted-foreground">
-        Compará cada indicador con el rango sano esperado. Apuntá a tener todo en
+        Compara cada indicador con el rango sano esperado. Apunta a tener todo en
         verde antes de dar por cerrado el proyecto.
       </p>
 

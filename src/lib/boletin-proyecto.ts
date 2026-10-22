@@ -99,7 +99,7 @@ export function calcularBoletin(proyecto: Proyecto): Boletin {
       !Number.isFinite(payback) || payback <= 0
         ? "No se recupera dentro del horizonte."
         : payback <= UMBRALES.paybackLentoAnios
-          ? "Recuperás la plata a tiempo."
+          ? "Recuperas la plata a tiempo."
           : "Tarda; queda poco colchón.",
   });
 
@@ -121,7 +121,7 @@ export function calcularBoletin(proyecto: Proyecto): Boletin {
       ingresoAnio1 <= 0
         ? "Falta cargar ingresos."
         : margenNetoPct < 0
-          ? "Perdés plata el primer año."
+          ? "Pierdes plata el primer año."
           : margenNetoPct < UMBRALES.margenNetoFlacoPct
             ? "Margen fino: poco aguante."
             : "Margen saludable.",

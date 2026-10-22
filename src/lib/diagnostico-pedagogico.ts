@@ -88,7 +88,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         titulo: "El VAN da positivo",
         detalle:
           "Hoy el proyecto crea valor: lo que genera, traído a valor de hoy, " +
-          "supera lo que invertís. Es la señal base de viabilidad.",
+          "supera lo que inviertes. Es la señal base de viabilidad.",
         etapa: 9,
       });
     } else {
@@ -124,7 +124,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "ok",
         titulo: "La TIR supera al costo del capital",
         detalle:
-          `Rendís ${(tir * 100).toFixed(1)}% contra un costo de ` +
+          `Rindes ${(tir * 100).toFixed(1)}% contra un costo de ` +
           `${(wacc * 100).toFixed(1)}%. El proyecto paga su financiamiento y deja margen.`,
         etapa: 7,
       });
@@ -150,9 +150,9 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "advertencia",
         titulo: "Tarda mucho en recuperar la inversión",
         detalle:
-          `Recuperás la plata recién en el año ${payback.toFixed(1)}. En un ` +
-          "horizonte de 5 años eso deja poco colchón ante imprevistos. Mirá si " +
-          "podés bajar la inversión inicial o acelerar ingresos.",
+          `Recuperas la plata recién en el año ${payback.toFixed(1)}. En un ` +
+          "horizonte de 5 años eso deja poco colchón ante imprevistos. Mira si " +
+          "puedes bajar la inversión inicial o acelerar ingresos.",
         etapa: 9,
       });
     }
@@ -174,7 +174,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       alertas.push({
         id: "margen_negativo",
         severidad: "critico",
-        titulo: "Perdés plata el primer año",
+        titulo: "Pierdes plata el primer año",
         detalle:
           "Tus costos y gastos del año 1 superan los ingresos. Revisá precio de " +
           "venta (Etapa 2), costos directos (Etapa 5) y gastos fijos/personal " +

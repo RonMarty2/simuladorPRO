@@ -59,8 +59,8 @@ export default function GaleriaEjemplos() {
         <p className="mt-1 text-sm text-muted-foreground">
           {PLANTILLAS.length} proyectos modelo <strong>completos</strong> agrupados por categoría.
           Vitrina para que el alumno explore distintos tipos de negocio y se vuelva experto
-          comparándolos. Son <strong>solo de lectura</strong> — no se guardan ni aparecen en
-          tus proyectos.
+          comparándolos. El ejemplo original no cambia: si quieres trabajarlo, usa{" "}
+          <strong>Usar como base</strong> para crear tu propia copia.
         </p>
       </div>
 
