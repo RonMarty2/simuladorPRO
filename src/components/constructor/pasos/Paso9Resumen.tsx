@@ -33,6 +33,7 @@ import {
 } from "@/lib/calculo-financiero";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
+import { calcularEquilibrioPorProducto } from "@/lib/equilibrio-por-producto";
 import { datosFaltantes } from "@/lib/datos-faltantes";
 
 const ANIOS = [1, 2, 3, 4, 5] as const;
@@ -524,30 +525,46 @@ function AnalisisAvanzadoV2({
           sigla="PE"
           nombre="Punto de equilibrio"
           valor={
-            isFinite(v2.puntoEquilibrio.unidades)
-              ? `${Math.ceil(v2.puntoEquilibrio.unidades).toLocaleString("es-BO")} u`
-              : "No equilibra"
+            !isFinite(v2.equilibrio.factorVolumen)
+              ? "No equilibra"
+              : v2.equilibrio.tipo === "beneficio"
+                ? `${formatearBolivianos(v2.equilibrio.ingresoEquilibrio)}/año`
+                : v2.equilibrio.filas.length === 1
+                  ? `${Math.ceil(v2.equilibrio.filas[0].unidadesEquilibrio).toLocaleString("es-BO")} ${v2.equilibrio.filas[0].unidad}`
+                  : `${(v2.equilibrio.factorVolumen * 100).toFixed(0)}% de tus ventas`
           }
-          positivo={isFinite(v2.puntoEquilibrio.unidades) && v2.puntoEquilibrio.unidades <= v2.unidadesAnio1}
+          positivo={v2.equilibrio.alcanza}
         >
           <p className="text-[11px] text-muted-foreground">
-            <strong>¿Qué es?</strong> Cuántas unidades necesitas vender para no ganar ni
-            perder (cubrir todos tus costos). Por debajo de ese número pierdes plata; por
-            encima, empiezas a ganar.
+            <strong>¿Qué es?</strong>{" "}
+            {v2.equilibrio.tipo === "beneficio"
+              ? "El beneficio anual mínimo que cubre tus costos de operar. Por debajo de ese monto el proyecto pierde plata."
+              : "Cuánto necesitas vender de cada producto o servicio para no ganar ni perder (cubrir todos tus costos), manteniendo la mezcla de ventas del año 1. Por debajo pierdes plata; por encima, empiezas a ganar."}
           </p>
           <div className="mt-2 space-y-0.5 text-[11px]">
-            <FilaDetalle k="En dinero (Bs)" v={isFinite(v2.puntoEquilibrio.ingresoBs) ? formatearBolivianos(v2.puntoEquilibrio.ingresoBs) : "—"} />
-            <FilaDetalle k="Margen de contribución" v={`${(v2.puntoEquilibrio.ratioMargenContribucion * 100).toFixed(1)}% del precio`} />
-            <FilaDetalle k="Tu venta del año 1" v={`${v2.unidadesAnio1.toLocaleString("es-BO")} u`} />
+            {v2.equilibrio.tipo === "unidades" &&
+              v2.equilibrio.filas.map((f) => (
+                <FilaDetalle
+                  key={f.id}
+                  k={f.nombre}
+                  v={
+                    isFinite(f.unidadesEquilibrio)
+                      ? `${Math.ceil(f.unidadesEquilibrio).toLocaleString("es-BO")} ${f.unidad} (vendes ${Math.round(f.unidadesAnio1).toLocaleString("es-BO")})`
+                      : "—"
+                  }
+                />
+              ))}
+            <FilaDetalle k="En dinero (Bs)" v={isFinite(v2.equilibrio.ingresoEquilibrio) ? formatearBolivianos(v2.equilibrio.ingresoEquilibrio) : "—"} />
+            <FilaDetalle k="Margen de seguridad" v={isFinite(v2.equilibrio.margenSeguridad) ? `${(v2.equilibrio.margenSeguridad * 100).toFixed(1)}%` : "—"} />
           </div>
           <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">
-            {!isFinite(v2.puntoEquilibrio.unidades)
+            {!isFinite(v2.equilibrio.factorVolumen)
               ? "✗ Cada unidad pierde plata (sin margen)."
-              : v2.puntoEquilibrio.unidades <= v2.unidadesAnio1
+              : v2.equilibrio.alcanza
                 ? "✓ Vendes más que el punto de equilibrio → ganas."
                 : "⚠ Vendes menos que el punto de equilibrio → pierdes."}
           </div>
-          {isFinite(v2.puntoEquilibrio.unidades) && v2.precioPromedio > 0 && (
+          {isFinite(v2.puntoEquilibrio.unidades) && v2.precioPromedio > 0 && v2.equilibrio.tipo === "unidades" && v2.equilibrio.filas.length === 1 && (
             <GraficoEquilibrio
               precio={v2.precioPromedio}
               cvu={v2.costoVariableUnitProm}
@@ -1192,6 +1209,7 @@ function calcularV2(proyecto: any, calc: ReturnType<typeof construirFlujoCaja>) 
 
   return {
     puntoEquilibrio,
+    equilibrio: calcularEquilibrioPorProducto(proyecto),
     costosFijosAnio1,
     costosVariablesAnio1,
     unidadesAnio1,

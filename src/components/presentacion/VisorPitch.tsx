@@ -39,6 +39,7 @@ import {
   crearAjustesLaboratorioIniciales,
   type AjustesLaboratorio,
 } from "@/lib/laboratorio-viabilidad";
+import { calcularEquilibrioPorProducto } from "@/lib/equilibrio-por-producto";
 import {
   emitirVeredicto,
   simularMontecarlo,
@@ -515,61 +516,106 @@ function Equilibrio({
       ),
     [proyecto]
   );
-  const unidadesEquilibrio = base.equilibrio.unidades;
-  const alcanzaEquilibrio =
-    Number.isFinite(unidadesEquilibrio) &&
-    base.unidadesAnio1 >= unidadesEquilibrio;
+  const eq = useMemo(
+    () => calcularEquilibrioPorProducto(base.proyectoAjustado),
+    [base.proyectoAjustado]
+  );
+  const esBeneficio = eq.tipo === "beneficio";
+  const factor = eq.factorVolumen;
+  const filasVisibles = [...eq.filas]
+    .sort((a, b) => b.ingresoAnio1 - a.ingresoAnio1)
+    .slice(0, 4);
+  const filasOcultas = eq.filas.length - filasVisibles.length;
+  // El eje X del gráfico es el % del volumen de ventas del año 1 (se mantiene la
+  // mezcla de productos), porque sumar unidades de productos distintos no tiene sentido.
+  const datosGrafico = base.graficoEquilibrio.map((d) => ({
+    ...d,
+    volumenPct: base.unidadesAnio1 > 0 ? (d.unidades / base.unidadesAnio1) * 100 : 0,
+  }));
 
   return (
     <Marco
       etiqueta={etiqueta}
       titulo="El punto exacto donde el proyecto deja de perder"
-      subtitulo="La intersección entre ingresos y costos muestra cuántas unidades deben venderse para cubrir toda la operación."
+      subtitulo={
+        esBeneficio
+          ? "Este proyecto no vende unidades: el equilibrio es el beneficio anual mínimo que cubre los costos de operar."
+          : "Cuánto debe venderse de cada producto o servicio, manteniendo la mezcla del año 1, para cubrir toda la operación."
+      }
     >
       <div className="grid h-full grid-cols-[1fr_2.25fr] gap-[3%]">
-        <div className="flex flex-col justify-center gap-[5%]">
+        <div className="flex flex-col justify-center gap-[4%]">
+          {esBeneficio ? (
+            <Kpi
+              titulo="Beneficio anual mínimo"
+              valor={Number.isFinite(eq.ingresoEquilibrio) ? fmtBs(eq.ingresoEquilibrio) : "No se alcanza"}
+              color={eq.alcanza ? "emerald" : "amber"}
+            />
+          ) : (
+            <div
+              className={`rounded-[1.2vw] border p-[6%] ${
+                eq.alcanza
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              }`}
+            >
+              <div className="text-[clamp(8px,0.72vw,12px)] font-black uppercase tracking-[0.15em] opacity-75">
+                Equilibrio por producto
+              </div>
+              {Number.isFinite(factor) ? (
+                <ul className="mt-[3%] space-y-[2%] text-[clamp(10px,1vw,16px)] leading-tight">
+                  {filasVisibles.map((f) => (
+                    <li key={f.id}>
+                      <span className="block truncate font-bold">{f.nombre}</span>
+                      <span className="font-black">
+                        {Math.ceil(f.unidadesEquilibrio).toLocaleString("es-BO")} {f.unidad}
+                      </span>
+                      <span className="opacity-70">
+                        {" "}de {Math.round(f.unidadesAnio1).toLocaleString("es-BO")}
+                      </span>
+                    </li>
+                  ))}
+                  {filasOcultas > 0 && (
+                    <li className="opacity-70">y {filasOcultas} más…</li>
+                  )}
+                </ul>
+              ) : (
+                <div className="mt-[3%] text-[clamp(17px,2vw,34px)] font-black">No se alcanza</div>
+              )}
+            </div>
+          )}
           <Kpi
-            titulo="Equilibrio en unidades"
+            titulo={esBeneficio ? "Beneficio del año 1" : "Ventas de equilibrio"}
             valor={
-              Number.isFinite(unidadesEquilibrio)
-                ? `${Math.ceil(unidadesEquilibrio).toLocaleString("es-BO")} u`
-                : "No se alcanza"
-            }
-            color={alcanzaEquilibrio ? "emerald" : "amber"}
-          />
-          <Kpi
-            titulo="Ventas de equilibrio"
-            valor={
-              Number.isFinite(base.equilibrio.ingresoBs)
-                ? fmtBs(base.equilibrio.ingresoBs)
-                : "Sin margen"
+              esBeneficio
+                ? fmtBs(eq.ingresoAnio1)
+                : Number.isFinite(eq.ingresoEquilibrio)
+                  ? fmtBs(eq.ingresoEquilibrio)
+                  : "Sin margen"
             }
             color="violet"
           />
           <Kpi
             titulo="Margen de seguridad"
-            valor={
-              Number.isFinite(base.margenSeguridad)
-                ? fmtPct(base.margenSeguridad)
-                : "—"
-            }
-            color={base.margenSeguridad >= 0 ? "cyan" : "amber"}
+            valor={Number.isFinite(eq.margenSeguridad) ? fmtPct(eq.margenSeguridad) : "—"}
+            color={eq.margenSeguridad >= 0 ? "cyan" : "amber"}
           />
         </div>
         <div className="rounded-[1.5vw] border border-slate-200 bg-white p-[3%] shadow-sm">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
-              data={base.graficoEquilibrio}
-              margin={{ top: 16, right: 28, left: 18, bottom: 4 }}
+              data={datosGrafico}
+              margin={{ top: 16, right: 28, left: 18, bottom: 18 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis
-                dataKey="unidades"
+                dataKey="volumenPct"
                 type="number"
-                tickFormatter={(valor) => Number(valor).toLocaleString("es-BO", { maximumFractionDigits: 0 })}
+                tickFormatter={(valor) => `${Math.round(Number(valor))}%`}
                 tick={{ fontSize: 11, fill: "#64748b" }}
                 axisLine={false}
                 tickLine={false}
+                label={{ value: "% del volumen de ventas del año 1", position: "insideBottom", offset: -10, fill: "#64748b", fontSize: 11 }}
               />
               <YAxis
                 tickFormatter={(valor) => fmtBs(valor).replace("Bs ", "")}
@@ -579,12 +625,12 @@ function Equilibrio({
               />
               <Tooltip
                 formatter={tooltipBs}
-                labelFormatter={(valor) => `${Number(valor).toLocaleString("es-BO", { maximumFractionDigits: 0 })} unidades`}
+                labelFormatter={(valor) => `${Math.round(Number(valor))}% del volumen del año 1`}
               />
-              <Legend />
-              {Number.isFinite(unidadesEquilibrio) && (
+              <Legend verticalAlign="top" />
+              {Number.isFinite(factor) && (
                 <ReferenceLine
-                  x={unidadesEquilibrio}
+                  x={factor * 100}
                   stroke="#7c3aed"
                   strokeDasharray="6 4"
                   label={{ value: "Punto de equilibrio", fill: "#7c3aed", fontSize: 11, position: "insideTopRight" }}
