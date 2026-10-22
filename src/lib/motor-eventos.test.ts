@@ -152,6 +152,19 @@ describe("aplicarDecisionAEstado", () => {
     expect(r.reputacion).toBeGreaterThanOrEqual(0);
   });
 
+  it("un monto en Bs sobre un costo sale de la caja y no toca el multiplicador", () => {
+    const ev = eventoMock();
+    const op: OpcionDecision = {
+      letra: "B",
+      texto: "Contratar contador externo",
+      consecuencias: { costos_admin: "+1500" },
+      feedback_corto: "Profesionaliza",
+    };
+    const r = aplicarDecisionAEstado(estadoInicial(), ev, op);
+    expect(r.costos_multiplicador).toBe(1);
+    expect(r.caja).toBe(100000 - 1500);
+  });
+
   it("guarda último_feedback en el estado", () => {
     const ev = eventoMock();
     const op: OpcionDecision = {

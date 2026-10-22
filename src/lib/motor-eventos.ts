@@ -219,6 +219,17 @@ function aplicarConsecuenciaAlEstado(
   const claveEstado = aliasACampo[campo];
   if (!claveEstado) return estado;
 
+  // "+1500" sobre un costo es un monto en Bs, no un factor: se paga una vez
+  // desde la caja. Sumarlo al multiplicador lo dejaba en ~1500 y quebraba el negocio.
+  if (
+    claveEstado === "costos_multiplicador" &&
+    (parsed.operacion === "sumar" || parsed.operacion === "restar") &&
+    parsed.valor >= 10
+  ) {
+    const signo = parsed.operacion === "sumar" ? -1 : 1;
+    return { ...estado, caja: estado.caja + signo * parsed.valor };
+  }
+
   const valorActual = estado[claveEstado] as number;
   let nuevo = valorActual;
 
