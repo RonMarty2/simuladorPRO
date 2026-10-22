@@ -10,7 +10,8 @@ decisiones intencionales.
 - **Producto**: Simulador educativo de proyectos de inversión bolivianos.
 - **Stack**: React + Vite + TS + Tailwind + Zustand + Supabase + Vercel PWA.
 - **Lenguaje del código y UI**: español rioplatense neutro, moneda BOB.
-- **Tests**: `npm test -- --run` (293 al día de hoy, deben mantenerse verdes).
+- **Tests**: `npm test -- --run` (436 al 2026-10-22, deben mantenerse verdes).
+- **Plan vigente**: `PLAN-TIPOS-DE-PROYECTO.md` (eventos y esencia propia por tipo de proyecto; leerlo con la bitácora).
 - **Build**: `npm run build` (debe pasar sin warnings TypeScript).
 - **Producción**: `https://simulador-pro-seven.vercel.app`.
 

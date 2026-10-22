@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-19 — recorrido, análisis de riesgo y presentación (ver "Retomar aquí" en §10)
+> **Última actualización**: 2026-10-22 — eventos propios por tipo de proyecto (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -261,6 +261,8 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 025 | `proyecto_actividad.sql` | Tabla de actividad por usuario + RLS. Audit de quién editó/entregó proyectos grupales. |
 | 026 | `escenarios_config_por_curso.sql` | Columna `cursos.escenarios_config` (JSONB). El docente ajusta los % de Optimista/Pesimista por curso. NULL = defaults del código. |
 | 027 | `curso_semana_e.sql` | Columna `cursos.es_semana_e` (BOOL). Modo evento universitario: oculta entregas/notas/podio, muestra banner + checklist al estudiante. |
+| 034 | `eventos_turismo.sql` | 10 eventos exclusivos del tipo turismo (`sectores_afectados = ['tipo:turismo']`). Aplicada el 2026-10-22. |
+| 035 | `eventos_suscripcion.sql` | 10 eventos exclusivos del tipo suscripción (`'tipo:suscripcion'`). Aplicada el 2026-10-22. |
 | 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
@@ -626,6 +628,32 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         (39 ejemplos) hasta desregistrarlo y recargar; los usuarios la verán
         actualizada por el OTA (§7.7) tras recargar.
       - 373 tests (antes 293). Sin migraciones.
+
+### Retomar aquí (cierre de sesión 2026-10-22) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+Objetivo del owner: un simulador con distintos tipos de proyecto, donde las
+situaciones y la forma de evaluar cambian según el tipo (productos, costo-beneficio,
+social, marketing, suscripción, turismo...), con ejemplos de datos simulados.
+
+Hecho el 2026-10-22:
+- Investigación rigurosa de 20 de 24 tipos (carpeta local `docs/metodologia/`,
+  NO subida a GitHub; sincronizada por Synology): mapa `00-taxonomia-tipos.md` y
+  20 fichas en `tipos/`, cada una con 12 a 15 situaciones con dilema, variables
+  propias, ejemplos reales, fuentes con nivel y cifras a validar en Bolivia.
+  Faltan 4 tipos sin ficha: cultural, TI interna, infraestructura pública,
+  cumplimiento normativo (decidir con el owner si vale el gasto).
+- Base técnica (commit 597ac05, publicada): `Proyecto.tipoNegocio` (lo estampan
+  las plantillas con su categoría) y filtro de eventos por tipo
+  (`eventoAplicaAProyecto`). Proyectos sin tipo reciben solo eventos por sector.
+- Migraciones 034 (turismo) y 035 (suscripción): 20 eventos propios, aplicadas
+  en Supabase. 436 tests en verde, build OK.
+- Pendiente de verificar con el owner: abrir un proyecto del hostal boutique y
+  ver que llegan eventos TUR0xx (y uno de suscripción con SUS0xx).
+
+Siguiente: Fase 2 del plan (eventos para el resto de las categorías), luego
+plantillas nuevas (clínica, colegio, franquicia, agua, microcrédito) y, con OK
+del owner, variables e indicadores propios por tipo (Fase 4: cambia motor y
+fórmulas). Lección operativa: la IA no ejecuta SQL en producción ni hace push sin
+OK; copia el SQL, el owner pega y pulsa Run (detalle en el plan, §6).
 
 ### Retomar aquí (cierre de sesión 2026-10-19)
 Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión
@@ -1143,6 +1171,14 @@ Usos: `AnalisisRiesgo.tsx` (Escenarios) y `VisorPitch.tsx` (presentación).
    ```
 2. Correr en Supabase SQL Editor.
 3. (No requiere cambios de código — el motor lee del catálogo.)
+
+**Eventos propios de un tipo de proyecto (desde 2026-10-22)**: poner
+`ARRAY['tipo:turismo']` (la categoría de la plantilla, campo `tipoNegocio` del
+proyecto) en `sectores_afectados`. Solo llegarán a proyectos de ese tipo; el
+sector se ignora. Modelo: `034_eventos_turismo.sql`. Regla: `eventoAplicaAProyecto`
+en `motor-eventos.ts` (también la usa el lanzador del docente). La prueba
+`eventos-por-tipo-sql.test.ts` valida cada migración `NNN_eventos_*.sql`. Receta
+completa en `PLAN-TIPOS-DE-PROYECTO.md` §5.
 
 ### 16.3 Agregar un paso al wizard del constructor (10 pasos en vez de 9)
 1. Crear `src/components/constructor/pasos/Paso10X.tsx`.
