@@ -1632,6 +1632,392 @@ function peliculaNacional(): Proyecto {
 }
 
 // ============================================================================
+// TANDA 3
+// ============================================================================
+
+function coworking(): Proyecto {
+  const sus = { suscriptoresIniciales: 30, altasMensuales: 8, churnMensual: 0.05, cuotaMensual: 650 };
+  const baseAnual: [number, number, number, number, number] = [40, 70, 90, 100, 100];
+  const precioAnual = sus.cuotaMensual * 12;
+  const idPuesto = nuevoId();
+  return {
+    ...base(),
+    nombre: "Coworking «Nodo Central»",
+    ubicacion: "Santa Cruz, centro",
+    descripcion: "Espacio de trabajo compartido que alquila puestos por mes a freelancers y emprendedores. Modelo SUSCRIPCIÓN: el alquiler del local es el costo fijo dominante, y la ocupación determina todo. Ejemplo VIABLE si se llena sobre el 60% del aforo.",
+    sector: "servicios",
+    modeloIngreso: "suscripcion",
+    suscripcionV2: sus,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación de 400 m² (divisiones, cocina, salas)", "obra", 1, 120000, 10)],
+      maquinaria: [inv("Internet de alta velocidad, redes y climatización", "set", 1, 45000, 6)],
+      mobiliario: [inv("Escritorios, sillas, salas de reunión y cocina", "set", 1, 90000, 8)],
+      activoDiferido: [inv("Marca, web y sistema de reservas", "global", 1, 20000, 5)],
+    },
+    capitalTrabajo: 40000,
+    personal: [puesto("Community manager", 1, 4000), puesto("Recepción", 1, 2800), puesto("Limpieza", 1, 2600)],
+    costosDirectos: [directo(idPuesto, "comision_venta", "Comisión de pasarela y soporte por socio/año", "socio/año", 1, Math.round(precioAnual * 0.04))],
+    costosAdministracion: [gasto("Alquiler del local", 16000), gasto("Servicios básicos", 4500), gasto("Internet corporativo", 2500), gasto("Mantenimiento", 1500)],
+    costosComercializacion: [gasto("Marketing y eventos de comunidad", 3000)],
+    productos: [{ id: idPuesto, nombre: "Membresía de puesto fijo/flexible", unidadMedida: "socio/año", cantidades: baseAnual, precios: [precioAnual, precioAnual, precioAnual, precioAnual, precioAnual] }],
+    ...finCapm(),
+    crecimientoIngresosAnual: 0.1, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function parqueo(): Proyecto {
+  const idAbono = nuevoId(), idHora = nuevoId();
+  return {
+    ...base(),
+    nombre: "Estacionamiento céntrico «Park Plaza»",
+    ubicacion: "La Paz, zona central",
+    descripcion: "Parqueo para 80 vehículos en un terreno alquilado: abonos mensuales para oficinistas y cobro por hora para visitantes. Pocos activos y poca gente, pero el alquiler del terreno pesa. Ejemplo VIABLE con riesgo bajo.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Pavimentado, señalización e iluminación", "obra", 1, 150000, 15)],
+      maquinaria: [inv("Barreras, cámaras y sistema de cobro", "set", 1, 60000, 6)],
+      mobiliario: [inv("Casetas y cerco", "set", 1, 20000, 8)],
+      activoDiferido: [inv("Permisos municipales y contrato de terreno", "global", 1, 15000, 5)],
+    },
+    capitalTrabajo: 20000,
+    personal: [puesto("Cajeros (turnos)", 3, 2800), puesto("Supervisor", 1, 3800)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Alquiler del terreno", 14000), gasto("Energía e internet", 1200), gasto("Seguro y mantenimiento", 1500)],
+    costosComercializacion: [gasto("Promoción y convenios con edificios", 1000)],
+    productos: [
+      { id: idAbono, nombre: "Abonos mensuales", unidadMedida: "abono-mes", cantidades: [660, 720, 756, 768, 768], precios: serie(450, 0.03, 2) },
+      { id: idHora, nombre: "Cobro por hora", unidadMedida: "hora", cantidades: [30000, 32000, 34000, 35000, 36000], precios: serie(6, 0.03, 2) },
+    ],
+    ...finCapm(0.8),
+    crecimientoIngresosAnual: 0.04, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
+function aguaPotableRural(): Proyecto {
+  // Beneficio social: horas de acarreo ahorradas + enfermedades hídricas evitadas.
+  const { cb, precios } = beneficioAnual(380000, 0.02);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Sistema de agua potable para una comunidad rural",
+    ubicacion: "Provincia Tarata, Cochabamba",
+    descripcion: "Captación, tanque y red de distribución para 300 familias que hoy acarrean agua. El beneficio social se valora como horas de acarreo ahorradas (sobre todo de mujeres y niños) más enfermedades de origen hídrico evitadas. Financiamiento 100% propio (gobierno municipal) con tasa social. Ejemplo VIABLE socialmente.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Captación, tanque de almacenamiento y caseta", "obra", 1, 380000, 30), inv("Red de distribución y conexiones domiciliarias", "obra", 1, 300000, 25)],
+      maquinaria: [inv("Bombas, tratamiento y cloración", "set", 1, 90000, 10)],
+      mobiliario: [],
+      activoDiferido: [inv("Estudio, diseño y capacitación comunitaria", "global", 1, 40000, 5)],
+    },
+    capitalTrabajo: 15000,
+    personal: [puesto("Operador del sistema", 1, 3000)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Energía de bombeo", 2500), gasto("Cloro y análisis del agua", 1200), gasto("Mantenimiento de la red", 1500)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Beneficio social anual (horas de acarreo y salud)", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finSocial(0.08),
+    crecimientoIngresosAnual: 0.02, crecimientoCostosAnual: 0.03,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function tratamientoAgua(): Proyecto {
+  // Beneficio = agua que se deja de comprar + multas ambientales evitadas.
+  const { cb, precios } = beneficioAnual(476000, 0.03);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Planta de tratamiento y reúso de agua industrial",
+    ubicacion: "El Alto (curtiembre)",
+    descripcion: "Una curtiembre trata y reutiliza su agua residual. El beneficio es el agua que deja de comprar más las multas ambientales que evita. Ejemplo MARGINAL: parte del beneficio (la multa) es un riesgo que quizás nunca se materialice; si se descarta, el proyecto no se paga.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Obra civil de pozas y estanques", "obra", 1, 260000, 20)],
+      maquinaria: [inv("Equipos de tratamiento (filtros, bombas, dosificadores)", "set", 1, 520000, 12)],
+      mobiliario: [],
+      activoDiferido: [inv("Estudio de impacto y licencia ambiental", "global", 1, 60000, 5)],
+    },
+    capitalTrabajo: 25000,
+    personal: [puesto("Operador de planta", 1, 4000)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Insumos químicos", 5500), gasto("Energía eléctrica", 4000), gasto("Análisis de laboratorio", 1500), gasto("Mantenimiento", 1800)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Agua no comprada y multas ambientales evitadas", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(0.8),
+    crecimientoIngresosAnual: 0.03, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function programaFidelizacion(): Proyecto {
+  // Beneficio = margen de las compras EXTRA que genera el programa, no de todas
+  // las compras de los clientes inscritos (muchas se habrían hecho igual).
+  const { cb, precios } = beneficioAnual(280000, 0.02);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Programa de fidelización con tarjeta de puntos",
+    ubicacion: "Tarija (supermercado de barrio)",
+    descripcion: "Un supermercado lanza una tarjeta de puntos con descuentos. El beneficio es el margen de las compras ADICIONALES, pero el programa también regala descuentos a clientes que habrían comprado igual. Ejemplo MARGINAL: el costo del descuento se come buena parte de la ganancia.",
+    sector: "comercio",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Lectores y terminales en cajas", "set", 1, 25000, 5)],
+      mobiliario: [],
+      activoDiferido: [inv("Software de fidelización y base de clientes", "global", 1, 45000, 4), inv("Tarjetas y lanzamiento", "global", 1, 15000, 3)],
+    },
+    capitalTrabajo: 10000,
+    personal: [puesto("Encargado del programa", 1, 3500)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Licencia y soporte del software", 1200)],
+    costosComercializacion: [gasto("Descuentos y premios canjeados", 9500), gasto("Comunicación a socios (SMS y redes)", 1500)],
+    productos: [{ id: idBen, nombre: "Margen de compras adicionales atribuibles al programa", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(1.0),
+    crecimientoIngresosAnual: 0.02, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function seguridadAlmacen(): Proyecto {
+  // Beneficio = robos y mermas que se evitan, valorados a costo de reposición.
+  const { cb, precios } = beneficioAnual(207000, 0.0);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Sistema de seguridad para un almacén",
+    ubicacion: "Santa Cruz (almacén de electrodomésticos)",
+    descripcion: "Cámaras, alarma y control de acceso en un almacén que pierde mercadería por robo y merma interna. El beneficio son las pérdidas evitadas, que se estiman con los inventarios de años anteriores. Ejemplo VIABLE: la inversión es baja frente a la pérdida, pero hay que comprobar que la pérdida sea real y atribuible.",
+    sector: "comercio",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Cableado y adecuaciones", "obra", 1, 20000, 10)],
+      maquinaria: [inv("Cámaras, grabadores y alarma perimetral", "set", 1, 95000, 6), inv("Control de acceso biométrico", "set", 1, 30000, 6)],
+      mobiliario: [],
+      activoDiferido: [inv("Diseño del sistema e instalación", "global", 1, 15000, 5)],
+    },
+    capitalTrabajo: 8000,
+    personal: [puesto("Operador de monitoreo", 1, 3200)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Servicio de monitoreo y soporte", 1800), gasto("Mantenimiento de equipos", 800)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Robos y mermas evitados (a costo de reposición)", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(0.9),
+    crecimientoIngresosAnual: 0, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function mantenimientoPreventivo(): Proyecto {
+  // Beneficio = horas de parada no programada que se evitan × margen por hora.
+  const { cb, precios } = beneficioAnual(359000, 0.03);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Mantenimiento preventivo con sensores en una fábrica",
+    ubicacion: "Cochabamba (planta de embutidos)",
+    descripcion: "Sensores y un plan de mantenimiento preventivo en lugar de reparar cuando algo falla. El beneficio son las horas de parada no programada que se evitan, valoradas por lo que la planta deja de producir. Ejemplo VIABLE con inversión pequeña frente al beneficio.",
+    sector: "produccion",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Sensores de vibración y temperatura", "set", 1, 120000, 7)],
+      mobiliario: [inv("Taller y herramientas de diagnóstico", "set", 1, 25000, 8)],
+      activoDiferido: [inv("Software de gestión de mantenimiento", "global", 1, 35000, 4), inv("Capacitación de técnicos", "global", 1, 20000, 3)],
+    },
+    capitalTrabajo: 10000,
+    personal: [puesto("Técnicos de mantenimiento", 2, 4200)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Repuestos de mantenimiento preventivo", 4000), gasto("Licencia del software", 1000)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Producción que ya no se pierde por paradas no programadas", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(1.0),
+    crecimientoIngresosAnual: 0.03, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function feriaComercial(): Proyecto {
+  const idStand = nuevoId(), idEntrada = nuevoId(), idAuspicio = nuevoId();
+  return {
+    ...base(),
+    nombre: "Feria comercial anual «ExpoPyme»",
+    ubicacion: "Santa Cruz (recinto ferial)",
+    descripcion: "Feria de 4 días para pequeñas empresas: venta de stands, entradas y auspicios. Ingresos concentrados y casi todos los costos son del recinto y la producción. Ejemplo VIABLE: el stand es un ingreso casi puro, pero depende de convencer a los expositores año tras año.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Sistema de acreditación, sonido y pantallas", "set", 1, 90000, 6)],
+      mobiliario: [inv("Estructuras modulares de stands y señalética", "set", 1, 140000, 6)],
+      activoDiferido: [inv("Marca, web y plataforma de registro", "global", 1, 30000, 5)],
+    },
+    capitalTrabajo: 70000,
+    personal: [puesto("Director de la feria", 1, 8000), puesto("Coordinador comercial", 1, 4500)],
+    costosDirectos: [
+      directo(idStand, "insumo_directo", "Montaje, electricidad y limpieza por stand", "stand", 1, 700),
+      directo(idEntrada, "insumo_directo", "Seguridad y control por visitante", "entrada", 1, 3),
+    ],
+    costosAdministracion: [gasto("Alquiler del recinto ferial", 150000, "año"), gasto("Permisos, seguros y contabilidad", 30000, "año")],
+    costosComercializacion: [gasto("Campaña de promoción de la feria", 100000, "año")],
+    productos: [
+      { id: idStand, nombre: "Venta de stands", unidadMedida: "stand", cantidades: [150, 170, 190, 205, 220], precios: serie(2800, 0.04, 2) },
+      { id: idEntrada, nombre: "Entradas de visitantes", unidadMedida: "entrada", cantidades: [18000, 21000, 24000, 26000, 28000], precios: serie(20, 0.03, 2) },
+      { id: idAuspicio, nombre: "Auspicios de marcas", unidadMedida: "auspicio", cantidades: [5, 5, 6, 6, 7], precios: serie(30000, 0.04, 2) },
+    ],
+    ...finCapm(1.2),
+    crecimientoIngresosAnual: 0.07, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function salonEventos(): Proyecto {
+  const idSalon = nuevoId(), idCatering = nuevoId();
+  return {
+    ...base(),
+    nombre: "Salón de eventos y matrimonios «Terraza Jardín»",
+    ubicacion: "Cochabamba, zona Tiquipaya",
+    descripcion: "Terreno propio con salón, jardín y cocina para matrimonios y eventos corporativos. Alquiler del salón más servicio de comida y bebida. Ejemplo MARGINAL: gran inversión en obra y terreno, ingresos estacionales (fines de semana y fechas altas) y mucha dependencia de la ocupación.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [inv("Terreno de 1.200 m²", "m²", 1200, 1000, null)],
+      obrasCiviles: [inv("Salón principal, cocina y baños", "obra", 1, 650000, 25), inv("Jardín, iluminación y estacionamiento", "obra", 1, 120000, 15)],
+      maquinaria: [inv("Cocina industrial y refrigeración", "set", 1, 95000, 10)],
+      mobiliario: [inv("Mesas, sillas, mantelería y vajilla", "set", 1, 110000, 6), inv("Sonido e iluminación", "set", 1, 45000, 6)],
+      activoDiferido: [inv("Licencias, marca y permisos", "global", 1, 25000, 5)],
+    },
+    capitalTrabajo: 45000,
+    personal: [puesto("Administrador de eventos", 1, 6000), puesto("Cocineros", 2, 3500), puesto("Meseros y apoyo", 4, 2600), puesto("Mantenimiento y limpieza", 2, 2600)],
+    costosDirectos: [directo(idCatering, "insumo_directo", "Comida y bebida por invitado", "invitado", 1, 55)],
+    costosAdministracion: [gasto("Servicios básicos", 4500), gasto("Mantenimiento del salón y jardín", 3500), gasto("Seguros e impuestos", 3000), gasto("Contabilidad", 1200)],
+    costosComercializacion: [gasto("Publicidad y ferias de novios", 3500)],
+    productos: [
+      { id: idSalon, nombre: "Alquiler del salón (evento)", unidadMedida: "evento", cantidades: [80, 88, 94, 98, 100], precios: serie(8500, 0.04, 2) },
+      { id: idCatering, nombre: "Servicio de comida y bebida", unidadMedida: "invitado", cantidades: [12000, 13200, 14100, 14700, 15000], precios: serie(120, 0.04, 2) },
+    ],
+    ...finCapm(1.0),
+    crecimientoIngresosAnual: 0.05, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function lanzamientoProducto(): Proyecto {
+  // El efecto de una campaña de lanzamiento se desvanece: el beneficio cae
+  // cada año (crecimiento negativo), a diferencia de un negocio estable.
+  const { cb, precios } = beneficioAnual(380000, -0.2);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Campaña de lanzamiento de una nueva línea de snacks",
+    ubicacion: "Cochabamba y Santa Cruz",
+    descripcion: "Una empresa lanza una línea nueva con degustaciones, redes y promociones en supermercados. El beneficio es el margen de las ventas adicionales, que es alto el primer año y se desvanece cuando termina la promoción. Ejemplo MARGINAL: un mal cálculo es suponer que el efecto dura todos los años.",
+    sector: "produccion",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [],
+      mobiliario: [inv("Góndolas y exhibidores en supermercados", "set", 1, 60000, 3)],
+      activoDiferido: [inv("Diseño de marca y empaque", "global", 1, 40000, 3), inv("Producción de contenido y material", "global", 1, 30000, 3)],
+    },
+    capitalTrabajo: 40000,
+    personal: [puesto("Jefe de producto (medio tiempo)", 1, 3200)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Medición y seguimiento", 1500)],
+    costosComercializacion: [gasto("Degustaciones y promotoras", 3000), gasto("Pauta en redes y exhibición", 3000)],
+    productos: [{ id: idBen, nombre: "Margen de ventas adicionales por la campaña", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(1.2),
+    crecimientoIngresosAnual: -0.2, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function softwareSaaS(): Proyecto {
+  const sus = { suscriptoresIniciales: 20, altasMensuales: 14, churnMensual: 0.03, cuotaMensual: 320 };
+  const baseAnual: [number, number, number, number, number] = [60, 150, 260, 360, 440];
+  const precioAnual = sus.cuotaMensual * 12;
+  const idPlan = nuevoId();
+  return {
+    ...base(),
+    nombre: "Software de gestión para pymes «OrdenaYa»",
+    ubicacion: "Santa Cruz (remoto)",
+    descripcion: "Plataforma en la nube de facturación e inventario con suscripción mensual. El desarrollo es el gran costo inicial; cada cliente nuevo casi no cuesta. Ejemplo ARRIESGADO: sin cierto número de clientes no cubre al equipo, pero con volumen el margen es muy alto.",
+    sector: "servicios",
+    modeloIngreso: "suscripcion",
+    suscripcionV2: sus,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Equipos del equipo técnico", "set", 1, 45000, 4)],
+      mobiliario: [inv("Mobiliario de oficina", "set", 1, 10000, 8)],
+      activoDiferido: [inv("Desarrollo de la plataforma (versión 1)", "global", 1, 200000, 4), inv("Marca, web y registro", "global", 1, 25000, 4)],
+    },
+    capitalTrabajo: 60000,
+    personal: [puesto("Desarrolladores", 2, 8000), puesto("Soporte al cliente", 1, 3500), puesto("Ejecutivo comercial", 1, 4500), puesto("Gerente general", 1, 8000)],
+    costosDirectos: [directo(idPlan, "comision_venta", "Pasarela de pago y soporte por cliente/año", "cliente/año", 1, Math.round(precioAnual * 0.05))],
+    costosAdministracion: [gasto("Servidores en la nube", 2800), gasto("Oficina e internet", 2500), gasto("Contabilidad y legal", 1500)],
+    costosComercializacion: [gasto("Publicidad digital y demos", 6000), gasto("Eventos y alianzas con contadores", 2000)],
+    productos: [{ id: idPlan, nombre: "Suscripción anual por empresa", unidadMedida: "cliente/año", cantidades: baseAnual, precios: [precioAnual, precioAnual, precioAnual, precioAnual, precioAnual] }],
+    ...finCapm(1.6),
+    crecimientoIngresosAnual: 0.3, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function reforestacionCarbono(): Proyecto {
+  // Proyecto de horizonte largo evaluado en 5 años: los árboles recién empiezan
+  // a capturar carbono de forma significativa pasado ese plazo.
+  const idBono = nuevoId(), idMadera = nuevoId();
+  return {
+    ...base(),
+    nombre: "Reforestación con venta de bonos de carbono",
+    ubicacion: "Beni (200 hectáreas)",
+    descripcion: "Plantación de especies nativas que vende bonos de carbono y madera de raleo. Ejemplo de RECHAZO a 5 años: los árboles capturan poco al inicio y los ingresos grandes llegan mucho después. Enseña que el horizonte de evaluación cambia la decisión: a 20 años el mismo proyecto podría ser viable.",
+    sector: "agricultura",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [inv("Tierras (200 hectáreas)", "ha", 200, 3500, null)],
+      obrasCiviles: [inv("Vivero, camino y campamento", "obra", 1, 90000, 15)],
+      maquinaria: [inv("Maquinaria y herramientas forestales", "set", 1, 110000, 8)],
+      mobiliario: [],
+      activoDiferido: [inv("Plantines y plantación inicial", "global", 1, 160000, 5), inv("Certificación del proyecto de carbono", "global", 1, 70000, 5)],
+    },
+    capitalTrabajo: 30000,
+    personal: [puesto("Ingeniero forestal", 1, 6500), puesto("Jornaleros", 4, 2600)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Monitoreo y verificación anual", 40000, "año"), gasto("Mantenimiento de la plantación", 3500), gasto("Seguro y contabilidad", 1500)],
+    costosComercializacion: [gasto("Intermediación de bonos", 1500)],
+    productos: [
+      { id: idBono, nombre: "Bonos de carbono vendidos (tCO2)", unidadMedida: "tCO2", cantidades: [400, 1500, 3200, 5200, 7500], precios: serie(110, 0.03, 2) },
+      { id: idMadera, nombre: "Madera de raleo", unidadMedida: "m³", cantidades: [0, 0, 150, 350, 600], precios: serie(650, 0.03, 2) },
+    ],
+    ...finCapm(0.9),
+    crecimientoIngresosAnual: 0.1, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
+// ============================================================================
 // REGISTRO EXPORTADO
 // ============================================================================
 
@@ -1702,4 +2088,18 @@ export const PLANTILLAS: PlantillaMeta[] = [
   { clave: "appdelivery", titulo: "App de delivery para barrios", emoji: "📱", categoria: "tecnologia", sector: "Servicios", modelo: "unidades", modeloLabel: "Comisión por pedido", escala: "Mediano", resumen: "Desarrollo caro, ingreso por comisión y escala.", ensena: "Costo inicial alto y costo marginal bajo: el resultado depende del volumen de pedidos. Prueba con la mitad de los pedidos para ver el riesgo.", veredicto: "marginal", crear: appDelivery },
   { clave: "capacitacion", titulo: "Capacitación técnica para jóvenes", emoji: "🎓", categoria: "social", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Beneficio social", escala: "Mediano", resumen: "El beneficio es el mayor ingreso de los egresados.", ensena: "Cuánto del beneficio se atribuye al programa es el supuesto clave. Cambia el porcentaje y compara el VAN con el de la posta de salud.", veredicto: "marginal", crear: capacitacionJovenes },
   { clave: "pelicula", titulo: "Película nacional", emoji: "🎬", categoria: "eventos", sector: "Servicios", modelo: "unidades", modeloLabel: "Proyecto puntual", escala: "Grande", resumen: "Un año de producción e ingresos concentrados en pocos años.", ensena: "Un proyecto de una sola vez tiene ingresos que se agotan: aquí no hay flujo estable. Muestra por qué el periodo de recuperación y el riesgo importan.", veredicto: "marginal", crear: peliculaNacional },
+
+  // Tanda 3
+  { clave: "coworking", titulo: "Coworking", emoji: "🧑‍💻", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Puestos de trabajo compartidos con membresía mensual.", ensena: "Con alquiler fijo alto, la ocupación decide todo. Prueba bajar la ocupación al 50% y mira cuándo deja de convenir.", veredicto: "viable", crear: () => calibrarDemanda(coworking(), 1.375) },
+  { clave: "parqueo", titulo: "Estacionamiento céntrico", emoji: "🅿️", categoria: "alquiler", sector: "Servicios", modelo: "unidades", modeloLabel: "Renta", escala: "Pequeño", resumen: "Abonos mensuales y cobro por hora en terreno alquilado.", ensena: "Un negocio de pocos activos y poca gente, pero con el alquiler del terreno como costo fijo dominante. Compara con el edificio de departamentos: ahí el terreno es propio.", veredicto: "viable", crear: () => calibrarDemanda(parqueo(), 1.143) },
+  { clave: "aguapotable", titulo: "Agua potable para comunidad rural", emoji: "💧", categoria: "social", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Beneficio social", escala: "Grande", resumen: "Horas de acarreo y salud, valoradas en bolivianos.", ensena: "El beneficio mezcla tiempo ahorrado y salud: cada uno necesita su supuesto explícito. Discute cuánto vale una hora de acarreo y quién debería pagar el proyecto.", veredicto: "viable", crear: aguaPotableRural },
+  { clave: "tratamientoagua", titulo: "Planta de tratamiento de agua", emoji: "♻️", categoria: "costo_beneficio", sector: "Producción", modelo: "costo_beneficio", modeloLabel: "Ahorro de costos", escala: "Mediano", resumen: "Ahorro de agua y multas evitadas en una curtiembre.", ensena: "Una parte del beneficio es una multa que quizás nunca ocurra. Prueba quitarla del beneficio y observa si el proyecto se sostiene solo con el ahorro de agua.", veredicto: "marginal", crear: tratamientoAgua },
+  { clave: "fidelizacion", titulo: "Programa de fidelización", emoji: "💳", categoria: "marketing", sector: "Comercio", modelo: "costo_beneficio", modeloLabel: "Ventas adicionales", escala: "Pequeño", resumen: "Tarjeta de puntos: el descuento come parte de la ganancia.", ensena: "No todas las compras de los clientes inscritos son extra: muchas se habrían hecho igual y aun así se les regala el descuento. Ese costo es lo que decide el resultado.", veredicto: "marginal", crear: programaFidelizacion },
+  { clave: "seguridad", titulo: "Seguridad para un almacén", emoji: "🔒", categoria: "costo_beneficio", sector: "Comercio", modelo: "costo_beneficio", modeloLabel: "Pérdidas evitadas", escala: "Pequeño", resumen: "Cámaras y alarma contra robos y mermas.", ensena: "Compara con la cámara de frío: ambas evitan pérdidas. La diferencia es qué tan seguro es el dato de la pérdida; con inventarios reales el supuesto es más firme.", veredicto: "viable", crear: seguridadAlmacen },
+  { clave: "mantenimiento", titulo: "Mantenimiento preventivo", emoji: "🛠️", categoria: "costo_beneficio", sector: "Producción", modelo: "costo_beneficio", modeloLabel: "Pérdidas evitadas", escala: "Pequeño", resumen: "Sensores para evitar paradas no programadas.", ensena: "Una inversión chica puede evitar una pérdida grande. El beneficio se valora como producción que no se pierde por parada, con el margen por hora de la planta.", veredicto: "viable", crear: mantenimientoPreventivo },
+  { clave: "feria", titulo: "Feria comercial anual", emoji: "🏬", categoria: "eventos", sector: "Servicios", modelo: "unidades", modeloLabel: "Evento", escala: "Mediano", resumen: "Stands, entradas y auspicios en un recinto alquilado.", ensena: "El stand es un ingreso casi puro: cada expositor adicional aporta casi todo su precio. Prueba bajar los stands vendidos un 20% y compara con el festival de música.", veredicto: "viable", crear: () => calibrarDemanda(feriaComercial(), 0.824) },
+  { clave: "salonmatrimonios", titulo: "Salón de eventos y matrimonios", emoji: "💍", categoria: "alquiler", sector: "Servicios", modelo: "unidades", modeloLabel: "Evento", escala: "Grande", resumen: "Terreno, salón y cocina con ingresos estacionales.", ensena: "Mucha inversión en obra y terreno con ingresos que dependen de la ocupación. El terreno conserva valor; el salón se deprecia. Mira cuánto pesa cada cosa en el resultado final.", veredicto: "marginal", crear: () => calibrarDemanda(salonEventos(), 0.793) },
+  { clave: "lanzamiento", titulo: "Campaña de lanzamiento de producto", emoji: "🚀", categoria: "marketing", sector: "Producción", modelo: "costo_beneficio", modeloLabel: "Ventas adicionales", escala: "Mediano", resumen: "Efecto fuerte el primer año que se desvanece después.", ensena: "El beneficio de una campaña cae año a año. Es un error común proyectarlo constante: cambia el crecimiento del beneficio y mira cuánto se mueve el VAN.", veredicto: "marginal", crear: lanzamientoProducto },
+  { clave: "saas", titulo: "Software para pymes (SaaS)", emoji: "☁️", categoria: "tecnologia", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Desarrollo caro, clientes que pagan cada mes.", ensena: "Costo inicial alto y costo marginal casi cero: la escala lo es todo. Prueba con la mitad de los clientes y observa cuánto empeora el resultado.", veredicto: "marginal", crear: () => calibrarDemanda(softwareSaaS(), 1.528) },
+  { clave: "reforestacion", titulo: "Reforestación con bonos de carbono", emoji: "🌳", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Largo plazo", escala: "Grande", resumen: "Ingresos que llegan recién después del horizonte de evaluación.", ensena: "El horizonte de 5 años perjudica a proyectos de maduración lenta. Un proyecto puede ser bueno a 20 años y rechazado a 5: la decisión depende de cuánto tiempo se mire.", veredicto: "rechazo", crear: reforestacionCarbono },
 ];
