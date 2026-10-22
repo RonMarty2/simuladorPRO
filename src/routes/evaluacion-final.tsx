@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Lightbulb, TrendingUp, XCircle } from "lucide-react";
 import {
@@ -142,7 +143,7 @@ export default function EvaluacionFinal() {
           <BarChart data={comparativo}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis dataKey="periodo" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}K`} />
             <Tooltip
               formatter={(v: number) => formatearBolivianos(v)}
               labelFormatter={(l) => l}
@@ -204,7 +205,7 @@ export default function EvaluacionFinal() {
           Calificación sugerida
         </div>
         <div className="text-3xl font-bold text-amber-900 dark:text-amber-200">
-          {analisis.calificacion.toFixed(0)}/100
+          {fmtNum(analisis.calificacion, 0)}/100
         </div>
         <div className="mt-2 text-xs text-amber-800/80 dark:text-amber-300/80">
           Rúbrica sugerida: 30% calidad de construcción inicial · 40% decisiones durante simulación
@@ -242,10 +243,10 @@ function ComparativoCard({
     formato === "moneda"
       ? formatearBolivianos(n)
       : formato === "porcentaje"
-        ? `${(n * 100).toFixed(2)}%`
+        ? `${fmtNum((n * 100), 2)}%`
         : n < 0
           ? "No recupera"
-          : `${n.toFixed(1)} años`;
+          : `${fmtNum(n, 1)} años`;
   const delta = real - proyectado;
   const fueMejor = mejorEsMayor ? delta > 0 : delta < 0;
 

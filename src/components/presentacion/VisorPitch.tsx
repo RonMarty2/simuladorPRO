@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -53,13 +54,13 @@ const COLORES = ["#7c3aed", "#06b6d4", "#10b981", "#f59e0b", "#f43f5e"];
 function fmtBs(valor: number) {
   const abs = Math.abs(valor);
   const signo = valor < 0 ? "−" : "";
-  if (abs >= 1_000_000) return `${signo}Bs ${(abs / 1_000_000).toFixed(1)} M`;
-  if (abs >= 1_000) return `${signo}Bs ${(abs / 1_000).toFixed(0)} mil`;
+  if (abs >= 1_000_000) return `${signo}Bs ${fmtNum((abs / 1_000_000), 1)} M`;
+  if (abs >= 1_000) return `${signo}Bs ${fmtNum((abs / 1_000), 0)} mil`;
   return `${signo}Bs ${abs.toLocaleString("es-BO", { maximumFractionDigits: 0 })}`;
 }
 
 function fmtPct(valor: number) {
-  return Number.isFinite(valor) ? `${(valor * 100).toFixed(1)}%` : "—";
+  return Number.isFinite(valor) ? `${fmtNum((valor * 100), 1)}%` : "—";
 }
 
 function tooltipBs(valor: number | string) {
@@ -814,7 +815,7 @@ function ControlLaboratorio({
   mostrarSigno: boolean;
   onChange: (valor: number) => void;
 }) {
-  const textoValor = `${mostrarSigno && valor > 0 ? "+" : ""}${valor.toFixed(paso < 1 ? 1 : 0)}${sufijo}`;
+  const textoValor = `${mostrarSigno && valor > 0 ? "+" : ""}${fmtNum(valor, paso < 1 ? 1 : 0)}${sufijo}`;
   return (
     <label className="block rounded-xl bg-slate-50 px-[4%] py-[3%]">
       <span className="flex items-center justify-between gap-2 text-[clamp(9px,0.82vw,13px)] font-bold text-slate-700">
@@ -856,12 +857,12 @@ function Comparador({
 }
 
 function formatoRecuperacion(valor: number) {
-  return Number.isFinite(valor) && valor >= 0 ? `${valor.toFixed(1)} años` : "No recupera";
+  return Number.isFinite(valor) && valor >= 0 ? `${fmtNum(valor, 1)} años` : "No recupera";
 }
 
 function formatoCobertura(valor: number) {
   if (!Number.isFinite(valor)) return "Sin deuda";
-  return `${valor.toFixed(2)} veces`;
+  return `${fmtNum(valor, 2)} veces`;
 }
 
 function Financiamiento({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string }) {
@@ -918,8 +919,8 @@ function Indicadores({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: stri
   const indicadores = [
     { nombre: "VAN", valor: fmtBs(modelo.resultado.indicadores.van), lectura: modelo.resultado.indicadores.van > 0 ? "Crea valor" : "Destruye valor" },
     { nombre: "TIR", valor: fmtPct(modelo.resultado.indicadores.tir), lectura: `vs. costo de capital ${fmtPct(modelo.resultado.wacc)}` },
-    { nombre: "Recuperación", valor: Number.isFinite(modelo.resultado.indicadores.payback) && modelo.resultado.indicadores.payback >= 0 ? `${modelo.resultado.indicadores.payback.toFixed(1)} años` : "No recupera", lectura: "Periodo de recuperación de la inversión" },
-    { nombre: "Rentabilidad", valor: modelo.resultado.indicadores.ir.toFixed(2), lectura: "Índice de rentabilidad" },
+    { nombre: "Recuperación", valor: Number.isFinite(modelo.resultado.indicadores.payback) && modelo.resultado.indicadores.payback >= 0 ? `${fmtNum(modelo.resultado.indicadores.payback, 1)} años` : "No recupera", lectura: "Periodo de recuperación de la inversión" },
+    { nombre: "Rentabilidad", valor: fmtNum(modelo.resultado.indicadores.ir, 2), lectura: "Índice de rentabilidad" },
   ];
   return (
     <Marco etiqueta={etiqueta} titulo={modelo.viable ? "Los indicadores respaldan la inversión" : "Los indicadores piden una recalibración"} subtitulo="La decisión combina creación de valor, rendimiento y velocidad de recuperación.">
@@ -984,7 +985,7 @@ function Escenarios({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: strin
               </div>
               <div className="text-[clamp(20px,2.6vw,44px)] font-black leading-tight tracking-tight text-slate-950">{fmtBs(e.van)}</div>
               <div className="text-[clamp(9px,0.9vw,15px)] font-semibold text-slate-500">
-                VAN · TIR {tirCalculable(e.tir) ? fmtPct(e.tir) : "no calculable"} · {Number.isFinite(e.payback) && e.payback >= 0 ? `recupera en ${e.payback.toFixed(1)} años` : "no recupera"}
+                VAN · TIR {tirCalculable(e.tir) ? fmtPct(e.tir) : "no calculable"} · {Number.isFinite(e.payback) && e.payback >= 0 ? `recupera en ${fmtNum(e.payback, 1)} años` : "no recupera"}
               </div>
             </div>
           ))}

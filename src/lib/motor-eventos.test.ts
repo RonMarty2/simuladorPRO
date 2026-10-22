@@ -240,3 +240,29 @@ describe("inicializarEstadoDesdeProyecto", () => {
     expect(r.deuda).toBe(40000);
   });
 });
+
+describe("efectos de decisiones que antes se ignoraban", () => {
+  const ev = eventoMock();
+  const op = (consecuencias: Record<string, string>): OpcionDecision => ({
+    letra: "A",
+    texto: "x",
+    consecuencias,
+    feedback_corto: "ok",
+  });
+
+  it("intereses pagados salen de la caja", () => {
+    const r = aplicarDecisionAEstado(estadoInicial(), ev, op({ interes_pagado: "+1500" }));
+    expect(r.caja).toBe(100000 - 1500);
+  });
+
+  it("calidad baja la reputación", () => {
+    const r = aplicarDecisionAEstado(estadoInicial(), ev, op({ calidad: "-10%" }));
+    expect(r.reputacion).toBeCloseTo(0.45);
+  });
+
+  it("costo en Bs no toca el multiplicador", () => {
+    const r = aplicarDecisionAEstado(estadoInicial(), ev, op({ costo: "+3000" }));
+    expect(r.costos_multiplicador).toBe(1);
+    expect(r.caja).toBe(100000 - 3000);
+  });
+});

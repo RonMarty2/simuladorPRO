@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Newspaper, PlayCircle, Trophy, XCircle } from "lucide-react";
@@ -238,7 +239,7 @@ export default function SimularProyecto() {
           />
           <Metrica
             titulo="Reputación"
-            valor={`${(sim.estado_actual.reputacion * 100).toFixed(0)}%`}
+            valor={`${fmtNum((sim.estado_actual.reputacion * 100), 0)}%`}
             positivo={sim.estado_actual.reputacion >= 0.5}
           />
         </div>
@@ -377,7 +378,7 @@ function GraficosHistorial({ historial }: { historial: ReturnType<typeof useSimu
           <LineChart data={datos}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis dataKey="turno" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}K`} />
             <Tooltip
               formatter={(v: number) => formatearBolivianos(v)}
               labelFormatter={(l) => `Turno ${l}`}
@@ -392,7 +393,7 @@ function GraficosHistorial({ historial }: { historial: ReturnType<typeof useSimu
           <BarChart data={datos}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis dataKey="turno" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${fmtNum((v / 1000), 1)}K`} />
             <Tooltip
               formatter={(v: number) => formatearBolivianos(v)}
               labelFormatter={(l) => `Turno ${l}`}
@@ -460,7 +461,7 @@ function PantallaFinalizada({
           />
           <ResumenCelda
             titulo="Reputación final"
-            valor={`${(simulacion.estado_actual.reputacion * 100).toFixed(0)}%`}
+            valor={`${fmtNum((simulacion.estado_actual.reputacion * 100), 0)}%`}
           />
         </div>
 
@@ -548,7 +549,7 @@ function PantallaInicio({
           <ResumenCelda titulo="VAN del plan" valor={formatearBolivianos(indicadores.van)} />
           <ResumenCelda
             titulo="TIR del plan"
-            valor={tirCalculable(indicadores.tir) ? `${(indicadores.tir * 100).toFixed(1)}%` : "No calculable"}
+            valor={tirCalculable(indicadores.tir) ? `${fmtNum((indicadores.tir * 100), 1)}%` : "No calculable"}
           />
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { tirCalculable } from "@/lib/acotar-numero";
 import {
@@ -126,7 +127,7 @@ export default function PanelEscenarios({
           <LineChart data={datosGrafico} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}k`} />
             <Tooltip
               formatter={(v: number) => formatearBolivianos(v)}
               labelStyle={{ color: "hsl(var(--foreground))" }}
@@ -321,9 +322,9 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
       </div>
       <div className="mt-2 grid grid-cols-2 gap-1 text-[11px]">
         <Stat label="VAN" v={formatearBolivianos(ind.van)} />
-        <Stat label="TIR" v={tirCalculable(ind.tir) ? `${(ind.tir * 100).toFixed(1)}%` : "—"} />
-        <Stat label="Recuperación" v={ind.payback !== null && ind.payback >= 0 ? `${ind.payback.toFixed(1)} años` : "∞"} />
-        <Stat label="WACC" v={`${(escenario.flujo.wacc * 100).toFixed(1)}%`} />
+        <Stat label="TIR" v={tirCalculable(ind.tir) ? `${fmtNum((ind.tir * 100), 1)}%` : "—"} />
+        <Stat label="Recuperación" v={ind.payback !== null && ind.payback >= 0 ? `${fmtNum(ind.payback, 1)} años` : "∞"} />
+        <Stat label="WACC" v={`${fmtNum((escenario.flujo.wacc * 100), 1)}%`} />
       </div>
       <div className="mt-2 text-[11px] text-muted-foreground">
         {resumirModificadores(escenario.modificadores)}
@@ -360,16 +361,16 @@ function TablaIndicadores({ escenarios }: { escenarios: EscenarioCalculado[] }) 
           <FilaIndicador
             label="TIR"
             escenarios={escenarios}
-            sel={(f) => (tirCalculable(f.indicadores.tir) ? `${(f.indicadores.tir * 100).toFixed(2)}%` : "—")}
+            sel={(f) => (tirCalculable(f.indicadores.tir) ? `${fmtNum((f.indicadores.tir * 100), 2)}%` : "—")}
           />
           <FilaIndicador
             label="Recuperación"
             escenarios={escenarios}
-            sel={(f) => (f.indicadores.payback !== null && f.indicadores.payback >= 0 ? `${f.indicadores.payback.toFixed(2)} años` : "∞")}
+            sel={(f) => (f.indicadores.payback !== null && f.indicadores.payback >= 0 ? `${fmtNum(f.indicadores.payback, 2)} años` : "∞")}
           />
-          <FilaIndicador label="IR (Índice de rentabilidad)" escenarios={escenarios} sel={(f) => f.indicadores.ir.toFixed(2)} />
-          <FilaIndicador label="RBC (Beneficio/Costo)" escenarios={escenarios} sel={(f) => f.indicadores.rbc.toFixed(2)} />
-          <FilaIndicador label="WACC" escenarios={escenarios} sel={(f) => `${(f.wacc * 100).toFixed(2)}%`} />
+          <FilaIndicador label="IR (Índice de rentabilidad)" escenarios={escenarios} sel={(f) => fmtNum(f.indicadores.ir, 2)} />
+          <FilaIndicador label="RBC (Beneficio/Costo)" escenarios={escenarios} sel={(f) => fmtNum(f.indicadores.rbc, 2)} />
+          <FilaIndicador label="WACC" escenarios={escenarios} sel={(f) => `${fmtNum((f.wacc * 100), 2)}%`} />
           <tr className="border-t-2 border-border bg-primary/5 font-bold">
             <td className="p-2">¿Viable?</td>
             {escenarios.map((e) => (

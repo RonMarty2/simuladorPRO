@@ -1,5 +1,6 @@
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import type { Proyecto } from "@/types/proyecto";
+import { fmtNum } from "./utils";
 
 /**
  * Diagnóstico pedagógico de un proyecto de inversión.
@@ -113,8 +114,8 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "critico",
         titulo: "La TIR no supera al costo del capital (WACC)",
         detalle:
-          `Tu proyecto rinde ${(tir * 100).toFixed(1)}% pero el dinero te ` +
-          `cuesta ${(wacc * 100).toFixed(1)}%. Estás rindiendo menos de lo que ` +
+          `Tu proyecto rinde ${fmtNum((tir * 100), 1)}% pero el dinero te ` +
+          `cuesta ${fmtNum((wacc * 100), 1)}%. Estás rindiendo menos de lo que ` +
           "cuesta financiarte: no alcanza para pagar a quienes ponen la plata.",
         etapa: 7,
       });
@@ -124,8 +125,8 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "ok",
         titulo: "La TIR supera al costo del capital",
         detalle:
-          `Rindes ${(tir * 100).toFixed(1)}% contra un costo de ` +
-          `${(wacc * 100).toFixed(1)}%. El proyecto paga su financiamiento y deja margen.`,
+          `Rindes ${fmtNum((tir * 100), 1)}% contra un costo de ` +
+          `${fmtNum((wacc * 100), 1)}%. El proyecto paga su financiamiento y deja margen.`,
         etapa: 7,
       });
     }
@@ -150,7 +151,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "advertencia",
         titulo: "Tarda mucho en recuperar la inversión",
         detalle:
-          `Recuperas la plata recién en el año ${payback.toFixed(1)}. En un ` +
+          `Recuperas la plata recién en el año ${fmtNum(payback, 1)}. En un ` +
           "horizonte de 5 años eso deja poco colchón ante imprevistos. Mira si " +
           "puedes bajar la inversión inicial o acelerar ingresos.",
         etapa: 9,
@@ -187,7 +188,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "advertencia",
         titulo: "El margen del primer año es muy fino",
         detalle:
-          `Te queda apenas ${margenNetoPct.toFixed(1)}% de utilidad sobre ventas. ` +
+          `Te queda apenas ${fmtNum(margenNetoPct, 1)}% de utilidad sobre ventas. ` +
           "Cualquier suba de costos te deja en rojo. Poco margen = poco aguante " +
           "ante eventos económicos.",
         etapa: 5,
@@ -202,7 +203,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       severidad: "advertencia",
       titulo: "Estás financiando casi todo con deuda",
       detalle:
-        `El ${deudaPct.toFixed(0)}% de la inversión sale de préstamo. Mucho ` +
+        `El ${fmtNum(deudaPct, 0)}% de la inversión sale de préstamo. Mucho ` +
         "apalancamiento sube el riesgo: las cuotas se pagan sí o sí, vendas o no. " +
         "Probá subir el aporte propio en Etapa 7.",
       etapa: 7,
@@ -220,7 +221,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       severidad: "advertencia",
       titulo: "Tu demanda crece muy rápido",
       detalle:
-        `Estás proyectando que las ventas crecen ~${crecDemanda.toFixed(0)}% por ` +
+        `Estás proyectando que las ventas crecen ~${fmtNum(crecDemanda, 0)}% por ` +
         "año. Es un crecimiento agresivo; defendelo con un motivo real (mercado " +
         "nuevo, expansión) o moderalo en Etapa 2 para que el proyecto sea creíble.",
       etapa: 2,

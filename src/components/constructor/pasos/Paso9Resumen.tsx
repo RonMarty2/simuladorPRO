@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useMemo, useState, type ReactNode } from "react";
 import { tirCalculable } from "@/lib/acotar-numero";
 import {
@@ -106,7 +107,7 @@ export default function Paso9Resumen() {
                 ? "✓ Positivo: el proyecto crea valor"
                 : "✗ Negativo: el proyecto destruye valor"
             }
-            tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\nTu VAN descontado al ${(calc.wacc * 100).toFixed(2)}%: ${formatearBolivianos(calc.indicadores.van)}\n\nRegla: VAN > 0 acepta · VAN < 0 rechaza`}
+            tooltip={`VAN = Σ FCt / (1+WACC)^t  desde t=0 hasta t=5\nTu VAN descontado al ${fmtNum((calc.wacc * 100), 2)}%: ${formatearBolivianos(calc.indicadores.van)}\n\nRegla: VAN > 0 acepta · VAN < 0 rechaza`}
             explicacion="Suma toda la plata que genera el proyecto en 5 años, pero traída a valor de HOY (el dinero futuro vale menos). Si da positivo, el negocio te deja ganancia por encima de lo mínimo que exiges; si da negativo, pierdes valor. Es el indicador más importante."
           />
           <CardIndicador
@@ -114,7 +115,7 @@ export default function Paso9Resumen() {
             nombre="Tasa Interna de Retorno"
             valor={
               tirCalculable(calc.indicadores.tir)
-                ? `${(calc.indicadores.tir * 100).toFixed(2)}%`
+                ? `${fmtNum((calc.indicadores.tir * 100), 2)}%`
                 : "—"
             }
             positivo={tirCalculable(calc.indicadores.tir) && calc.indicadores.tir > calc.wacc}
@@ -123,8 +124,8 @@ export default function Paso9Resumen() {
               !tirCalculable(calc.indicadores.tir)
                 ? "✗ No se puede calcular (flujos malos)"
                 : calc.indicadores.tir > calc.wacc
-                  ? `✓ Supera el WACC (${(calc.wacc * 100).toFixed(2)}%)`
-                  : `✗ Menor al WACC (${(calc.wacc * 100).toFixed(2)}%)`
+                  ? `✓ Supera el WACC (${fmtNum((calc.wacc * 100), 2)}%)`
+                  : `✗ Menor al WACC (${fmtNum((calc.wacc * 100), 2)}%)`
             }
             tooltip={`TIR = tasa que hace VAN = 0.\n\nSi TIR > WACC: proyecto rentable, ACEPTAR.\nSi TIR < WACC: proyecto NO rentable, rechazar.\n\nSi muestra "—" los flujos no permiten calcularla.`}
             explicacion="Es el rendimiento anual que da el proyecto, como un interés. Se compara con el WACC (lo mínimo que exiges): si la TIR es mayor, el proyecto vale la pena; si es menor, no conviene. Una TIR alta = el negocio rinde bien."
@@ -135,7 +136,7 @@ export default function Paso9Resumen() {
             valor={
               calc.indicadores.payback < 0
                 ? "No recupera"
-                : `${calc.indicadores.payback.toFixed(1)} años`
+                : `${fmtNum(calc.indicadores.payback, 1)} años`
             }
             positivo={calc.indicadores.payback > 0 && calc.indicadores.payback <= 5}
             pregunta="¿En cuánto tiempo recuperas tu plata?"
@@ -154,7 +155,7 @@ export default function Paso9Resumen() {
             nombre="Tasa de Retorno Contable"
             valor={
               isFinite(calc.indicadores.trc)
-                ? `${(calc.indicadores.trc * 100).toFixed(2)}%`
+                ? `${fmtNum((calc.indicadores.trc * 100), 2)}%`
                 : "—"
             }
             positivo={calc.indicadores.trc > 0}
@@ -172,7 +173,7 @@ export default function Paso9Resumen() {
             nombre="Servicio de la Deuda"
             valor={
               isFinite(calc.indicadores.sd)
-                ? `${calc.indicadores.sd.toFixed(2)} veces`
+                ? `${fmtNum(calc.indicadores.sd, 2)} veces`
                 : "Sin deuda"
             }
             positivo={calc.indicadores.sd >= 1}
@@ -192,12 +193,12 @@ export default function Paso9Resumen() {
           <CardIndicador
             sigla="IR"
             nombre="Índice de Rentabilidad"
-            valor={calc.indicadores.ir.toFixed(2)}
+            valor={fmtNum(calc.indicadores.ir, 2)}
             positivo={calc.indicadores.ir > 1}
             pregunta="¿Cuántos Bs ganas por cada Bs invertido?"
             interpretacion={
               calc.indicadores.ir > 1
-                ? `✓ Por cada Bs invertido recuperas Bs ${calc.indicadores.ir.toFixed(2)}`
+                ? `✓ Por cada Bs invertido recuperas Bs ${fmtNum(calc.indicadores.ir, 2)}`
                 : "✗ No recuperas ni 1 Bs por cada Bs invertido"
             }
             tooltip="IR = VP(flujos positivos) ÷ inversión inicial.\n\nSi IR > 1: rentable, acepta.\nSi IR < 1: pierdes valor."
@@ -208,14 +209,14 @@ export default function Paso9Resumen() {
             nombre="Relación Beneficio/Costo"
             valor={
               isFinite(calc.indicadores.rbc)
-                ? calc.indicadores.rbc.toFixed(2)
+                ? fmtNum(calc.indicadores.rbc, 2)
                 : "—"
             }
             positivo={calc.indicadores.rbc > 1}
             pregunta="¿Cuántos Bs ingresas por cada Bs gastado?"
             interpretacion={
               calc.indicadores.rbc > 1
-                ? `✓ Por cada Bs de costo, ingresas Bs ${calc.indicadores.rbc.toFixed(2)}`
+                ? `✓ Por cada Bs de costo, ingresas Bs ${fmtNum(calc.indicadores.rbc, 2)}`
                 : "✗ Gastas más de lo que ingresas"
             }
             tooltip="RBC = VP(beneficios) ÷ VP(costos), con los MISMOS flujos que el VAN.\n\nBeneficios = ventas + préstamo + valor residual + recuperación del capital de trabajo.\nCostos = inversión + operación + impuestos + IVA neto + intereses + amortización.\n\nPor eso siempre coincide con el VAN: si VAN > 0, RBC > 1."
@@ -224,7 +225,7 @@ export default function Paso9Resumen() {
           <CardIndicador
             sigla="WACC"
             nombre="Costo Promedio Ponderado de Capital"
-            valor={`${(calc.wacc * 100).toFixed(2)}%`}
+            valor={`${fmtNum((calc.wacc * 100), 2)}%`}
             positivo
             pregunta="¿Qué rentabilidad mínima debe dar el proyecto?"
             interpretacion="Es la vara que la TIR debe superar"
@@ -376,7 +377,7 @@ export default function Paso9Resumen() {
             >
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
               <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+              <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}K`} />
               <Tooltip formatter={(v: number) => formatearBolivianos(v)} />
               <Bar dataKey="valor">
                 {calc.flujoCaja.map((v, i) => (
@@ -407,7 +408,7 @@ export default function Paso9Resumen() {
             >
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
               <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+              <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}K`} />
               <Tooltip formatter={(v: number) => formatearBolivianos(v)} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="ingresos" stroke="#10b981" name="Ingresos" />
@@ -453,9 +454,9 @@ function AnalisisAvanzadoV2({
   const v2 = useMemo(() => calcularV2(proyecto, calc), [proyecto, calc]);
 
   const fmtRatio = (n: number) =>
-    isFinite(n) ? `${n.toFixed(2)}×` : "—";
+    isFinite(n) ? `${fmtNum(n, 2)}×` : "—";
   const fmtPct = (n: number) =>
-    isFinite(n) ? `${(n * 100).toFixed(2)}%` : "—";
+    isFinite(n) ? `${fmtNum((n * 100), 2)}%` : "—";
 
   // Contraído por defecto: el usuario lo abre cuando quiere ver el detalle.
   const [abierto, setAbierto] = useState(false);
@@ -531,7 +532,7 @@ function AnalisisAvanzadoV2({
                 ? `${formatearBolivianos(v2.equilibrio.ingresoEquilibrio)}/año`
                 : v2.equilibrio.filas.length === 1
                   ? `${Math.ceil(v2.equilibrio.filas[0].unidadesEquilibrio).toLocaleString("es-BO")} ${v2.equilibrio.filas[0].unidad}`
-                  : `${(v2.equilibrio.factorVolumen * 100).toFixed(0)}% de tus ventas`
+                  : `${fmtNum((v2.equilibrio.factorVolumen * 100), 0)}% de tus ventas`
           }
           positivo={v2.equilibrio.alcanza}
         >
@@ -555,7 +556,7 @@ function AnalisisAvanzadoV2({
                 />
               ))}
             <FilaDetalle k="En dinero (Bs)" v={isFinite(v2.equilibrio.ingresoEquilibrio) ? formatearBolivianos(v2.equilibrio.ingresoEquilibrio) : "—"} />
-            <FilaDetalle k="Margen de seguridad" v={isFinite(v2.equilibrio.margenSeguridad) ? `${(v2.equilibrio.margenSeguridad * 100).toFixed(1)}%` : "—"} />
+            <FilaDetalle k="Margen de seguridad" v={isFinite(v2.equilibrio.margenSeguridad) ? `${fmtNum((v2.equilibrio.margenSeguridad * 100), 1)}%` : "—"} />
           </div>
           <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">
             {!isFinite(v2.equilibrio.factorVolumen)
@@ -578,13 +579,13 @@ function AnalisisAvanzadoV2({
         <V2Card
           sigla="PBD"
           nombre="Periodo de recuperación descontado"
-          valor={v2.paybackDescontado < 0 ? "No recupera" : `${v2.paybackDescontado.toFixed(1)} años`}
+          valor={v2.paybackDescontado < 0 ? "No recupera" : `${fmtNum(v2.paybackDescontado, 1)} años`}
           positivo={v2.paybackDescontado > 0 && v2.paybackDescontado <= 5}
         >
           <p className="text-[11px] text-muted-foreground">
             <strong>¿Qué es?</strong> En cuántos años recuperas tu inversión, pero contando
             que el dinero de mañana vale menos que el de hoy (lo "descuenta" al WACC{" "}
-            {(calc.wacc * 100).toFixed(1)}%). Por eso siempre tarda un poco más que el
+            {fmtNum((calc.wacc * 100), 1)}%). Por eso siempre tarda un poco más que el
             periodo de recuperación normal.
           </p>
           <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">
@@ -599,7 +600,7 @@ function AnalisisAvanzadoV2({
         <V2Card
           sigla="APAL"
           nombre="Apalancamiento"
-          valor={isFinite(v2.gat) ? `${v2.gat.toFixed(2)}×` : "—"}
+          valor={isFinite(v2.gat) ? `${fmtNum(v2.gat, 2)}×` : "—"}
           positivo
         >
           <p className="text-[11px] text-muted-foreground">
@@ -615,7 +616,7 @@ function AnalisisAvanzadoV2({
           </div>
           <div className="mt-1.5 text-[11px] font-medium leading-snug text-muted-foreground">
             {isFinite(v2.gat)
-              ? `En palabras: si tus ventas suben (o bajan) 1%, la ganancia del dueño sube (o baja) ~${v2.gat.toFixed(1)}%.`
+              ? `En palabras: si tus ventas suben (o bajan) 1%, la ganancia del dueño sube (o baja) ~${fmtNum(v2.gat, 1)}%.`
               : "No calculable con los datos actuales."}
           </div>
         </V2Card>
@@ -637,14 +638,14 @@ function AnalisisAvanzadoV2({
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
                 VAN del proyecto<br />
-                <span className="text-[11px] opacity-70">negocio entero · descontado al WACC {(calc.wacc * 100).toFixed(1)}%</span>
+                <span className="text-[11px] opacity-70">negocio entero · descontado al WACC {fmtNum((calc.wacc * 100), 1)}%</span>
               </span>
               <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanProyecto >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanProyecto)}</span>
             </div>
             <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground leading-tight">
                 VAN de tu parte (accionista)<br />
-                <span className="text-[11px] opacity-70">tras pagar la deuda · descontado al Ke {(proyecto.financiamiento.costoOportunidadAccionista * 100).toFixed(1)}%</span>
+                <span className="text-[11px] opacity-70">tras pagar la deuda · descontado al Ke {fmtNum((proyecto.financiamiento.costoOportunidadAccionista * 100), 1)}%</span>
               </span>
               <span className={cn("font-semibold tabular-nums", v2.flujoInv.vanAccionista >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{formatearBolivianos(v2.flujoInv.vanAccionista)}</span>
             </div>
@@ -696,7 +697,7 @@ function AnalisisAvanzadoV2({
                     v === 0 && "bg-secondary/50 text-foreground"
                   )}
                 >
-                  {v === 0 ? "Base (hoy)" : `${v > 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(0)}%`}
+                  {v === 0 ? "Base (hoy)" : `${v > 0 ? "+" : "−"}${fmtNum(Math.abs(v * 100), 0)}%`}
                 </th>
               ))}
             </tr>
@@ -769,9 +770,9 @@ function GraficoEquilibrio({
             type="number"
             domain={[0, Math.round(qMax)]}
             tick={{ fontSize: 9 }}
-            tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`)}
+            tickFormatter={(v) => (v >= 1000 ? `${fmtNum((v / 1000), 0)}k` : `${v}`)}
           />
-          <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+          <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}K`} />
           <Tooltip
             formatter={(v: number) => formatearBolivianos(v)}
             labelFormatter={(l) => `${Number(l).toLocaleString("es-BO")} u`}
@@ -928,7 +929,7 @@ function PanelMonteCarlo({
               Probabilidad de VAN positivo
             </div>
             <div className={cn("text-3xl font-bold", colorProb)}>
-              {(prob * 100).toFixed(0)}%
+              {fmtNum((prob * 100), 0)}%
             </div>
             <div className="text-[11px] text-muted-foreground">
               {prob >= 0.7
@@ -971,7 +972,7 @@ function PanelMonteCarlo({
         <div className="mt-3 space-y-1.5 rounded-md bg-secondary/30 p-3 text-[11px] leading-snug">
           <div className="font-semibold">📖 Cómo leerla:</div>
           <div>
-            <strong>{(prob * 100).toFixed(0)}%</strong> significa que, de cada 100 veces que
+            <strong>{fmtNum((prob * 100), 0)}%</strong> significa que, de cada 100 veces que
             abrieras este negocio (con esos márgenes de incertidumbre), en{" "}
             <strong>~{Math.round(prob * 100)}</strong> ganarías (VAN positivo) y en{" "}
             <strong>~{100 - Math.round(prob * 100)}</strong> perderías.

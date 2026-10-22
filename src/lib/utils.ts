@@ -13,6 +13,11 @@ export function formatearBolivianos(monto: number): string {
   }).format(monto);
 }
 
+/** Número con coma decimal (como se escribe en Bolivia): fmtNum(36.24, 1) -> "36,2". */
+export function fmtNum(n: number, decimales: number): string {
+  return n.toFixed(decimales).replace(".", ",");
+}
+
 /**
  * Normaliza el nombre de una universidad para que no haya 3 variantes
  * de la misma (ej: "ucatec", "Ucatec", "UCATEC"). Trim + UPPERCASE,

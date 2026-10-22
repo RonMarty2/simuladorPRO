@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy } from "lucide-react";
@@ -486,13 +487,13 @@ function VisorPlantilla({
                 />
                 <Indicador
                   titulo="TIR"
-                  valor={isFinite(calc.indicadores.tir) ? `${(calc.indicadores.tir * 100).toFixed(2)}%` : "—"}
+                  valor={isFinite(calc.indicadores.tir) ? `${fmtNum((calc.indicadores.tir * 100), 2)}%` : "—"}
                   positivo={calc.indicadores.tir > calc.wacc}
                 />
-                <Indicador titulo="WACC" valor={`${(calc.wacc * 100).toFixed(2)}%`} positivo />
+                <Indicador titulo="WACC" valor={`${fmtNum((calc.wacc * 100), 2)}%`} positivo />
                 <Indicador
                   titulo="Periodo de recuperación"
-                  valor={isFinite(calc.indicadores.payback) ? `${calc.indicadores.payback.toFixed(1)} años` : "—"}
+                  valor={isFinite(calc.indicadores.payback) ? `${fmtNum(calc.indicadores.payback, 1)} años` : "—"}
                   positivo={calc.indicadores.payback > 0 && calc.indicadores.payback <= 5}
                 />
               </div>

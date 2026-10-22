@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -38,8 +39,8 @@ const ESTILO_VEREDICTO: Record<NivelVeredicto, string> = {
 
 function corto(v: number) {
   const abs = Math.abs(v);
-  if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
+  if (abs >= 1_000_000) return `${fmtNum((v / 1_000_000), 1)}M`;
+  if (abs >= 1_000) return `${fmtNum((v / 1_000), 0)}k`;
   return `${Math.round(v)}`;
 }
 
@@ -126,7 +127,7 @@ export default function AnalisisRiesgo({
       <div className={cn("flex items-start gap-3 rounded-lg border p-4", ESTILO_VEREDICTO[veredicto.nivel])}>
         <Icono className="mt-0.5 h-6 w-6 flex-shrink-0" />
         <div>
-          <div className="text-base font-bold">Veredicto: {veredicto.titulo}</div>
+          <div className="text-base font-bold">Veredicto de riesgo: {veredicto.titulo}</div>
           <div className="text-sm">{veredicto.detalle}</div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import { UMBRALES } from "@/lib/diagnostico-pedagogico";
 import type { Proyecto } from "@/types/proyecto";
+import { fmtNum } from "./utils";
 
 /**
  * "Boletín" del proyecto: compara los indicadores del alumno contra los rangos
@@ -32,7 +33,7 @@ export interface Boletin {
 }
 
 function pct(n: number): string {
-  return `${(n * 100).toFixed(1)}%`;
+  return `${fmtNum((n * 100), 1)}%`;
 }
 
 export function calcularBoletin(proyecto: Proyecto): Boletin {
@@ -88,7 +89,7 @@ export function calcularBoletin(proyecto: Proyecto): Boletin {
     clave: "payback",
     nombre: "Recuperación de la inversión",
     valorTexto:
-      Number.isFinite(payback) && payback > 0 ? `${payback.toFixed(1)} años` : "—",
+      Number.isFinite(payback) && payback > 0 ? `${fmtNum(payback, 1)} años` : "—",
     metaTexto: `Hasta ${UMBRALES.paybackLentoAnios} años`,
     estado: !Number.isFinite(payback) || payback <= 0
       ? "mal"
@@ -107,7 +108,7 @@ export function calcularBoletin(proyecto: Proyecto): Boletin {
   filas.push({
     clave: "margen",
     nombre: "Margen neto (año 1)",
-    valorTexto: ingresoAnio1 > 0 ? `${margenNetoPct.toFixed(1)}%` : "—",
+    valorTexto: ingresoAnio1 > 0 ? `${fmtNum(margenNetoPct, 1)}%` : "—",
     metaTexto: `Al menos ${UMBRALES.margenNetoFlacoPct}%`,
     estado:
       ingresoAnio1 <= 0
@@ -131,7 +132,7 @@ export function calcularBoletin(proyecto: Proyecto): Boletin {
   filas.push({
     clave: "deuda",
     nombre: "Financiado con deuda",
-    valorTexto: r.totalProyecto > 0 ? `${deudaPct.toFixed(0)}%` : "—",
+    valorTexto: r.totalProyecto > 0 ? `${fmtNum(deudaPct, 0)}%` : "—",
     metaTexto: `Hasta ${UMBRALES.deudaAltaPct}%`,
     estado:
       r.totalProyecto <= 0

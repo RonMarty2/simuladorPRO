@@ -1,3 +1,4 @@
+import { fmtNum } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { tirCalculable } from "@/lib/acotar-numero";
 import {
@@ -229,19 +230,19 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
             <div>
               <div className="opacity-60">TIR</div>
               <div className="font-bold">
-                {tirCalculable(entrega.tir) ? `${(entrega.tir * 100).toFixed(1)}%` : "—"}
+                {tirCalculable(entrega.tir) ? `${fmtNum((entrega.tir * 100), 1)}%` : "—"}
               </div>
             </div>
             <div>
               <div className="opacity-60">WACC</div>
               <div className="font-bold">
-                {entrega.wacc !== null ? `${(entrega.wacc * 100).toFixed(1)}%` : "—"}
+                {entrega.wacc !== null ? `${fmtNum((entrega.wacc * 100), 1)}%` : "—"}
               </div>
             </div>
             <div>
               <div className="opacity-60">Recuperación</div>
               <div className="font-bold">
-                {entrega.payback !== null && entrega.payback >= 0 ? `${entrega.payback.toFixed(1)}a` : "No recupera"}
+                {entrega.payback !== null && entrega.payback >= 0 ? `${fmtNum(entrega.payback, 1)}a` : "No recupera"}
               </div>
             </div>
           </div>

@@ -134,8 +134,8 @@ export function seleccionarEventoTurno(
   const probTotal = candidatos.reduce((acc, e) => acc + e.probabilidad, 0);
   if (probTotal === 0) return null;
 
-  // Boost: probabilidad de que ALGÚN evento aparezca = min(0.7, suma)
-  const probAlgunEvento = Math.min(0.7, probTotal);
+  // Probabilidad de que ALGÚN evento aparezca = min(0.4, suma): ~2 noticias por año en modo mensual
+  const probAlgunEvento = Math.min(0.4, probTotal);
   if (rng() > probAlgunEvento) return null;
 
   // Ahora elegir cuál, ponderado por probabilidad individual
@@ -208,7 +208,18 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   ingreso_extra: "caja",
   margen: "precio_venta_multiplicador",
   reputacion: "reputacion",
+  costo: "costos_multiplicador",
+  costos_fijos: "costos_multiplicador",
+  // Percepción del cliente y del equipo: se reflejan en la reputación
+  calidad: "reputacion",
+  servicio: "reputacion",
+  clima_laboral: "reputacion",
+  reputacion_local: "reputacion",
+  clientes_recurrentes: "reputacion",
 };
+
+// "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
+const PAGOS_EN_CAJA = new Set(["interes_pagado", "indemnizaciones", "comision_pagada"]);
 
 function aplicarConsecuenciaAlEstado(
   estado: EstadoSimulacion,
@@ -217,6 +228,9 @@ function aplicarConsecuenciaAlEstado(
 ): EstadoSimulacion {
   const parsed = parsearConsecuencia(raw);
   if (!parsed) return estado;
+  if (PAGOS_EN_CAJA.has(campo) && parsed.operacion === "sumar") {
+    return { ...estado, caja: estado.caja - parsed.valor };
+  }
   const claveEstado = aliasACampo[campo];
   if (!claveEstado) return estado;
 
