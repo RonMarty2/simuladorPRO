@@ -98,6 +98,23 @@ function finCapm(beta = 1.0): Pick<Proyecto, "financiamiento" | "capmV2"> {
   };
 }
 
+/**
+ * Ajusta la demanda de un ejemplo (cantidades de todos sus productos) por un
+ * factor. Se usa para calibrar los ejemplos de la galería a rentabilidades
+ * creíbles sin reescribir cada serie: el factor está en el registro del final.
+ */
+export function calibrarDemanda(p: Proyecto, factor: number): Proyecto {
+  return {
+    ...p,
+    productos: p.productos.map((pr) => ({
+      ...pr,
+      cantidades: pr.cantidades.map((c) =>
+        c >= 10 ? Math.round(c * factor) : Math.round(c * factor * 100) / 100
+      ) as typeof pr.cantidades,
+    })),
+  };
+}
+
 function base(): Pick<Proyecto, "id" | "estudiante_id" | "curso_id" | "version" | "tipo" | "estado" | "creado_en" | "actualizado_en" | "mesesBufferCapitalTrabajo" | "imprevistosPorcentaje"> {
   const ahora = new Date().toISOString();
   return {
@@ -127,7 +144,12 @@ export type CategoriaPlantilla =
   | "medios"
   | "turismo"
   | "agricultura"
-  | "costo_beneficio";
+  | "costo_beneficio"
+  | "marketing"
+  | "social"
+  | "eventos"
+  | "alquiler"
+  | "tecnologia";
 
 export interface PlantillaMeta {
   clave: string;
@@ -140,6 +162,10 @@ export interface PlantillaMeta {
   /** Etiqueta de tamaño/complejidad. */
   escala: "Pequeño" | "Mediano" | "Grande";
   resumen: string;
+  /** Qué aprende el alumno con este ejemplo: qué se mide y el supuesto clave. */
+  ensena?: string;
+  /** Resultado esperado de la evaluación, para ejemplos pensados como caso de decisión. */
+  veredicto?: "viable" | "marginal" | "rechazo";
   crear: () => Proyecto;
 }
 
@@ -153,6 +179,11 @@ export const CATEGORIAS: Record<CategoriaPlantilla, { titulo: string; emoji: str
   turismo: { titulo: "Turismo y hospitalidad", emoji: "🏔️", descripcion: "Operadoras de turismo, hostales, ecoturismo." },
   agricultura: { titulo: "Agricultura", emoji: "🌾", descripcion: "Cultivos, invernaderos, agroindustria." },
   costo_beneficio: { titulo: "Proyectos costo-beneficio", emoji: "⚖️", descripcion: "Inversiones que se evalúan por ahorro/beneficio incremental." },
+  marketing: { titulo: "Marketing y campañas", emoji: "📣", descripcion: "Planes y campañas evaluados por las ventas adicionales que generan." },
+  social: { titulo: "Proyectos sociales y públicos", emoji: "🏫", descripcion: "Escuelas, salud, agua: el beneficio se traduce a bolivianos con supuestos explícitos." },
+  eventos: { titulo: "Eventos y proyectos puntuales", emoji: "🎪", descripcion: "Festivales, ferias y producciones con ingresos concentrados." },
+  tecnologia: { titulo: "Tecnología y plataformas", emoji: "📱", descripcion: "Apps y plataformas: costo de desarrollo alto, ingreso por comisión y escala." },
+  alquiler: { titulo: "Alquiler y renta", emoji: "🏢", descripcion: "Inmuebles y activos que generan renta: gran inversión inicial y flujo estable." },
 };
 
 // ============================================================================
@@ -1109,7 +1140,7 @@ function digitalizacionEmpresa(): Proyecto {
   // El beneficio = ahorros operativos (menos personal manual, errores) +
   // ventas adicionales del e-commerce. En empresas medianas suele rondar
   // 30-40% del costo de la inversión por año.
-  const cb = { beneficioAnualBase: 480000, crecimientoAnual: 0.08 };
+  const cb = { beneficioAnualBase: 520000, crecimientoAnual: 0.08 };
   const precios = [0, 1, 2, 3, 4].map(
     (i) => Math.round(cb.beneficioAnualBase * Math.pow(1 + cb.crecimientoAnual, i))
   ) as [number, number, number, number, number];
@@ -1147,6 +1178,460 @@ function digitalizacionEmpresa(): Proyecto {
 }
 
 // ============================================================================
+// COSTO-BENEFICIO / PROYECTOS PARTICULARES (tanda 1)
+// ============================================================================
+
+/** Serie de beneficio anual con crecimiento, para los proyectos costo-beneficio. */
+function beneficioAnual(base: number, crecimiento: number) {
+  const precios = [0, 1, 2, 3, 4].map(
+    (i) => Math.round(base * Math.pow(1 + crecimiento, i))
+  ) as [number, number, number, number, number];
+  return { cb: { beneficioAnualBase: base, crecimientoAnual: crecimiento }, precios };
+}
+
+/** Financiamiento 100% propio (aporte o donación) con tasa social de descuento. */
+function finSocial(tasa: number): Pick<Proyecto, "financiamiento" | "capmV2"> {
+  return {
+    financiamiento: {
+      porcentajePropio: 1,
+      porcentajePrestamo: 0,
+      tasaInteresAnual: 0.1,
+      plazoMeses: 60,
+      costoOportunidadAccionista: tasa,
+      prestamoCapitalTrabajo: { porcentajePropio: 1, porcentajePrestamo: 0, tasaInteresAnual: 0.1, plazoMeses: 48 },
+    },
+    capmV2: { tasaLibreRiesgo: 0.04, beta: (tasa - 0.04) / 0.08, primaMercado: 0.08 },
+  };
+}
+
+function planMarketingRestaurante(): Proyecto {
+  // Beneficio = margen bruto de las ventas adicionales atribuidas a la campaña
+  // (ventas extra × margen de contribución), NO las ventas totales del local.
+  const { cb, precios } = beneficioAnual(215000, 0.06);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Plan de marketing digital para un restaurante",
+    ubicacion: "Cochabamba",
+    descripcion: "Un restaurante existente invierte en marca, sitio web con reservas, contenido en redes y pauta pagada. El beneficio es el margen de las ventas ADICIONALES que trae el plan (clientes nuevos y mayor frecuencia), no las ventas del local.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Equipo de foto y video para contenido", "set", 1, 14000, 4)],
+      mobiliario: [],
+      activoDiferido: [inv("Estrategia y rediseño de marca", "global", 1, 15000, 5), inv("Sitio web con reservas en línea", "global", 1, 18000, 5)],
+    },
+    capitalTrabajo: 10000,
+    personal: [puesto("Community manager", 1, 3500), puesto("Diseñador (medio tiempo)", 1, 2000)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Herramientas y software de marketing", 800)],
+    costosComercializacion: [gasto("Pauta pagada en redes", 3800), gasto("Alianzas con influencers locales", 1200)],
+    productos: [{ id: idBen, nombre: "Margen de ventas adicionales atribuidas al plan", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(1.1),
+    crecimientoIngresosAnual: 0.06, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function campanaMasivaTv(): Proyecto {
+  const { cb, precios } = beneficioAnual(440000, 0.0);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Campaña masiva en TV y vallas para una marca local",
+    ubicacion: "La Paz y El Alto",
+    descripcion: "Una marca regional de lácteos compra espacios en televisión y vallas en las dos ciudades. El costo es alto y fijo, mientras que el efecto sobre las ventas es incierto y se diluye cuando termina la pauta. Ejemplo de RECHAZO: la campaña no recupera su costo.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [],
+      mobiliario: [inv("Vallas publicitarias (instalación)", "valla", 6, 16000, 3)],
+      activoDiferido: [inv("Producción de spots de TV", "spot", 2, 45000, 3), inv("Agencia: estrategia y plan de medios", "global", 1, 30000, 3)],
+    },
+    capitalTrabajo: 20000,
+    personal: [puesto("Coordinador de campaña", 1, 6000)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Seguimiento y medición", 1500)],
+    costosComercializacion: [gasto("Pauta en TV (paquete mensual)", 18000), gasto("Alquiler de espacios en vallas", 6000)],
+    productos: [{ id: idBen, nombre: "Margen de ventas adicionales atribuidas a la campaña", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(1.2),
+    crecimientoIngresosAnual: 0, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function postaSalud(): Proyecto {
+  // Beneficio social monetizado: atenciones × valor por atención (traslado
+  // evitado + jornada laboral no perdida + complicaciones prevenidas).
+  const { cb, precios } = beneficioAnual(560000, 0.03);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Posta de salud comunitaria",
+    ubicacion: "Municipio rural de Potosí",
+    descripcion: "Construcción y operación de una posta de salud para 4.000 habitantes que hoy viajan más de 3 horas al hospital. No genera ingresos: el beneficio se estima en bolivianos como traslados evitados, jornadas de trabajo no perdidas y complicaciones prevenidas. Financiamiento 100% propio (gobierno municipal) y tasa social de descuento.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [inv("Terreno cedido por la comunidad (valor estimado)", "lote", 1, 30000, null)],
+      obrasCiviles: [inv("Construcción de la posta (consultorio, sala de partos, farmacia)", "obra", 1, 360000, 30)],
+      maquinaria: [inv("Equipamiento médico básico", "set", 1, 90000, 10), inv("Panel solar y refrigeración de vacunas", "set", 1, 45000, 10)],
+      mobiliario: [inv("Mobiliario clínico", "set", 1, 25000, 10)],
+      activoDiferido: [inv("Estudios, licencias y capacitación inicial", "global", 1, 20000, 5)],
+    },
+    capitalTrabajo: 25000,
+    personal: [puesto("Médico general", 1, 7000), puesto("Enfermera", 1, 4200), puesto("Auxiliar y promotor de salud", 1, 2800)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Medicamentos e insumos", 6000), gasto("Servicios básicos y mantenimiento", 1500)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Beneficio social anual (traslados, jornadas y complicaciones evitados)", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finSocial(0.08),
+    crecimientoIngresosAnual: 0.03, crecimientoCostosAnual: 0.03,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function festivalMusica(): Proyecto {
+  const idEntrada = nuevoId(), idBarra = nuevoId(), idAuspicio = nuevoId();
+  return {
+    ...base(),
+    nombre: "Festival de música «Altiplano Vivo»",
+    ubicacion: "Oruro",
+    descripcion: "Festival anual de 3 días. Ingresos concentrados: entradas, consumo en barras y auspicios. Los cachets de artistas son el costo dominante y casi no se pueden reducir. Ejemplo MARGINAL: el proyecto rinde apenas por encima del costo del capital y depende de llenar el aforo.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Escenario, sonido e iluminación", "set", 1, 180000, 8)],
+      mobiliario: [inv("Carpas, vallas y baños portátiles propios", "set", 1, 60000, 6)],
+      activoDiferido: [inv("Permisos, seguros y marca del festival", "global", 1, 25000, 5)],
+    },
+    capitalTrabajo: 90000,
+    personal: [puesto("Productor general", 1, 7000), puesto("Coordinador logístico", 1, 4500)],
+    costosDirectos: [
+      directo(idEntrada, "insumo_directo", "Seguridad, sanitarios y logística por asistente", "entrada", 1, 22),
+      directo(idBarra, "mercaderia", "Bebidas y comida para reventa", "consumo", 1, 21),
+    ],
+    costosAdministracion: [gasto("Cachets de artistas y hospedaje", 880000, "año"), gasto("Permisos municipales y seguros", 28000, "año")],
+    costosComercializacion: [gasto("Campaña de promoción del festival", 120000, "año")],
+    productos: [
+      { id: idEntrada, nombre: "Entradas (3 días)", unidadMedida: "entrada", cantidades: serie(8000, 0.05), precios: serie(140, 0.04, 2) },
+      { id: idBarra, nombre: "Consumo en barras y comida", unidadMedida: "consumo", cantidades: serie(14000, 0.05), precios: serie(40, 0.04, 2) },
+      { id: idAuspicio, nombre: "Auspicios de marcas", unidadMedida: "auspicio", cantidades: [5, 5, 6, 6, 7], precios: serie(40000, 0.05, 2) },
+    ],
+    ...finCapm(1.3),
+    crecimientoIngresosAnual: 0.05, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [5, 5, 5, 5], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function edificioAlquiler(): Proyecto {
+  const idDepto = nuevoId(), idParqueo = nuevoId();
+  return {
+    ...base(),
+    nombre: "Edificio de 8 departamentos en alquiler",
+    ubicacion: "Santa Cruz, zona Equipetrol",
+    descripcion: "Compra de terreno y construcción de un edificio para alquilar. Inversión grande y flujo estable pero lento: el terreno conserva su valor y el edificio se deprecia. Ejemplo MARGINAL: la renta cubre el costo de capital sin sobrar mucho; la plusvalía del terreno es parte del retorno.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [inv("Terreno de 300 m²", "m²", 300, 1800, null)],
+      obrasCiviles: [inv("Construcción del edificio (8 departamentos)", "depto", 8, 70000, 30)],
+      maquinaria: [inv("Ascensor y sistema contra incendios", "set", 1, 60000, 15)],
+      mobiliario: [],
+      activoDiferido: [inv("Planos, permisos y licencias municipales", "global", 1, 30000, 5)],
+    },
+    capitalTrabajo: 30000,
+    personal: [puesto("Portero / encargado", 1, 2800), puesto("Administrador (medio tiempo)", 1, 1500)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Mantenimiento general", 2200), gasto("Servicios comunes (luz, agua de áreas comunes)", 1400), gasto("Impuesto a la propiedad y seguros", 14000, "año")],
+    costosComercializacion: [gasto("Publicidad y corretaje de alquileres", 900)],
+    productos: [
+      { id: idDepto, nombre: "Alquiler de departamentos (mes-depto ocupado)", unidadMedida: "mes", cantidades: [84, 86, 88, 90, 90], precios: serie(4100, 0.04, 2) },
+      { id: idParqueo, nombre: "Alquiler de parqueos", unidadMedida: "mes", cantidades: [84, 84, 90, 90, 90], precios: serie(300, 0.03, 2) },
+    ],
+    ...finCapm(0.8),
+    crecimientoIngresosAnual: 0.04, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [2, 2, 2, 0], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function camaraFrioCooperativa(): Proyecto {
+  // Beneficio = pérdida que se evita (merma de producto) valorada a precio de venta.
+  const { cb, precios } = beneficioAnual(290000, 0.04);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Cámara de frío para una cooperativa frutícola",
+    ubicacion: "Valles de Tarija",
+    descripcion: "La cooperativa pierde cerca de 25% de su fruta por falta de refrigeración. La cámara de frío no vende nada nuevo: el beneficio son las pérdidas que se EVITAN, valoradas al precio de venta. Ejemplo VIABLE con beneficio medible a partir de datos de merma.",
+    sector: "agricultura",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Galpón aislado para la cámara", "obra", 1, 70000, 20)],
+      maquinaria: [inv("Cámara de frío (equipo y compresores)", "set", 1, 190000, 12), inv("Grupo electrógeno de respaldo", "set", 1, 40000, 10)],
+      mobiliario: [inv("Cajas plásticas y estantes", "set", 1, 15000, 6)],
+      activoDiferido: [inv("Estudio técnico y permisos", "global", 1, 10000, 5)],
+    },
+    capitalTrabajo: 20000,
+    personal: [puesto("Operario de cámara", 1, 2800)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Energía eléctrica de la cámara", 3200), gasto("Mantenimiento de equipos", 900)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Fruta que ya no se pierde (valorada a precio de venta)", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(0.8),
+    crecimientoIngresosAnual: 0.04, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+// ============================================================================
+// TANDA 2
+// ============================================================================
+
+function flotaElectrica(): Proyecto {
+  // Beneficio = combustible y mantenimiento que se dejan de gastar con vans
+  // eléctricas, vs. el mismo servicio con vans a gasolina.
+  const { cb, precios } = beneficioAnual(400000, 0.03);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Reemplazo de flota de reparto por vehículos eléctricos",
+    ubicacion: "Santa Cruz",
+    descripcion: "Una empresa de reparto cambia 6 vans a gasolina por eléctricas. El beneficio es el ahorro en combustible y mantenimiento. Ejemplo MARGINAL: la inversión es alta y el resultado depende del precio del combustible, de los kilómetros recorridos y de cuánto se recupere al vender las vans viejas.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Instalación eléctrica de carga en el patio", "obra", 1, 45000, 15)],
+      maquinaria: [inv("Vans eléctricas de reparto", "van", 6, 140000, 8), inv("Cargadores rápidos", "cargador", 3, 22000, 10)],
+      mobiliario: [],
+      activoDiferido: [inv("Capacitación de conductores y estudio de rutas", "global", 1, 15000, 5)],
+    },
+    capitalTrabajo: 20000,
+    personal: [],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Energía para carga", 3800), gasto("Seguro de baterías y vehículos", 3500), gasto("Mantenimiento preventivo", 1500)],
+    costosComercializacion: [],
+    productos: [{ id: idBen, nombre: "Ahorro anual en combustible y mantenimiento", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finCapm(0.9),
+    crecimientoIngresosAnual: 0.03, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function podcastAuspicios(): Proyecto {
+  const pub = { audienciaMensual: 40000, crecimientoMensual: 0.03, impresionesPorUsuario: 8, cpm: 85 };
+  // 40000 oyentes × 8 menciones × 12 meses = 3840 miles/año, creciendo.
+  const miles: [number, number, number, number, number] = [2400, 3200, 4000, 4800, 5400];
+  const idMencion = nuevoId();
+  return {
+    ...base(),
+    nombre: "Podcast de negocios con auspicios «Emprender Bolivia»",
+    ubicacion: "Cochabamba (online)",
+    descripcion: "Podcast semanal gratuito para el oyente que vive de auspicios: menciones leídas por el conductor. Modelo PUBLICIDAD por audiencia × CPM. Un CPM alto es posible porque el público es de nicho y la mención es personal. Ejemplo VIABLE si la audiencia crece; todo depende de ella.",
+    sector: "servicios",
+    modeloIngreso: "publicidad",
+    publicidadV2: pub,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Acondicionamiento acústico del estudio", "obra", 1, 8000, 8)],
+      maquinaria: [inv("Micrófonos, interfaz y cámara", "set", 1, 14000, 5), inv("Computadora y software de edición", "set", 1, 10000, 5)],
+      mobiliario: [],
+      activoDiferido: [inv("Marca, web y diseño de portadas", "global", 1, 6000, 5)],
+    },
+    capitalTrabajo: 15000,
+    personal: [puesto("Conductor / productor", 1, 4000), puesto("Editor de audio y video", 1, 2800)],
+    costosDirectos: [directo(idMencion, "comision_venta", "Comisión de agencia por mil impresiones", "mil impresiones", 1, 13)],
+    costosAdministracion: [gasto("Hosting de audio y plataformas", 700), gasto("Internet", 250)],
+    costosComercializacion: [gasto("Promoción en redes", 1500), gasto("Invitados y producción de episodios", 1200)],
+    productos: [{ id: idMencion, nombre: "Menciones de auspiciantes", unidadMedida: "mil impresiones", cantidades: miles, precios: [pub.cpm, pub.cpm, pub.cpm, pub.cpm, pub.cpm] }],
+    ...finCapm(1.2),
+    crecimientoIngresosAnual: 0.12, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function radioComunitaria(): Proyecto {
+  const pub = { audienciaMensual: 12000, crecimientoMensual: 0.01, impresionesPorUsuario: 12, cpm: 60 };
+  // 12000 × 12 × 12 meses = 1728 miles/año.
+  const miles: [number, number, number, number, number] = [1728, 1800, 1900, 2000, 2100];
+  const idCunia = nuevoId();
+  return {
+    ...base(),
+    nombre: "Radio comunitaria rural «Voz del Valle»",
+    ubicacion: "Valle de Sacaba, Cochabamba",
+    descripcion: "Emisora FM de comunidad que informa en quechua y castellano. Su audiencia es chica y la pauta local paga poco (CPM bajo). Ejemplo de RECHAZO como negocio: no cubre sus costos con publicidad. Su valor es social y por eso estos proyectos viven de subvención o aportes; el simulador solo mide el flujo de dinero.",
+    sector: "servicios",
+    modeloIngreso: "publicidad",
+    publicidadV2: pub,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Cabina y estudio", "obra", 1, 35000, 15)],
+      maquinaria: [inv("Transmisor FM y antena", "set", 1, 60000, 10), inv("Consola, micrófonos y computadora", "set", 1, 25000, 6)],
+      mobiliario: [inv("Mobiliario del estudio", "set", 1, 6000, 10)],
+      activoDiferido: [inv("Licencia ATT y trámites", "global", 1, 20000, 5)],
+    },
+    capitalTrabajo: 15000,
+    personal: [puesto("Director / locutor", 1, 3500), puesto("Locutor y productor", 1, 2800), puesto("Operador técnico", 1, 2800)],
+    costosDirectos: [directo(idCunia, "comision_venta", "Comisión de venta de pauta", "mil impresiones", 1, 4)],
+    costosAdministracion: [gasto("Energía y mantenimiento del transmisor", 1800), gasto("Derechos de autor musicales", 700)],
+    costosComercializacion: [gasto("Venta de pauta local", 900)],
+    productos: [{ id: idCunia, nombre: "Cuñas de comercios locales", unidadMedida: "mil impresiones", cantidades: miles, precios: [pub.cpm, pub.cpm, pub.cpm, pub.cpm, pub.cpm] }],
+    ...finCapm(1.0),
+    crecimientoIngresosAnual: 0.04, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function agenciaMarketing(): Proyecto {
+  const idRetainer = nuevoId(), idProyecto = nuevoId();
+  return {
+    ...base(),
+    nombre: "Agencia de marketing digital «Pixel Andino»",
+    ubicacion: "La Paz",
+    descripcion: "Agencia pequeña que vende servicios a otras empresas: contratos mensuales de manejo de redes y proyectos puntuales (web, campañas). Casi no tiene activos: su costo principal es el equipo humano. Ejemplo VIABLE y de baja inversión; el riesgo está en perder clientes grandes.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Computadoras y equipo de producción", "set", 1, 45000, 4)],
+      mobiliario: [inv("Mobiliario de oficina", "set", 1, 12000, 8)],
+      activoDiferido: [inv("Marca, web y portafolio inicial", "global", 1, 12000, 5)],
+    },
+    capitalTrabajo: 40000,
+    personal: [puesto("Director de cuentas", 1, 6500), puesto("Diseñador", 2, 3800), puesto("Community managers", 2, 3200), puesto("Ejecutivo comercial", 1, 4000)],
+    costosDirectos: [
+      directo(idRetainer, "insumo_directo", "Herramientas y pauta gestionada por cliente-mes", "cliente-mes", 1, 350),
+      directo(idProyecto, "insumo_directo", "Freelancers y producción por proyecto", "proyecto", 1, 3500),
+    ],
+    costosAdministracion: [gasto("Alquiler de oficina", 3500), gasto("Servicios básicos e internet", 900), gasto("Software y licencias de diseño", 1300), gasto("Contabilidad", 1000)],
+    costosComercializacion: [gasto("Prospección y eventos", 1500)],
+    productos: [
+      { id: idRetainer, nombre: "Contratos mensuales de redes (clientes-mes)", unidadMedida: "cliente-mes", cantidades: [108, 150, 192, 228, 252], precios: serie(3800, 0.03, 2) },
+      { id: idProyecto, nombre: "Proyectos puntuales", unidadMedida: "proyecto", cantidades: [24, 28, 32, 36, 40], precios: serie(9000, 0.03, 2) },
+    ],
+    ...finCapm(1.1),
+    crecimientoIngresosAnual: 0.1, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
+function appDelivery(): Proyecto {
+  const idComision = nuevoId(), idEnvio = nuevoId();
+  return {
+    ...base(),
+    nombre: "App de delivery para barrios «Pedilo»",
+    ubicacion: "Sucre",
+    descripcion: "Plataforma que conecta comercios de barrio con repartidores. Ingreso por comisión sobre cada pedido. El desarrollo es el gran costo inicial; después cada pedido adicional casi no cuesta. Ejemplo ARRIESGADO: sin volumen suficiente no cubre el equipo, pero con volumen escala muy rápido.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Equipos del equipo técnico y servidores", "set", 1, 40000, 4)],
+      mobiliario: [inv("Mobiliario de oficina", "set", 1, 10000, 8)],
+      activoDiferido: [inv("Desarrollo de la app y panel de comercios", "global", 1, 160000, 4), inv("Lanzamiento y registro de marca", "global", 1, 25000, 4)],
+    },
+    capitalTrabajo: 60000,
+    personal: [puesto("Desarrollador", 2, 7500), puesto("Soporte y operaciones", 2, 3500), puesto("Ejecutivo de comercios", 2, 3800), puesto("Gerente general", 1, 8000)],
+    costosDirectos: [
+      directo(idComision, "comision_venta", "Pasarela de pago y soporte por pedido", "pedido", 1, 1.6),
+      directo(idEnvio, "mercaderia", "Subsidio a repartidor por envío", "envío", 1, 2.5),
+    ],
+    costosAdministracion: [gasto("Alquiler de oficina", 3000), gasto("Servidores en la nube", 2200), gasto("Contabilidad y legal", 1500), gasto("Servicios e internet", 800)],
+    costosComercializacion: [gasto("Marketing de lanzamiento y descuentos", 9000), gasto("Activaciones en comercios", 2000)],
+    productos: [
+      { id: idComision, nombre: "Comisión por pedido (18% sobre un pedido medio de Bs 45)", unidadMedida: "pedido", cantidades: [60000, 135000, 230000, 310000, 390000], precios: serie(8.1, 0.0, 2) },
+      { id: idEnvio, nombre: "Cargo por envío", unidadMedida: "envío", cantidades: [60000, 135000, 230000, 310000, 390000], precios: serie(4.0, 0.0, 2) },
+    ],
+    ...finCapm(1.6),
+    crecimientoIngresosAnual: 0.3, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function capacitacionJovenes(): Proyecto {
+  // Beneficio social: egresados que consiguen empleo × diferencia de ingreso
+  // atribuible al curso (NO todo su sueldo), año a año.
+  const { cb, precios } = beneficioAnual(700000, 0.02);
+  const idBen = nuevoId();
+  return {
+    ...base(),
+    nombre: "Programa de capacitación técnica para jóvenes",
+    ubicacion: "El Alto",
+    descripcion: "Un centro forma a 120 jóvenes al año en oficios (electricidad, soldadura, gastronomía). El beneficio social es la diferencia de ingresos que logran los egresados gracias al curso, no su sueldo completo. Ejemplo MARGINAL: el resultado depende de qué porcentaje consigue empleo y de cuánto se atribuya al programa.",
+    sector: "servicios",
+    modeloIngreso: "costo_beneficio",
+    costoBeneficioV2: cb,
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación de talleres y aulas", "obra", 1, 140000, 20)],
+      maquinaria: [inv("Equipos y herramientas de taller", "set", 1, 130000, 8)],
+      mobiliario: [inv("Mobiliario de aulas", "set", 1, 28000, 10)],
+      activoDiferido: [inv("Diseño curricular y acreditación", "global", 1, 30000, 5)],
+    },
+    capitalTrabajo: 30000,
+    personal: [puesto("Instructores", 3, 4800), puesto("Coordinadora académica", 1, 5000), puesto("Administrativo", 1, 3000)],
+    costosDirectos: [],
+    costosAdministracion: [gasto("Materiales de práctica", 5500), gasto("Servicios básicos y mantenimiento", 2200)],
+    costosComercializacion: [gasto("Convocatoria y seguimiento de egresados", 1200)],
+    productos: [{ id: idBen, nombre: "Mayor ingreso de los egresados atribuible al programa", unidadMedida: "año", cantidades: [1, 1, 1, 1, 1], precios }],
+    ...finSocial(0.08),
+    crecimientoIngresosAnual: 0.02, crecimientoCostosAnual: 0.03,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+function peliculaNacional(): Proyecto {
+  // Proyecto de UNA sola vez: la película se produce el año 1 y vende después.
+  // Los ingresos se concentran en pocos años y luego se agotan.
+  const idTaquilla = nuevoId(), idStreaming = nuevoId(), idFestival = nuevoId();
+  return {
+    ...base(),
+    nombre: "Largometraje de ficción «La Ruta del Illimani»",
+    ubicacion: "La Paz",
+    descripcion: "Producción de una película: rodaje y posproducción antes del estreno (inversión inicial), luego estreno en salas, venta a plataformas de streaming y festivales. Ingresos concentrados en pocos años y casi nulos después. Ejemplo MARGINAL con riesgo muy alto: unas pocas películas dan mucho y la mayoría no recupera la inversión.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [],
+      maquinaria: [inv("Cámaras, lentes y equipo de luz y sonido", "set", 1, 240000, 6)],
+      mobiliario: [],
+      activoDiferido: [inv("Guion, derechos y desarrollo", "global", 1, 90000, 5), inv("Rodaje (elenco, locaciones y producción)", "global", 1, 520000, 5), inv("Posproducción, música y color", "global", 1, 140000, 5)],
+    },
+    capitalTrabajo: 60000,
+    personal: [puesto("Productor ejecutivo (medio tiempo)", 1, 4000)],
+    costosDirectos: [
+      directo(idTaquilla, "comision_venta", "Porcentaje de la sala por entrada", "entrada", 1, 14),
+    ],
+    costosAdministracion: [gasto("Oficina y administración", 800), gasto("Derechos, seguros y contabilidad", 900)],
+    costosComercializacion: [gasto("Distribución, copias y promoción", 30000, "año")],
+    productos: [
+      { id: idTaquilla, nombre: "Entradas en salas", unidadMedida: "entrada", cantidades: [40000, 10000, 0, 0, 0], precios: [36, 36, 36, 36, 36] },
+      { id: idStreaming, nombre: "Licencias y catálogo en plataformas de streaming", unidadMedida: "licencia", cantidades: [0, 2, 2, 2, 2], precios: [260000, 260000, 150000, 110000, 90000] },
+      { id: idFestival, nombre: "Premios y venta a festivales", unidadMedida: "venta", cantidades: [3, 4, 2, 1, 0], precios: [30000, 30000, 30000, 30000, 30000] },
+    ],
+    ...finCapm(1.4),
+    crecimientoIngresosAnual: 0, crecimientoCostosAnual: 0.03,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [0, 0, 0, 0],
+  };
+}
+
+// ============================================================================
 // REGISTRO EXPORTADO
 // ============================================================================
 
@@ -1154,44 +1639,67 @@ export const PLANTILLAS: PlantillaMeta[] = [
   // Gastronomía
   { clave: "restaurante", titulo: "Restaurante temático", emoji: "🍽️", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Grande", resumen: "Platos, bebidas, postres y salón de eventos.", crear: restaurante },
   { clave: "cafeteria", titulo: "Cafetería de especialidad", emoji: "☕", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Mediano", resumen: "Café de origen, postres y almuerzos ligeros.", crear: cafeteria },
-  { clave: "foodtruck", titulo: "Food truck móvil", emoji: "🚐", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Hamburguesas gourmet que rotan por ferias y eventos.", crear: foodTruck },
+  { clave: "foodtruck", titulo: "Food truck móvil", emoji: "🚐", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Hamburguesas gourmet que rotan por ferias y eventos.", crear: () => calibrarDemanda(foodTruck(), 0.65) },
   { clave: "panaderia", titulo: "Panadería artesanal", emoji: "🥖", categoria: "gastronomia", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Pan integral, galletas y tortas por encargo.", crear: panaderiaArtesanal },
 
   // Producción
-  { clave: "fabrica", titulo: "Fábrica de snacks", emoji: "🏭", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Grande", resumen: "Granola, barras y mantequilla de maní industrial.", crear: fabricaSnacks },
-  { clave: "embotelladora", titulo: "Embotelladora de jugos", emoji: "🧃", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Jugos naturales pasteurizados con cadena de frío.", crear: embotelladoraJugos },
-  { clave: "muebles", titulo: "Taller de muebles", emoji: "🪑", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Carpintería a medida: sillas, mesas, closets.", crear: tallerMuebles },
-  { clave: "textil", titulo: "Taller textil de alpaca", emoji: "🧶", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Sweaters, bufandas y gorros para exportación.", crear: textilSweaters },
+  { clave: "fabrica", titulo: "Fábrica de snacks", emoji: "🏭", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Grande", resumen: "Granola, barras y mantequilla de maní industrial.", crear: () => calibrarDemanda(fabricaSnacks(), 0.46) },
+  { clave: "embotelladora", titulo: "Embotelladora de jugos", emoji: "🧃", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Jugos naturales pasteurizados con cadena de frío.", crear: () => calibrarDemanda(embotelladoraJugos(), 0.34) },
+  { clave: "muebles", titulo: "Taller de muebles", emoji: "🪑", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Carpintería a medida: sillas, mesas, closets.", ensena: "Un taller con buena demanda apenas supera el costo del capital. Compara con la fábrica de snacks: misma lógica de producción, pero aquí el margen por unidad es mucho menor.", veredicto: "marginal", crear: () => calibrarDemanda(tallerMuebles(), 1.07) },
+  { clave: "textil", titulo: "Taller textil de alpaca", emoji: "🧶", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Sweaters, bufandas y gorros para exportación.", crear: () => calibrarDemanda(textilSweaters(), 0.78) },
 
   // Comercio
   { clave: "distribuidora", titulo: "Distribuidora mayorista", emoji: "📦", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Grande", resumen: "Compra y reventa al por mayor a tiendas de barrio.", crear: distribuidora },
-  { clave: "tiendaonline", titulo: "Tienda online", emoji: "🛒", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "E-commerce de electrónica, hogar y accesorios.", crear: tiendaOnline },
-  { clave: "ferreteria", titulo: "Ferretería de barrio", emoji: "🔧", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "Herramientas, materiales de construcción y pintura.", crear: ferreteria },
+  { clave: "tiendaonline", titulo: "Tienda online", emoji: "🛒", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "E-commerce de electrónica, hogar y accesorios.", crear: () => calibrarDemanda(tiendaOnline(), 0.45) },
+  { clave: "ferreteria", titulo: "Ferretería de barrio", emoji: "🔧", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "Herramientas, materiales de construcción y pintura.", crear: () => calibrarDemanda(ferreteria(), 0.42) },
 
   // Servicios
-  { clave: "lavanderia", titulo: "Lavandería industrial", emoji: "🧺", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Mediano", resumen: "Lavado, tintorería y planchado, hogares + hoteles.", crear: lavanderia },
-  { clave: "peluqueria", titulo: "Salón de belleza", emoji: "💇", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Corte, color, manicure y tratamientos.", crear: peluqueria },
-  { clave: "consultora", titulo: "Consultora de negocios", emoji: "💼", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Estrategia, marketing y capacitación para PYMES.", crear: consultoria },
+  { clave: "lavanderia", titulo: "Lavandería industrial", emoji: "🧺", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Mediano", resumen: "Lavado, tintorería y planchado, hogares + hoteles.", crear: () => calibrarDemanda(lavanderia(), 1.27) },
+  { clave: "peluqueria", titulo: "Salón de belleza", emoji: "💇", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Corte, color, manicure y tratamientos.", crear: () => calibrarDemanda(peluqueria(), 0.49) },
+  { clave: "consultora", titulo: "Consultora de negocios", emoji: "💼", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Estrategia, marketing y capacitación para PYMES.", crear: () => calibrarDemanda(consultoria(), 0.49) },
 
   // Suscripciones
-  { clave: "gimnasio", titulo: "Gimnasio con membresías", emoji: "💪", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Grande", resumen: "Base recurrente de socios con altas y churn.", crear: gimnasio },
-  { clave: "academia", titulo: "Academia online", emoji: "🎓", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Cursos de programación con membresía mensual.", crear: academiaOnline },
-  { clave: "podcast", titulo: "Podcast con membresía", emoji: "🎙️", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Pequeño", resumen: "Episodios extra y comunidad para suscriptores.", crear: podcastPremium },
+  { clave: "gimnasio", titulo: "Gimnasio con membresías", emoji: "💪", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Grande", resumen: "Base recurrente de socios con altas y churn.", crear: () => calibrarDemanda(gimnasio(), 0.92) },
+  { clave: "academia", titulo: "Academia online", emoji: "🎓", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Cursos de programación con membresía mensual.", crear: () => calibrarDemanda(academiaOnline(), 1.31) },
+  { clave: "podcast", titulo: "Podcast con membresía", emoji: "🎙️", categoria: "suscripcion", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Pequeño", resumen: "Episodios extra y comunidad para suscriptores.", crear: () => calibrarDemanda(podcastPremium(), 0.79) },
 
   // Medios
-  { clave: "medio", titulo: "Medio digital", emoji: "📰", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Grande", resumen: "Portal de noticias que vive de pauta. Audiencia × CPM.", crear: medioDigital },
-  { clave: "radio", titulo: "Programa radial", emoji: "📻", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Mediano", resumen: "Matutino FM + streaming con cuñas y menciones.", crear: programaRadial },
-  { clave: "youtube", titulo: "Canal de YouTube", emoji: "📹", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Mediano", resumen: "Viajes, cultura y noticias. AdSense + brand deals.", crear: canalYoutube },
+  { clave: "medio", titulo: "Medio digital", emoji: "📰", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Grande", resumen: "Portal de noticias que vive de pauta. Audiencia × CPM.", ensena: "Un portal de noticias necesita mucha audiencia para vivir de pauta. Con el tráfico del ejemplo no recupera lo invertido: observa qué audiencia haría falta para equilibrar.", veredicto: "rechazo", crear: () => calibrarDemanda(medioDigital(), 1.38) },
+  { clave: "radio", titulo: "Programa radial", emoji: "📻", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Mediano", resumen: "Matutino FM + streaming con cuñas y menciones.", crear: () => calibrarDemanda(programaRadial(), 0.6) },
+  { clave: "youtube", titulo: "Canal de YouTube", emoji: "📹", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Mediano", resumen: "Viajes, cultura y noticias. AdSense + brand deals.", crear: () => calibrarDemanda(canalYoutube(), 0.31) },
 
   // Turismo
-  { clave: "turismo", titulo: "Operadora de turismo", emoji: "🏔️", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Rutas turísticas", escala: "Grande", resumen: "Uyuni, Amazonía, city tours y trekking.", crear: operadoraTurismo },
+  { clave: "turismo", titulo: "Operadora de turismo", emoji: "🏔️", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Rutas turísticas", escala: "Grande", resumen: "Uyuni, Amazonía, city tours y trekking.", crear: () => calibrarDemanda(operadoraTurismo(), 0.47) },
   { clave: "hostal", titulo: "Hostal boutique", emoji: "🏨", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Hospitalidad", escala: "Mediano", resumen: "Casa colonial restaurada con 12 habitaciones.", crear: hostalBoutique },
 
   // Agricultura
-  { clave: "quinua", titulo: "Cultivo de quinua", emoji: "🌾", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Agricultura", escala: "Grande", resumen: "Quinua real orgánica para exportación.", crear: cultivoQuinua },
-  { clave: "hidroponico", titulo: "Invernadero hidropónico", emoji: "🌱", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Agricultura tecnificada", escala: "Mediano", resumen: "Lechuga, tomate y hierbas premium para gourmet.", crear: invernaderoHidroponico },
+  { clave: "quinua", titulo: "Cultivo de quinua", emoji: "🌾", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Agricultura", escala: "Grande", resumen: "Quinua real orgánica para exportación.", crear: () => calibrarDemanda(cultivoQuinua(), 0.32) },
+  { clave: "hidroponico", titulo: "Invernadero hidropónico", emoji: "🌱", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Agricultura tecnificada", escala: "Mediano", resumen: "Lechuga, tomate y hierbas premium para gourmet.", crear: () => calibrarDemanda(invernaderoHidroponico(), 0.68) },
 
   // Costo-beneficio
-  { clave: "solar", titulo: "Planta solar industrial", emoji: "☀️", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Costo-beneficio", escala: "Grande", resumen: "Paneles solares evaluados por ahorro vs inversión.", crear: plantaSolar },
-  { clave: "digitalizacion", titulo: "Digitalización de empresa", emoji: "💻", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Costo-beneficio", escala: "Mediano", resumen: "ERP, CRM y e-commerce evaluado por ahorro + ventas.", crear: digitalizacionEmpresa },
+  { clave: "solar", titulo: "Planta solar industrial", emoji: "☀️", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Costo-beneficio", escala: "Grande", resumen: "Paneles solares evaluados por ahorro vs inversión.", ensena: "En Bolivia la electricidad está subsidiada, lo que reduce el ahorro de los paneles. Un buen proyecto técnico puede no ser buen negocio si el precio de lo que se ahorra es bajo.", veredicto: "rechazo", crear: plantaSolar },
+  { clave: "digitalizacion", titulo: "Digitalización de empresa", emoji: "💻", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Costo-beneficio", escala: "Mediano", resumen: "ERP, CRM y e-commerce evaluado por ahorro + ventas.", ensena: "Una digitalización rara vez se paga sola en 5 años. Mira qué parte del beneficio son ahorros seguros y qué parte son ventas hipotéticas.", veredicto: "marginal", crear: digitalizacionEmpresa },
+  { clave: "camarafrio", titulo: "Cámara de frío para cooperativa", emoji: "🧊", categoria: "costo_beneficio", sector: "Agricultura", modelo: "costo_beneficio", modeloLabel: "Pérdidas evitadas", escala: "Mediano", resumen: "No vende nada nuevo: el beneficio es la fruta que deja de perderse.", ensena: "El beneficio no siempre es ingreso: puede ser una pérdida que se evita. Se mide con datos de merma y se valora al precio de venta.", veredicto: "viable", crear: camaraFrioCooperativa },
+
+  // Marketing
+  { clave: "marketingresto", titulo: "Plan de marketing para un restaurante", emoji: "📣", categoria: "marketing", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Ventas adicionales", escala: "Pequeño", resumen: "Marca, web y pauta evaluadas por el margen de las ventas extra.", ensena: "Se evalúa el margen de las ventas ADICIONALES atribuidas al plan, no las ventas del negocio. El supuesto de atribución es el punto más frágil: conviene probar qué pasa si rinde la mitad.", veredicto: "viable", crear: planMarketingRestaurante },
+  { clave: "campanatv", titulo: "Campaña masiva en TV y vallas", emoji: "📺", categoria: "marketing", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Ventas adicionales", escala: "Mediano", resumen: "Costo alto y fijo, efecto incierto: no recupera lo gastado.", ensena: "Un proyecto puede ser un buen negocio y la campaña igual no convenir. Muestra el criterio de rechazo: VAN negativo y TIR bajo el costo del capital.", veredicto: "rechazo", crear: campanaMasivaTv },
+
+  // Social
+  { clave: "postasalud", titulo: "Posta de salud comunitaria", emoji: "🏥", categoria: "social", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Beneficio social", escala: "Mediano", resumen: "Sin ingresos: el beneficio son traslados y jornadas evitadas.", ensena: "En proyectos sociales el beneficio se traduce a bolivianos con supuestos explícitos y se descuenta con una tasa social (menor que la de una empresa), con financiamiento propio.", veredicto: "viable", crear: postaSalud },
+
+  // Eventos
+  { clave: "festival", titulo: "Festival de música anual", emoji: "🎪", categoria: "eventos", sector: "Servicios", modelo: "unidades", modeloLabel: "Evento", escala: "Mediano", resumen: "Ingresos concentrados y cachets como costo dominante.", ensena: "Con costos fijos altos, el resultado depende de llenar el aforo. Prueba bajar la asistencia un 20% y mira qué pasa con el VAN.", veredicto: "marginal", crear: festivalMusica },
+
+  // Alquiler
+  { clave: "edificio", titulo: "Edificio de departamentos en alquiler", emoji: "🏢", categoria: "alquiler", sector: "Servicios", modelo: "unidades", modeloLabel: "Renta", escala: "Grande", resumen: "Inversión grande, flujo estable y lento.", ensena: "Rentabilidad modesta con riesgo bajo: compara con una tasa de depósito. El valor residual del terreno pesa mucho en el resultado final.", veredicto: "marginal", crear: edificioAlquiler },
+
+  // Tanda 2
+  { clave: "flotaelectrica", titulo: "Flota de reparto eléctrica", emoji: "🔌", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Ahorro de costos", escala: "Mediano", resumen: "Cambiar vans a gasolina por eléctricas: ahorro vs inversión.", ensena: "Un ahorro anual atractivo puede no justificar una inversión grande. Prueba subir el precio del combustible y observa cuándo el proyecto pasa a ser viable.", veredicto: "marginal", crear: flotaElectrica },
+  { clave: "podcastauspicios", titulo: "Podcast con auspicios", emoji: "🎧", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Pequeño", resumen: "Gratis para el oyente, vive de menciones de marcas.", ensena: "Compara con el podcast de membresías: aquí el ingreso depende de audiencia × CPM, y el CPM sube cuando el público es de nicho. Todo depende de que la audiencia crezca.", veredicto: "viable", crear: podcastAuspicios },
+  { clave: "radiocomunitaria", titulo: "Radio comunitaria rural", emoji: "📡", categoria: "medios", sector: "Servicios", modelo: "publicidad", modeloLabel: "Publicidad", escala: "Pequeño", resumen: "Audiencia chica y pauta barata: no cubre sus costos.", ensena: "Un proyecto con mucho valor social puede ser inviable como negocio. Discute cómo se financiaría: subvención, aportes o cambio de modelo.", veredicto: "rechazo", crear: radioComunitaria },
+  { clave: "agenciamkt", titulo: "Agencia de marketing digital", emoji: "🎯", categoria: "servicios", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Pequeño", resumen: "Contratos mensuales y proyectos; casi sin activos.", ensena: "En servicios profesionales el costo es el equipo, no los activos. La inversión es baja y el riesgo está en perder clientes: prueba bajar los contratos mensuales.", veredicto: "viable", crear: agenciaMarketing },
+  { clave: "appdelivery", titulo: "App de delivery para barrios", emoji: "📱", categoria: "tecnologia", sector: "Servicios", modelo: "unidades", modeloLabel: "Comisión por pedido", escala: "Mediano", resumen: "Desarrollo caro, ingreso por comisión y escala.", ensena: "Costo inicial alto y costo marginal bajo: el resultado depende del volumen de pedidos. Prueba con la mitad de los pedidos para ver el riesgo.", veredicto: "marginal", crear: appDelivery },
+  { clave: "capacitacion", titulo: "Capacitación técnica para jóvenes", emoji: "🎓", categoria: "social", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Beneficio social", escala: "Mediano", resumen: "El beneficio es el mayor ingreso de los egresados.", ensena: "Cuánto del beneficio se atribuye al programa es el supuesto clave. Cambia el porcentaje y compara el VAN con el de la posta de salud.", veredicto: "marginal", crear: capacitacionJovenes },
+  { clave: "pelicula", titulo: "Película nacional", emoji: "🎬", categoria: "eventos", sector: "Servicios", modelo: "unidades", modeloLabel: "Proyecto puntual", escala: "Grande", resumen: "Un año de producción e ingresos concentrados en pocos años.", ensena: "Un proyecto de una sola vez tiene ingresos que se agotan: aquí no hay flujo estable. Muestra por qué el periodo de recuperación y el riesgo importan.", veredicto: "marginal", crear: peliculaNacional },
 ];

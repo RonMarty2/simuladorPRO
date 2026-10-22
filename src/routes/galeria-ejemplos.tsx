@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, BookOpen, Eye, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy } from "lucide-react";
 import {
   PLANTILLAS,
   CATEGORIAS,
@@ -12,7 +13,8 @@ import type { Proyecto } from "@/types/proyecto";
 import DetalleEntregaPasoAPaso from "@/components/docente/DetalleEntregaPasoAPaso";
 import { useAuthStore } from "@/stores/auth-store";
 import { listarMisCursos, type Curso } from "@/lib/cursos-supabase";
-import { publicarPlantillaComoCaso } from "@/lib/proyecto-supabase";
+import { guardarProyecto, publicarPlantillaComoCaso } from "@/lib/proyecto-supabase";
+import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 
 /**
  * Galería de proyectos de EJEMPLO (solo lectura). Vitrina pedagógica para que
@@ -124,6 +126,7 @@ export default function GaleriaEjemplos() {
                         <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                           {pl.sector}
                         </span>
+                        {pl.veredicto && <ChipVeredicto veredicto={pl.veredicto} />}
                       </div>
                       <p className="text-[11px] leading-snug text-muted-foreground">{pl.resumen}</p>
                       <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary">
@@ -372,6 +375,17 @@ function FiltroCategoria({
   );
 }
 
+function ChipVeredicto({ veredicto }: { veredicto: "viable" | "marginal" | "rechazo" }) {
+  const meta = {
+    viable: { texto: "Viable", clase: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200" },
+    marginal: { texto: "Marginal", clase: "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200" },
+    rechazo: { texto: "Ejemplo de rechazo", clase: "bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200" },
+  }[veredicto];
+  return (
+    <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold", meta.clase)}>{meta.texto}</span>
+  );
+}
+
 function ChipEscala({ escala }: { escala: "Pequeño" | "Mediano" | "Grande" }) {
   const clase =
     escala === "Pequeño"
@@ -395,8 +409,42 @@ function VisorPlantilla({
 }) {
   const perfil = useAuthStore((s) => s.perfil);
   const esDocente = perfil?.rol === "docente";
+  const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const [publicar, setPublicar] = useState(false);
+  const [copiando, setCopiando] = useState(false);
+  const [errorCopia, setErrorCopia] = useState<string | null>(null);
   const proyecto = useMemo<Proyecto>(() => plantilla.crear(), [plantilla]);
+
+  // El alumno se lleva una copia propia (proyecto libre, sin curso) y la edita
+  // en el constructor. El ejemplo de la galería no cambia.
+  const usarComoBase = async () => {
+    if (!user) return;
+    setCopiando(true);
+    setErrorCopia(null);
+    try {
+      const ahora = new Date().toISOString();
+      const copia: Proyecto = {
+        ...plantilla.crear(),
+        estudiante_id: user.id,
+        curso_id: null,
+        grupo_id: null,
+        tipo: "libre",
+        caso_origen_id: null,
+        paso_inicio_estudiante: null,
+        estado: "construyendo",
+        nombre: `${proyecto.nombre} (mi copia)`,
+        creado_en: ahora,
+        actualizado_en: ahora,
+      };
+      await guardarProyecto(copia);
+      guardarProyectoActivo(user.id, copia.id);
+      navigate("/construir");
+    } catch (e: any) {
+      setErrorCopia(e?.message ?? "No se pudo crear la copia");
+      setCopiando(false);
+    }
+  };
   const calc = useMemo(() => {
     try {
       return construirFlujoCaja(proyecto);
@@ -455,13 +503,43 @@ function VisorPlantilla({
             {proyecto.descripcion}
           </div>
 
+          {plantilla.ensena && (
+            <div className="rounded-md border border-amber-300 bg-amber-50/60 p-3 text-[11px] text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+              <div className="mb-1 flex items-center gap-2 font-bold uppercase tracking-wider">
+                Qué enseña este ejemplo
+                {plantilla.veredicto && <ChipVeredicto veredicto={plantilla.veredicto} />}
+              </div>
+              {plantilla.ensena}
+            </div>
+          )}
+
           <DetalleEntregaPasoAPaso proyecto={proyecto} pasoEntregado={null} />
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border p-3">
           <span className="text-[11px] text-muted-foreground">
-            Ejemplo de referencia · No se guarda
+            {user && !esDocente
+              ? "Ejemplo de referencia · Puedes crear tu propia copia para editarla"
+              : "Ejemplo de referencia · No se guarda"}
           </span>
+          {user && !esDocente && (
+            <div className="flex items-center gap-2">
+              {errorCopia && <span className="text-[11px] text-destructive">{errorCopia}</span>}
+              <button
+                onClick={usarComoBase}
+                disabled={copiando}
+                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                title="Crea una copia tuya de este ejemplo; el original no cambia"
+              >
+                {copiando ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                Usar como base
+              </button>
+            </div>
+          )}
           {esDocente && (
             <button
               onClick={() => setPublicar(true)}
