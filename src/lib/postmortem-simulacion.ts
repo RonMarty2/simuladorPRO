@@ -79,7 +79,7 @@ export function analizarPostmortem(
         "La reputación baja arrastra la demanda: vendes menos y la caja sufre.",
     });
     consejos.push(
-      "Cuidá la reputación: ante eventos, las opciones más baratas a veces la dañan y el costo aparece después."
+      "Cuida la reputación: ante eventos, las opciones más baratas a veces la dañan y el costo aparece después."
     );
   }
 
@@ -137,13 +137,13 @@ export function analizarPostmortem(
         "se sostiene pero todavía no genera valor.",
     });
     consejos.push(
-      "Buscá subir el margen: aunque no quiebres, sin utilidad el proyecto no rinde."
+      "Busca subir el margen: aunque no quiebres, sin utilidad el proyecto no rinde."
     );
   }
 
   if (consejos.length === 0) {
     consejos.push(
-      "Buen manejo. Probá un nivel más difícil o forzá eventos para estresar el proyecto."
+      "Buen manejo. Prueba un nivel más difícil o fuerza eventos para estresar el proyecto."
     );
   }
 

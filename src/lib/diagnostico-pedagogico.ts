@@ -160,7 +160,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       titulo: "No se pudo calcular la TIR",
       detalle:
         "Suele pasar cuando los flujos nunca se vuelven positivos o el proyecto " +
-        "no tiene inversión inicial cargada. Revisá inversiones (Etapa 3) y los " +
+        "no tiene inversión inicial cargada. Revisa las inversiones (Etapa 3) y los " +
         "flujos de los 5 años.",
       etapa: 3,
     });
@@ -200,7 +200,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         severidad: "critico",
         titulo: "Pierdes plata el primer año",
         detalle:
-          "Tus costos y gastos del año 1 superan los ingresos. Revisá precio de " +
+          "Tus costos y gastos del año 1 superan los ingresos. Revisa el precio de " +
           "venta (Etapa 2), costos directos (Etapa 5) y gastos fijos/personal " +
           "(Etapas 4 y 6).",
         etapa: 5,
@@ -228,7 +228,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       detalle:
         `El ${fmtNum(deudaPct, 0)}% de la inversión sale de préstamo. Mucho ` +
         "apalancamiento sube el riesgo: las cuotas se pagan sí o sí, vendas o no. " +
-        "Probá subir el aporte propio en Etapa 7.",
+        "Prueba a subir el aporte propio en Etapa 7.",
       etapa: 7,
     });
   }
@@ -258,7 +258,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       severidad: "info",
       titulo: "Todavía no hay ingresos cargados",
       detalle:
-        "Sin ventas en el año 1 no se puede evaluar viabilidad. Completá " +
+        "Sin ventas en el año 1 no se puede evaluar viabilidad. Completa " +
         "productos, cantidades y precios en la Etapa 2.",
       etapa: 2,
     });
@@ -270,7 +270,7 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       titulo: "Todavía no hay inversión cargada",
       detalle:
         "Sin inversión inicial ni capital de trabajo, los indicadores no tienen " +
-        "sentido. Completá las Etapas 3 y 8.",
+        "sentido. Completa las Etapas 3 y 8.",
       etapa: 3,
     });
   }
