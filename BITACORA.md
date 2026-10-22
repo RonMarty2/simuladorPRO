@@ -610,8 +610,22 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         del año 1) y en la tarjeta PE del Paso 9. NO se cambió el Excel
         (`exportar-excel.ts`) ni el laboratorio de viabilidad
         (`laboratorio-viabilidad.ts`): siguen con el cálculo agregado.
-      - 373 tests (antes 293). Sin migraciones. Probado solo con el motor y
-        tests, no visto en pantalla.
+      - Validación posterior (mismo día): visto en producción (51 ejemplos,
+        "Qué enseña", diapositiva de equilibrio por producto). Salario mínimo
+        2026 en Bolivia = Bs 3.300 (+20%; fuentes citan DS 5503 o DS 5516, a
+        confirmar): 52 sueldos de jornada completa de las plantillas estaban por
+        debajo y se subieron a 3.300 (los "medio tiempo" no), lo que obligó a
+        reajustar 5 ejemplos (lavandería, quinua, salón, parqueo, edificio).
+        Diésel: Bs 9,80 al público y cerca de Bs 18 a grandes consumidores
+        (agosto-septiembre 2026, fuentes con contradicciones): el ejemplo de la
+        flota eléctrica ahora supone diésel a ~Bs 18. Alquileres, sueldos de
+        oficios y costos de obra NO se pudieron validar (sin fuente online).
+      - El botón "Usar como base" NO se probó en producción: exige una sesión
+        de estudiante real y la IA no inicia sesión.
+      - Ojo de caché: el service worker del navegador sirvió la galería vieja
+        (39 ejemplos) hasta desregistrarlo y recargar; los usuarios la verán
+        actualizada por el OTA (§7.7) tras recargar.
+      - 373 tests (antes 293). Sin migraciones.
 
 ### Retomar aquí (cierre de sesión 2026-10-19)
 Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión

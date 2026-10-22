@@ -110,7 +110,7 @@ export default function DashboardDocente() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
-            Galería de 26 proyectos de ejemplo para enseñar en clase
+            Galería de más de 50 proyectos de ejemplo para enseñar en clase
           </div>
           <div className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
             Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
