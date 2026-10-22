@@ -3,6 +3,7 @@ import { PLANTILLAS } from "./plantillas";
 import { calcularBaseProyecto, aplicarOperacionDelTurno, inicializarEstadoDesdeProyecto } from "./motor-eventos";
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { calcularTornado, simularMontecarlo } from "./analisis-riesgo";
+import { calcularMinimoCaja } from "./colchon-caja";
 
 // Barrido por TODOS los tipos de proyecto: el simulador, los escenarios y el
 // riesgo deben dar números finitos y coherentes con el constructor.
@@ -21,7 +22,12 @@ describe("barrido de plantillas", () => {
       for (let i = 0; i < 60; i++) e = aplicarOperacionDelTurno(e, base, "mensual", i);
       expect(Number.isFinite(e.caja)).toBe(true);
       // un proyecto con VAN positivo no debe quebrar en la simulación sin eventos
-      if (c.indicadores.van > 0) expect(e.caja, "caja a 60 meses").toBeGreaterThan(0);
+      if (c.indicadores.van > 0) {
+        expect(e.caja, "caja a 60 meses").toBeGreaterThan(0);
+        expect(calcularMinimoCaja(p).minimo, "la caja nunca debe quedar negativa").toBeGreaterThanOrEqual(0);
+      }
+      if (pl.veredicto === "viable") expect(c.indicadores.van, "ejemplo viable").toBeGreaterThan(0);
+      if (pl.veredicto === "rechazo") expect(c.indicadores.van, "ejemplo de rechazo").toBeLessThan(0);
 
       expect(Number.isFinite(c.van ?? 0)).toBe(true);
       const t: any = calcularTornado(p);

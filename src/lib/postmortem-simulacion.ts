@@ -76,7 +76,7 @@ export function analizarPostmortem(
       titulo: "Tu reputación cayó a lo largo de la simulación",
       detalle:
         `Pasaste de ${fmtNum((repInicial * 100), 0)}% a ${fmtNum((repFinal * 100), 0)}%. ` +
-        "La reputación baja arrastra la demanda: vendés menos y la caja sufre.",
+        "La reputación baja arrastra la demanda: vendes menos y la caja sufre.",
     });
     consejos.push(
       "Cuidá la reputación: ante eventos, las opciones más baratas a veces la dañan y el costo aparece después."

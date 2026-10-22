@@ -1,6 +1,7 @@
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import type { Proyecto } from "@/types/proyecto";
 import { fmtNum } from "./utils";
+import { calcularMinimoCaja } from "./colchon-caja";
 
 /**
  * Diagnóstico pedagógico de un proyecto de inversión.
@@ -99,11 +100,33 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         titulo: "El VAN da negativo",
         detalle:
           "El proyecto destruye valor: traído a hoy, devuelve menos de lo que " +
-          "ponés. Subí precio, bajá costos o revisá la inversión. Mientras el " +
+          "pones. Sube el precio, baja los costos o revisa la inversión. Mientras el " +
           "VAN sea negativo, no conviene ejecutarlo.",
         etapa: 9,
       });
     }
+  }
+
+  // ── Caja a lo largo del tiempo ───────────────────────────────────────────
+  // Un VAN positivo no basta: si el capital de trabajo no cubre las pérdidas
+  // del arranque, el negocio se queda sin plata antes de llegar a las ganancias.
+  try {
+    const { minimo, mes } = calcularMinimoCaja(proyecto);
+    if (minimo < 0 && Number.isFinite(minimo)) {
+      alertas.push({
+        id: "caja_negativa",
+        severidad: "critico",
+        titulo: "Te quedas sin caja antes de ganar",
+        detalle:
+          `En el mes ${mes} tu caja llegaría a Bs ${fmtNum(minimo, 0)}: el capital de ` +
+          "trabajo no alcanza para cubrir lo que pierdes al arrancar. Aunque el VAN " +
+          "sea positivo, en la simulación quebrarías. Sube el capital de trabajo " +
+          "(etapa 8) o reduce costos y gastos del primer año.",
+        etapa: 8,
+      });
+    }
+  } catch {
+    /* proyecto a medio armar */
   }
 
   // ── TIR vs WACC ──────────────────────────────────────────────────────────

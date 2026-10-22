@@ -4,6 +4,8 @@ import type {
   CategoriaCostoDirecto,
 } from "@/types/proyecto";
 import { nuevoId } from "@/lib/proyecto-factory";
+import { conColchonDeCaja } from "./colchon-caja";
+import { construirFlujoCaja } from "./flujo-proyecto";
 
 /**
  * GALERÍA DE PLANTILLAS DE EJEMPLO ("mega proyectos") — vitrina pedagógica.
@@ -2021,7 +2023,7 @@ function reforestacionCarbono(): Proyecto {
 // REGISTRO EXPORTADO
 // ============================================================================
 
-export const PLANTILLAS: PlantillaMeta[] = [
+const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
   // Gastronomía
   { clave: "restaurante", titulo: "Restaurante temático", emoji: "🍽️", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Grande", resumen: "Platos, bebidas, postres y salón de eventos.", crear: restaurante },
   { clave: "cafeteria", titulo: "Cafetería de especialidad", emoji: "☕", categoria: "gastronomia", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicios", escala: "Mediano", resumen: "Café de origen, postres y almuerzos ligeros.", crear: cafeteria },
@@ -2103,3 +2105,13 @@ export const PLANTILLAS: PlantillaMeta[] = [
   { clave: "saas", titulo: "Software para pymes (SaaS)", emoji: "☁️", categoria: "tecnologia", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Desarrollo caro, clientes que pagan cada mes.", ensena: "Costo inicial alto y costo marginal casi cero: la escala lo es todo. Prueba con la mitad de los clientes y observa cuánto empeora el resultado.", veredicto: "marginal", crear: () => calibrarDemanda(softwareSaaS(), 1.528) },
   { clave: "reforestacion", titulo: "Reforestación con bonos de carbono", emoji: "🌳", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Largo plazo", escala: "Grande", resumen: "Ingresos que llegan recién después del horizonte de evaluación.", ensena: "El horizonte de 5 años perjudica a proyectos de maduración lenta. Un proyecto puede ser bueno a 20 años y rechazado a 5: la decisión depende de cuánto tiempo se mire.", veredicto: "rechazo", crear: reforestacionCarbono },
 ];
+
+// Los ejemplos pensados como viables no deben quedarse sin caja en el año 1: si el
+// capital de trabajo no alcanza, se sube lo justo. Los de VAN negativo se dejan como están.
+export const PLANTILLAS: PlantillaMeta[] = PLANTILLAS_SIN_COLCHON.map((pl) => ({
+  ...pl,
+  crear: () => {
+    const p = pl.crear();
+    return construirFlujoCaja(p).indicadores.van > 0 ? conColchonDeCaja(p) : p;
+  },
+}));
