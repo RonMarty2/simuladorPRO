@@ -86,7 +86,7 @@ Arquitectura preparada para escalar a cientos.
 | Registro | `/registro` | `routes/registro.tsx` (sin selector rol — siempre estudiante) |
 | Panel personal | `/estudiante` | `routes/dashboard-estudiante.tsx` |
 | Constructor proyecto (9 pasos) | `/construir` | `routes/construir-proyecto.tsx` + `components/constructor/pasos/*` |
-| Galería de 26 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` + `lib/plantillas.ts` |
+| Galería de 51 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` + `lib/plantillas.ts` |
 | Simular (5 años, eventos) | `/simular` | `routes/simular-proyecto.tsx` |
 | Escenarios + análisis de riesgo (veredicto, tornado, Montecarlo, tabla precio × demanda) | `/escenarios` | `routes/escenarios.tsx` + `components/escenarios/PanelEscenarios.tsx` + `AnalisisRiesgo.tsx` + `lib/analisis-riesgo.ts` |
 | Presentar proyecto (14 diapositivas, incluye escenarios y simulación de riesgo) | `/presentar/:id` | `routes/presentar-proyecto.tsx` + `components/presentacion/VisorPitch.tsx` + `lib/presentacion-proyecto.ts` |
@@ -120,7 +120,7 @@ Arquitectura preparada para escalar a cientos.
 | Grupos | tab "Grupos" | `components/curso/GruposDocente.tsx` |
 | Casos del curso | tab "Casos" | `components/curso/CasosCurso.tsx` |
 | **🎲 Lanzar situación en vivo** | tab "Lanzar situación" | `components/docente/LanzadorEventos.tsx` |
-| Galería de 26 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` |
+| Galería de 51 ejemplos | `/ejemplos` | `routes/galeria-ejemplos.tsx` |
 | Catálogo de eventos | `/eventos` | `routes/catalogo-eventos.tsx` |
 
 **3 modales de revisión** (todos en `components/docente/`):
@@ -189,7 +189,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 │   │   ├── eventos-supabase.ts    catálogo de eventos
 │   │   ├── lanzador-eventos.ts    disparar eventos a un curso + dashboard
 │   │   ├── podio-supabase.ts      top 3 individual + grupal + tu posición + racha
-│   │   ├── plantillas.ts          26 plantillas mega de ejemplo
+│   │   ├── plantillas.ts          51 plantillas de ejemplo (con veredicto y "qué enseña")
 │   │   ├── proyecto-factory.ts    crearProyectoVacio + 6 ejemplos del paseo
 │   │   ├── flujo-proyecto.ts      motor de flujo de caja (VAN/TIR/Payback/WACC)
 │   │   ├── calculo-financiero.ts  funciones puras V1
@@ -563,6 +563,55 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - Barra lateral de escritorio plegable (`RootLayout`): botón con ícono de
         panel en la cabecera, preferencia en `localStorage`
         (`simulador.lateralOculto`). No cambia el menú móvil. Commit `75cb318`.
+
+- [x] **Sesión 2026-10-21 (2)** (`5958962`, `3e2fd3a`, `e98bf1b`) — galería de
+      ejemplos y punto de equilibrio. Pedido del owner: que el alumno pueda
+      editar un ejemplo, que los ejemplos sean variados y creíbles, y que el
+      equilibrio no mezcle productos.
+      - Caso del curso: NO es un fallo. `tomarCasoDelCurso` hace una copia
+        congelada al tomarlo y el caso ya tomado no se vuelve a ofrecer; si el
+        docente cambia el paso de inicio después, la copia vieja no se
+        actualiza. El owner decidió dejarlo así. Para probar: borrar la entrega
+        y volver a tomar el caso. Sin verificar contra la base.
+      - Botón "Usar como base" en `/ejemplos` (solo alumno): crea un proyecto
+        libre propio (`tipo: "libre"`, sin curso) y lo abre en el constructor.
+        El ejemplo original no cambia. Código en `VisorPlantilla`.
+      - `lib/plantillas.ts`: 51 ejemplos (antes 26). 25 nuevos repartidos por
+        CÓMO SE MIDE EL BENEFICIO: ventas por unidades, cobro recurrente,
+        publicidad, ahorro de costos, ventas adicionales de una acción de
+        marketing, pérdidas evitadas, beneficio social, proyectos puntuales,
+        alquiler. Categorías nuevas: marketing, social, eventos, alquiler,
+        tecnologia. `PlantillaMeta` suma `ensena` (qué aprende el alumno) y
+        `veredicto` ("viable" | "marginal" | "rechazo"); la galería los muestra
+        como etiqueta y recuadro "Qué enseña este ejemplo". Los ejemplos de
+        rechazo son intencionales (campaña masiva de TV, radio comunitaria,
+        reforestación a 5 años, planta solar, medio digital).
+      - Recalibración de los 26 viejos: 15 tenían TIR de 85% a 811% y plazos de
+        recuperación de 0,1 a 0,5 años; 6 daban VAN negativo sin explicación.
+        `calibrarDemanda(p, factor)` escala las cantidades de todos los
+        productos; el factor está en el registro del final del archivo (se halló
+        con el motor para dejar la TIR en 25-60%, o 10-15% en los marginales).
+        Limitación: en los de suscripción/publicidad los campos de entrada
+        (`suscripcionV2`, `publicidadV2`) no se reescalan y pueden no cuadrar
+        del todo con el flujo.
+      - Los MONTOS de los 25 ejemplos nuevos son estimaciones de la IA, no
+        validadas contra precios de Bolivia: el owner debe revisarlas.
+      - Hallazgo del motor: un beneficio que decae (campaña) o ingresos que se
+        agotan (película) con costos fijos constantes dan flujos negativos en
+        los últimos años y la TIR sale absurda (billones por ciento). Se
+        resolvió bajando costos fijos o agregando ingresos de cola.
+      - Punto de equilibrio por producto: `lib/equilibrio-por-producto.ts`
+        (`calcularEquilibrioPorProducto`). El agregado de siempre sumaba
+        unidades de productos distintos sobre un precio promedio. Ahora se
+        mantiene la mezcla de ventas del año 1: φ = costos fijos / contribución
+        total, y unidades de equilibrio = unidades del año 1 × φ. En
+        costo-beneficio devuelve el beneficio anual mínimo. Aplicado en la
+        diapositiva "Punto de equilibrio" (`VisorPitch`, eje X en % del volumen
+        del año 1) y en la tarjeta PE del Paso 9. NO se cambió el Excel
+        (`exportar-excel.ts`) ni el laboratorio de viabilidad
+        (`laboratorio-viabilidad.ts`): siguen con el cálculo agregado.
+      - 373 tests (antes 293). Sin migraciones. Probado solo con el motor y
+        tests, no visto en pantalla.
 
 ### Retomar aquí (cierre de sesión 2026-10-19)
 Estado: producción al día, 293 tests, build OK, migración 033 aplicada. Sesión
