@@ -66,7 +66,7 @@ posterior a la 033.
 | producto-unidades | gastronomia, produccion, comercio | HECHO (036) |
 | publicidad-medios | medios | HECHO (037) |
 | eventos-servicios-sorpresa | eventos | ESCRITO (038), falta aplicar |
-| marketing + comunicacion-institucional | marketing | pendiente |
+| marketing (+ comunicacion-institucional) | marketing | ESCRITO (039 solo de marketing; falta aplicar y falta comunicacion) |
 | social-ong + educacion-publica + salud-publica | social | pendiente |
 | ahorro-eficiencia | costo_beneficio | pendiente |
 | alquiler-activos | alquiler | pendiente |
@@ -103,7 +103,7 @@ Nota: la categoría `tecnologia` mezcla SaaS (suscripción) y app de delivery
 Un paso por fila de la tabla del §3. Procedimiento por tipo en el §5.
 - [x] 2.1 turismo (034)   - [x] 2.2 suscripcion (035)
 - [x] 2.3 gastronomia + produccion + comercio (producto-unidades): migracion 036, 12 eventos. APLICADA 2026-10-22.
-- [x] 2.4 medios (037, 10 eventos, APLICADA 2026-10-22)   - [x] 2.5 eventos (038, 10 eventos, FALTA APLICAR)   - [ ] 2.6 marketing   - [ ] 2.7 social
+- [x] 2.4 medios (037, 10 eventos, APLICADA 2026-10-22)   - [x] 2.5 eventos (038, 10 eventos, FALTA APLICAR)   - [x] 2.6 marketing (039, 11 eventos, FALTA APLICAR)   - [ ] 2.7 social
 - [ ] 2.8 costo_beneficio   - [ ] 2.9 alquiler   - [ ] 2.10 agricultura
 - [ ] 2.11 servicios   - [ ] 2.12 tecnologia
 
