@@ -36,7 +36,7 @@ describe("indicadores propios por tipo", () => {
 
   it("los tipos sin panel devuelven null", () => {
     expect(indicadoresPorTipo(crear("restaurante"))).toBeNull();
-    expect(indicadoresPorTipo(crear("clinica"))).toBeNull();
+    expect(indicadoresPorTipo(crear("colegio"))).toBeNull();
   });
 
   it("el gimnasio muestra los indicadores de suscripción", () => {
@@ -60,6 +60,32 @@ describe("indicadores propios por tipo", () => {
     p.suscripcionV2!.churnMensual = 0.4;
     const panel = indicadoresPorTipo(p)!;
     expect(panel.indicadores.find((i) => i.id === "base-equilibrio")!.severidad).toBe("critico");
+  });
+
+  it("la clínica muestra ocupación por línea, ventas de equilibrio y cobranza", () => {
+    const panel = indicadoresPorTipo(crear("clinica"));
+    expect(panel).not.toBeNull();
+    const lista = ids(panel);
+    expect(lista.filter((i) => i.startsWith("ocupacion-")).length).toBe(3);
+    expect(lista).toEqual(expect.arrayContaining(["mezcla-servicios", "ventas-equilibrio", "honorarios", "cobranza", "meses-caja"]));
+    const cobranza = panel!.indicadores.find((i) => i.id === "cobranza")!;
+    expect(["advertencia", "critico"]).toContain(cobranza.severidad);
+  });
+
+  it("una línea que supera su capacidad se marca como crítica", () => {
+    const p = crear("clinica");
+    p.productos[2].capacidadAnual = 500;
+    const panel = indicadoresPorTipo(p)!;
+    const linea = panel.indicadores.find((i) => i.id === "ocupacion-" + p.productos[2].id)!;
+    expect(linea.severidad).toBe("critico");
+  });
+
+  it("todas las plantillas de salud privada calculan sin errores", () => {
+    for (const pl of PLANTILLAS.filter((x) => x.categoria === "salud_privada")) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
   });
 
   it("todas las plantillas de turismo calculan sin errores", () => {

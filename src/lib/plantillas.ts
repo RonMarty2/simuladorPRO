@@ -2063,9 +2063,9 @@ function clinicaPrivada(): Proyecto {
     costosAdministracion: [gasto("Alquiler del edificio", 35000), gasto("Servicios básicos y gases medicinales", 18000), gasto("Mantenimiento de equipos", 12000), gasto("Seguro de responsabilidad médica", 6000), gasto("Contabilidad y asesoría legal", 5000)],
     costosComercializacion: [gasto("Convenios con cajas, aseguradoras y empresas", 4000), gasto("Marketing y reputación", 3500)],
     productos: [
-      { id: idConsulta, nombre: "Consulta externa", unidadMedida: "consulta", cantidades: serie(21600, 0.06), precios: serie(150, 0.04, 2) },
-      { id: idEstudio, nombre: "Laboratorio e imagenología", unidadMedida: "estudio", cantidades: serie(13000, 0.06), precios: serie(130, 0.04, 2) },
-      { id: idInternacion, nombre: "Internación y cirugía", unidadMedida: "día-cama", cantidades: serie(1970, 0.05), precios: serie(950, 0.04, 2) },
+      { id: idConsulta, nombre: "Consulta externa", unidadMedida: "consulta", capacidadAnual: 36000, cantidades: serie(21600, 0.06), precios: serie(150, 0.04, 2) },
+      { id: idEstudio, nombre: "Laboratorio e imagenología", unidadMedida: "estudio", capacidadAnual: 22000, cantidades: serie(13000, 0.06), precios: serie(130, 0.04, 2) },
+      { id: idInternacion, nombre: "Internación y cirugía", unidadMedida: "día-cama", capacidadAnual: 12 * 365, cantidades: serie(1970, 0.05), precios: serie(950, 0.04, 2) },
     ],
     ...finCapm(0.9),
     crecimientoIngresosAnual: 0.06, crecimientoCostosAnual: 0.05,

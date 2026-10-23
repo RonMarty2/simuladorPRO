@@ -10,7 +10,7 @@ import type { Proyecto } from "../types/proyecto";
  * cambian el VAN, la TIR ni la caja de nadie. Si falta un dato opcional (por
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
- * Hoy existen los paneles de turismo y suscripción. Los demás tipos devuelven null.
+ * Hoy existen los paneles de turismo, suscripción y salud privada. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -36,6 +36,7 @@ const bs = (x: number) => `Bs ${Math.round(x).toLocaleString("es-BO")}`;
 export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null {
   if (proyecto.tipoNegocio === "turismo") return indicadoresTurismo(proyecto);
   if (proyecto.tipoNegocio === "suscripcion") return indicadoresSuscripcion(proyecto);
+  if (proyecto.tipoNegocio === "salud_privada") return indicadoresSaludPrivada(proyecto);
   return null;
 }
 
@@ -287,6 +288,134 @@ function indicadoresSuscripcion(p: Proyecto): PanelIndicadores | null {
     titulo: "Indicadores de suscripción y membresías",
     introduccion:
       "Estas métricas son las que usa un negocio recurrente para decidir. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresSaludPrivada(p: Proyecto): PanelIndicadores | null {
+  if (p.modeloIngreso === "costo_beneficio" || p.productos.length === 0) return null;
+
+  const flujo = construirFlujoCaja(p);
+  const eq = calcularEquilibrioPorProducto(p);
+
+  const lineas = p.productos
+    .map((x) => ({
+      nombre: x.nombre,
+      unidad: x.unidadMedida,
+      id: x.id,
+      u1: Number(x.cantidades?.[0] ?? 0),
+      ingreso: Number(x.cantidades?.[0] ?? 0) * Number(x.precios?.[0] ?? 0),
+      capacidad: x.capacidadAnual && x.capacidadAnual > 0 ? x.capacidadAnual : null,
+    }))
+    .filter((l) => l.u1 > 0);
+  const ing1 = lineas.reduce((a, l) => a + l.ingreso, 0);
+  if (ing1 <= 0) return null;
+
+  const indicadores: IndicadorPropio[] = [];
+
+  // Ocupación de cada línea con capacidad conocida (consultorios, equipos, camas)
+  for (const l of lineas) {
+    if (!l.capacidad) continue;
+    const ocup = l.u1 / l.capacidad;
+    indicadores.push({
+      id: "ocupacion-" + l.id,
+      nombre: `Ocupación: ${l.nombre}`,
+      valor: pct(ocup),
+      detalle:
+        ocup > 1
+          ? `Vendes más ${l.unidad} de los que caben en tu capacidad: revisa los supuestos o amplía.`
+          : ocup > 0.9
+            ? "Casi sin margen: un pico de demanda o una falla de equipo te dejaría pacientes sin atender."
+            : ocup < 0.5
+              ? "Menos de la mitad de tu capacidad. Un equipo o una cama que no se usa cuesta lo mismo que uno lleno: revisa si la inversión se justifica."
+              : "Parte de la capacidad de esta línea que vendes en el primer año. Las clínicas suelen llenar primero las consultas y más despacio la internación.",
+      severidad: ocup > 1 ? "critico" : ocup > 0.9 || ocup < 0.5 ? "advertencia" : "ok",
+    });
+  }
+
+  // Mezcla de servicios: de qué línea vive la clínica
+  const mayor = [...lineas].sort((a, b) => b.ingreso - a.ingreso)[0];
+  if (lineas.length > 1) {
+    indicadores.push({
+      id: "mezcla-servicios",
+      nombre: "Línea que más aporta al ingreso",
+      valor: `${mayor.nombre}: ${pct(mayor.ingreso / ing1)}`,
+      detalle:
+        "Reparto del ingreso del año 1: " +
+        lineas.map((l) => `${l.nombre} ${pct(l.ingreso / ing1)}`).join(", ") +
+        ". Si una sola línea sostiene el negocio, un problema ahí lo tumba.",
+      severidad: mayor.ingreso / ing1 > 0.6 ? "advertencia" : "info",
+    });
+  }
+
+  // Ventas mínimas para no perder
+  if (Number.isFinite(eq.factorVolumen)) {
+    const phi = eq.factorVolumen;
+    indicadores.push({
+      id: "ventas-equilibrio",
+      nombre: "Ventas mínimas para no perder",
+      valor: pct(phi),
+      detalle:
+        phi > 1
+          ? "Con lo que proyectas vender no cubres tus costos fijos."
+          : `Es la parte de tus ventas proyectadas que cubre los costos fijos. Si vendes menos, pierdes: tu margen de seguridad es de ${pct(1 - phi)}.`,
+      severidad: phi > 1 ? "critico" : phi > 0.85 ? "advertencia" : "ok",
+    });
+  }
+
+  // Honorarios médicos: costo directo de mano de obra sobre el ingreso
+  const honorarios = lineas.reduce((a, l) => {
+    const unit = (p.costosDirectos ?? [])
+      .filter((c) => c.productoId === l.id && c.categoria === "mano_obra")
+      .reduce((s, c) => s + c.cantidadPorUnidad * c.costoUnitario, 0);
+    return a + unit * l.u1;
+  }, 0);
+  if (honorarios > 0) {
+    const peso = honorarios / ing1;
+    indicadores.push({
+      id: "honorarios",
+      nombre: "Ingreso que se va en honorarios médicos",
+      valor: pct(peso),
+      detalle:
+        "Es un costo variable: baja si baja la demanda, pero un médico que trae muchos pacientes puede pedir más o irse con ellos.",
+      severidad: peso > 0.4 ? "advertencia" : "info",
+    });
+  }
+
+  // Cobranza a cajas y aseguradoras (supuesto ilustrativo de 90 días)
+  const DIAS_COBRO = 90;
+  const inmovilizado = (ing1 / 365) * DIAS_COBRO;
+  const cobertura = p.capitalTrabajo / inmovilizado;
+  indicadores.push({
+    id: "cobranza",
+    nombre: `Capital de trabajo frente a cobrar a ${DIAS_COBRO} días`,
+    valor: pct(Math.min(cobertura, 9.99)),
+    detalle: `Ejemplo ilustrativo: si cajas de salud y aseguradoras te pagan a ${DIAS_COBRO} días, tienes ${pct(inmovilizado / ing1, 0)} de un año de ingresos sin cobrar, unos ${bs(inmovilizado)}. ${
+      cobertura >= 1
+        ? "Tu capital de trabajo lo cubre."
+        : `Tu capital de trabajo cubre solo ${pct(cobertura)}: el resto lo tendrías que financiar con crédito o dejar de atender.`
+    }`,
+    severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+  });
+
+  // Meses de caja
+  if (eq.costosFijos > 0) {
+    const meses = p.capitalTrabajo / (eq.costosFijos / 12);
+    indicadores.push({
+      id: "meses-caja",
+      nombre: "Meses de costos fijos que cubre tu capital de trabajo",
+      valor: `${meses.toFixed(1).replace(".", ",")} meses`,
+      detalle:
+        "Una inspección que cierra un servicio, un paro o un pagador que se atrasa dejan la plata afuera mientras los sueldos corren. Menos de 2 meses es una caja muy justa.",
+      severidad: meses < 1 ? "critico" : meses < 2 ? "advertencia" : "ok",
+    });
+  }
+
+  void flujo;
+  return {
+    titulo: "Indicadores de salud privada",
+    introduccion:
+      "Estas métricas son las que mira un gerente de clínica. Son informativas: no cambian tu VAN ni tu flujo de caja.",
     indicadores,
   };
 }

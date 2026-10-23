@@ -105,6 +105,12 @@ export interface Producto {
   cantidades: [number, number, number, number, number];
   /** Precio de venta para cada año. precios[0] = año 1. */
   precios: [number, number, number, number, number];
+  /**
+   * Capacidad vendible por año de esta línea, en la misma unidad que `cantidades`
+   * (consultas, días-cama...). Opcional: solo la usan los indicadores propios del
+   * tipo (ocupación por línea en salud privada).
+   */
+  capacidadAnual?: number;
   /** @deprecated reemplazado por `precios` (un valor por año). Se mantiene solo para datos legados. */
   precioVenta?: number;
 }
