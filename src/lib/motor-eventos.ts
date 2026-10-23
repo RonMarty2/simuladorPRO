@@ -25,6 +25,8 @@ import {
   obtenerTasasAportes,
 } from "./calculo-financiero";
 import { construirFlujoCaja } from "./flujo-proyecto";
+import { DIAS_COBRO_POR_TIPO } from "./guia-extra-por-tipo";
+import type { CategoriaPlantilla } from "./plantillas";
 
 // ============================================================================
 // INICIALIZACIÓN
@@ -53,7 +55,19 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     ultimo_feedback: null,
     delta_caja: 0,
     delta_ingresos: 0,
+    dias_cobro: DIAS_COBRO_POR_TIPO[proyecto.tipoNegocio as CategoriaPlantilla] ?? 30,
+    cuentas_por_cobrar: 0,
   };
+}
+
+/**
+ * La reputación mueve la demanda: con 50% vendes lo planeado, con 100% hasta 50% más y
+ * con 0% la mitad. Antes la reputación no afectaba nada y la opción "sucia" siempre
+ * rendía más: ahora recortar costos a costa de la reputación tiene un precio.
+ */
+export function factorReputacion(reputacion: number): number {
+  const r = Math.max(0, Math.min(1, Number.isFinite(reputacion) ? reputacion : 0.5));
+  return 0.5 + r;
 }
 
 // ============================================================================
@@ -229,12 +243,23 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   reputacion: "reputacion",
   costo: "costos_multiplicador",
   costos_fijos: "costos_multiplicador",
+  // Cobranza: días que tardan tus clientes en pagarte
+  dias_cobro: "dias_cobro",
+  plazo_cobro: "dias_cobro",
+  cobranza: "dias_cobro",
   // Percepción del cliente y del equipo: se reflejan en la reputación
   calidad: "reputacion",
   servicio: "reputacion",
   clima_laboral: "reputacion",
   reputacion_local: "reputacion",
   clientes_recurrentes: "reputacion",
+};
+
+/** Rango en que pueden moverse los multiplicadores acumulados por eventos y decisiones. */
+export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
+  precio_venta_multiplicador: [0.5, 1.3],
+  demanda_multiplicador: [0.3, 1.5],
+  costos_multiplicador: [0.8, 2.0],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -264,7 +289,8 @@ function aplicarConsecuenciaAlEstado(
     return { ...estado, caja: estado.caja + signo * parsed.valor };
   }
 
-  const valorActual = estado[claveEstado] as number;
+  const valorActual =
+    claveEstado === "dias_cobro" ? (estado.dias_cobro ?? 30) : (estado[claveEstado] as number);
   let nuevo = valorActual;
 
   switch (parsed.operacion) {
@@ -289,6 +315,14 @@ function aplicarConsecuenciaAlEstado(
   if (claveEstado === "reputacion") {
     nuevo = Math.max(0, Math.min(1, nuevo));
   }
+  // Días de cobro: entre 0 y 180
+  if (claveEstado === "dias_cobro") {
+    nuevo = Math.max(0, Math.min(180, nuevo));
+  }
+  // Los efectos acumulados de eventos y decisiones tienen un tope: sin él, repetir "subir
+  // precio 8%" o "bajar costos 4%" varias veces los llevaba a valores imposibles.
+  const tope = LIMITES_MULTIPLICADORES[claveEstado as string];
+  if (tope) nuevo = Math.max(tope[0], Math.min(tope[1], nuevo));
 
   return { ...estado, [claveEstado]: nuevo };
 }
@@ -329,6 +363,12 @@ export interface MetricasProyectoBase {
    * y los proyectos que crecen quebraban aunque su VAN fuera positivo.
    */
   porAnio?: { ingresos: number; costosInsumos: number; costosFijos: number }[];
+  /**
+   * Tope del multiplicador de demanda por año (capacidad / ventas planeadas del año).
+   * Si el proyecto declara capacidad (habitaciones, camas, cupos), no puedes vender más
+   * de lo que cabe aunque un evento dispare la demanda. Undefined = sin tope.
+   */
+  limiteDemanda?: number[];
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -385,7 +425,21 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     p.financiamiento.plazoMeses
   );
 
+  // Tope de demanda por capacidad: el menor cociente capacidad / ventas planeadas.
+  const limiteDemanda = [0, 1, 2, 3, 4].map((anio) => {
+    let tope = Infinity;
+    const totalAnio = p.productos.reduce((acc, prod) => acc + Number(prod.cantidades?.[anio] ?? 0), 0);
+    if (p.capacidadAnual && p.capacidadAnual > 0 && totalAnio > 0) tope = Math.min(tope, p.capacidadAnual / totalAnio);
+    for (const prod of p.productos) {
+      const venta = Number(prod.cantidades?.[anio] ?? 0);
+      if (prod.capacidadAnual && prod.capacidadAnual > 0 && venta > 0) tope = Math.min(tope, prod.capacidadAnual / venta);
+    }
+    return tope;
+  });
+  const hayCapacidad = limiteDemanda.some((x) => Number.isFinite(x));
+
   return {
+    limiteDemanda: hayCapacidad ? limiteDemanda : undefined,
     ingresosAnuales,
     costosAnualesFijos: personal + admin + comerc,
     costoInsumosPorUnidad,
@@ -421,10 +475,14 @@ export function aplicarOperacionDelTurno(
     : base.cantidadAnualUnidades * base.costoInsumosPorUnidad;
   const fijosAnio = plan ? plan.costosFijos : base.costosAnualesFijos;
 
-  const ingresoMes =
-    (ingresosAnio / 12) * estado.precio_venta_multiplicador * estado.demanda_multiplicador;
-  const costoInsumosMes =
-    (insumosAnio / 12) * estado.demanda_multiplicador * estado.costos_multiplicador;
+  // Demanda efectiva: la planeada, movida por los eventos y por la reputación, y con el
+  // tope de la capacidad instalada (si el proyecto la declara).
+  let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion);
+  const tope = base.limiteDemanda?.[anio];
+  if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
+
+  const ingresoMes = (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda;
+  const costoInsumosMes = (insumosAnio / 12) * demanda * estado.costos_multiplicador;
   const costoFijoMes = (fijosAnio / 12) * estado.costos_multiplicador;
   const cuotaMes = base.cuotaPrestamoMensual;
 
@@ -434,16 +492,112 @@ export function aplicarOperacionDelTurno(
   const impuestoPeriodo = Math.max(0, utilidadPeriodo) * 0.25;
   const utilidadDespuesImp = utilidadPeriodo - impuestoPeriodo;
 
+  // Cobranza a crédito: con más de 30 días, solo se cobra una parte de lo pendiente cada
+  // período y el resto queda como cuenta por cobrar. Con 30 días o menos, cobras todo ya.
+  const dias = estado.dias_cobro ?? 30;
+  const pendiente = (estado.cuentas_por_cobrar ?? 0) + ingresoPeriodo;
+  const fraccionCobrada = dias <= 30 ? 1 : Math.min(1, (30 * meses) / dias);
+  const cobrado = pendiente * fraccionCobrada;
+  const cuentasPorCobrar = pendiente - cobrado;
+  const flujoDelPeriodo = cobrado - costoPeriodo - impuestoPeriodo;
+
   return {
     ...estado,
-    caja: estado.caja + utilidadDespuesImp,
-    delta_caja: utilidadDespuesImp,
+    cuentas_por_cobrar: cuentasPorCobrar,
+    caja: estado.caja + flujoDelPeriodo,
+    delta_caja: flujoDelPeriodo,
     delta_ingresos: ingresoPeriodo,
     ingresos_acumulados: estado.ingresos_acumulados + ingresoPeriodo,
     costos_acumulados: estado.costos_acumulados + costoPeriodo + impuestoPeriodo,
     utilidad_acumulada: estado.utilidad_acumulada + utilidadDespuesImp,
   };
 }
+
+
+// ============================================================================
+// GOLPE DEL EVENTO
+// ============================================================================
+
+/**
+ * Cuánto de lo que cuenta la noticia le pasa a tu negocio SIN importar qué decidas.
+ * Cada evento trae un golpe (`modificadores`) además de las consecuencias de cada
+ * opción. Antes el golpe no se aplicaba: los eventos solo ofrecían opciones que
+ * mejoraban el negocio y hasta los ejemplos de rechazo terminaban ganando. Con 1 el
+ * golpe es completo (demasiado duro: 32% de los proyectos viables quebraban aun
+ * decidiendo bien); con 0,6 el que decide bien casi siempre sobrevive y los
+ * proyectos malos mayormente fracasan. Medido con `docs` del plan, paso 5.4.
+ */
+export const INTENSIDAD_GOLPE_EVENTO = 0.6;
+
+function consecuenciasDelGolpe(evento: Evento, intensidad: number): Record<string, string> {
+  const salida: Record<string, string> = {};
+  for (const m of evento.modificadores?.variables_afectadas ?? []) {
+    if (!m || typeof m.valor !== "number" || !(m.campo in aliasACampo)) continue;
+    const v = m.valor;
+    salida[m.campo] =
+      m.operacion === "multiplicar"
+        ? `*${1 + (v - 1) * intensidad}`
+        : m.operacion === "sumar"
+          ? `+${v * intensidad}`
+          : m.operacion === "restar"
+            ? `-${v * intensidad}`
+            : m.operacion === "porcentaje"
+              ? `${v * intensidad >= 0 ? "+" : ""}${v * intensidad}%`
+              : `${v}`;
+  }
+  return salida;
+}
+
+/** Aplica el golpe del evento al estado (a la intensidad indicada). */
+export function aplicarGolpeDelEvento(
+  estado: EstadoSimulacion,
+  evento: Evento,
+  intensidad = INTENSIDAD_GOLPE_EVENTO
+): EstadoSimulacion {
+  let nuevo = { ...estado };
+  for (const [campo, valor] of Object.entries(consecuenciasDelGolpe(evento, intensidad))) {
+    nuevo = aplicarConsecuenciaAlEstado(nuevo, campo, valor);
+  }
+  return nuevo;
+}
+
+const ETIQUETA_GOLPE: Record<string, string> = {
+  demanda_multiplicador: "Ventas",
+  precio_venta_multiplicador: "Precios",
+  costos_multiplicador: "Costos",
+  caja: "Caja",
+  deuda: "Deuda",
+  reputacion: "Reputación",
+  dias_cobro: "Días de cobro",
+};
+
+/**
+ * Resumen legible del golpe ("Ventas -15%, Costos +6%") para mostrárselo al alumno
+ * antes de que decida: es lo que le pasa aunque elija bien.
+ */
+export function resumenGolpeEvento(evento: Evento, intensidad = INTENSIDAD_GOLPE_EVENTO): string[] {
+  const base: EstadoSimulacion = {
+    caja: 100, deuda: 100, precio_venta_multiplicador: 1, demanda_multiplicador: 1, costos_multiplicador: 1,
+    reputacion: 0.5, ingresos_acumulados: 0, costos_acumulados: 0, utilidad_acumulada: 0,
+    ultimo_evento: null, ultima_decision: null, ultimo_feedback: null, delta_caja: 0, delta_ingresos: 0,
+    dias_cobro: 30, cuentas_por_cobrar: 0,
+  };
+  const despues = aplicarGolpeDelEvento(base, evento, intensidad);
+  const partes: string[] = [];
+  const claves = ["demanda_multiplicador", "precio_venta_multiplicador", "costos_multiplicador", "caja", "deuda", "reputacion", "dias_cobro"] as const;
+  for (const k of claves) {
+    const antes = Number(base[k] ?? 0);
+    const ahora = Number(despues[k] ?? 0);
+    if (!antes || Math.abs(ahora - antes) < 1e-9) continue;
+    if (k === "dias_cobro") {
+      partes.push(`${ETIQUETA_GOLPE[k]} ${ahora > antes ? "+" : ""}${Math.round(ahora - antes)}`);
+      continue;
+    }
+    const pct = Math.round(((ahora - antes) / antes) * 100);
+    if (pct !== 0) partes.push(`${ETIQUETA_GOLPE[k]} ${pct > 0 ? "+" : ""}${pct}%`);
+  }
+  return partes;
+}
 
 // ============================================================================
 // AVANZAR TURNO COMPLETO
@@ -470,6 +624,8 @@ export function avanzarTurnoConDecision(
 
   // 1. Aplicar consecuencias de la decisión (si hay)
   if (evento && decision) {
+    // Primero lo que la noticia le hace a tu negocio, luego lo que tú decides hacer.
+    nuevo = aplicarGolpeDelEvento(nuevo, evento);
     nuevo = aplicarDecisionAEstado(nuevo, evento, decision);
     decisionOut = { evento_id: evento.id, opcion: decision };
   } else {

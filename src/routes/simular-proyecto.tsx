@@ -20,7 +20,7 @@ import { useSimulacionStore } from "@/stores/simulacion-store";
 import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
-import { calcularBaseProyecto, mesesPorTurno } from "@/lib/motor-eventos";
+import { calcularBaseProyecto, mesesPorTurno, resumenGolpeEvento } from "@/lib/motor-eventos";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { tirCalculable } from "@/lib/acotar-numero";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
@@ -265,7 +265,13 @@ export default function SimularProyecto() {
             Noticia del mes — {eventoActual.codigo}
           </div>
           <h2 className="text-lg font-semibold tracking-tight">{eventoActual.titulo}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{eventoActual.descripcion}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{eventoActual.descripcion}</p>
+          {resumenGolpeEvento(eventoActual).length > 0 && (
+            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+              <strong>Esto le pasa a tu negocio aunque decidas bien:</strong>{" "}
+              {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
+            </p>
+          )}
 
           <div className="mt-5 space-y-2">
             <div className="text-sm font-medium">¿Qué decides?</div>

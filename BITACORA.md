@@ -671,8 +671,17 @@ Lección: el comando `npx tsc --noEmit -p .` de la raíz NO revisa tipos; la com
 `npm run build`. Falta (4.3): llevar estos indicadores también al diagnóstico pedagógico y al
 boletín. Siguiente: Fase 5 (calibración con datos de Bolivia y prueba en la app real de un
 proyecto de cada tipo, que requiere sesión de estudiante).
-Aviso: el motor aplica solo las consecuencias de la opción elegida, NO los `modificadores` del evento
-(medido el 2026-10-23: aplicarlos haría quebrar al 86% de los proyectos viables; ver plan §4 paso 5.4).
+Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas):
+- Ahora SÍ se aplica el golpe (`modificadores`) del evento antes de la decisión, al 60%
+  (`INTENSIDAD_GOLPE_EVENTO` en `lib/motor-eventos.ts`). Antes solo valían las opciones y hasta
+  los ejemplos de rechazo terminaban ganando. Al alumno se le muestra el golpe antes de decidir.
+- La reputación mueve la demanda (`factorReputacion`: 50% = neutral, 0% = mitad, 100% = +50%).
+- La capacidad declarada (`capacidadAnual`) pone tope a las ventas.
+- Cobro a crédito: `dias_cobro` y `cuentas_por_cobrar` en el estado; más de 30 días retiene caja.
+  Eventos pueden mover `dias_cobro` (alias `dias_cobro`, `plazo_cobro`, `cobranza`).
+- Los multiplicadores acumulados tienen tope (`LIMITES_MULTIPLICADORES`).
+- Control permanente de equilibrio en `motor-eventos-golpe.test.ts`: viables bien jugados casi no
+  quiebran, rechazos bien jugados fracasan.
 Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
 

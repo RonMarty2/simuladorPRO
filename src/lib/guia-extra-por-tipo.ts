@@ -136,3 +136,14 @@ export const MESES_BUFFER_POR_TIPO: Record<CategoriaPlantilla, number> = {
   concesion: 2,
   microcredito: 3,
 };
+
+/**
+ * Días que suelen tardar en pagarte, por tipo de negocio. 30 o menos = cobras en el
+ * mismo mes (sin cuentas por cobrar). Criterio del equipo, no un dato auditado.
+ */
+export const DIAS_COBRO_POR_TIPO: Partial<Record<CategoriaPlantilla, number>> = {
+  servicios: 45,
+  medios: 45,
+  salud_privada: 60,
+  social: 45,
+};

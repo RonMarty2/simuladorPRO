@@ -34,6 +34,15 @@ export interface EstadoSimulacion {
   // Cambios en este turno respecto al anterior (para mostrar deltas)
   delta_caja: number;
   delta_ingresos: number;
+
+  /**
+   * Días que tardan tus clientes en pagarte (cobranza a crédito). Opcional: las
+   * simulaciones viejas no lo traen y se tratan como 30 (cobro en el mismo mes).
+   * Si pasa de 30, parte de lo que vendes queda como cuenta por cobrar.
+   */
+  dias_cobro?: number;
+  /** Lo vendido y todavía no cobrado (Bs). Opcional, 0 si no existe. */
+  cuentas_por_cobrar?: number;
 }
 
 export interface Simulacion {

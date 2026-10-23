@@ -134,10 +134,10 @@ terreno atípico y de indicadores en rojo en el diagnóstico; panel de indicador
 galería y presentación); escenarios optimista y pesimista propios del tipo (lib/escenarios-por-tipo);
 diapositiva del rubro en la presentación; eventos propios de la simulación.
 NO se adapta todavía (y por qué):
-- El motor de la simulación sigue con las mismas variables (caja, deuda, precio, demanda, costos,
-  reputación): variables propias por tipo = camino B de la Fase 4, no implementado por riesgo alto.
-- La reputación no afecta la caja: en muchos eventos la opción "sucia" rinde más. Cambiarlo altera
-  simulaciones en curso de los alumnos; se deja para decidir con datos de alumnos reales.
+- El motor tiene hoy: golpe del evento al 60%, reputación que mueve la demanda, tope por capacidad,
+  cobro a crédito (días de cobro y cuentas por cobrar) y topes a los multiplicadores. Siguen sin
+  variables propias de cada rubro (inventario, mora, suscriptores por antigüedad): es el camino B de
+  la Fase 4, de mucho esfuerzo y no implementado.
 - Los textos FichaPedagogica de cada etapa siguen siendo genéricos (explican el concepto, no el rubro);
   lo propio del rubro está en la guía por tipo.
 - La guía, los escenarios y las cifras de las 56 plantillas son criterio del equipo, sin validar con
@@ -149,10 +149,10 @@ NO se adapta todavía (y por qué):
 - [ ] 5.2 Actualizar `BITACORA.md` (§6 migraciones, §15.2 motor, §16.2 recetas).
 - [x] 5.4 (2026-10-23) Barrido automático del simulador con los 238 eventos y las plantillas viables
       (100 simulaciones de 60 meses por plantilla, evento mensual con 40% de probabilidad). Hallazgos:
-      1. El motor NO aplica los `modificadores` (golpe) de cada evento: solo las consecuencias de la
-         opción elegida. Aplicarlos haría quebrar al 86% de los proyectos viables (hoy 24% con
-         decisiones al azar), así que se dejó como está: las consecuencias de cada opción ya llevan
-         el efecto neto. La bitácora decía lo contrario; se corrigió.
+      1. (RESUELTO el 2026-10-23) El motor no aplicaba los `modificadores` (golpe) de cada evento: solo las
+         consecuencias de la opción. Aplicarlos completos hacía quebrar al 32% de los viables aun
+         decidiendo bien; se aplican al 60% con topes a los multiplicadores acumulados. Sin esto, los
+         ejemplos de rechazo terminaban ganando con eventos (campaña de TV: de -211.000 a +1,08 millones).
       2. Decidiendo bien (elegir la opción que más caja deja a 12 meses) quiebra 0% de las viables;
          al azar, 24%. Al azar quiebran más: youtube 67%, saas 61%, appdelivery 57%, gimnasio 50%,
          podcast 50%, coworking 49%, academia 47%, festival 47%.
