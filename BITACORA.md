@@ -647,9 +647,9 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - 373 tests (antes 293). Sin migraciones.
 
 ### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
-Estado: Fase 2 del plan COMPLETA para todas las categorías con plantilla. Migraciones
+Estado: Fases 1.2, 2 y 3 del plan COMPLETAS para todas las categorías con plantilla. Migraciones
 036 a 052 aplicadas en Supabase; la tabla `eventos` tiene 238 filas (50 generales y
-188 propios por tipo, 034 a 052). Publicado en `main` (a54b0cc). 469 tests en verde,
+188 propios por tipo, 034 a 052). Publicado en `main` (ead8e79). 513 tests en verde,
 build OK. Sin cambios de app para el alumno: solo eventos nuevos en la base. Recetas y reglas operativas: plan §5 y §6.
 
 Hecho también: 1.2 (el lanzador del docente muestra el nombre del tipo) y las fichas
