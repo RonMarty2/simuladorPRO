@@ -94,7 +94,7 @@ Nota: la categoría `tecnologia` mezcla SaaS (suscripción) y app de delivery
 
 ### Fase 1. Base técnica
 - [x] 1.1 `tipoNegocio` en el proyecto y filtro de eventos por tipo (597ac05).
-- [ ] 1.2 Mostrar bien los eventos de tipo en el lanzador del docente
+- [x] 1.2 (2026-10-23, hecho) Mostrar bien los eventos de tipo en el lanzador del docente
       (`LanzadorEventos.tsx` muestra la etiqueta cruda `tipo:turismo`).
 - [ ] 1.3 Que un proyecto libre (sin plantilla) elija su tipo en el constructor
       (hoy solo las plantillas lo estampan). Cambia UI: pedir OK.

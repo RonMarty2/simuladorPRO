@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { eventoAplicaAProyecto } from "./motor-eventos";
+import { CATEGORIAS, type CategoriaPlantilla } from "./plantillas";
 
 /**
  * Lanzador de eventos en vivo (modo "docente_dispara").
@@ -301,4 +302,15 @@ export async function obtenerRespuestasEvento(
   }
 
   return { totalRespondieron: total, porLetra, textosPorLetra };
+}
+
+/**
+ * Etiqueta legible de un sector de `sectores_afectados`. Los tokens
+ * "tipo:xxx" (eventos propios de un tipo de negocio) se muestran con el
+ * nombre de la categoría ("Tipo: Turismo y hospitalidad") en vez del código.
+ */
+export function etiquetaSectorEvento(sector: string): string {
+  if (!sector.startsWith("tipo:")) return sector;
+  const clave = sector.slice(5) as CategoriaPlantilla;
+  return "Tipo: " + (CATEGORIAS[clave]?.titulo ?? clave);
 }

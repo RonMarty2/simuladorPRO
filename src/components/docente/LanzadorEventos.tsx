@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import type { Curso } from "@/lib/cursos-supabase";
 import type { Evento } from "@/types/evento";
 import { cn } from "@/lib/utils";
+import { etiquetaSectorEvento } from "@/lib/lanzador-eventos";
 
 /**
  * Lanzador de situaciones en vivo. El docente elige un evento del catálogo
@@ -368,7 +369,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
                       key={s}
                       className="rounded bg-sky-100 px-1 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
                     >
-                      {s}
+                      {etiquetaSectorEvento(s)}
                     </span>
                   ))
                 )}
@@ -388,7 +389,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
                 key={s}
                 className="rounded bg-sky-200 px-1.5 py-0.5 text-[11px] uppercase dark:bg-sky-800/60"
               >
-                {s}
+                {etiquetaSectorEvento(s)}
               </span>
             ))}
           </div>
