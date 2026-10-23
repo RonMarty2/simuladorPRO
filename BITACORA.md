@@ -671,6 +671,8 @@ Lección: el comando `npx tsc --noEmit -p .` de la raíz NO revisa tipos; la com
 `npm run build`. Falta (4.3): llevar estos indicadores también al diagnóstico pedagógico y al
 boletín. Siguiente: Fase 5 (calibración con datos de Bolivia y prueba en la app real de un
 proyecto de cada tipo, que requiere sesión de estudiante).
+Aviso: el motor aplica solo las consecuencias de la opción elegida, NO los `modificadores` del evento
+(medido el 2026-10-23: aplicarlos haría quebrar al 86% de los proyectos viables; ver plan §4 paso 5.4).
 Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
 

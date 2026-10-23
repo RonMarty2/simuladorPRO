@@ -130,6 +130,20 @@ y los resultados.
 - [ ] 5.1 Calibrar las cifras "estimación" con datos de Bolivia (docentes,
       gremios, empresarios; cada ficha lista a quién preguntar en su sección 10).
 - [ ] 5.2 Actualizar `BITACORA.md` (§6 migraciones, §15.2 motor, §16.2 recetas).
+- [x] 5.4 (2026-10-23) Barrido automático del simulador con los 238 eventos y las plantillas viables
+      (100 simulaciones de 60 meses por plantilla, evento mensual con 40% de probabilidad). Hallazgos:
+      1. El motor NO aplica los `modificadores` (golpe) de cada evento: solo las consecuencias de la
+         opción elegida. Aplicarlos haría quebrar al 86% de los proyectos viables (hoy 24% con
+         decisiones al azar), así que se dejó como está: las consecuencias de cada opción ya llevan
+         el efecto neto. La bitácora decía lo contrario; se corrigió.
+      2. Decidiendo bien (elegir la opción que más caja deja a 12 meses) quiebra 0% de las viables;
+         al azar, 24%. Al azar quiebran más: youtube 67%, saas 61%, appdelivery 57%, gimnasio 50%,
+         podcast 50%, coworking 49%, academia 47%, festival 47%.
+      3. Límite del diseño: `reputación` no afecta la caja, así que en muchos eventos la opción que
+         más caja deja es la "sucia" (recortar costos) aunque pierda reputación. Y varias opciones
+         de los eventos generales (por ejemplo EVT001 D, `costos *0.6`) dan una mejora neta sobre
+         no haber tenido el evento. Hacer que la reputación pese en la demanda sería un cambio de
+         motor; queda anotado para decidir con datos de alumnos reales.
 - [ ] 5.3 Probar en la app real un proyecto de cada tipo (ver memoria
       "probar todos los tipos").
 
