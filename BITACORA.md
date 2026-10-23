@@ -275,6 +275,11 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 045 | `eventos_tecnologia.sql` | 8 eventos de tecnología (válidos para SaaS y app de delivery). Aplicada el 2026-10-23. |
 | 046 | `eventos_comunicacion.sql` | 7 eventos de comunicación institucional para el tipo marketing (MKT012-MKT018). Aplicada el 2026-10-23. |
 | 047 | `eventos_educacion_salud.sql` | 8 eventos de educación y salud públicas para el tipo social (SOC012-SOC019). Aplicada el 2026-10-23. |
+| 048 | `eventos_salud_privada.sql` | 11 eventos de salud privada (SAL001-SAL011). Aplicada el 2026-10-23. |
+| 049 | `eventos_educacion_privada.sql` | 9 eventos de educación privada, de colegio (EDP001-EDP009). Aplicada el 2026-10-23. |
+| 050 | `eventos_franquicia.sql` | 10 eventos de franquicia, lado franquiciado (FRA001-FRA010). Aplicada el 2026-10-23. |
+| 051 | `eventos_concesion.sql` | 10 eventos de concesión de infraestructura, red de agua (CON001-CON010). Aplicada el 2026-10-23. |
+| 052 | `eventos_microcredito.sql` | 11 eventos de microcrédito (MIC001-MIC011). Aplicada el 2026-10-23. |
 | 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
@@ -643,16 +648,20 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
 
 ### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
 Estado: Fase 2 del plan COMPLETA para todas las categorías con plantilla. Migraciones
-036 a 047 aplicadas en Supabase; la tabla `eventos` tiene 187 filas (50 generales y
-137 propios por tipo, 034 a 047). Publicado en `main` (a54b0cc). 469 tests en verde,
+036 a 052 aplicadas en Supabase; la tabla `eventos` tiene 238 filas (50 generales y
+188 propios por tipo, 034 a 052). Publicado en `main` (a54b0cc). 469 tests en verde,
 build OK. Sin cambios de app para el alumno: solo eventos nuevos en la base. Recetas y reglas operativas: plan §5 y §6.
 
 Hecho también: 1.2 (el lanzador del docente muestra el nombre del tipo) y las fichas
 de comunicación, educación y salud públicas ya tienen eventos (046, 047).
-Siguiente: Fase 3 (plantillas
-nuevas: clínica, colegio, franquicia, concesión, microcrédito); Fase 4 (variables e
-indicadores propios por tipo: cambia fórmulas, REQUIERE OK del owner). Pendientes del
-owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
+Fase 3 hecha: 5 plantillas nuevas en la galería (clínica, colegio, franquicia, concesión
+de agua, microcrédito; categorías salud_privada, educacion_privada, franquicia, concesion,
+microcredito) con sus eventos propios (048 a 052). Sus cifras son estimaciones del equipo,
+no datos auditados: calibrarlas con gremios (sección 10 de cada ficha).
+Siguiente: Fase 4 (variables e indicadores propios por tipo: cambia fórmulas, REQUIERE OK
+del owner; primero presentarle tipo por tipo qué cambiaría, sin implementar) y Fase 5
+(calibración con datos de Bolivia y prueba en la app real de un proyecto de cada tipo).
+Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
 
 ### Retomar aquí (cierre de sesión 2026-10-22)
