@@ -786,7 +786,7 @@ interface ContextoNegocio {
   ing5: number;
   inversionTotal: number;
   cuota: number;
-  unidades: (id: string | null) => number;
+  unidades: (id: string | null | undefined) => number;
 }
 
 interface RubroNegocio {
@@ -940,7 +940,7 @@ function indicadoresNegocio(p: Proyecto): PanelIndicadores | null {
     .flat()
     .reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
   const cuota = Number(flujo.indicadores?.cuotaAnualTotal ?? 0);
-  const unidades = (id: string | null) => {
+  const unidades = (id: string | null | undefined) => {
     const prod = p.productos.find((x) => x.id === id);
     return prod ? Number(prod.cantidades?.[0] ?? 0) : Math.max(...p.productos.map((x) => Number(x.cantidades?.[0] ?? 0)));
   };
