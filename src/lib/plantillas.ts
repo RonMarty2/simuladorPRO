@@ -151,7 +151,12 @@ export type CategoriaPlantilla =
   | "social"
   | "eventos"
   | "alquiler"
-  | "tecnologia";
+  | "tecnologia"
+  | "salud_privada"
+  | "educacion_privada"
+  | "franquicia"
+  | "concesion"
+  | "microcredito";
 
 export interface PlantillaMeta {
   clave: string;
@@ -186,6 +191,11 @@ export const CATEGORIAS: Record<CategoriaPlantilla, { titulo: string; emoji: str
   eventos: { titulo: "Eventos y proyectos puntuales", emoji: "🎪", descripcion: "Festivales, ferias y producciones con ingresos concentrados." },
   tecnologia: { titulo: "Tecnología y plataformas", emoji: "📱", descripcion: "Apps y plataformas: costo de desarrollo alto, ingreso por comisión y escala." },
   alquiler: { titulo: "Alquiler y renta", emoji: "🏢", descripcion: "Inmuebles y activos que generan renta: gran inversión inicial y flujo estable." },
+  salud_privada: { titulo: "Salud privada", emoji: "🏥", descripcion: "Clínicas, laboratorios y centros de diagnóstico: ocupación, cobranza a cajas y aseguradoras." },
+  educacion_privada: { titulo: "Educación privada", emoji: "🎓", descripcion: "Colegios, institutos y academias: pensiones, costo docente y reinscripción." },
+  franquicia: { titulo: "Franquicias", emoji: "🏷️", descripcion: "Comprar una marca: derecho de entrada, regalías y compras obligatorias." },
+  concesion: { titulo: "Concesiones de infraestructura", emoji: "🚰", descripcion: "Redes y servicios regulados con inversión enorme, tarifa regulada y larga vida útil." },
+  microcredito: { titulo: "Microcrédito y finanzas", emoji: "🏦", descripcion: "Prestar dinero: margen financiero, costo de fondeo y mora de la cartera." },
 };
 
 // ============================================================================
@@ -2020,6 +2030,187 @@ function reforestacionCarbono(): Proyecto {
 }
 
 // ============================================================================
+// SALUD, EDUCACIÓN, FRANQUICIA, CONCESIÓN Y MICROCRÉDITO (cifras a calibrar)
+// ============================================================================
+// Las cifras de estas cinco plantillas son estimaciones razonables para
+// Bolivia, no datos auditados: cada ficha de docs/metodologia/tipos las lista
+// en su sección 10 para validarlas con gremios y empresarios del rubro.
+
+function clinicaPrivada(): Proyecto {
+  const idConsulta = nuevoId(), idEstudio = nuevoId(), idInternacion = nuevoId();
+  return {
+    ...base(),
+    nombre: "Clínica privada «San Gabriel»",
+    ubicacion: "Santa Cruz de la Sierra, zona Equipetrol",
+    descripcion: "Clínica de mediana complejidad con 6 consultorios, laboratorio, imagenología (rayos X, ecógrafos y tomógrafo) y 12 camas de internación. Los médicos cobran honorarios por consulta. Ejemplo GRANDE de salud privada: la ocupación de camas y consultorios y los días de cobro a las cajas y aseguradoras definen si hay caja para pagar la deuda.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación del edificio alquilado (consultorios, quirófano, salas)", "obra", 1, 1100000, 15)],
+      maquinaria: [inv("Tomógrafo", "und", 1, 1800000, 10), inv("Rayos X digital", "und", 1, 350000, 10), inv("Ecógrafos", "und", 3, 120000, 8), inv("Laboratorio clínico", "set", 1, 450000, 8), inv("Equipamiento de internación y quirófano", "set", 1, 500000, 10)],
+      mobiliario: [inv("Mobiliario de consultorios, salas y recepción", "set", 1, 280000, 10), inv("Sistemas de historia clínica y facturación", "set", 1, 120000, 5)],
+      activoDiferido: [inv("Habilitación del SEDES, licencias y marca", "global", 1, 90000, 5)],
+    },
+    capitalTrabajo: 900000,
+    personal: [puesto("Director médico y gerente", 1, 14000), puesto("Enfermeras y auxiliares", 8, 4500), puesto("Técnicos de laboratorio e imagen", 4, 5500), puesto("Administración y facturación", 5, 3800), puesto("Limpieza y seguridad", 4, 3300)],
+    costosDirectos: [
+      directo(idConsulta, "mano_obra", "Honorarios médicos por consulta", "consulta", 1, 70),
+      directo(idEstudio, "insumo_directo", "Reactivos, placas y contraste", "estudio", 1, 40),
+      directo(idInternacion, "insumo_directo", "Medicamentos, alimentación y ropa por día-cama", "día-cama", 1, 260),
+    ],
+    costosAdministracion: [gasto("Alquiler del edificio", 35000), gasto("Servicios básicos y gases medicinales", 18000), gasto("Mantenimiento de equipos", 12000), gasto("Seguro de responsabilidad médica", 6000), gasto("Contabilidad y asesoría legal", 5000)],
+    costosComercializacion: [gasto("Convenios con cajas, aseguradoras y empresas", 4000), gasto("Marketing y reputación", 3500)],
+    productos: [
+      { id: idConsulta, nombre: "Consulta externa", unidadMedida: "consulta", cantidades: serie(21600, 0.06), precios: serie(150, 0.04, 2) },
+      { id: idEstudio, nombre: "Laboratorio e imagenología", unidadMedida: "estudio", cantidades: serie(13000, 0.06), precios: serie(130, 0.04, 2) },
+      { id: idInternacion, nombre: "Internación y cirugía", unidadMedida: "día-cama", cantidades: serie(1970, 0.05), precios: serie(950, 0.04, 2) },
+    ],
+    ...finCapm(0.9),
+    crecimientoIngresosAnual: 0.06, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [6, 6, 6, 6], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function colegioPrivado(): Proyecto {
+  const idPension = nuevoId(), idMatricula = nuevoId(), idExtras = nuevoId();
+  return {
+    ...base(),
+    nombre: "Unidad educativa privada «Nuevo Horizonte»",
+    ubicacion: "Cochabamba, zona norte",
+    descripcion: "Colegio privado con inicial, primaria y secundaria para 480 alumnos. Cobra 10 pensiones al año pero paga sueldos los 12 meses. Ejemplo MEDIANO de educación privada: el costo docente y la reinscripción anual mandan, y dos meses de caja salen sin pensión.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [inv("Terreno de 3.000 m²", "terreno", 1, 1200000, null)],
+      obrasCiviles: [inv("Aulas, patio, biblioteca y administración", "obra", 1, 1800000, 30)],
+      maquinaria: [inv("Laboratorio y sala de computación", "set", 1, 260000, 8)],
+      mobiliario: [inv("Pupitres, pizarras y mobiliario docente", "set", 1, 210000, 10)],
+      activoDiferido: [inv("Autorización del Ministerio, marca y sistema de gestión", "global", 1, 80000, 5)],
+    },
+    capitalTrabajo: 350000,
+    personal: [puesto("Director", 1, 9000), puesto("Docentes", 22, 4800), puesto("Psicopedagoga y coordinación", 2, 4500), puesto("Administración y secretaría", 3, 3500), puesto("Portería, limpieza y mantenimiento", 4, 3300)],
+    costosDirectos: [
+      directo(idPension, "insumo_directo", "Material didáctico y refrigerio por pensión", "pensión", 1, 28),
+      directo(idMatricula, "insumo_directo", "Libretas, uniformes base y materiales", "matrícula", 1, 120),
+    ],
+    costosAdministracion: [gasto("Servicios básicos", 9000), gasto("Mantenimiento del edificio", 6000), gasto("Contabilidad", 2500), gasto("Seguros", 2000), gasto("Capacitación docente", 2500)],
+    costosComercializacion: [gasto("Promoción de inscripciones", 3500)],
+    productos: [
+      { id: idPension, nombre: "Pensiones escolares (10 al año)", unidadMedida: "pensión", cantidades: serie(4800, 0.03), precios: serie(780, 0.04, 2) },
+      { id: idMatricula, nombre: "Matrícula anual", unidadMedida: "matrícula", cantidades: serie(480, 0.03), precios: serie(500, 0.04, 2) },
+      { id: idExtras, nombre: "Transporte y almuerzo", unidadMedida: "servicio", cantidades: serie(2400, 0.03), precios: serie(320, 0.04, 2) },
+    ],
+    ...finCapm(0.7),
+    crecimientoIngresosAnual: 0.05, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [3, 3, 3, 3], tasasCrecPrecio: [4, 4, 4, 4],
+  };
+}
+
+function franquiciaPolleria(): Proyecto {
+  const idCombo = nuevoId(), idBebida = nuevoId();
+  return {
+    ...base(),
+    nombre: "Franquicia de pollos «Don Crispín» (local propio)",
+    ubicacion: "La Paz, zona Sopocachi",
+    descripcion: "Compra de una franquicia de comida rápida con marca conocida: pagas un derecho de entrada y luego una regalía y un aporte de marketing sobre cada venta, además de comprar insumos al franquiciador. Ejemplo PEQUEÑO de franquicia: la marca atrae clientes desde el primer día, pero la regalía se paga aunque no ganes.",
+    sector: "comercio",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación del local según manual de marca", "obra", 1, 260000, 10)],
+      maquinaria: [inv("Freidoras, hornos y cámara de frío", "set", 1, 230000, 8)],
+      mobiliario: [inv("Mobiliario de salón y caja", "set", 1, 95000, 8)],
+      activoDiferido: [inv("Derecho de franquicia (entrada)", "global", 1, 180000, 5), inv("Capacitación inicial y apertura", "global", 1, 45000, 5)],
+    },
+    capitalTrabajo: 120000,
+    personal: [puesto("Gerente del local", 1, 6000), puesto("Cocineros", 3, 3600), puesto("Atención y caja", 4, 3300)],
+    costosDirectos: [
+      directo(idCombo, "insumo_directo", "Insumos comprados al franquiciador", "combo", 1, 24),
+      directo(idCombo, "insumo_directo", "Regalía (6%) y aporte de marketing (2%)", "combo", 1, 5),
+      directo(idBebida, "insumo_directo", "Bebidas y complementos", "bebida", 1, 6),
+    ],
+    costosAdministracion: [gasto("Alquiler del local", 14000), gasto("Servicios básicos y gas", 6000), gasto("Contabilidad y licencias", 2500), gasto("Mantenimiento", 1500)],
+    costosComercializacion: [gasto("Promociones locales", 2500)],
+    productos: [
+      { id: idCombo, nombre: "Combo de pollo", unidadMedida: "combo", cantidades: serie(31000, 0.04), precios: serie(58, 0.03, 2) },
+      { id: idBebida, nombre: "Bebidas y complementos", unidadMedida: "bebida", cantidades: serie(24000, 0.04), precios: serie(14, 0.03, 2) },
+    ],
+    ...finCapm(0.9),
+    crecimientoIngresosAnual: 0.06, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [4, 4, 4, 4], tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
+function concesionAgua(): Proyecto {
+  const idAgua = nuevoId(), idConexion = nuevoId();
+  return {
+    ...base(),
+    nombre: "Cooperativa de agua potable con concesión",
+    ubicacion: "Tarija, zona periurbana",
+    descripcion: "Cooperativa que opera la red de agua potable de un barrio de 4.000 conexiones bajo licencia del Estado. Vende m³ con una tarifa regulada y cobra conexiones nuevas. Ejemplo GRANDE de concesión de infraestructura: la inversión inicial es enorme, la vida útil de la red es de décadas y la tarifa depende del regulador.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Red de distribución y tanques de almacenamiento", "obra", 1, 7200000, 30)],
+      maquinaria: [inv("Pozos, bombas y planta de cloración", "set", 1, 1800000, 12), inv("Medidores domiciliarios", "und", 4000, 180, 10)],
+      mobiliario: [inv("Oficina y vehículos de mantenimiento", "set", 1, 260000, 8)],
+      activoDiferido: [inv("Licencia, estudios y registro ante el regulador", "global", 1, 320000, 5)],
+    },
+    capitalTrabajo: 400000,
+    personal: [puesto("Gerente", 1, 8000), puesto("Operadores y plomeros", 7, 3800), puesto("Facturación y atención", 4, 3500), puesto("Lecturistas y cobranza", 3, 3300)],
+    costosDirectos: [
+      directo(idAgua, "insumo_directo", "Energía de bombeo y cloro por m³", "m³", 1, 0.9),
+    ],
+    costosAdministracion: [gasto("Servicios, oficina y combustible", 12000), gasto("Mantenimiento de la red", 15000), gasto("Análisis de calidad del agua", 4000), gasto("Contabilidad, seguros y regulación", 6000)],
+    costosComercializacion: [],
+    productos: [
+      { id: idAgua, nombre: "Agua vendida", unidadMedida: "m³", cantidades: serie(780000, 0.02), precios: serie(3.1, 0.03, 2) },
+      { id: idConexion, nombre: "Conexiones nuevas", unidadMedida: "conexión", cantidades: [150, 150, 150, 150, 150], precios: serie(1200, 0.03, 2) },
+    ],
+    ...finCapm(0.5),
+    crecimientoIngresosAnual: 0.03, crecimientoCostosAnual: 0.04,
+    tasasCrecCantidad: [0, 0, 0, 0], tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
+function cooperativaMicrocredito(): Proyecto {
+  const idCredito = nuevoId(), idComision = nuevoId();
+  return {
+    ...base(),
+    nombre: "Cooperativa de microcrédito «Esperanza»",
+    ubicacion: "El Alto, La Paz",
+    descripcion: "Cooperativa que presta a microempresarios. Cada crédito de Bs 10.000 a 12 meses deja intereses y comisiones, pero también un costo de fondeo, una previsión por mora y oficiales de crédito que visitan al cliente. El capital de trabajo es la plata que se presta. Ejemplo MEDIANO de microcrédito: la mora lo decide todo.",
+    sector: "servicios",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación de oficina con bóveda y seguridad", "obra", 1, 160000, 10)],
+      maquinaria: [inv("Sistema de gestión de cartera y cajeros", "set", 1, 260000, 6)],
+      mobiliario: [inv("Mobiliario y equipos de oficina", "set", 1, 90000, 8)],
+      activoDiferido: [inv("Autorización de ASFI y puesta en marcha", "global", 1, 120000, 5)],
+    },
+    capitalTrabajo: 2000000,
+    personal: [puesto("Gerente", 1, 7500), puesto("Oficiales de crédito", 8, 4300), puesto("Cajeros y atención", 3, 3500), puesto("Administración y cumplimiento", 2, 4200)],
+    costosDirectos: [
+      directo(idCredito, "insumo_directo", "Costo de fondeo (intereses de la deuda que financia el crédito)", "crédito", 1, 340),
+      directo(idCredito, "insumo_directo", "Previsión por mora (5% de la cartera)", "crédito", 1, 520),
+      directo(idCredito, "insumo_directo", "Cobranza y recuperación", "crédito", 1, 60),
+    ],
+    costosAdministracion: [gasto("Alquiler de la oficina", 7000), gasto("Servicios, transporte y seguridad", 6500), gasto("Auditoría, ASFI y cumplimiento", 5000), gasto("Contabilidad", 2500)],
+    costosComercializacion: [gasto("Promoción en mercados y ferias", 3000)],
+    productos: [
+      { id: idCredito, nombre: "Crédito de Bs 10.000 a 12 meses", unidadMedida: "crédito", cantidades: serie(1500, 0.08), precios: serie(1900, 0.01, 2) },
+      { id: idComision, nombre: "Comisiones y seguros", unidadMedida: "crédito", cantidades: serie(1500, 0.08), precios: serie(180, 0.02, 2) },
+    ],
+    ...finCapm(1.1),
+    crecimientoIngresosAnual: 0.08, crecimientoCostosAnual: 0.05,
+    tasasCrecCantidad: [8, 8, 8, 8], tasasCrecPrecio: [1, 1, 1, 1],
+  };
+}
+
+// ============================================================================
 // REGISTRO EXPORTADO
 // ============================================================================
 
@@ -2104,6 +2295,13 @@ const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
   { clave: "lanzamiento", titulo: "Campaña de lanzamiento de producto", emoji: "🚀", categoria: "marketing", sector: "Producción", modelo: "costo_beneficio", modeloLabel: "Ventas adicionales", escala: "Mediano", resumen: "Efecto fuerte el primer año que se desvanece después.", ensena: "El beneficio de una campaña cae año a año. Es un error común proyectarlo constante: cambia el crecimiento del beneficio y mira cuánto se mueve el VAN.", veredicto: "marginal", crear: lanzamientoProducto },
   { clave: "saas", titulo: "Software para pymes (SaaS)", emoji: "☁️", categoria: "tecnologia", sector: "Servicios", modelo: "suscripcion", modeloLabel: "Suscripción", escala: "Mediano", resumen: "Desarrollo caro, clientes que pagan cada mes.", ensena: "Costo inicial alto y costo marginal casi cero: la escala lo es todo. Prueba con la mitad de los clientes y observa cuánto empeora el resultado.", veredicto: "marginal", crear: () => calibrarDemanda(softwareSaaS(), 1.528) },
   { clave: "reforestacion", titulo: "Reforestación con bonos de carbono", emoji: "🌳", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Largo plazo", escala: "Grande", resumen: "Ingresos que llegan recién después del horizonte de evaluación.", ensena: "El horizonte de 5 años perjudica a proyectos de maduración lenta. Un proyecto puede ser bueno a 20 años y rechazado a 5: la decisión depende de cuánto tiempo se mire.", veredicto: "rechazo", crear: reforestacionCarbono },
+
+  // Salud, educación, franquicia, concesión y microcrédito
+  { clave: "clinica", titulo: "Clínica privada", emoji: "🏥", categoria: "salud_privada", sector: "Servicios", modelo: "unidades", modeloLabel: "Atenciones", escala: "Grande", resumen: "Consultorios, laboratorio, imagen e internación.", ensena: "Tres líneas de ingreso con distinta ocupación y mucho equipo caro. Mira cómo la ocupación de camas y consultorios, y los días que tardan en pagarte las cajas y aseguradoras, mueven la caja más que la tarifa.", veredicto: "marginal", crear: () => calibrarDemanda(clinicaPrivada(), 1.25) },
+  { clave: "colegio", titulo: "Colegio privado", emoji: "🎓", categoria: "educacion_privada", sector: "Servicios", modelo: "unidades", modeloLabel: "Pensiones", escala: "Mediano", resumen: "480 alumnos, pensión mensual y matrícula anual.", ensena: "Los sueldos se pagan 12 meses y las pensiones se cobran 10: hay dos meses de caja sin ingreso. El costo docente pesa casi la mitad y pierdes mucho si bajan las reinscripciones.", veredicto: "marginal", crear: () => calibrarDemanda(colegioPrivado(), 0.92) },
+  { clave: "franquicia", titulo: "Franquicia de comida rápida", emoji: "🏷️", categoria: "franquicia", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Pequeño", resumen: "Marca conocida con derecho de entrada y regalía.", ensena: "La marca trae clientes desde el primer día, pero pagas derecho de entrada, regalía sobre cada venta y compras obligatorias. Compara el margen con el de la cafetería propia: ganas seguridad y cedes ganancia.", veredicto: "marginal", crear: () => calibrarDemanda(franquiciaPolleria(), 1.3) },
+  { clave: "concesionagua", titulo: "Concesión de agua potable", emoji: "🚰", categoria: "concesion", sector: "Servicios", modelo: "unidades", modeloLabel: "Servicio regulado", escala: "Grande", resumen: "Red de 4.000 conexiones con tarifa regulada.", ensena: "La inversión es enorme y la red dura décadas, pero este análisis solo mira 5 años. Prueba subir la tarifa y mira cuánto pesa lo que queda al final: en una concesión el horizonte largo y la tarifa que autoriza el regulador lo deciden todo.", veredicto: "rechazo", crear: () => calibrarDemanda(concesionAgua(), 1) },
+  { clave: "microcredito", titulo: "Cooperativa de microcrédito", emoji: "🏦", categoria: "microcredito", sector: "Servicios", modelo: "unidades", modeloLabel: "Margen financiero", escala: "Mediano", resumen: "Créditos de Bs 10.000 con fondeo, mora y oficiales.", ensena: "El ingreso es la tasa que cobras, pero cada crédito lleva costo de fondeo, previsión por mora y oficiales que visitan al cliente. Sube la mora de 5% a 10% y mira cómo desaparece el margen: la cartera es la plata que se presta.", veredicto: "marginal", crear: () => calibrarDemanda(cooperativaMicrocredito(), 1.4) },
 ];
 
 // Los ejemplos pensados como viables no deben quedarse sin caja en el año 1: si el

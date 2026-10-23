@@ -112,8 +112,8 @@ Para los tipos sin categoría: clínica privada, colegio o instituto privado,
 franquicia (comprar una), cooperativa de agua (concesión), cooperativa de
 microcrédito. Cada una con su escenario y su `ensena`/`veredicto` como las
 actuales, y luego sus eventos (como la Fase 2).
-- [ ] 3.1 salud privada   - [ ] 3.2 educación privada   - [ ] 3.3 franquicia
-- [ ] 3.4 concesión de infraestructura   - [ ] 3.5 microcrédito
+- [x] 3.1 salud privada   - [x] 3.2 educación privada   - [x] 3.3 franquicia
+- [x] 3.4 concesión de infraestructura   - [x] 3.5 microcrédito (2026-10-23: las 5 plantillas creadas y calibradas; FALTAN sus eventos propios, migraciones 048 a 052)
 
 ### Fase 4. Esencia propia: variables e indicadores por tipo (REQUIERE OK DEL OWNER)
 Hoy el estado de la simulación tiene solo caja, deuda, precio, demanda, costos y
