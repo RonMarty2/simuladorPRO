@@ -1394,3 +1394,46 @@ function indicadoresMedios(p: Proyecto): PanelIndicadores | null {
     indicadores,
   };
 }
+
+/**
+ * Indicadores que son ESCENARIOS o ejemplos ilustrativos (qué pasaría si...), no un
+ * resultado de los números del alumno. No entran al diagnóstico pedagógico.
+ */
+const ESCENARIOS = new Set([
+  "cobranza",
+  "inventario",
+  "meses-sin-pension",
+  "morosidad-10",
+  "ventas-menos-20",
+  "campana-6-meses",
+  "precio-menos-30",
+  "sequia-menos-40",
+  "caja-antes-del-evento",
+  "cpm-menos-30",
+  "ahorro-70",
+  "ventas-adicionales-50",
+  "mora-doble",
+]);
+
+export interface AlertaDelTipo {
+  /** Id estable (sin ids de producto) para agrupar alertas entre proyectos. */
+  id: string;
+  titulo: string;
+  detalle: string;
+}
+
+/**
+ * Indicadores propios del tipo que están en rojo con los números del propio
+ * alumno. Alimentan el diagnóstico pedagógico y el resumen del docente.
+ */
+export function alertasDelTipo(proyecto: Proyecto): AlertaDelTipo[] {
+  const panel = indicadoresPorTipo(proyecto);
+  if (!panel) return [];
+  return panel.indicadores
+    .filter((i) => i.severidad === "critico" && !ESCENARIOS.has(i.id))
+    .map((i) => ({
+      id: "tipo_" + i.id.replace(/^(ocupacion)-.+$/, "$1"),
+      titulo: i.nombre + ": " + i.valor,
+      detalle: i.detalle,
+    }));
+}

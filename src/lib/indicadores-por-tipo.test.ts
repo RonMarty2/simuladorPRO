@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PLANTILLAS } from "./plantillas";
-import { indicadoresPorTipo } from "./indicadores-por-tipo";
+import { indicadoresPorTipo, alertasDelTipo } from "./indicadores-por-tipo";
+import { diagnosticarProyecto } from "./diagnostico-pedagogico";
 
 const crear = (clave: string) => PLANTILLAS.find((p) => p.clave === clave)!.crear();
 const ids = (p: ReturnType<typeof indicadoresPorTipo>) => p?.indicadores.map((i) => i.id) ?? [];
@@ -238,6 +239,26 @@ describe("indicadores propios por tipo", () => {
       expect(panel, pl.clave).not.toBeNull();
       for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
     }
+  });
+
+  it("los indicadores en rojo con los números del alumno llegan al diagnóstico", () => {
+    const p = crear("appdelivery");
+    const alertas = alertasDelTipo(p);
+    expect(alertas.length).toBeGreaterThan(0);
+    const diag = diagnosticarProyecto(p);
+    for (const a of alertas) expect(diag.alertas.map((x) => x.id)).toContain(a.id);
+  });
+
+  it("los escenarios ilustrativos no entran al diagnóstico", () => {
+    for (const pl of PLANTILLAS) {
+      for (const a of alertasDelTipo(pl.crear())) {
+        expect(a.id, pl.clave).not.toMatch(/cobranza|inventario|sequia|precio-menos|cpm-menos|ahorro-70|mora-doble|morosidad-10|campana|antes-del-evento/);
+      }
+    }
+  });
+
+  it("un ejemplo sano no suma alertas del tipo", () => {
+    expect(alertasDelTipo(crear("hostal")).every((a) => a.id.startsWith("tipo_"))).toBe(true);
   });
 
   it("todas las plantillas de turismo calculan sin errores", () => {

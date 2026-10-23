@@ -2,6 +2,7 @@ import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import type { Proyecto } from "@/types/proyecto";
 import { fmtNum } from "./utils";
 import { calcularMinimoCaja } from "./colchon-caja";
+import { alertasDelTipo } from "./indicadores-por-tipo";
 
 /**
  * Diagnóstico pedagógico de un proyecto de inversión.
@@ -272,6 +273,16 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
         "Sin inversión inicial ni capital de trabajo, los indicadores no tienen " +
         "sentido. Completa las Etapas 3 y 8.",
       etapa: 3,
+    });
+  }
+
+  // ── Indicadores propios del tipo de negocio (en rojo con tus números) ───
+  for (const a of alertasDelTipo(proyecto)) {
+    alertas.push({
+      id: a.id,
+      severidad: "critico",
+      titulo: a.titulo,
+      detalle: a.detalle + " Esto sale de los indicadores de tu tipo de negocio, en el resumen final.",
     });
   }
 
