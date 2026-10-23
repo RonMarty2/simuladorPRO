@@ -1369,8 +1369,8 @@ function edificioAlquiler(): Proyecto {
     costosAdministracion: [gasto("Mantenimiento general", 2200), gasto("Servicios comunes (luz, agua de áreas comunes)", 1400), gasto("Impuesto a la propiedad y seguros", 14000, "año")],
     costosComercializacion: [gasto("Publicidad y corretaje de alquileres", 900)],
     productos: [
-      { id: idDepto, nombre: "Alquiler de departamentos (mes-depto ocupado)", unidadMedida: "mes", cantidades: [84, 86, 88, 90, 90], precios: serie(4250, 0.04, 2) },
-      { id: idParqueo, nombre: "Alquiler de parqueos", unidadMedida: "mes", cantidades: [84, 84, 90, 90, 90], precios: serie(300, 0.03, 2) },
+      { id: idDepto, nombre: "Alquiler de departamentos (mes-depto ocupado)", unidadMedida: "mes", capacidadAnual: 96, cantidades: [84, 86, 88, 90, 90], precios: serie(4250, 0.04, 2) },
+      { id: idParqueo, nombre: "Alquiler de parqueos", unidadMedida: "mes", capacidadAnual: 96, cantidades: [84, 84, 90, 90, 90], precios: serie(300, 0.03, 2) },
     ],
     ...finCapm(0.8),
     crecimientoIngresosAnual: 0.04, crecimientoCostosAnual: 0.04,
@@ -1704,7 +1704,7 @@ function parqueo(): Proyecto {
     costosAdministracion: [gasto("Alquiler del terreno", 14000), gasto("Energía e internet", 1200), gasto("Seguro y mantenimiento", 1500)],
     costosComercializacion: [gasto("Promoción y convenios con edificios", 1000)],
     productos: [
-      { id: idAbono, nombre: "Abonos mensuales", unidadMedida: "abono-mes", cantidades: [660, 720, 756, 768, 768], precios: serie(450, 0.03, 2) },
+      { id: idAbono, nombre: "Abonos mensuales", unidadMedida: "abono-mes", capacidadAnual: 80 * 12, cantidades: [660, 720, 756, 768, 768], precios: serie(450, 0.03, 2) },
       { id: idHora, nombre: "Cobro por hora", unidadMedida: "hora", cantidades: [30000, 32000, 34000, 35000, 36000], precios: serie(6, 0.03, 2) },
     ],
     ...finCapm(0.8),
@@ -1927,7 +1927,7 @@ function salonEventos(): Proyecto {
     costosAdministracion: [gasto("Servicios básicos", 4500), gasto("Mantenimiento del salón y jardín", 3500), gasto("Seguros e impuestos", 3000), gasto("Contabilidad", 1200)],
     costosComercializacion: [gasto("Publicidad y ferias de novios", 3500)],
     productos: [
-      { id: idSalon, nombre: "Alquiler del salón (evento)", unidadMedida: "evento", cantidades: [80, 88, 94, 98, 100], precios: serie(8500, 0.04, 2) },
+      { id: idSalon, nombre: "Alquiler del salón (evento)", unidadMedida: "evento", capacidadAnual: 110, cantidades: [80, 88, 94, 98, 100], precios: serie(8500, 0.04, 2) },
       { id: idCatering, nombre: "Servicio de comida y bebida", unidadMedida: "invitado", cantidades: [12000, 13200, 14100, 14700, 15000], precios: serie(120, 0.04, 2) },
     ],
     ...finCapm(1.0),

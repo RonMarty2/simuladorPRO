@@ -10,7 +10,7 @@ import type { Proyecto } from "../types/proyecto";
  * cambian el VAN, la TIR ni la caja de nadie. Si falta un dato opcional (por
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
- * Hoy existen los paneles de turismo, suscripción, salud privada, microcrédito y social. Los demás tipos devuelven null.
+ * Hoy existen los paneles de turismo, suscripción, salud privada, microcrédito, social y alquiler. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -39,6 +39,7 @@ export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null 
   if (proyecto.tipoNegocio === "salud_privada") return indicadoresSaludPrivada(proyecto);
   if (proyecto.tipoNegocio === "microcredito") return indicadoresMicrocredito(proyecto);
   if (proyecto.tipoNegocio === "social") return indicadoresSocial(proyecto);
+  if (proyecto.tipoNegocio === "alquiler") return indicadoresAlquiler(proyecto);
   return null;
 }
 
@@ -631,6 +632,135 @@ function indicadoresSocial(p: Proyecto): PanelIndicadores | null {
     titulo: "Indicadores de proyectos sociales y públicos",
     introduccion:
       "Estas métricas son las que mira un financiador o una entidad pública. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresAlquiler(p: Proyecto): PanelIndicadores | null {
+  if (p.modeloIngreso === "costo_beneficio" || p.productos.length === 0) return null;
+
+  const flujo = construirFlujoCaja(p);
+  const eq = calcularEquilibrioPorProducto(p);
+
+  const lineas = p.productos
+    .map((x) => ({
+      nombre: x.nombre,
+      unidad: x.unidadMedida,
+      id: x.id,
+      u1: Number(x.cantidades?.[0] ?? 0),
+      ingreso: Number(x.cantidades?.[0] ?? 0) * Number(x.precios?.[0] ?? 0),
+      capacidad: x.capacidadAnual && x.capacidadAnual > 0 ? x.capacidadAnual : null,
+    }))
+    .filter((l) => l.u1 > 0);
+  const ing1 = lineas.reduce((a, l) => a + l.ingreso, 0);
+  if (ing1 <= 0) return null;
+
+  const gastosOperativos =
+    (flujo.personal?.[0] ?? 0) +
+    (flujo.gastosAdmin?.[0] ?? 0) +
+    (flujo.gastosComerc?.[0] ?? 0) +
+    (flujo.imprevistos?.[0] ?? 0) +
+    (flujo.costosProduccion?.[0] ?? 0);
+  const noi = ing1 - gastosOperativos;
+  const inversionTotal = Object.values(p.inversiones ?? {})
+    .flat()
+    .reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
+
+  const indicadores: IndicadorPropio[] = [];
+
+  // Ocupación de cada línea con capacidad conocida (departamentos, parqueos, eventos)
+  for (const l of lineas) {
+    if (!l.capacidad) continue;
+    const ocup = l.u1 / l.capacidad;
+    indicadores.push({
+      id: "ocupacion-" + l.id,
+      nombre: `Ocupación: ${l.nombre}`,
+      valor: pct(ocup),
+      detalle:
+        ocup > 1
+          ? "Alquilas más de lo que tienes: revisa los supuestos o la capacidad."
+          : ocup > 0.95
+            ? "Casi sin vacancia. Cuando se va un inquilino la unidad queda vacía entre 2 y 6 meses: una ocupación tan alta todo el año es poco realista."
+            : ocup < 0.7
+              ? "La vacancia pesa: tus gastos fijos y la cuota del préstamo no bajan cuando la unidad está vacía."
+              : "Parte de tu capacidad alquilada en el año 1. Piensa en cuánto tardas en reemplazar a un inquilino que se va.",
+      severidad: ocup > 1 ? "critico" : ocup > 0.95 || ocup < 0.7 ? "advertencia" : "ok",
+    });
+  }
+
+  indicadores.push({
+    id: "noi",
+    nombre: "Resultado operativo anual (NOI)",
+    valor: `${bs(noi)} (${pct(noi / ing1)} de las rentas)`,
+    detalle:
+      "Lo que queda de las rentas del año 1 después de pagar todo lo de operar, antes de impuestos, intereses y depreciación. Es el número con el que se valúa un inmueble.",
+    severidad: noi <= 0 ? "critico" : "info",
+  });
+
+  if (inversionTotal > 0) {
+    const rend = noi / inversionTotal;
+    const tasaCredito = p.financiamiento?.tasaInteresAnual ?? 0;
+    indicadores.push({
+      id: "rendimiento-inversion",
+      nombre: "Rendimiento anual sobre lo invertido",
+      valor: pct(rend, 1),
+      detalle: `NOI del año 1 dividido entre toda tu inversión, terreno incluido. No cuenta la plusvalía, que en un inmueble es parte del retorno pero no se cobra hasta vender. ${
+        tasaCredito > 0 && rend < tasaCredito
+          ? `Rinde menos que la tasa de tu crédito (${pct(tasaCredito, 1)}): la renta sola no alcanza a pagar el costo de la deuda.`
+          : "Compáralo con la tasa de tu crédito y con lo que pagaría un depósito a plazo fijo."
+      }`,
+      severidad: rend <= 0 ? "critico" : tasaCredito > 0 && rend < tasaCredito ? "advertencia" : "ok",
+    });
+  }
+
+  const cuota = Number(flujo.indicadores?.cuotaAnualTotal ?? 0);
+  if (cuota > 0) {
+    const cobertura = noi / cuota;
+    indicadores.push({
+      id: "cobertura-cuota",
+      nombre: "Cobertura de la cuota del préstamo",
+      valor: `${cobertura.toFixed(2).replace(".", ",")} veces`,
+      detalle:
+        cobertura < 1
+          ? "Las rentas no alcanzan a pagar la cuota del préstamo: tendrías que poner plata de tu bolsillo todos los años."
+          : cobertura < 1.25
+            ? "Cubres la cuota, pero casi sin margen: un par de meses de vacancia te dejan sin poder pagar."
+            : "Las rentas cubren la cuota con colchón para algún mes de vacancia.",
+      severidad: cobertura < 1 ? "critico" : cobertura < 1.25 ? "advertencia" : "ok",
+    });
+  }
+
+  if (Number.isFinite(eq.factorVolumen)) {
+    const phi = eq.factorVolumen;
+    indicadores.push({
+      id: "ventas-equilibrio",
+      nombre: "Rentas mínimas para no perder",
+      valor: pct(phi),
+      detalle:
+        phi > 1
+          ? "Con las rentas que proyectas no cubres tus costos fijos."
+          : `Es la parte de tus rentas proyectadas que cubre los costos fijos. Si cobras menos, pierdes: tu margen de seguridad es de ${pct(1 - phi)}.`,
+      severidad: phi > 1 ? "critico" : phi > 0.85 ? "advertencia" : "ok",
+    });
+  }
+
+  if (eq.costosFijos > 0) {
+    const fijosMes = (eq.costosFijos + cuota) / 12;
+    const meses = p.capitalTrabajo / fijosMes;
+    indicadores.push({
+      id: "meses-reserva",
+      nombre: "Meses de gastos fijos y cuota que cubre tu reserva",
+      valor: `${meses.toFixed(1).replace(".", ",")} meses`,
+      detalle:
+        "Si un inquilino grande se va o deja de pagar, estos gastos siguen. Menos de 3 meses es poco para esperar a que llegue el reemplazo.",
+      severidad: meses < 1.5 ? "critico" : meses < 3 ? "advertencia" : "ok",
+    });
+  }
+
+  return {
+    titulo: "Indicadores de alquiler y renta",
+    introduccion:
+      "Estas métricas son las que mira un dueño de inmuebles o activos. Son informativas: no cambian tu VAN ni tu flujo de caja.",
     indicadores,
   };
 }

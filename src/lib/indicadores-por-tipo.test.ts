@@ -136,6 +136,31 @@ describe("indicadores propios por tipo", () => {
     }
   });
 
+  it("el edificio muestra ocupación, NOI, rendimiento y cobertura de la cuota", () => {
+    const panel = indicadoresPorTipo(crear("edificio"));
+    expect(panel).not.toBeNull();
+    const lista = ids(panel);
+    expect(lista.filter((i) => i.startsWith("ocupacion-")).length).toBe(2);
+    expect(lista).toEqual(expect.arrayContaining(["noi", "rendimiento-inversion", "cobertura-cuota", "ventas-equilibrio", "meses-reserva"]));
+  });
+
+  it("una ocupación sobre el 100% se marca como crítica en alquiler", () => {
+    const p = crear("edificio");
+    p.productos[0].capacidadAnual = 50;
+    const panel = indicadoresPorTipo(p)!;
+    expect(panel.indicadores.find((i) => i.id === "ocupacion-" + p.productos[0].id)!.severidad).toBe("critico");
+  });
+
+  it("todas las plantillas de alquiler calculan sin errores", () => {
+    const lista = PLANTILLAS.filter((x) => x.categoria === "alquiler");
+    expect(lista.length).toBeGreaterThan(0);
+    for (const pl of lista) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
   it("todas las plantillas de turismo calculan sin errores", () => {
     for (const pl of PLANTILLAS.filter((x) => x.categoria === "turismo")) {
       const panel = indicadoresPorTipo(pl.crear());
