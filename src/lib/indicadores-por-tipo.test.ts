@@ -34,11 +34,6 @@ describe("indicadores propios por tipo", () => {
     expect(ocup.severidad).toBe("critico");
   });
 
-  it("los tipos sin panel devuelven null", () => {
-    expect(indicadoresPorTipo(crear("pelicula"))).toBeNull();
-    expect(indicadoresPorTipo(crear("quinua"))).toBeNull();
-  });
-
   it("el gimnasio muestra los indicadores de suscripción", () => {
     const panel = indicadoresPorTipo(crear("gimnasio"));
     expect(panel).not.toBeNull();
@@ -214,6 +209,34 @@ describe("indicadores propios por tipo", () => {
       // un SaaS (suscripción) o un costo-beneficio no usa este panel
       if (!panel) continue;
       for (const i of panel.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
+  it("el ahorro y el marketing muestran su prueba de estrés propia", () => {
+    const ahorro = indicadoresPorTipo(crear("solar"));
+    expect(ahorro!.titulo).toContain("ahorro");
+    expect(ids(ahorro)).toEqual(expect.arrayContaining(["beneficio-esperado", "costo-de-operar", "beneficio-neto", "ahorro-70", "razon-beneficio-costo"]));
+    const mkt = indicadoresPorTipo(crear("campanatv"));
+    expect(mkt!.titulo).toContain("marketing");
+    expect(ids(mkt)).toContain("ventas-adicionales-50");
+  });
+
+  it("los medios muestran audiencia de equilibrio y el efecto de un CPM menor", () => {
+    const panel = indicadoresPorTipo(crear("medio"));
+    expect(panel!.titulo).toContain("medios");
+    expect(ids(panel)).toEqual(expect.arrayContaining(["ingreso-por-usuario", "audiencia-equilibrio", "cpm-menos-30", "resultado-anio5", "meses-caja"]));
+  });
+
+  it("agricultura y eventos tienen su panel", () => {
+    expect(ids(indicadoresPorTipo(crear("quinua")))).toEqual(expect.arrayContaining(["campana-6-meses", "precio-menos-30", "sequia-menos-40"]));
+    expect(ids(indicadoresPorTipo(crear("festival")))).toContain("caja-antes-del-evento");
+  });
+
+  it("todas las plantillas tienen panel y calculan sin errores", () => {
+    for (const pl of PLANTILLAS) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
     }
   });
 

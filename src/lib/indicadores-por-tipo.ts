@@ -11,8 +11,9 @@ import type { Proyecto } from "../types/proyecto";
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
  * Hoy existen los paneles de turismo, suscripción, salud privada, microcrédito, social, alquiler
- * y el panel general de negocios (gastronomía, producción, comercio, servicios, tecnología,
- * educación privada, franquicia y concesión). Los demás tipos devuelven null.
+ * medios, ahorro y marketing (que se evalúan por beneficio) y el panel general de negocios
+ * (gastronomía, producción, comercio, servicios, tecnología, educación privada, franquicia,
+ * concesión, agricultura y eventos). Cada tipo con plantilla tiene su panel. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -34,6 +35,8 @@ export interface PanelIndicadores {
 
 const pct = (x: number, dec = 0) => `${(x * 100).toFixed(dec).replace(".", ",")}%`;
 const bs = (x: number) => `Bs ${Math.round(x).toLocaleString("es-BO")}`;
+/** Para montos chicos (centavos por usuario) donde redondear a entero da cero. */
+const bsFino = (x: number) => `Bs ${x.toFixed(2).replace(".", ",")}`;
 
 export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null {
   if (proyecto.tipoNegocio === "turismo") return indicadoresTurismo(proyecto);
@@ -41,6 +44,9 @@ export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null 
   if (proyecto.tipoNegocio === "salud_privada") return indicadoresSaludPrivada(proyecto);
   if (proyecto.tipoNegocio === "microcredito") return indicadoresMicrocredito(proyecto);
   if (proyecto.tipoNegocio === "social") return indicadoresSocial(proyecto);
+  if (proyecto.tipoNegocio === "costo_beneficio") return indicadoresBeneficio(proyecto, "ahorro");
+  if (proyecto.tipoNegocio === "marketing") return indicadoresBeneficio(proyecto, "marketing");
+  if (proyecto.tipoNegocio === "medios") return indicadoresMedios(proyecto);
   if (proyecto.tipoNegocio === "alquiler") return indicadoresAlquiler(proyecto);
   if (proyecto.tipoNegocio && proyecto.tipoNegocio in RUBROS_NEGOCIO) return indicadoresNegocio(proyecto);
   return null;
@@ -904,6 +910,73 @@ const RUBROS_NEGOCIO: Record<string, RubroNegocio> = {
       ];
     },
   },
+  agricultura: {
+    titulo: "Indicadores de agricultura",
+    introduccion:
+      "Estas métricas son las que mira quien produce de la tierra. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    extras: (c) => {
+      const salida: IndicadorPropio[] = [];
+      const costosAnuales = c.costoDirecto + c.personal + c.gastosFijos;
+      // Gastar durante la campaña sin vender hasta la cosecha (ejemplo ilustrativo de 6 meses)
+      if (costosAnuales > 0) {
+        const necesario = (costosAnuales / 12) * 6;
+        const cobertura = c.p.capitalTrabajo / necesario;
+        salida.push({
+          id: "campana-6-meses",
+          nombre: "Capital de trabajo frente a 6 meses de gasto sin cosechar",
+          valor: pct(Math.min(cobertura, 9.99)),
+          detalle: `Ejemplo ilustrativo: si pasan 6 meses entre sembrar y vender, ya gastaste unos ${bs(necesario)}. ${
+            cobertura >= 1
+              ? "Tu capital de trabajo lo cubre."
+              : `Tu capital de trabajo cubre solo ${pct(cobertura)}: el resto se financia con deuda de campaña, y la cuota llega antes que la cosecha.`
+          }`,
+          severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+        });
+      }
+      const conPrecio = c.resultado - 0.3 * c.ing1;
+      salida.push({
+        id: "precio-menos-30",
+        nombre: "Resultado si el precio internacional cae 30%",
+        valor: bs(conPrecio),
+        detalle: `El precio de un producto agrícola lo fija el mercado mundial, no tú. Con una caída de 30% y los mismos costos, el resultado del año 1 pasa de ${bs(c.resultado)} a ${bs(conPrecio)}.`,
+        severidad: conPrecio < 0 ? "critico" : conPrecio < c.resultado * 0.4 ? "advertencia" : "ok",
+      });
+      const conSequia = c.resultado - 0.4 * c.ing1;
+      salida.push({
+        id: "sequia-menos-40",
+        nombre: "Resultado si una sequía te quita 40% de la cosecha",
+        valor: bs(conSequia),
+        detalle: `Los costos ya se gastaron cuando falta la lluvia. Con 40% menos de cosecha el resultado del año 1 pasa de ${bs(c.resultado)} a ${bs(conSequia)}. Un seguro agrario o parcelas en distintas zonas son formas de protegerte.`,
+        severidad: conSequia < 0 ? "critico" : conSequia < c.resultado * 0.4 ? "advertencia" : "ok",
+      });
+      return salida;
+    },
+  },
+  eventos: {
+    titulo: "Indicadores de eventos y proyectos puntuales",
+    introduccion:
+      "Estas métricas son las que mira quien organiza ferias, festivales o producciones. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    extras: (c) => {
+      const costosAnuales = c.costoDirecto + c.personal + c.gastosFijos;
+      if (costosAnuales <= 0) return [];
+      // Se gasta mucho antes de que entre la plata del evento (ejemplo ilustrativo de la mitad de los costos)
+      const antes = costosAnuales * 0.5;
+      const cobertura = c.p.capitalTrabajo / antes;
+      return [
+        {
+          id: "caja-antes-del-evento",
+          nombre: "Capital de trabajo frente a lo que gastas antes del evento",
+          valor: pct(Math.min(cobertura, 9.99)),
+          detalle: `Ejemplo ilustrativo: si la mitad de tus costos del año salen antes de vender la primera entrada, son unos ${bs(antes)}. ${
+            cobertura >= 1
+              ? "Tu capital de trabajo lo cubre."
+              : `Tu capital de trabajo cubre solo ${pct(cobertura)}: el resto sale de anticipos, auspicios o crédito. Si el evento se cae, ya lo gastaste.`
+          }`,
+          severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+        },
+      ];
+    },
+  },
   concesion: {
     titulo: "Indicadores de concesión de infraestructura",
     introduccion:
@@ -1100,4 +1173,224 @@ function indicadoresNegocio(p: Proyecto): PanelIndicadores | null {
   }
 
   return { titulo: rubro.titulo, introduccion: rubro.introduccion, indicadores };
+}
+
+// ---------------------------------------------------------------------------
+// Proyectos que se evalúan por beneficio (ahorro y marketing) y medios
+// ---------------------------------------------------------------------------
+
+function costoOperarAnio1(p: Proyecto) {
+  const flujo = construirFlujoCaja(p);
+  const costo =
+    (flujo.personal?.[0] ?? 0) +
+    (flujo.gastosAdmin?.[0] ?? 0) +
+    (flujo.gastosComerc?.[0] ?? 0) +
+    (flujo.imprevistos?.[0] ?? 0) +
+    (flujo.costosProduccion?.[0] ?? 0);
+  const inversion = Object.values(p.inversiones ?? {})
+    .flat()
+    .reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
+  return { flujo, costo, inversion };
+}
+
+function indicadoresBeneficio(p: Proyecto, modo: "ahorro" | "marketing"): PanelIndicadores | null {
+  const beneficio = p.costoBeneficioV2?.beneficioAnualBase ?? 0;
+  if (p.modeloIngreso !== "costo_beneficio" || beneficio <= 0) return null;
+
+  const { flujo, costo, inversion } = costoOperarAnio1(p);
+  const etiqueta = modo === "ahorro" ? "ahorro" : "ventas adicionales";
+  const delBeneficio = modo === "ahorro" ? "del ahorro" : "de las ventas adicionales";
+  const neto = beneficio - costo;
+  const indicadores: IndicadorPropio[] = [];
+
+  indicadores.push({
+    id: "beneficio-esperado",
+    nombre: modo === "ahorro" ? "Ahorro anual esperado (año 1)" : "Ventas adicionales esperadas (año 1)",
+    valor: bs(beneficio),
+    detalle:
+      modo === "ahorro"
+        ? "Es lo que esperas ahorrar. Es una proyección: depende de que la medición, el uso y el mantenimiento acompañen."
+        : "Es lo que esperas vender de más gracias a la campaña. Es una proyección: lo difícil es saber cuánto de eso no habría vendido igual.",
+    severidad: "info",
+  });
+
+  indicadores.push({
+    id: "costo-de-operar",
+    nombre: modo === "ahorro" ? "Costo anual de operar y mantener" : "Costo anual de la campaña",
+    valor: `${bs(costo)} (${pct(costo / beneficio)} ${delBeneficio})`,
+    detalle: `Es lo que te cuesta operar cada año, sin contar la inversión inicial. Si tu ${etiqueta} real baja de ese monto, el proyecto pierde plata año tras año.`,
+    severidad: costo >= beneficio ? "critico" : costo / beneficio > 0.7 ? "advertencia" : "ok",
+  });
+
+  indicadores.push({
+    id: "beneficio-neto",
+    nombre: modo === "ahorro" ? "Ahorro neto del año 1" : "Resultado neto de la campaña del año 1",
+    valor: bs(neto),
+    detalle: `Es el ${etiqueta} esperado menos el costo de operar. Con este monto pagas la inversión.`,
+    severidad: neto <= 0 ? "critico" : "info",
+  });
+
+  if (inversion > 0) {
+    const anios = neto > 0 ? inversion / neto : Infinity;
+    indicadores.push({
+      id: "recuperacion-simple",
+      nombre: "Años para recuperar la inversión (sin descontar)",
+      valor: Number.isFinite(anios) ? `${anios.toFixed(1).replace(".", ",")} años` : "no se recupera",
+      detalle:
+        "Inversión total dividida entre el beneficio neto del año 1. Es una cuenta simple que ignora impuestos y el valor del dinero en el tiempo, pero te dice si estás cerca o lejos de recuperarla.",
+      severidad: !Number.isFinite(anios) || anios > 5 ? "critico" : anios > 3.5 ? "advertencia" : "ok",
+    });
+  }
+
+  // Prueba de estrés propia de cada tipo
+  if (modo === "ahorro") {
+    const real = 0.7 * beneficio - costo;
+    indicadores.push({
+      id: "ahorro-70",
+      nombre: "Resultado si el ahorro real es solo 70% del esperado",
+      valor: bs(real),
+      detalle: `Los ahorros prometidos casi siempre se logran en parte: el equipo falla, la gente no lo usa como se pensó o el consumo base era menor. Con 70% de lo esperado, el año 1 deja ${bs(real)}.`,
+      severidad: real < 0 ? "critico" : real < neto * 0.5 ? "advertencia" : "ok",
+    });
+  } else {
+    const real = 0.5 * beneficio - costo;
+    indicadores.push({
+      id: "ventas-adicionales-50",
+      nombre: "Resultado si solo la mitad de las ventas fue realmente adicional",
+      valor: bs(real),
+      detalle: `Muchas de las ventas que atribuyes a la campaña se habrían dado igual. Si solo la mitad es de verdad adicional, el año 1 deja ${bs(real)}. Por eso conviene medir contra un grupo que no recibió la campaña.`,
+      severidad: real < 0 ? "critico" : real < neto * 0.5 ? "advertencia" : "ok",
+    });
+  }
+
+  const rbc = Number(flujo.indicadores?.rbc);
+  if (Number.isFinite(rbc)) {
+    indicadores.push({
+      id: "razon-beneficio-costo",
+      nombre: "Razón beneficio-costo (5 años)",
+      valor: `${rbc.toFixed(2).replace(".", ",")} a 1`,
+      detalle:
+        rbc < 1
+          ? "Los beneficios proyectados no alcanzan a pagar los costos."
+          : rbc < 1.3
+            ? "Los beneficios apenas superan a los costos: un supuesto optimista de más y el resultado se da vuelta."
+            : "Por cada boliviano que cuesta, el proyecto devuelve más de un boliviano.",
+      severidad: rbc < 1 ? "critico" : rbc < 1.3 ? "advertencia" : "ok",
+    });
+  }
+
+  return {
+    titulo: modo === "ahorro" ? "Indicadores de ahorro y eficiencia" : "Indicadores de marketing y campañas",
+    introduccion:
+      "Estas métricas son las que mira quien decide si una inversión se justifica por lo que ahorra o vende. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresMedios(p: Proyecto): PanelIndicadores | null {
+  const pub = p.publicidadV2;
+  if (p.modeloIngreso !== "publicidad" || !pub || pub.audienciaMensual <= 0) return null;
+
+  const { flujo, costo, inversion } = costoOperarAnio1(p);
+  const eq = calcularEquilibrioPorProducto(p);
+  const ing1 = flujo.ingresos?.[0] ?? 0;
+  if (ing1 <= 0) return null;
+
+  const resultado = ing1 - costo;
+  const indicadores: IndicadorPropio[] = [];
+
+  const ingresoPorUsuario = (pub.impresionesPorUsuario * pub.cpm) / 1000;
+  indicadores.push({
+    id: "ingreso-por-usuario",
+    nombre: "Ingreso mensual por usuario",
+    valor: `${bsFino(ingresoPorUsuario)} (${pub.impresionesPorUsuario.toLocaleString("es-BO")} impresiones a Bs ${pub.cpm.toLocaleString("es-BO")} por mil)`,
+    detalle:
+      "Cada usuario te deja poco: lo que importa es cuántos son y cuánto tiempo se quedan. El precio por mil (CPM) lo fija el anunciante, no tú.",
+    severidad: "info",
+  });
+
+  // Audiencia para no perder
+  const costoVarPorUsuarioMes = (flujo.costosProduccion?.[0] ?? 0) / (pub.audienciaMensual * 12);
+  const margenUsuario = ingresoPorUsuario - costoVarPorUsuarioMes;
+  if (margenUsuario > 0 && eq.costosFijos > 0) {
+    const necesaria = eq.costosFijos / 12 / margenUsuario;
+    let detalle = `Con lo que te deja cada usuario necesitas unos ${Math.ceil(necesaria).toLocaleString("es-BO")} usuarios al mes para cubrir tus costos fijos. Hoy partes con ${pub.audienciaMensual.toLocaleString("es-BO")}.`;
+    let sev: SeveridadIndicador = "ok";
+    if (necesaria > pub.audienciaMensual) {
+      if (pub.crecimientoMensual > 0) {
+        const meses = Math.log(necesaria / pub.audienciaMensual) / Math.log(1 + pub.crecimientoMensual);
+        detalle += ` Creciendo ${pct(pub.crecimientoMensual, 1)} al mes tardas unos ${Math.ceil(meses)} meses en llegar, y hasta entonces pierdes plata.`;
+        sev = meses > 24 ? "critico" : meses > 12 ? "advertencia" : "info";
+      } else {
+        detalle += " Sin crecimiento, nunca llegas.";
+        sev = "critico";
+      }
+    }
+    indicadores.push({
+      id: "audiencia-equilibrio",
+      nombre: "Audiencia mensual para no perder",
+      valor: Math.ceil(necesaria).toLocaleString("es-BO"),
+      detalle,
+      severidad: sev,
+    });
+  }
+
+  indicadores.push({
+    id: "resultado-operativo",
+    nombre: "Resultado operativo del año 1",
+    valor: `${bs(resultado)} (${pct(resultado / ing1)} de los ingresos)`,
+    detalle:
+      "Lo que queda después de pagar todo lo de operar, antes de impuestos, intereses y depreciación.",
+    severidad: resultado <= 0 ? "critico" : resultado / ing1 < 0.08 ? "advertencia" : "ok",
+  });
+
+  const conCpm = resultado - 0.3 * ing1;
+  indicadores.push({
+    id: "cpm-menos-30",
+    nombre: "Resultado si el precio por mil baja 30%",
+    valor: bs(conCpm),
+    detalle: `Un cambio de algoritmo, una plataforma que paga menos o un anunciante grande que se va pueden bajar tu CPM. Con 30% menos, el resultado del año 1 pasa de ${bs(resultado)} a ${bs(conCpm)}.`,
+    severidad: conCpm < 0 ? "critico" : conCpm < resultado * 0.4 ? "advertencia" : "ok",
+  });
+
+  const ing5 = flujo.ingresos?.[4] ?? 0;
+  const resultado5 =
+    ing5 -
+    ((flujo.costosProduccion?.[4] ?? 0) +
+      (flujo.personal?.[4] ?? 0) +
+      (flujo.gastosAdmin?.[4] ?? 0) +
+      (flujo.gastosComerc?.[4] ?? 0) +
+      (flujo.imprevistos?.[4] ?? 0));
+  indicadores.push({
+    id: "resultado-anio5",
+    nombre: "Resultado operativo del año 5",
+    valor: `${bs(resultado5)} (año 1: ${bs(resultado)})`,
+    detalle:
+      resultado5 <= 0
+        ? "Aun con el crecimiento de audiencia que supones, en el año 5 no ganas."
+        : resultado <= 0
+          ? "Todo depende de que la audiencia crezca como supones: si crece la mitad, mira cuánto cambia el resultado."
+          : "Ya ganas desde el primer año; el crecimiento de la audiencia es un extra.",
+    severidad: resultado5 <= 0 ? "critico" : resultado <= 0 ? "advertencia" : "ok",
+  });
+
+  if (eq.costosFijos > 0) {
+    const meses = p.capitalTrabajo / (eq.costosFijos / 12);
+    indicadores.push({
+      id: "meses-caja",
+      nombre: "Meses de costos fijos que cubre tu capital de trabajo",
+      valor: `${meses.toFixed(1).replace(".", ",")} meses`,
+      detalle:
+        "Los anunciantes grandes y las plataformas pagan con atraso de 30 a 90 días. Menos de 2 meses es una caja muy justa.",
+      severidad: meses < 1 ? "critico" : meses < 2 ? "advertencia" : "ok",
+    });
+  }
+
+  void inversion;
+  return {
+    titulo: "Indicadores de medios y publicidad",
+    introduccion:
+      "Estas métricas son las que mira quien vive de una audiencia y de anunciantes. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
 }

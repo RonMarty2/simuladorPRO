@@ -14,8 +14,10 @@ describe("PanelIndicadoresTipo", () => {
     expect(html).toContain("RevPAR");
   });
 
-  it("no dibuja nada para un tipo sin panel", () => {
-    const html = renderToStaticMarkup(<PanelIndicadoresTipo proyecto={crear("pelicula")} />);
+  it("no dibuja nada para un proyecto libre sin tipo", () => {
+    const p = crear("hostal");
+    delete p.tipoNegocio;
+    const html = renderToStaticMarkup(<PanelIndicadoresTipo proyecto={p} />);
     expect(html).toBe("");
   });
 });
