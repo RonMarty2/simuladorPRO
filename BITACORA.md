@@ -280,6 +280,7 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 050 | `eventos_franquicia.sql` | 10 eventos de franquicia, lado franquiciado (FRA001-FRA010). Aplicada el 2026-10-23. |
 | 051 | `eventos_concesion.sql` | 10 eventos de concesión de infraestructura, red de agua (CON001-CON010). Aplicada el 2026-10-23. |
 | 052 | `eventos_microcredito.sql` | 11 eventos de microcrédito (MIC001-MIC011). Aplicada el 2026-10-23. |
+| 053 | `cobranza_en_eventos.sql` | UPDATE de las opciones de SAL001, SAL011, SRV001 y SOC001: ahora mueven `dias_cobro`. Aplicada el 2026-10-23. |
 | 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
