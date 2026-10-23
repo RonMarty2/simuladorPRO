@@ -10,7 +10,7 @@ import type { Proyecto } from "../types/proyecto";
  * cambian el VAN, la TIR ni la caja de nadie. Si falta un dato opcional (por
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
- * Hoy existen los paneles de turismo, suscripción, salud privada y microcrédito. Los demás tipos devuelven null.
+ * Hoy existen los paneles de turismo, suscripción, salud privada, microcrédito y social. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -38,6 +38,7 @@ export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null 
   if (proyecto.tipoNegocio === "suscripcion") return indicadoresSuscripcion(proyecto);
   if (proyecto.tipoNegocio === "salud_privada") return indicadoresSaludPrivada(proyecto);
   if (proyecto.tipoNegocio === "microcredito") return indicadoresMicrocredito(proyecto);
+  if (proyecto.tipoNegocio === "social") return indicadoresSocial(proyecto);
   return null;
 }
 
@@ -535,6 +536,101 @@ function indicadoresMicrocredito(p: Proyecto): PanelIndicadores | null {
     titulo: "Indicadores de microcrédito y finanzas",
     introduccion:
       "Estas métricas son las que mira una cooperativa o una entidad de microfinanzas. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresSocial(p: Proyecto): PanelIndicadores | null {
+  if (p.productos.length === 0) return null;
+
+  const flujo = construirFlujoCaja(p);
+  const costoOperacion =
+    (flujo.personal?.[0] ?? 0) +
+    (flujo.gastosAdmin?.[0] ?? 0) +
+    (flujo.gastosComerc?.[0] ?? 0) +
+    (flujo.imprevistos?.[0] ?? 0) +
+    (flujo.costosProduccion?.[0] ?? 0);
+  if (costoOperacion <= 0) return null;
+
+  const inversionTotal = Object.values(p.inversiones ?? {})
+    .flat()
+    .reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
+
+  const ben = p.beneficiarios && p.beneficiarios.cantidad > 0 ? p.beneficiarios : null;
+  const beneficioAnual = p.costoBeneficioV2?.beneficioAnualBase ?? 0;
+  const indicadores: IndicadorPropio[] = [];
+
+  if (ben) {
+    indicadores.push({
+      id: "costo-beneficiario",
+      nombre: "Costo de operar por beneficiario (año 1)",
+      valor: bs(costoOperacion / ben.cantidad),
+      detalle: `Lo que cuesta cada año atender a ${ben.cantidad.toLocaleString("es-BO")} beneficiarios (unidad: ${ben.unidad}), sin contar la inversión inicial. Es el número que mira un financiador para comparar con otros proyectos.`,
+      severidad: "info",
+    });
+
+    indicadores.push({
+      id: "costo-beneficiario-total",
+      nombre: "Costo por beneficiario con la inversión repartida en 5 años",
+      valor: bs((costoOperacion + inversionTotal / 5) / ben.cantidad),
+      detalle:
+        "Suma la operación de un año más una quinta parte de lo que invertiste. Es más honesto que el costo de operar solo, porque la obra y los equipos también hay que pagarlos.",
+      severidad: "info",
+    });
+  }
+
+  if (beneficioAnual > 0) {
+    if (ben) {
+      indicadores.push({
+        id: "beneficio-beneficiario",
+        nombre: "Beneficio social valorado por beneficiario (año 1)",
+        valor: bs(beneficioAnual / ben.cantidad),
+        detalle:
+          "El beneficio se traduce a bolivianos con supuestos (horas de acarreo, traslados evitados, ingresos que mejoran). Cada supuesto es discutible: pregúntate cuál cambiaría el resultado si estuviera equivocado.",
+        severidad: "info",
+      });
+    }
+
+    const rbc = Number(flujo.indicadores?.rbc);
+    if (Number.isFinite(rbc)) {
+      indicadores.push({
+        id: "razon-beneficio-costo",
+        nombre: "Razón beneficio-costo social (5 años)",
+        valor: `${rbc.toFixed(2).replace(".", ",")} a 1`,
+        detalle:
+          rbc < 1
+            ? "Los beneficios valorados no alcanzan a pagar los costos: con estos supuestos, el proyecto destruye valor social."
+            : rbc < 1.3
+              ? "Los beneficios apenas superan a los costos: un supuesto optimista de más y el resultado se da vuelta."
+              : "Por cada boliviano que cuesta, el proyecto devuelve más de un boliviano en beneficio social.",
+        severidad: rbc < 1 ? "critico" : rbc < 1.3 ? "advertencia" : "ok",
+      });
+    }
+  }
+
+  indicadores.push({
+    id: "gasto-recurrente",
+    nombre: "Gasto anual que alguien tiene que seguir pagando",
+    valor: bs(costoOperacion),
+    detalle:
+      "Cuando termina el dinero de la inversión, este gasto sigue. Si no hay un dueño que lo asuma (municipio, comunidad, otro financiador), el servicio se cae: es la causa más común de proyectos sociales abandonados.",
+    severidad: "info",
+  });
+
+  const meses = p.capitalTrabajo / (costoOperacion / 12);
+  indicadores.push({
+    id: "meses-operacion",
+    nombre: "Meses de operación que cubre tu reserva",
+    valor: `${meses.toFixed(1).replace(".", ",")} meses`,
+    detalle:
+      "Los desembolsos del financiador se atrasan con frecuencia. Una reserva de menos de 2 meses te deja sin poder pagar sueldos cuando eso pasa.",
+    severidad: meses < 1 ? "critico" : meses < 2 ? "advertencia" : "ok",
+  });
+
+  return {
+    titulo: "Indicadores de proyectos sociales y públicos",
+    introduccion:
+      "Estas métricas son las que mira un financiador o una entidad pública. Son informativas: no cambian tu VAN ni tu flujo de caja.",
     indicadores,
   };
 }

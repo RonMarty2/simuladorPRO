@@ -1287,6 +1287,7 @@ function postaSalud(): Proyecto {
   return {
     ...base(),
     nombre: "Posta de salud comunitaria",
+    beneficiarios: { cantidad: 4000, unidad: "persona" },
     ubicacion: "Municipio rural de Potosí",
     descripcion: "Construcción y operación de una posta de salud para 4.000 habitantes que hoy viajan más de 3 horas al hospital. No genera ingresos: el beneficio se estima en bolivianos como traslados evitados, jornadas de trabajo no perdidas y complicaciones prevenidas. Financiamiento 100% propio (gobierno municipal) y tasa social de descuento.",
     sector: "servicios",
@@ -1584,6 +1585,7 @@ function capacitacionJovenes(): Proyecto {
   return {
     ...base(),
     nombre: "Programa de capacitación técnica para jóvenes",
+    beneficiarios: { cantidad: 120, unidad: "joven" },
     ubicacion: "El Alto",
     descripcion: "Un centro forma a 120 jóvenes al año en oficios (electricidad, soldadura, gastronomía). El beneficio social es la diferencia de ingresos que logran los egresados gracias al curso, no su sueldo completo. Ejemplo MARGINAL: el resultado depende de qué porcentaje consigue empleo y de cuánto se atribuya al programa.",
     sector: "servicios",
@@ -1718,6 +1720,7 @@ function aguaPotableRural(): Proyecto {
   return {
     ...base(),
     nombre: "Sistema de agua potable para una comunidad rural",
+    beneficiarios: { cantidad: 300, unidad: "familia" },
     ubicacion: "Provincia Tarata, Cochabamba",
     descripcion: "Captación, tanque y red de distribución para 300 familias que hoy acarrean agua. El beneficio social se valora como horas de acarreo ahorradas (sobre todo de mujeres y niños) más enfermedades de origen hídrico evitadas. Financiamiento 100% propio (gobierno municipal) con tasa social. Ejemplo VIABLE socialmente.",
     sector: "servicios",

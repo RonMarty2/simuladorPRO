@@ -110,6 +110,32 @@ describe("indicadores propios por tipo", () => {
     }
   });
 
+  it("la posta de salud muestra costo por beneficiario y razón beneficio-costo", () => {
+    const panel = indicadoresPorTipo(crear("postasalud"));
+    expect(panel).not.toBeNull();
+    expect(ids(panel)).toEqual(
+      expect.arrayContaining(["costo-beneficiario", "costo-beneficiario-total", "beneficio-beneficiario", "razon-beneficio-costo", "gasto-recurrente", "meses-operacion"])
+    );
+  });
+
+  it("sin beneficiarios no aparecen los indicadores por beneficiario", () => {
+    const p = crear("postasalud");
+    delete p.beneficiarios;
+    const lista = ids(indicadoresPorTipo(p));
+    expect(lista).not.toContain("costo-beneficiario");
+    expect(lista).toContain("razon-beneficio-costo");
+  });
+
+  it("todas las plantillas sociales calculan sin errores", () => {
+    const sociales = PLANTILLAS.filter((x) => x.categoria === "social");
+    expect(sociales.length).toBeGreaterThan(0);
+    for (const pl of sociales) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
   it("todas las plantillas de turismo calculan sin errores", () => {
     for (const pl of PLANTILLAS.filter((x) => x.categoria === "turismo")) {
       const panel = indicadoresPorTipo(pl.crear());

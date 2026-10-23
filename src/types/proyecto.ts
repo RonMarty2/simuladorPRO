@@ -291,6 +291,11 @@ export interface Proyecto {
    * turismo). Sin este dato esos indicadores no aparecen.
    */
   capacidadAnual?: number;
+  /**
+   * Cuántas personas, familias u otras unidades recibe el servicio cada año. Opcional:
+   * solo lo usan los indicadores propios de los proyectos sociales (costo por beneficiario).
+   */
+  beneficiarios?: { cantidad: number; unidad: string };
 
   // Inversiones (cada categoría es una lista)
   inversiones: Record<CategoriaInversion, ItemInversion[]>;
