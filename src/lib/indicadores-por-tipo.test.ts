@@ -35,7 +35,7 @@ describe("indicadores propios por tipo", () => {
   });
 
   it("los tipos sin panel devuelven null", () => {
-    expect(indicadoresPorTipo(crear("restaurante"))).toBeNull();
+    expect(indicadoresPorTipo(crear("consultora"))).toBeNull();
     expect(indicadoresPorTipo(crear("colegio"))).toBeNull();
   });
 
@@ -154,6 +154,30 @@ describe("indicadores propios por tipo", () => {
   it("todas las plantillas de alquiler calculan sin errores", () => {
     const lista = PLANTILLAS.filter((x) => x.categoria === "alquiler");
     expect(lista.length).toBeGreaterThan(0);
+    for (const pl of lista) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
+  it("el restaurante muestra márgenes, mezcla, equilibrio e inventario", () => {
+    const panel = indicadoresPorTipo(crear("restaurante"));
+    expect(panel).not.toBeNull();
+    expect(panel!.titulo).toContain("gastronomía");
+    expect(ids(panel)).toEqual(
+      expect.arrayContaining(["margen-contribucion", "mezcla-ventas", "mejor-margen", "ventas-equilibrio", "margen-operativo", "peso-personal", "inventario"])
+    );
+  });
+
+  it("cada rubro de productos usa su propio título", () => {
+    expect(indicadoresPorTipo(crear("distribuidora"))!.titulo).toContain("comercio");
+    expect(indicadoresPorTipo(crear("fabrica"))!.titulo).toContain("producción");
+  });
+
+  it("todas las plantillas de gastronomía, producción y comercio calculan sin errores", () => {
+    const lista = PLANTILLAS.filter((x) => ["gastronomia", "produccion", "comercio"].includes(x.categoria));
+    expect(lista.length).toBeGreaterThan(10);
     for (const pl of lista) {
       const panel = indicadoresPorTipo(pl.crear());
       expect(panel, pl.clave).not.toBeNull();
