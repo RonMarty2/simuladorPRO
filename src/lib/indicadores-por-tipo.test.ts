@@ -35,8 +35,8 @@ describe("indicadores propios por tipo", () => {
   });
 
   it("los tipos sin panel devuelven null", () => {
-    expect(indicadoresPorTipo(crear("consultora"))).toBeNull();
-    expect(indicadoresPorTipo(crear("colegio"))).toBeNull();
+    expect(indicadoresPorTipo(crear("pelicula"))).toBeNull();
+    expect(indicadoresPorTipo(crear("quinua"))).toBeNull();
   });
 
   it("el gimnasio muestra los indicadores de suscripción", () => {
@@ -182,6 +182,38 @@ describe("indicadores propios por tipo", () => {
       const panel = indicadoresPorTipo(pl.crear());
       expect(panel, pl.clave).not.toBeNull();
       for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
+  it("el colegio muestra la caja de los 2 meses sin pensión y la morosidad", () => {
+    const panel = indicadoresPorTipo(crear("colegio"));
+    expect(panel!.titulo).toContain("educación privada");
+    expect(ids(panel)).toEqual(expect.arrayContaining(["meses-sin-pension", "morosidad-10", "ventas-menos-20", "recuperacion-simple"]));
+  });
+
+  it("la franquicia muestra la regalía sobre las ventas", () => {
+    const panel = indicadoresPorTipo(crear("franquicia"));
+    expect(panel!.titulo).toContain("franquicia");
+    expect(ids(panel)).toContain("regalias");
+  });
+
+  it("servicios, tecnología y concesión tienen su panel", () => {
+    expect(indicadoresPorTipo(crear("consultora"))!.titulo).toContain("servicios");
+    expect(ids(indicadoresPorTipo(crear("consultora")))).toContain("cobranza");
+    expect(indicadoresPorTipo(crear("appdelivery"))!.titulo).toContain("tecnología");
+    expect(ids(indicadoresPorTipo(crear("appdelivery")))).toContain("resultado-anio5");
+    expect(ids(indicadoresPorTipo(crear("concesionagua")))).toContain("cobertura-cuota");
+  });
+
+  it("todas las plantillas de los rubros generales calculan sin errores", () => {
+    const rubros = ["gastronomia", "produccion", "comercio", "servicios", "tecnologia", "educacion_privada", "franquicia", "concesion"];
+    const lista = PLANTILLAS.filter((x) => rubros.includes(x.categoria) && x.modelo !== "costo_beneficio");
+    for (const pl of lista) {
+      const p = pl.crear();
+      const panel = indicadoresPorTipo(p);
+      // un SaaS (suscripción) o un costo-beneficio no usa este panel
+      if (!panel) continue;
+      for (const i of panel.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
     }
   });
 

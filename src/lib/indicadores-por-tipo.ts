@@ -11,7 +11,8 @@ import type { Proyecto } from "../types/proyecto";
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
  * Hoy existen los paneles de turismo, suscripción, salud privada, microcrédito, social, alquiler
- * y productos (gastronomía, producción y comercio). Los demás tipos devuelven null.
+ * y el panel general de negocios (gastronomía, producción, comercio, servicios, tecnología,
+ * educación privada, franquicia y concesión). Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -41,7 +42,7 @@ export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null 
   if (proyecto.tipoNegocio === "microcredito") return indicadoresMicrocredito(proyecto);
   if (proyecto.tipoNegocio === "social") return indicadoresSocial(proyecto);
   if (proyecto.tipoNegocio === "alquiler") return indicadoresAlquiler(proyecto);
-  if (proyecto.tipoNegocio && proyecto.tipoNegocio in RUBRO_PRODUCTOS) return indicadoresProductos(proyecto);
+  if (proyecto.tipoNegocio && proyecto.tipoNegocio in RUBROS_NEGOCIO) return indicadoresNegocio(proyecto);
   return null;
 }
 
@@ -767,14 +768,151 @@ function indicadoresAlquiler(p: Proyecto): PanelIndicadores | null {
   };
 }
 
-const RUBRO_PRODUCTOS: Record<string, { titulo: string; diasInventario: number; cosa: string }> = {
-  gastronomia: { titulo: "gastronomía", diasInventario: 10, cosa: "insumos frescos" },
-  produccion: { titulo: "producción", diasInventario: 45, cosa: "materia prima y producto terminado" },
-  comercio: { titulo: "comercio", diasInventario: 60, cosa: "mercadería" },
+// ---------------------------------------------------------------------------
+// Panel general por rubro: negocios que venden productos o servicios con
+// costos directos y fijos. Cada rubro agrega su capital inmovilizado y, si
+// corresponde, indicadores extra propios (colegio, franquicia, concesión).
+// ---------------------------------------------------------------------------
+
+interface ContextoNegocio {
+  p: Proyecto;
+  ing1: number;
+  costoDirecto: number;
+  personal: number;
+  gastosFijos: number; // admin + comercialización + imprevistos (sin sueldos)
+  resultado: number;
+  /** Resultado operativo del año 5 (cuánto cambia si el crecimiento llega). */
+  resultado5: number;
+  ing5: number;
+  inversionTotal: number;
+  cuota: number;
+  unidades: (id: string | null) => number;
+}
+
+interface RubroNegocio {
+  titulo: string;
+  introduccion: string;
+  /** Qué inmoviliza caja: stock guardado o plata sin cobrar. */
+  capital?: { modo: "inventario" | "cobranza"; dias: number; cosa: string };
+  extras?: (c: ContextoNegocio) => IndicadorPropio[];
+}
+
+const INTRO_PRODUCTOS =
+  "Estas métricas son las que mira el dueño de un negocio que vende productos. Son informativas: no cambian tu VAN ni tu flujo de caja.";
+const INTRO_SERVICIOS =
+  "Estas métricas son las que mira el dueño de un negocio de servicios. Son informativas: no cambian tu VAN ni tu flujo de caja.";
+
+const RUBROS_NEGOCIO: Record<string, RubroNegocio> = {
+  gastronomia: {
+    titulo: "Indicadores de gastronomía",
+    introduccion: INTRO_PRODUCTOS,
+    capital: { modo: "inventario", dias: 10, cosa: "insumos frescos" },
+  },
+  produccion: {
+    titulo: "Indicadores de producción",
+    introduccion: INTRO_PRODUCTOS,
+    capital: { modo: "inventario", dias: 45, cosa: "materia prima y producto terminado" },
+  },
+  comercio: {
+    titulo: "Indicadores de comercio",
+    introduccion: INTRO_PRODUCTOS,
+    capital: { modo: "inventario", dias: 60, cosa: "mercadería" },
+  },
+  servicios: {
+    titulo: "Indicadores de servicios profesionales",
+    introduccion: INTRO_SERVICIOS,
+    capital: { modo: "cobranza", dias: 45, cosa: "de facturación a clientes empresa" },
+  },
+  tecnologia: {
+    titulo: "Indicadores de tecnología y plataformas",
+    introduccion:
+      "Estas métricas son las que mira quien invierte en desarrollar una plataforma o un software. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    extras: (c) => [
+      {
+        id: "resultado-anio5",
+        nombre: "Resultado operativo del año 5",
+        valor: `${bs(c.resultado5)} (año 1: ${bs(c.resultado)})`,
+        detalle: `Una plataforma gasta casi todo antes de vender: tu proyecto pasa de ${bs(c.resultado)} en el año 1 a ${bs(c.resultado5)} en el año 5, con ingresos de ${bs(c.ing5)}. ${
+          c.resultado5 <= 0
+            ? "Aun con el crecimiento que supones, en el año 5 no ganas: el proyecto no se sostiene."
+            : c.resultado <= 0
+              ? "Todo depende de que el crecimiento llegue: si llega la mitad, mira cuánto cambia el resultado."
+              : "Ya ganas desde el primer año; el crecimiento es un extra."
+        }`,
+        severidad: c.resultado5 <= 0 ? "critico" : c.resultado <= 0 ? "advertencia" : "ok",
+      },
+    ],
+  },
+  educacion_privada: {
+    titulo: "Indicadores de educación privada",
+    introduccion:
+      "Estas métricas son las que mira la dirección de un colegio privado. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    extras: (c) => {
+      const salida: IndicadorPropio[] = [];
+      // Sueldos de 12 meses con pensiones de 10: dos meses de caja sin ingreso
+      const fijosMes = (c.personal + c.gastosFijos) / 12;
+      if (fijosMes > 0) {
+        const necesario = fijosMes * 2;
+        const cobertura = c.p.capitalTrabajo / necesario;
+        salida.push({
+          id: "meses-sin-pension",
+          nombre: "Caja para los 2 meses del año sin pensión",
+          valor: pct(Math.min(cobertura, 9.99)),
+          detalle: `Se cobran 10 pensiones y se pagan 12 meses de sueldos: faltan unos ${bs(necesario)} de caja para esos 2 meses. ${
+            cobertura >= 1
+              ? "Tu capital de trabajo los cubre."
+              : `Tu capital de trabajo cubre solo ${pct(cobertura)}: el resto sale de las pensiones del año anterior o de un crédito.`
+          }`,
+          severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+        });
+      }
+      // Morosidad
+      const conMora = c.resultado - 0.1 * c.ing1;
+      salida.push({
+        id: "morosidad-10",
+        nombre: "Resultado si el 10% de las familias no paga",
+        valor: bs(conMora),
+        detalle: `Hoy el resultado operativo del año 1 es ${bs(c.resultado)}. ${
+          conMora < 0
+            ? "Con 10% de morosidad pasas a pérdida: los sueldos no bajan cuando las familias dejan de pagar."
+            : "Con 10% de morosidad igual ganas, pero con menos margen para una crisis."
+        }`,
+        severidad: conMora < 0 ? "critico" : conMora < c.resultado * 0.5 ? "advertencia" : "ok",
+      });
+      return salida;
+    },
+  },
+  franquicia: {
+    titulo: "Indicadores de franquicia",
+    introduccion:
+      "Estas métricas son las que mira quien compra una franquicia. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    extras: (c) => {
+      const regalias = (c.p.costosDirectos ?? [])
+        .filter((d) => /regal|aporte|marketing|publicidad/i.test(d.descripcion))
+        .reduce((a, d) => a + d.cantidadPorUnidad * d.costoUnitario * c.unidades(d.productoId), 0);
+      if (regalias <= 0) return [];
+      const peso = regalias / c.ing1;
+      return [
+        {
+          id: "regalias",
+          nombre: "Regalía y aporte de marketing sobre las ventas",
+          valor: `${pct(peso, 1)} (${bs(regalias)} al año)`,
+          detalle:
+            "Se paga sobre las ventas, ganes o pierdas. Sumado al derecho de entrada y a los insumos obligatorios, es lo que le cuesta tener una marca conocida.",
+          severidad: peso > 0.1 ? "advertencia" : "info",
+        },
+      ];
+    },
+  },
+  concesion: {
+    titulo: "Indicadores de concesión de infraestructura",
+    introduccion:
+      "Estas métricas son las que mira quien opera un servicio regulado con inversión grande. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+  },
 };
 
-function indicadoresProductos(p: Proyecto): PanelIndicadores | null {
-  const rubro = RUBRO_PRODUCTOS[p.tipoNegocio ?? ""];
+function indicadoresNegocio(p: Proyecto): PanelIndicadores | null {
+  const rubro = RUBROS_NEGOCIO[p.tipoNegocio ?? ""];
   if (!rubro) return null;
   if (p.modeloIngreso === "costo_beneficio" || p.productos.length === 0) return null;
 
@@ -787,47 +925,59 @@ function indicadoresProductos(p: Proyecto): PanelIndicadores | null {
 
   const costoDirecto = flujo.costosProduccion?.[0] ?? 0;
   const personal = flujo.personal?.[0] ?? 0;
-  const resultado =
-    ing1 -
-    costoDirecto -
-    personal -
-    (flujo.gastosAdmin?.[0] ?? 0) -
-    (flujo.gastosComerc?.[0] ?? 0) -
-    (flujo.imprevistos?.[0] ?? 0);
+  const gastosFijos =
+    (flujo.gastosAdmin?.[0] ?? 0) + (flujo.gastosComerc?.[0] ?? 0) + (flujo.imprevistos?.[0] ?? 0);
+  const resultado = ing1 - costoDirecto - personal - gastosFijos;
+  const ing5 = flujo.ingresos?.[4] ?? 0;
+  const resultado5 =
+    ing5 -
+    (flujo.costosProduccion?.[4] ?? 0) -
+    (flujo.personal?.[4] ?? 0) -
+    (flujo.gastosAdmin?.[4] ?? 0) -
+    (flujo.gastosComerc?.[4] ?? 0) -
+    (flujo.imprevistos?.[4] ?? 0);
+  const inversionTotal = Object.values(p.inversiones ?? {})
+    .flat()
+    .reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
+  const cuota = Number(flujo.indicadores?.cuotaAnualTotal ?? 0);
+  const unidades = (id: string | null) => {
+    const prod = p.productos.find((x) => x.id === id);
+    return prod ? Number(prod.cantidades?.[0] ?? 0) : Math.max(...p.productos.map((x) => Number(x.cantidades?.[0] ?? 0)));
+  };
 
   const indicadores: IndicadorPropio[] = [];
 
-  // Margen después de lo que cuesta producir o comprar lo que vendes
+  // Margen después de lo que cuesta producir, comprar o prestar lo que vendes
   const margenContribucion = (ing1 - costoDirecto) / ing1;
   indicadores.push({
     id: "margen-contribucion",
-    nombre: "Margen después de insumos y costos directos",
+    nombre: "Margen después de costos directos",
     valor: pct(margenContribucion),
-    detalle: `De cada boliviano que vendes, ${pct(costoDirecto / ing1)} se va en lo que cuesta hacer o comprar lo vendido y te queda ${pct(margenContribucion)} para pagar sueldos, alquiler y todo lo demás. Si el precio de tus insumos sube y no puedes subir el tuyo, este es el número que se achica primero.`,
+    detalle: `De cada boliviano que vendes, ${pct(costoDirecto / ing1)} se va en lo que cuesta hacer, comprar o prestar lo vendido y te queda ${pct(margenContribucion)} para pagar sueldos, alquiler y todo lo demás. Si tus costos suben y no puedes subir tu precio, este es el número que se achica primero.`,
     severidad: margenContribucion < 0.2 ? "advertencia" : "ok",
   });
 
-  // Producto que más aporta y mezcla de ventas
+  // Producto que más aporta y el de mejor margen
   if (lineas.length > 1) {
     const mayor = [...lineas].sort((a, b) => b.ingresoAnio1 - a.ingresoAnio1)[0];
     const peso = mayor.ingresoAnio1 / ing1;
     indicadores.push({
       id: "mezcla-ventas",
-      nombre: "Producto que más aporta a las ventas",
+      nombre: "Producto o servicio que más aporta a las ventas",
       valor: `${mayor.nombre}: ${pct(peso)}`,
       detalle:
         "Reparto de las ventas del año 1: " +
         lineas.map((f) => `${f.nombre} ${pct(f.ingresoAnio1 / ing1)}`).join(", ") +
-        ". Si un solo producto sostiene casi todo, cualquier problema con él tumba el negocio.",
+        ". Si uno solo sostiene casi todo, cualquier problema con él tumba el negocio.",
       severidad: peso > 0.7 ? "advertencia" : "info",
     });
 
-    const mejorMargen = [...lineas].sort((a, b) => b.margenUnitario / (b.ingresoAnio1 / b.unidadesAnio1) - a.margenUnitario / (a.ingresoAnio1 / a.unidadesAnio1))[0];
-    const margenPct = mejorMargen.margenUnitario / (mejorMargen.ingresoAnio1 / mejorMargen.unidadesAnio1);
+    const margenDe = (f: (typeof lineas)[number]) => f.margenUnitario / (f.ingresoAnio1 / f.unidadesAnio1);
+    const mejor = [...lineas].sort((a, b) => margenDe(b) - margenDe(a))[0];
     indicadores.push({
       id: "mejor-margen",
-      nombre: "Producto con mejor margen por unidad",
-      valor: `${mejorMargen.nombre}: ${pct(margenPct)}`,
+      nombre: "Producto o servicio con mejor margen por unidad",
+      valor: `${mejor.nombre}: ${pct(margenDe(mejor))}`,
       detalle:
         "Es el que más deja de cada boliviano vendido. Empujar su venta suele mejorar más el resultado que vender más de lo que deja poco.",
       severidad: "info",
@@ -859,6 +1009,18 @@ function indicadoresProductos(p: Proyecto): PanelIndicadores | null {
     severidad: resultado <= 0 ? "critico" : resultado / ing1 < 0.08 ? "advertencia" : "ok",
   });
 
+  // Prueba de estrés: ventas 20% menores
+  const conCaida = resultado - 0.2 * (ing1 - costoDirecto);
+  indicadores.push({
+    id: "ventas-menos-20",
+    nombre: "Resultado si las ventas caen 20%",
+    valor: bs(conCaida),
+    detalle: `Sin cambiar tus costos fijos, una caída de 20% en las ventas te deja con ${bs(conCaida)} en el año 1. ${
+      conCaida < 0 ? "Pasas a pérdida: tu negocio no aguanta una mala temporada." : "Todavía aguantas, pero mira cuánto margen te queda."
+    }`,
+    severidad: conCaida < 0 ? "critico" : conCaida < resultado * 0.4 ? "advertencia" : "ok",
+  });
+
   // Peso del personal
   if (personal > 0) {
     const peso = personal / ing1;
@@ -872,27 +1034,70 @@ function indicadoresProductos(p: Proyecto): PanelIndicadores | null {
     });
   }
 
-  // Capital inmovilizado en inventario (ejemplo ilustrativo por rubro)
-  if (costoDirecto > 0) {
-    const inmovilizado = (costoDirecto / 365) * rubro.diasInventario;
-    const cobertura = p.capitalTrabajo / inmovilizado;
+  // Cobertura de la cuota
+  if (cuota > 0) {
+    const cobertura = resultado / cuota;
     indicadores.push({
-      id: "inventario",
-      nombre: `Capital de trabajo frente a guardar ${rubro.diasInventario} días de ${rubro.cosa}`,
-      valor: pct(Math.min(cobertura, 9.99)),
-      detalle: `Ejemplo ilustrativo: si mantienes ${rubro.diasInventario} días de ${rubro.cosa} en stock, tienes unos ${bs(inmovilizado)} parados. ${
-        cobertura >= 1
-          ? "Tu capital de trabajo lo cubre."
-          : `Tu capital de trabajo cubre solo ${pct(cobertura)} de eso, antes de pagar un solo sueldo.`
-      } Más stock evita quedarte sin producto, pero inmoviliza caja.`,
-      severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+      id: "cobertura-cuota",
+      nombre: "Cobertura de la cuota del préstamo",
+      valor: `${cobertura.toFixed(2).replace(".", ",")} veces`,
+      detalle:
+        cobertura < 1
+          ? "El resultado operativo no alcanza a pagar la cuota del préstamo: tendrías que poner plata de tu bolsillo todos los años."
+          : cobertura < 1.25
+            ? "Cubres la cuota, pero casi sin margen: un mal mes te deja sin poder pagar."
+            : "El resultado operativo cubre la cuota con colchón para un mal mes.",
+      severidad: cobertura < 1 ? "critico" : cobertura < 1.25 ? "advertencia" : "ok",
     });
   }
 
-  return {
-    titulo: `Indicadores de ${rubro.titulo}`,
-    introduccion:
-      "Estas métricas son las que mira el dueño de un negocio que vende productos. Son informativas: no cambian tu VAN ni tu flujo de caja.",
-    indicadores,
-  };
+  // Años para recuperar la inversión (simple, sin descontar)
+  if (inversionTotal > 0) {
+    const anios = resultado > 0 ? inversionTotal / resultado : Infinity;
+    indicadores.push({
+      id: "recuperacion-simple",
+      nombre: "Años para recuperar la inversión (sin descontar)",
+      valor: Number.isFinite(anios) ? `${anios.toFixed(1).replace(".", ",")} años` : "no se recupera",
+      detalle:
+        "Inversión total dividida entre el resultado operativo del año 1. Es una cuenta simple que ignora impuestos, crecimiento y el valor del dinero en el tiempo, pero te dice si estás cerca o lejos de recuperarla en los 5 años que analizas.",
+      severidad: !Number.isFinite(anios) || anios > 5 ? "critico" : anios > 3.5 ? "advertencia" : "ok",
+    });
+  }
+
+  // Capital inmovilizado (stock o cobranza)
+  if (rubro.capital) {
+    const c = rubro.capital;
+    const base = c.modo === "inventario" ? costoDirecto : ing1;
+    if (base > 0) {
+      const inmovilizado = (base / 365) * c.dias;
+      const cobertura = p.capitalTrabajo / inmovilizado;
+      indicadores.push({
+        id: c.modo === "inventario" ? "inventario" : "cobranza",
+        nombre:
+          c.modo === "inventario"
+            ? `Capital de trabajo frente a guardar ${c.dias} días de ${c.cosa}`
+            : `Capital de trabajo frente a cobrar a ${c.dias} días ${c.cosa}`,
+        valor: pct(Math.min(cobertura, 9.99)),
+        detalle: `Ejemplo ilustrativo: ${
+          c.modo === "inventario"
+            ? `si mantienes ${c.dias} días de ${c.cosa} en stock, tienes unos ${bs(inmovilizado)} parados.`
+            : `si tus clientes te pagan a ${c.dias} días, tienes unos ${bs(inmovilizado)} sin cobrar.`
+        } ${
+          cobertura >= 1
+            ? "Tu capital de trabajo lo cubre."
+            : `Tu capital de trabajo cubre solo ${pct(cobertura)} de eso, antes de pagar un solo sueldo.`
+        }`,
+        severidad: cobertura < 0.5 ? "critico" : cobertura < 1 ? "advertencia" : "ok",
+      });
+    }
+  }
+
+  // Extras del rubro
+  if (rubro.extras) {
+    indicadores.push(
+      ...rubro.extras({ p, ing1, costoDirecto, personal, gastosFijos, resultado, resultado5, ing5, inversionTotal, cuota, unidades })
+    );
+  }
+
+  return { titulo: rubro.titulo, introduccion: rubro.introduccion, indicadores };
 }

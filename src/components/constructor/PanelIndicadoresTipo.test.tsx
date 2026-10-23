@@ -15,7 +15,7 @@ describe("PanelIndicadoresTipo", () => {
   });
 
   it("no dibuja nada para un tipo sin panel", () => {
-    const html = renderToStaticMarkup(<PanelIndicadoresTipo proyecto={crear("colegio")} />);
+    const html = renderToStaticMarkup(<PanelIndicadoresTipo proyecto={crear("pelicula")} />);
     expect(html).toBe("");
   });
 });
