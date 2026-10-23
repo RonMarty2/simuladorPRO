@@ -122,8 +122,8 @@ bajas en suscripción; mora en microcrédito; beneficiarios y costo por
 beneficiario en lo social; ventas incrementales en marketing) y su manera de
 evaluarse (la sección 3 y la 6 de cada ficha lo detallan). Esto cambia el motor
 y los resultados.
-- [ ] 4.1 Presentar al owner, tipo por tipo, qué cambiaría (sin implementar).
-- [ ] 4.2 Con su OK, implementar de a un tipo, empezando por turismo.
+- [x] 4.1 (2026-10-23) Propuesta presentada: `docs/metodologia/FASE-4-PROPUESTA.md`. El owner eligió el Camino A (panel de indicadores, sin tocar fórmulas) y empezar por turismo.
+- [ ] 4.2 Implementar de a un tipo. Hecho: turismo (2026-10-23: `lib/indicadores-por-tipo.ts` y `PanelIndicadoresTipo`, en el resumen final del constructor; campo opcional `capacidadAnual`; solo el hostal lo trae). Siguen: suscripción, salud privada, microcrédito, social, alquiler, el resto.
 - [ ] 4.3 Indicadores propios en resultados y diagnóstico pedagógico.
 
 ### Fase 5. Calibración y cierre

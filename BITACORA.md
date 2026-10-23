@@ -658,8 +658,11 @@ Fase 3 hecha: 5 plantillas nuevas en la galería (clínica, colegio, franquicia,
 de agua, microcrédito; categorías salud_privada, educacion_privada, franquicia, concesion,
 microcredito) con sus eventos propios (048 a 052). Sus cifras son estimaciones del equipo,
 no datos auditados: calibrarlas con gremios (sección 10 de cada ficha).
-Siguiente: Fase 4 (variables e indicadores propios por tipo: cambia fórmulas, REQUIERE OK
-del owner; primero presentarle tipo por tipo qué cambiaría, sin implementar) y Fase 5
+Fase 4 (camino A, panel de indicadores sin tocar fórmulas) iniciada: turismo hecho
+(indicadores de ocupación, tarifa promedio, RevPAR, ocupación de equilibrio, meses de caja y peso
+de comisiones en el resumen final del constructor; campo opcional `capacidadAnual`). El ejemplo
+del hostal se recalibró: con 100% de ocupación parecía excelente, con 70% es marginal.
+Siguiente: Fase 4 en los demás tipos (orden en el plan 4.2) y Fase 5
 (calibración con datos de Bolivia y prueba en la app real de un proyecto de cada tipo).
 Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.

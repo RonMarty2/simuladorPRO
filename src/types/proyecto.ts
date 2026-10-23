@@ -279,6 +279,12 @@ export interface Proyecto {
    * Proyectos viejos o libres no lo tienen: reciben solo eventos por sector.
    */
   tipoNegocio?: string;
+  /**
+   * Capacidad vendible por año, en la misma unidad que las ventas (noches-habitación,
+   * cupos). Opcional: solo la usan los indicadores propios del tipo (ocupación en
+   * turismo). Sin este dato esos indicadores no aparecen.
+   */
+  capacidadAnual?: number;
 
   // Inversiones (cada categoría es una lista)
   inversiones: Record<CategoriaInversion, ItemInversion[]>;

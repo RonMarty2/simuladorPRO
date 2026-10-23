@@ -1002,6 +1002,7 @@ function hostalBoutique(): Proyecto {
     ubicacion: "Sucre, casco histórico",
     descripcion: "Hostal boutique de 12 habitaciones con desayuno incluido y servicio de tours. Ejemplo MEDIANO de hospitalidad con factor de ocupación.",
     sector: "servicios",
+    capacidadAnual: 12 * 365,
     modeloIngreso: "unidades",
     inversiones: {
       terreno: [inv("Casa colonial restaurada (terreno+inmueble)", "inmueble", 1, 950000, null)],
@@ -2249,7 +2250,7 @@ const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
 
   // Turismo
   { clave: "turismo", titulo: "Operadora de turismo", emoji: "🏔️", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Rutas turísticas", escala: "Grande", resumen: "Uyuni, Amazonía, city tours y trekking.", crear: () => calibrarDemanda(operadoraTurismo(), 0.47) },
-  { clave: "hostal", titulo: "Hostal boutique", emoji: "🏨", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Hospitalidad", escala: "Mediano", resumen: "Casa colonial restaurada con 12 habitaciones.", crear: hostalBoutique },
+  { clave: "hostal", titulo: "Hostal boutique", emoji: "🏨", categoria: "turismo", sector: "Servicios", modelo: "unidades", modeloLabel: "Hospitalidad", escala: "Mediano", resumen: "Casa colonial restaurada con 12 habitaciones.", ensena: "En un hostal manda la ocupación: con las 12 habitaciones llenas todo el año el negocio parecería excelente, pero con una ocupación realista del 70% apenas cubre su costo de capital. Mira la ocupación de equilibrio y cuánto margen te deja.", veredicto: "marginal", crear: () => calibrarDemanda(hostalBoutique(), 0.7) },
 
   // Agricultura
   { clave: "quinua", titulo: "Cultivo de quinua", emoji: "🌾", categoria: "agricultura", sector: "Agricultura", modelo: "unidades", modeloLabel: "Agricultura", escala: "Grande", resumen: "Quinua real orgánica para exportación.", crear: () => calibrarDemanda(cultivoQuinua(), 0.345) },

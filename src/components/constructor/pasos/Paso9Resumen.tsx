@@ -18,6 +18,7 @@ import {
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import PanelDiagnostico from "../PanelDiagnostico";
+import PanelIndicadoresTipo from "../PanelIndicadoresTipo";
 import BoletinProyecto from "../BoletinProyecto";
 import {
   calcularFlujoInversionista,
@@ -90,6 +91,7 @@ export default function Paso9Resumen() {
           los números. */}
       <div className="order-3 flex flex-col gap-4">
         <PanelDiagnostico proyecto={proyecto} />
+        <PanelIndicadoresTipo proyecto={proyecto} />
         <BoletinProyecto proyecto={proyecto} />
       </div>
 
