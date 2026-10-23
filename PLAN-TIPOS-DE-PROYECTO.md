@@ -127,6 +127,22 @@ y los resultados.
 - [ ] 4.2 Implementar de a un tipo. Hecho: turismo (2026-10-23: `lib/indicadores-por-tipo.ts` y `PanelIndicadoresTipo`, en el resumen final del constructor; campo opcional `capacidadAnual`; solo el hostal lo trae). Suscripción hecho el mismo día (MRR, cuota promedio, bajas, CAC, meses para recuperarlo, LTV:CAC, clientes necesarios). Salud privada hecho (ocupación por línea con `Producto.capacidadAnual`, mezcla de servicios, ventas de equilibrio, honorarios, capital de trabajo frente a cobrar a 90 días, meses de caja). Microcrédito hecho (ingreso por crédito, margen tras fondeo y mora, autosuficiencia operativa, resultado si la mora se duplica, créditos por oficial, resultado sobre el capital que se presta). Social hecho (costo por beneficiario con y sin inversión, beneficio valorado por beneficiario, razón beneficio-costo, gasto recurrente sin dueño, meses de reserva; campo opcional `beneficiarios`). Alquiler hecho (ocupación por línea, NOI, rendimiento sobre lo invertido, cobertura de la cuota, rentas de equilibrio, meses de reserva; capacidades en el edificio, el parqueo y el salón). Productos hecho (11 plantillas de gastronomía, producción y comercio: margen tras costos directos, producto que más aporta y el de mejor margen, ventas de equilibrio, resultado operativo, sueldos sobre ventas, capital de trabajo frente al stock). Panel general (2026-10-23) para servicios, tecnología (con el resultado del año 5), educación privada (caja de los 2 meses sin pensión y morosidad), franquicia (regalías) y concesión (cobertura de la cuota y años de recuperación); el panel de productos pasó a ser este panel general. Medios (audiencia de equilibrio, CPM -30%, año 5), ahorro y marketing (prueba de estrés propia), agricultura (campaña, precio -30%, sequía -40%) y eventos (caja antes del evento) hechos el 2026-10-23: TODAS las plantillas tienen panel. Falta ver los paneles en la app real y, con datos de Bolivia, calibrar los umbrales (Fase 5).
 - [x] 4.3 (2026-10-23) Los indicadores en rojo con los números del alumno entran al diagnóstico pedagógico (`alertasDelTipo`); los escenarios ilustrativos no. El boletín no se tocó.
 
+### Mapa honesto: qué se adapta al tipo y qué no (2026-10-23)
+Se adapta al tipo de negocio: selector de tipo (Paso 1), guía por tipo en las etapas de proyección,
+inversiones, personal, costos directos, gastos, capital de trabajo y financiamiento; alerta de
+terreno atípico y de indicadores en rojo en el diagnóstico; panel de indicadores del tipo (Paso 9,
+galería y presentación); escenarios optimista y pesimista propios del tipo (lib/escenarios-por-tipo);
+diapositiva del rubro en la presentación; eventos propios de la simulación.
+NO se adapta todavía (y por qué):
+- El motor de la simulación sigue con las mismas variables (caja, deuda, precio, demanda, costos,
+  reputación): variables propias por tipo = camino B de la Fase 4, no implementado por riesgo alto.
+- La reputación no afecta la caja: en muchos eventos la opción "sucia" rinde más. Cambiarlo altera
+  simulaciones en curso de los alumnos; se deja para decidir con datos de alumnos reales.
+- Los textos FichaPedagogica de cada etapa siguen siendo genéricos (explican el concepto, no el rubro);
+  lo propio del rubro está en la guía por tipo.
+- La guía, los escenarios y las cifras de las 56 plantillas son criterio del equipo, sin validar con
+  gremios (ver docs/metodologia/VALIDACION-PLANTILLAS.md).
+
 ### Fase 5. Calibración y cierre
 - [ ] 5.1 Calibrar las cifras "estimación" con datos de Bolivia (docentes,
       gremios, empresarios; cada ficha lista a quién preguntar en su sección 10).

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import GuiaTipoNegocio from "../GuiaTipoNegocio";
 import { Calculator, ChevronDown, ChevronRight, Info } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
@@ -180,6 +181,7 @@ export default function Paso3Capital() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
       <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+        <GuiaTipoNegocio etapa="capital" />
         <div>
           <h2 className="text-lg font-semibold tracking-tight">
             Paso 8 · Capital de trabajo

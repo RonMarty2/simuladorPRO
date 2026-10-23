@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PLANTILLAS } from "./plantillas";
 import { GUIA_POR_TIPO, SECTOR_POR_TIPO, terrenoAtipico } from "./guia-por-tipo";
 import { diagnosticarProyecto } from "./diagnostico-pedagogico";
+import { GUIA_EXTRA_POR_TIPO } from "./guia-extra-por-tipo";
 import { construirFlujoCaja } from "./flujo-proyecto";
 
 const terrenoDe = (p: ReturnType<(typeof PLANTILLAS)[number]["crear"]>) =>
@@ -35,6 +36,16 @@ describe("guía por tipo de negocio", () => {
     const p = PLANTILLAS.find((x) => x.clave === "quinua")!.crear();
     expect(terrenoDe(p)).toBeGreaterThan(0);
     expect(diagnosticarProyecto(p).alertas.map((a) => a.id)).not.toContain("terreno_atipico");
+  });
+
+  it("cada tipo tiene guía de proyección, capital de trabajo y financiamiento", () => {
+    for (const tipo of Object.keys(GUIA_POR_TIPO)) {
+      const g = (GUIA_EXTRA_POR_TIPO as Record<string, { proyeccion: string[]; capital: string[]; financiamiento: string[] }>)[tipo];
+      expect(g, tipo).toBeDefined();
+      expect(g.proyeccion.length, tipo + " proyeccion").toBeGreaterThan(0);
+      expect(g.capital.length, tipo + " capital").toBeGreaterThan(0);
+      expect(g.financiamiento.length, tipo + " financiamiento").toBeGreaterThan(0);
+    }
   });
 
   it("los ejemplos corregidos siguen siendo viables", () => {

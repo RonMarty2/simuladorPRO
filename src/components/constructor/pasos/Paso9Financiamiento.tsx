@@ -1,4 +1,5 @@
 import { useState } from "react";
+import GuiaTipoNegocio from "../GuiaTipoNegocio";
 import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
@@ -78,6 +79,7 @@ export default function Paso9Financiamiento() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
       <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+        <GuiaTipoNegocio etapa="financiamiento" />
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Paso 7 · Financiamiento</h2>
           <p className="mt-1 text-sm text-muted-foreground">

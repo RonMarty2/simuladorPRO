@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, Lightbulb } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import { GUIA_POR_TIPO } from "@/lib/guia-por-tipo";
+import { GUIA_EXTRA_POR_TIPO, type GuiaTipoExtra } from "@/lib/guia-extra-por-tipo";
 import type { GuiaTipo } from "@/lib/guia-por-tipo";
 import type { CategoriaPlantilla } from "@/lib/plantillas";
 
@@ -10,16 +11,23 @@ import type { CategoriaPlantilla } from "@/lib/plantillas";
  * un proyecto de ese rubro. Si el proyecto no tiene tipo, invita a elegirlo.
  */
 
-export type EtapaGuia = "inversiones" | "personal" | "costosDirectos" | "gastos";
+export type EtapaGuia = "inversiones" | "personal" | "costosDirectos" | "gastos" | "proyeccion" | "capital" | "financiamiento";
 
 const TITULO: Record<EtapaGuia, string> = {
   inversiones: "Qué suele invertir un proyecto de este tipo",
   personal: "Qué personal suele necesitar",
   costosDirectos: "Qué costos directos suele tener",
   gastos: "Qué gastos administrativos y comerciales suele tener",
+  proyeccion: "Cómo conviene proyectar la demanda",
+  capital: "Qué inmoviliza tu capital de trabajo",
+  financiamiento: "Cómo suele financiarse",
 };
 
-function lista(guia: GuiaTipo, etapa: EtapaGuia): string[] {
+function lista(guia: GuiaTipo, etapa: EtapaGuia, tipo: string): string[] {
+  if (etapa === "proyeccion" || etapa === "capital" || etapa === "financiamiento") {
+    const extra = (GUIA_EXTRA_POR_TIPO as Record<string, GuiaTipoExtra>)[tipo];
+    return extra ? extra[etapa] : [];
+  }
   return etapa === "inversiones"
     ? guia.inversiones
     : etapa === "personal"
@@ -44,7 +52,7 @@ export default function GuiaTipoNegocio({ etapa }: { etapa: EtapaGuia }) {
     );
   }
 
-  const items = lista(guia, etapa);
+  const items = lista(guia, etapa, tipo!);
 
   return (
     <div className="rounded-md border border-sky-300 bg-sky-50/60 p-3 text-xs dark:border-sky-800 dark:bg-sky-950/30">
