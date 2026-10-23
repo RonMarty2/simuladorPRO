@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import GuiaTipoNegocio from "../GuiaTipoNegocio";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
@@ -135,6 +136,7 @@ export default function Paso2Inversiones() {
   return (
     <div ref={containerRef} className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
       <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+        <GuiaTipoNegocio etapa="inversiones" />
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">

@@ -108,7 +108,7 @@ interface ProyectoState {
 
   // Datos generales
   actualizarDatosGenerales: (
-    cambios: Partial<Pick<Proyecto, "nombre" | "ubicacion" | "descripcion" | "sector">>
+    cambios: Partial<Pick<Proyecto, "nombre" | "ubicacion" | "descripcion" | "sector" | "tipoNegocio">>
   ) => void;
 
   // Inversiones

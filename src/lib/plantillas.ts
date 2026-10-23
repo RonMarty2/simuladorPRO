@@ -212,7 +212,7 @@ function restaurante(): Proyecto {
     sector: "servicios",
     modeloIngreso: "unidades",
     inversiones: {
-      terreno: [inv("Terreno propio para el local", "m²", 200, 1200, null)],
+      terreno: [],
       obrasCiviles: [inv("Construcción del salón principal", "obra", 1, 180000, 20), inv("Cocina industrial y baños", "obra", 1, 70000, 20)],
       maquinaria: [inv("Cocina industrial, hornos y planchas", "set", 1, 60000, 10), inv("Refrigeración y congeladores", "set", 1, 35000, 10), inv("Lavavajillas y campana extractora", "set", 1, 18000, 10)],
       mobiliario: [inv("Mesas, sillas y barra", "set", 1, 45000, 10), inv("Vajilla, cubertería y cristalería", "set", 1, 20000, 5), inv("Sonido y ambientación", "set", 1, 15000, 8)],
@@ -226,7 +226,7 @@ function restaurante(): Proyecto {
       directo(idPostre, "insumo_directo", "Ingredientes por postre", "porción", 1, 9),
       directo(idEvento, "insumo_directo", "Insumos por evento (decoración, extras)", "evento", 1, 1200),
     ],
-    costosAdministracion: [gasto("Servicios básicos (luz, gas, agua)", 6000), gasto("Internet y software de gestión", 900), gasto("Contabilidad y asesoría legal", 2500), gasto("Seguros del local", 1200), gasto("Mantenimiento de equipos", 1500)],
+    costosAdministracion: [gasto("Alquiler del local (200 m², Recoleta)", 9000), gasto("Servicios básicos (luz, gas, agua)", 6000), gasto("Internet y software de gestión", 900), gasto("Contabilidad y asesoría legal", 2500), gasto("Seguros del local", 1200), gasto("Mantenimiento de equipos", 1500)],
     costosComercializacion: [gasto("Marketing digital y redes", 3500), gasto("Plataformas de delivery (comisión)", 2000), gasto("Material promocional", 1500)],
     productos: [
       { id: idPlato, nombre: "Plato principal", unidadMedida: "plato", cantidades: serie(36000, 0.07), precios: serie(55, 0.04, 2) },
@@ -526,7 +526,7 @@ function distribuidora(): Proyecto {
     sector: "comercio",
     modeloIngreso: "unidades",
     inversiones: {
-      terreno: [inv("Terreno para depósito y patio de carga", "m²", 800, 500, null)],
+      terreno: [],
       obrasCiviles: [inv("Galpón depósito con andén de carga", "obra", 1, 150000, 20)],
       maquinaria: [inv("Montacargas y transpaletas", "set", 1, 55000, 10), inv("Camiones de reparto (2 unidades)", "vehículo", 2, 120000, 8)],
       mobiliario: [inv("Racks industriales y estantería", "set", 1, 40000, 10), inv("Sistema de inventario", "set", 1, 25000, 5)],
@@ -539,7 +539,7 @@ function distribuidora(): Proyecto {
       directo(idLimpieza, "mercaderia", "Costo de productos de limpieza", "caja", 1, 95),
       directo(idBebidas, "mercaderia", "Costo de bebidas y gaseosas", "caja", 1, 140),
     ],
-    costosAdministracion: [gasto("Combustible y mantenimiento de flota", 8000), gasto("Servicios básicos", 2500), gasto("Contabilidad, seguros e impuestos", 4000), gasto("Sistema y telefonía", 1500)],
+    costosAdministracion: [gasto("Alquiler de depósito y patio de carga (800 m²)", 7000), gasto("Combustible y mantenimiento de flota", 8000), gasto("Servicios básicos", 2500), gasto("Contabilidad, seguros e impuestos", 4000), gasto("Sistema y telefonía", 1500)],
     costosComercializacion: [gasto("Comisiones de venta por ruta", 7000), gasto("Promociones y POP", 2500)],
     productos: [
       { id: idAbarrotes, nombre: "Caja de abarrotes surtida", unidadMedida: "caja", cantidades: serie(60000, 0.07), precios: serie(215, 0.03, 2) },

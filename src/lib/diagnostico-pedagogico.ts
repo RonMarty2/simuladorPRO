@@ -3,6 +3,7 @@ import type { Proyecto } from "@/types/proyecto";
 import { fmtNum } from "./utils";
 import { calcularMinimoCaja } from "./colchon-caja";
 import { alertasDelTipo } from "./indicadores-por-tipo";
+import { terrenoAtipico } from "./guia-por-tipo";
 
 /**
  * Diagnóstico pedagógico de un proyecto de inversión.
@@ -272,6 +273,19 @@ export function diagnosticarProyecto(proyecto: Proyecto): ResultadoDiagnostico {
       detalle:
         "Sin inversión inicial ni capital de trabajo, los indicadores no tienen " +
         "sentido. Completa las Etapas 3 y 8.",
+      etapa: 3,
+    });
+  }
+
+  // ── Inversión poco usual para el tipo de negocio (terreno) ──────────────
+  const terrenoTotal = (proyecto.inversiones?.terreno ?? []).reduce((a, i) => a + Number(i.costoTotal ?? 0), 0);
+  const guiaTerreno = terrenoAtipico(proyecto.tipoNegocio, terrenoTotal);
+  if (guiaTerreno) {
+    alertas.push({
+      id: "terreno_atipico",
+      severidad: "advertencia",
+      titulo: `Compras terreno en un proyecto de ${guiaTerreno.titulo.toLowerCase()}`,
+      detalle: guiaTerreno.notaTerreno + " Si no necesitas ser dueño del suelo, quita el terreno de la Etapa 3 y pon el alquiler en los gastos de la Etapa 6.",
       etapa: 3,
     });
   }

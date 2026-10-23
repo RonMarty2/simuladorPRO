@@ -1,6 +1,8 @@
 import { useProyectoStore } from "@/stores/proyecto-store";
 import FichaPedagogica from "../FichaPedagogica";
 import type { Sector } from "@/types/proyecto";
+import { GUIA_POR_TIPO, SECTOR_POR_TIPO, TIPOS_PARA_SELECTOR } from "@/lib/guia-por-tipo";
+import type { CategoriaPlantilla } from "@/lib/plantillas";
 
 const sectores: { valor: Sector; label: string }[] = [
   { valor: "produccion", label: "Producción" },
@@ -54,6 +56,37 @@ export default function Paso1Datos() {
           />
         </div>
 
+        <div className="space-y-1.5">
+          <label htmlFor="p1-tipo" className="text-sm font-medium">
+            Tipo de negocio
+          </label>
+          <select
+            id="p1-tipo"
+            value={proyecto.tipoNegocio ?? ""}
+            onChange={(e) => {
+              const v = e.target.value as CategoriaPlantilla | "";
+              if (!v) {
+                actualizar({ tipoNegocio: undefined });
+                return;
+              }
+              actualizar({ tipoNegocio: v, sector: SECTOR_POR_TIPO[v] });
+            }}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Elige el tipo de tu proyecto…</option>
+            {TIPOS_PARA_SELECTOR.map((t) => (
+              <option key={t.clave} value={t.clave}>
+                {t.titulo}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-muted-foreground">
+            {proyecto.tipoNegocio && (GUIA_POR_TIPO as Record<string, { notaTerreno: string }>)[proyecto.tipoNegocio]
+              ? "Con este tipo, el constructor te muestra qué suele llevar tu rubro, el diagnóstico revisa lo que no es usual en él, y la simulación te manda situaciones propias de tu tipo."
+              : "Sin tipo, tu proyecto solo recibe situaciones generales y no ves la guía de tu rubro."}
+          </p>
+        </div>
+
         <div className="space-y-1.5">
           <label htmlFor="p1-sector" className="text-sm font-medium">
             Sector económico

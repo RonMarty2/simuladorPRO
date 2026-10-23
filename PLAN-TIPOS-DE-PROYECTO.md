@@ -96,7 +96,8 @@ Nota: la categoría `tecnologia` mezcla SaaS (suscripción) y app de delivery
 - [x] 1.1 `tipoNegocio` en el proyecto y filtro de eventos por tipo (597ac05).
 - [x] 1.2 (2026-10-23, hecho) Mostrar bien los eventos de tipo en el lanzador del docente
       (`LanzadorEventos.tsx` muestra la etiqueta cruda `tipo:turismo`).
-- [ ] 1.3 Que un proyecto libre (sin plantilla) elija su tipo en el constructor
+- [x] 1.3 (2026-10-23) HECHO: selector de tipo en el Paso 1 y guía por tipo (`lib/guia-por-tipo.ts`, `GuiaTipoNegocio`) en inversiones, personal, costos directos y gastos; el diagnóstico avisa de terreno atípico. La guía es del equipo, falta validarla con gremios. Pendiente: auditar a mano la estructura de cada plantilla contra su tipo (restaurante y distribuidora ya no compran terreno).
+      Antes: Que un proyecto libre (sin plantilla) elija su tipo en el constructor
       (hoy solo las plantillas lo estampan). Cambia UI: pedir OK.
 
 ### Fase 2. Eventos propios por tipo (capa 1, no toca fórmulas)
