@@ -161,7 +161,7 @@ NO se adapta todavía (y por qué):
          de los eventos generales (por ejemplo EVT001 D, `costos *0.6`) dan una mejora neta sobre
          no haber tenido el evento. Hacer que la reputación pese en la demanda sería un cambio de
          motor; queda anotado para decidir con datos de alumnos reales.
-- [ ] 5.3 Probar en la app real un proyecto de cada tipo (ver memoria
+- [~] 5.3 (2026-10-23, parcial: hostal como estudiante en la app real, flujo completo OK) Probar en la app real un proyecto de cada tipo (ver memoria
       "probar todos los tipos").
 
 ## 5. Procedimiento para cada tipo en la Fase 2 (receta probada con 034 y 035)
