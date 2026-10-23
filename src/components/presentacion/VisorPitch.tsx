@@ -41,6 +41,8 @@ import {
   type AjustesLaboratorio,
 } from "@/lib/laboratorio-viabilidad";
 import { calcularEquilibrioPorProducto } from "@/lib/equilibrio-por-producto";
+import { resolverEscenarios } from "@/lib/escenarios-por-tipo";
+import type { SeveridadIndicador } from "@/lib/indicadores-por-tipo";
 import {
   emitirVeredicto,
   simularMontecarlo,
@@ -95,7 +97,7 @@ export default function VisorPitch({
   useEffect(() => {
     if (!hayMontecarlo) return;
     let cancelado = false;
-    simularMontecarlo(proyecto, { corridas: 500 })
+    simularMontecarlo(proyecto, { corridas: 500, ...(() => { const r = resolverEscenarios(null, proyecto.tipoNegocio); return { optimista: r.optimista, pesimista: r.pesimista }; })() })
       .then((r) => {
         if (!cancelado) setMontecarlo(r);
       })
@@ -298,6 +300,7 @@ function RenderDiapositiva({
   if (id === "financiamiento") return <Financiamiento modelo={modelo} etiqueta={etiqueta} />;
   if (id === "flujo") return <Flujo modelo={modelo} etiqueta={etiqueta} />;
   if (id === "indicadores") return <Indicadores modelo={modelo} etiqueta={etiqueta} />;
+  if (id === "tipo") return <IndicadoresDelRubro modelo={modelo} etiqueta={etiqueta} />;
   if (id === "riesgo") return <Riesgo modelo={modelo} etiqueta={etiqueta} />;
   if (id === "escenarios") return <Escenarios modelo={modelo} etiqueta={etiqueta} />;
   if (id === "montecarlo") return <SimulacionRiesgo modelo={modelo} etiqueta={etiqueta} montecarlo={montecarlo} />;
@@ -940,6 +943,38 @@ function Indicadores({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: stri
   );
 }
 
+const PRIORIDAD_SEVERIDAD: Record<SeveridadIndicador, number> = { critico: 0, advertencia: 1, ok: 2, info: 3 };
+const PUNTO_SEVERIDAD: Record<SeveridadIndicador, string> = {
+  critico: "bg-rose-500",
+  advertencia: "bg-amber-400",
+  ok: "bg-emerald-400",
+  info: "bg-sky-400",
+};
+
+function IndicadoresDelRubro({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string }) {
+  const panel = modelo.panelTipo;
+  if (!panel) return null;
+  const elegidos = [...panel.indicadores]
+    .sort((a, b) => PRIORIDAD_SEVERIDAD[a.severidad] - PRIORIDAD_SEVERIDAD[b.severidad])
+    .slice(0, 6);
+  return (
+    <Marco etiqueta={etiqueta} titulo={panel.titulo} subtitulo="Lo que mira quien conoce este rubro: no solo VAN y TIR, sino las señales propias del negocio.">
+      <div className="grid h-full grid-cols-2 gap-[2.5%]">
+        {elegidos.map((i) => (
+          <div key={i.id} className="flex flex-col justify-between overflow-hidden rounded-[1.2vw] border border-slate-200 bg-white p-[4%] shadow-sm">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-[clamp(9px,0.9vw,15px)] font-black uppercase tracking-[0.12em] text-slate-500">{i.nombre}</span>
+              <span className={`mt-1 h-3 w-3 flex-shrink-0 rounded-full ${PUNTO_SEVERIDAD[i.severidad]}`} />
+            </div>
+            <div className="text-[clamp(18px,2.2vw,38px)] font-black leading-tight tracking-tight text-slate-950">{i.valor}</div>
+            <div className="line-clamp-3 text-[clamp(9px,0.85vw,14px)] font-semibold text-slate-500">{i.detalle}</div>
+          </div>
+        ))}
+      </div>
+    </Marco>
+  );
+}
+
 function Riesgo({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: string }) {
   return (
     <Marco etiqueta={etiqueta} titulo="¿Qué mueve realmente la viabilidad?" subtitulo="Los escenarios muestran cuánto cambia el VAN al mejorar precio, volumen o eficiencia operativa.">
@@ -1136,6 +1171,7 @@ function notaDiapositiva(id: IdDiapositivaPitch, presentacion: PresentacionProye
     financiamiento: `Aclara cuánto aporta el equipo y cuánto proviene de deuda. El costo promedio de capital (WACC) es ${fmtPct(modelo.resultado.wacc)}.`,
     flujo: "La barra inicial negativa representa la inversión. Después muestra cuándo los flujos positivos compensan ese desembolso.",
     indicadores: `La regla principal es VAN mayor a cero y TIR mayor al costo promedio de capital (WACC). Conecta los indicadores con una decisión concreta.`,
+    tipo: "Estos son los indicadores que mira alguien que conoce tu rubro. Empieza por los que están en rojo o amarillo: explica qué los causa y qué harías para corregirlos.",
     riesgo: "No presentes los escenarios como predicciones exactas. Son pruebas para identificar las variables que más afectan el resultado.",
     escenarios: "Presenta los tres escenarios como un rango, no como predicciones. Pregunta al público qué tan probable creen cada uno y vuelve al base como el más razonable.",
     montecarlo: "Explica el porcentaje como la proporción de futuros simulados en los que el proyecto gana dinero. Señala la variable más sensible del tornado y qué harían para controlarla.",

@@ -95,3 +95,29 @@ describe("modo presentación", () => {
     expect(basico).not.toContain("montecarlo");
   });
 });
+
+describe("presentación adaptada al tipo de negocio", () => {
+  it("cada ejemplo de la galería trae la diapositiva de su rubro y usa escenarios propios", async () => {
+    const { PLANTILLAS } = await import("./plantillas");
+    const { construirModeloPitch, crearPresentacionPredeterminada } = await import("./presentacion-proyecto");
+    const { GUIA_POR_TIPO } = await import("./guia-por-tipo");
+    for (const pl of PLANTILLAS) {
+      const p = pl.crear();
+      p.version = "v2";
+      const modelo = construirModeloPitch(p);
+      expect(modelo.panelTipo, pl.clave).not.toBeNull();
+      expect(modelo.diapositivas.some((d) => d.id === "tipo"), pl.clave).toBe(true);
+      const titulo = (GUIA_POR_TIPO as Record<string, { titulo: string }>)[p.tipoNegocio!].titulo;
+      expect(crearPresentacionPredeterminada(p).subtitulo, pl.clave).toContain(titulo);
+    }
+  });
+
+  it("un proyecto sin tipo no muestra la diapositiva del rubro", async () => {
+    const { PLANTILLAS } = await import("./plantillas");
+    const { construirModeloPitch } = await import("./presentacion-proyecto");
+    const p = PLANTILLAS[0].crear();
+    delete p.tipoNegocio;
+    const modelo = construirModeloPitch(p);
+    expect(modelo.diapositivas.some((d) => d.id === "tipo")).toBe(false);
+  });
+});

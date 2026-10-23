@@ -23,7 +23,6 @@ import {
 import {
   compararEscenarios,
   esViable,
-  resolverEscenariosDeCurso,
   ESCENARIO_NEUTRAL,
   type EscenarioCalculado,
   type EscenariosConfig,
@@ -34,6 +33,8 @@ import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 import { datosFaltantes } from "@/lib/datos-faltantes";
 import AnalisisRiesgo from "@/components/escenarios/AnalisisRiesgo";
+import { resolverEscenarios, resumenCambios } from "@/lib/escenarios-por-tipo";
+import { GUIA_POR_TIPO } from "@/lib/guia-por-tipo";
 
 const COLORES: Record<NombreEscenario, string> = {
   optimista: "#10b981",     // emerald-500
@@ -56,10 +57,13 @@ export default function PanelEscenarios({
 
   // Resolución de optimista/pesimista: lo que el docente puso en el curso,
   // con fallback a los defaults del código.
-  const { optimista, pesimista } = useMemo(
-    () => resolverEscenariosDeCurso(configCurso),
-    [configCurso]
+  const { optimista, pesimista, delTipo } = useMemo(
+    () => resolverEscenarios(configCurso, proyecto.tipoNegocio),
+    [configCurso, proyecto.tipoNegocio]
   );
+  const tituloTipo = proyecto.tipoNegocio
+    ? (GUIA_POR_TIPO as Record<string, { titulo: string }>)[proyecto.tipoNegocio]?.titulo
+    : undefined;
 
   const escenarios = useMemo<EscenarioCalculado[]>(
     () => compararEscenarios(proyecto, optimista, pesimista, miEscenario),
@@ -93,6 +97,26 @@ export default function PanelEscenarios({
         </p>
       </div>
 
+      {delTipo && (
+        <div className="rounded-lg border border-sky-300 bg-sky-50/60 p-3 text-xs dark:border-sky-800 dark:bg-sky-950/30">
+          <div className="mb-1.5 font-semibold text-sky-900 dark:text-sky-100">
+            Escenarios propios de tu tipo de negocio{tituloTipo ? `: ${tituloTipo}` : ""}
+          </div>
+          <p className="mb-1.5">
+            <strong className="text-red-700 dark:text-red-300">Pesimista.</strong> {delTipo.motivoPesimista}{" "}
+            <span className="text-muted-foreground">({resumenCambios(pesimista)})</span>
+          </p>
+          <p>
+            <strong className="text-emerald-700 dark:text-emerald-300">Optimista.</strong> {delTipo.motivoOptimista}{" "}
+            <span className="text-muted-foreground">({resumenCambios(optimista)})</span>
+          </p>
+          <p className="mt-1.5 text-[10px] text-muted-foreground">
+            Criterio del equipo basado en lo que más golpea a este rubro. Si tu docente configuró
+            otros valores para el curso, esos mandan.
+          </p>
+        </div>
+      )}
+
       {faltantes.length > 0 && (
         <div
           role="status"

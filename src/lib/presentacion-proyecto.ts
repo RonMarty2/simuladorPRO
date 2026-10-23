@@ -1,7 +1,10 @@
+import { indicadoresPorTipo } from "./indicadores-por-tipo";
+import { GUIA_POR_TIPO } from "./guia-por-tipo";
 import { construirFlujoCajaProyecto } from "@/lib/finanzas/proyecto-financiero";
 import { analizarSensibilidadProyecto } from "@/lib/finanzas/sensibilidad";
 import { compararEscenarios, esViable } from "@/lib/escenarios";
 import { calcularTornado } from "@/lib/analisis-riesgo";
+import { resolverEscenarios } from "@/lib/escenarios-por-tipo";
 import type {
   CategoriaInversion,
   NivelSemanaE,
@@ -19,6 +22,7 @@ export type IdDiapositivaPitch =
   | "financiamiento"
   | "flujo"
   | "indicadores"
+  | "tipo"
   | "riesgo"
   | "escenarios"
   | "montecarlo"
@@ -69,7 +73,10 @@ export function crearPresentacionPredeterminada(proyecto: Proyecto): Presentacio
     .slice(0, 3);
   const oferta = productos.length > 0 ? productos.join(", ") : "una solución sostenible";
   const lugar = proyecto.ubicacion?.trim() || "el mercado objetivo";
-  const sector = ETIQUETA_SECTOR[proyecto.sector] ?? "Proyecto de inversión";
+  const tipoTitulo = proyecto.tipoNegocio
+    ? (GUIA_POR_TIPO as Record<string, { titulo: string }>)[proyecto.tipoNegocio]?.titulo
+    : undefined;
+  const sector = tipoTitulo ?? ETIQUETA_SECTOR[proyecto.sector] ?? "Proyecto de inversión";
 
   return {
     titulo: proyecto.nombre || "Proyecto de inversión",
@@ -153,9 +160,11 @@ export function construirModeloPitch(proyecto: Proyecto) {
     viable: escenario.esViable,
   }));
 
-  // Optimista / Base / Pesimista con los valores por defecto (la presentación
+  // Optimista / Base / Pesimista propios del tipo de negocio (la presentación
   // no conoce la config del curso). Mismo cálculo que la pantalla Escenarios.
-  const escenarios = compararEscenarios(proyecto).map((e) => {
+  const escenariosDelTipo = resolverEscenarios(null, proyecto.tipoNegocio);
+  const panelTipo = indicadoresPorTipo(proyecto);
+  const escenarios = compararEscenarios(proyecto, escenariosDelTipo.optimista, escenariosDelTipo.pesimista).map((e) => {
     let acumulado = 0;
     return {
       nombre: e.etiqueta,
@@ -214,6 +223,12 @@ export function construirModeloPitch(proyecto: Proyecto) {
     { id: "flujo", titulo: "Flujo de caja", etiqueta: "07 · Cinco años", visible: true },
     { id: "indicadores", titulo: "Decisión financiera", etiqueta: "08 · Viabilidad", visible: true },
     {
+      id: "tipo",
+      titulo: "Lo propio de tu rubro",
+      etiqueta: "Indicadores del rubro",
+      visible: nivel !== "basico" && panelTipo !== null,
+    },
+    {
       id: "riesgo",
       titulo: "Escenarios y sensibilidad",
       etiqueta: "09 · Riesgo",
@@ -261,6 +276,7 @@ export function construirModeloPitch(proyecto: Proyecto) {
     financiamiento,
     riesgo,
     escenarios,
+    panelTipo,
     tornado,
     diapositivas,
     totalProyecto,
