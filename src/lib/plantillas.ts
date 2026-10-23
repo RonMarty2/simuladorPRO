@@ -213,7 +213,7 @@ function restaurante(): Proyecto {
     modeloIngreso: "unidades",
     inversiones: {
       terreno: [],
-      obrasCiviles: [inv("Construcción del salón principal", "obra", 1, 180000, 20), inv("Cocina industrial y baños", "obra", 1, 70000, 20)],
+      obrasCiviles: [inv("Adecuación y remodelación del salón principal", "obra", 1, 180000, 20), inv("Cocina industrial y baños", "obra", 1, 70000, 20)],
       maquinaria: [inv("Cocina industrial, hornos y planchas", "set", 1, 60000, 10), inv("Refrigeración y congeladores", "set", 1, 35000, 10), inv("Lavavajillas y campana extractora", "set", 1, 18000, 10)],
       mobiliario: [inv("Mesas, sillas y barra", "set", 1, 45000, 10), inv("Vajilla, cubertería y cristalería", "set", 1, 20000, 5), inv("Sonido y ambientación", "set", 1, 15000, 8)],
       activoDiferido: [inv("Licencias, registro sanitario y constitución", "global", 1, 12000, 5), inv("Diseño de marca y menú", "global", 1, 8000, 5)],
@@ -1353,12 +1353,12 @@ function edificioAlquiler(): Proyecto {
     ...base(),
     nombre: "Edificio de 8 departamentos en alquiler",
     ubicacion: "Santa Cruz, zona Equipetrol",
-    descripcion: "Compra de terreno y construcción de un edificio para alquilar. Inversión grande y flujo estable pero lento: el terreno conserva su valor y el edificio se deprecia. Ejemplo MARGINAL: la renta cubre el costo de capital sin sobrar mucho; la plusvalía del terreno es parte del retorno.",
+    descripcion: "Compra de terreno y construcción de un edificio para alquilar. Inversión grande y flujo estable pero lento: el terreno conserva su valor y el edificio se deprecia. Ejemplo de RECHAZO con costos reales de construcción: la renta rinde cerca de 6% anual y no cubre el costo de la deuda; la plusvalía del terreno sería lo único que lo sostiene.",
     sector: "servicios",
     modeloIngreso: "unidades",
     inversiones: {
       terreno: [inv("Terreno de 300 m²", "m²", 300, 1800, null)],
-      obrasCiviles: [inv("Construcción del edificio (8 departamentos)", "depto", 8, 70000, 30)],
+      obrasCiviles: [inv("Construcción del edificio (8 departamentos de unos 70 m² más áreas comunes)", "depto", 8, 400000, 30)],
       maquinaria: [inv("Ascensor y sistema contra incendios", "set", 1, 60000, 15)],
       mobiliario: [],
       activoDiferido: [inv("Planos, permisos y licencias municipales", "global", 1, 30000, 5)],
@@ -2275,7 +2275,7 @@ const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
   { clave: "festival", titulo: "Festival de música anual", emoji: "🎪", categoria: "eventos", sector: "Servicios", modelo: "unidades", modeloLabel: "Evento", escala: "Mediano", resumen: "Ingresos concentrados y cachets como costo dominante.", ensena: "Con costos fijos altos, el resultado depende de llenar el aforo. Prueba bajar la asistencia un 20% y mira qué pasa con el VAN.", veredicto: "marginal", crear: festivalMusica },
 
   // Alquiler
-  { clave: "edificio", titulo: "Edificio de departamentos en alquiler", emoji: "🏢", categoria: "alquiler", sector: "Servicios", modelo: "unidades", modeloLabel: "Renta", escala: "Grande", resumen: "Inversión grande, flujo estable y lento.", ensena: "Rentabilidad modesta con riesgo bajo: compara con una tasa de depósito. El valor residual del terreno pesa mucho en el resultado final.", veredicto: "marginal", crear: edificioAlquiler },
+  { clave: "edificio", titulo: "Edificio de departamentos en alquiler", emoji: "🏢", categoria: "alquiler", sector: "Servicios", modelo: "unidades", modeloLabel: "Renta", escala: "Grande", resumen: "Inversión grande, flujo estable y lento.", ensena: "Un edificio de renta rinde cerca de 6% al año sobre lo invertido (referencia para Cochabamba), menos que un crédito al 13%. Con una construcción a costo real (unos Bs 5.000 por m²) la renta no alcanza a pagar la cuota y el proyecto solo se sostiene si cuentas con la plusvalía del inmueble.", veredicto: "rechazo", crear: edificioAlquiler },
 
   // Tanda 2
   { clave: "flotaelectrica", titulo: "Flota de reparto eléctrica", emoji: "🔌", categoria: "costo_beneficio", sector: "Servicios", modelo: "costo_beneficio", modeloLabel: "Ahorro de costos", escala: "Mediano", resumen: "Cambiar vans diésel por eléctricas: ahorro vs inversión.", ensena: "Un ahorro anual atractivo puede no justificar una inversión grande. Prueba subir el precio del combustible y observa cuándo el proyecto pasa a ser viable.", veredicto: "marginal", crear: flotaElectrica },
