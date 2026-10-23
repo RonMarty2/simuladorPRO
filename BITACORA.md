@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-22 — eventos propios por tipo de proyecto (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
+> **Última actualización**: 2026-10-23 — eventos propios por tipo de proyecto (migraciones 034 a 045) (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -263,6 +263,16 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 027 | `curso_semana_e.sql` | Columna `cursos.es_semana_e` (BOOL). Modo evento universitario: oculta entregas/notas/podio, muestra banner + checklist al estudiante. |
 | 034 | `eventos_turismo.sql` | 10 eventos exclusivos del tipo turismo (`sectores_afectados = ['tipo:turismo']`). Aplicada el 2026-10-22. |
 | 035 | `eventos_suscripcion.sql` | 10 eventos exclusivos del tipo suscripción (`'tipo:suscripcion'`). Aplicada el 2026-10-22. |
+| 036 | `eventos_productos.sql` | 12 eventos de gastronomía, producción y comercio (`'tipo:gastronomia'`, etc.). Aplicada el 2026-10-22. |
+| 037 | `eventos_medios.sql` | 10 eventos de medios y publicidad. Aplicada el 2026-10-22. |
+| 038 | `eventos_eventos.sql` | 10 eventos de eventos y servicios con fechas pico. Aplicada el 2026-10-22. |
+| 039 | `eventos_marketing.sql` | 11 eventos de marketing y campañas. Aplicada el 2026-10-22. |
+| 040 | `eventos_social.sql` | 11 eventos de proyectos sociales y ONG. Aplicada el 2026-10-22. |
+| 041 | `eventos_costo_beneficio.sql` | 11 eventos de costo-beneficio (ahorro y eficiencia). Aplicada el 2026-10-22. |
+| 042 | `eventos_alquiler.sql` | 11 eventos de alquiler y renta de activos. Aplicada el 2026-10-23. |
+| 043 | `eventos_agricultura.sql` | 11 eventos de agricultura y agroindustria. Aplicada el 2026-10-23. |
+| 044 | `eventos_servicios.sql` | 7 eventos de servicios (solo situaciones válidas para cualquier servicio; lo de software va en tecnología). Aplicada el 2026-10-23. |
+| 045 | `eventos_tecnologia.sql` | 8 eventos de tecnología (válidos para SaaS y app de delivery). Aplicada el 2026-10-23. |
 | 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
@@ -629,7 +639,21 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         actualizada por el OTA (§7.7) tras recargar.
       - 373 tests (antes 293). Sin migraciones.
 
-### Retomar aquí (cierre de sesión 2026-10-22) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+Estado: Fase 2 del plan COMPLETA para todas las categorías con plantilla. Migraciones
+036 a 045 aplicadas en Supabase; la tabla `eventos` tiene 172 filas (50 generales y
+122 propios por tipo, 034 a 045). Publicado en `main` (a54b0cc). 469 tests en verde,
+build OK. Sin cambios de app para el alumno: solo eventos nuevos en la base. Recetas y reglas operativas: plan §5 y §6.
+
+Siguiente (en este orden sugerido): 1.2 mostrar bien la etiqueta de tipo en el lanzador
+del docente (hoy muestra `tipo:turismo`); usar las fichas sin aprovechar para eventos
+(comunicación institucional, educación pública, salud pública); Fase 3 (plantillas
+nuevas: clínica, colegio, franquicia, concesión, microcrédito); Fase 4 (variables e
+indicadores propios por tipo: cambia fórmulas, REQUIERE OK del owner). Pendientes del
+owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
+tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
+
+### Retomar aquí (cierre de sesión 2026-10-22)
 Objetivo del owner: un simulador con distintos tipos de proyecto, donde las
 situaciones y la forma de evaluar cambian según el tipo (productos, costo-beneficio,
 social, marketing, suscripción, turismo...), con ejemplos de datos simulados.
