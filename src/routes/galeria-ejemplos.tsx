@@ -12,6 +12,7 @@ import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 import DetalleEntregaPasoAPaso from "@/components/docente/DetalleEntregaPasoAPaso";
+import PanelIndicadoresTipo from "@/components/constructor/PanelIndicadoresTipo";
 import { useAuthStore } from "@/stores/auth-store";
 import { listarMisCursos, type Curso } from "@/lib/cursos-supabase";
 import { guardarProyecto, publicarPlantillaComoCaso } from "@/lib/proyecto-supabase";
@@ -513,6 +514,8 @@ function VisorPlantilla({
               {plantilla.ensena}
             </div>
           )}
+
+          <PanelIndicadoresTipo proyecto={proyecto} />
 
           <DetalleEntregaPasoAPaso proyecto={proyecto} pasoEntregado={null} />
         </div>
