@@ -658,12 +658,19 @@ Fase 3 hecha: 5 plantillas nuevas en la galería (clínica, colegio, franquicia,
 de agua, microcrédito; categorías salud_privada, educacion_privada, franquicia, concesion,
 microcredito) con sus eventos propios (048 a 052). Sus cifras son estimaciones del equipo,
 no datos auditados: calibrarlas con gremios (sección 10 de cada ficha).
-Fase 4 (camino A, panel de indicadores sin tocar fórmulas) iniciada: turismo hecho
-(indicadores de ocupación, tarifa promedio, RevPAR, ocupación de equilibrio, meses de caja y peso
-de comisiones en el resumen final del constructor; campo opcional `capacidadAnual`). El ejemplo
-del hostal se recalibró: con 100% de ocupación parecía excelente, con 70% es marginal.
-Siguiente: Fase 4 en los demás tipos (orden en el plan 4.2) y Fase 5
-(calibración con datos de Bolivia y prueba en la app real de un proyecto de cada tipo).
+Fase 4 (camino A, panel de indicadores sin tocar fórmulas) HECHA para todos los tipos:
+`lib/indicadores-por-tipo.ts` + `components/constructor/PanelIndicadoresTipo.tsx`, mostrado en el
+resumen final del constructor (Paso9Resumen) según `tipoNegocio`. Hay paneles de turismo,
+suscripción, salud privada, microcrédito, social, alquiler, medios, ahorro, marketing y un panel
+general (gastronomía, producción, comercio, servicios, tecnología, educación privada, franquicia,
+concesión, agricultura y eventos); las 56 plantillas tienen panel. Campos opcionales nuevos:
+`Proyecto.capacidadAnual`, `Proyecto.beneficiarios` y `Producto.capacidadAnual`. Los umbrales de
+color y los días ilustrativos (cobrar a 45 o 90 días, stock de 10 a 60 días) son criterios del
+equipo, no datos de Bolivia: calibrarlos en la Fase 5. El hostal se recalibró (70% de ocupación).
+Lección: el comando `npx tsc --noEmit -p .` de la raíz NO revisa tipos; la compuerta real es
+`npm run build`. Falta (4.3): llevar estos indicadores también al diagnóstico pedagógico y al
+boletín. Siguiente: Fase 5 (calibración con datos de Bolivia y prueba en la app real de un
+proyecto de cada tipo, que requiere sesión de estudiante).
 Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
 
