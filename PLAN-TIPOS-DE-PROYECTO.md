@@ -71,8 +71,8 @@ posterior a la 033.
 | ahorro-eficiencia | costo_beneficio | HECHO (041) |
 | alquiler-activos | alquiler | HECHO (042, aplicada) |
 | agro-campana | agricultura | HECHO (043, aplicada) |
-| servicios-software-a-medida | servicios (generales); lo de software queda para tecnologia | ESCRITO (044, 7 eventos), falta aplicar |
-| plataforma-marketplace | tecnologia (app delivery) | pendiente |
+| servicios-software-a-medida | servicios (generales); lo de software queda para tecnologia | HECHO (044, aplicada) |
+| plataforma-marketplace | tecnologia (app delivery y SaaS) | ESCRITO (045, 8 eventos), falta aplicar |
 | salud-privada, educacion-privada, franquicia-licencia, concesion-infraestructura, microcredito-finanzas | (no existe categoría ni plantilla) | falta crear plantillas |
 | B6 cultural, B7 TI interna, B8 infraestructura pública, B9 cumplimiento | (sin ficha todavía) | falta investigar |
 
@@ -105,7 +105,7 @@ Un paso por fila de la tabla del §3. Procedimiento por tipo en el §5.
 - [x] 2.3 gastronomia + produccion + comercio (producto-unidades): migracion 036, 12 eventos. APLICADA 2026-10-22.
 - [x] 2.4 medios (037, 10 eventos, APLICADA 2026-10-22)   - [x] 2.5 eventos (038, 10 eventos, APLICADA 2026-10-22)   - [x] 2.6 marketing (039, 11 eventos, APLICADA 2026-10-22)   - [x] 2.7 social (040, 11 eventos de social-ong, APLICADA 2026-10-22; faltan usar las fichas educacion-publica y salud-publica)
 - [x] 2.8 costo_beneficio (041, 11 eventos, APLICADA 2026-10-22)   - [x] 2.9 alquiler (042, 11 eventos, APLICADA 2026-10-23)   - [x] 2.10 agricultura (043, 11 eventos, APLICADA 2026-10-23)
-- [x] 2.11 servicios (044, 7 eventos, FALTA APLICAR)   - [ ] 2.12 tecnologia
+- [x] 2.11 servicios (044, 7 eventos, APLICADA 2026-10-23)   - [x] 2.12 tecnologia (045, 8 eventos, FALTA APLICAR)
 
 ### Fase 3. Plantillas de ejemplo nuevas (datos simulados)
 Para los tipos sin categoría: clínica privada, colegio o instituto privado,
