@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { PLANTILLAS } from "./plantillas";
 import { GUIA_POR_TIPO, SECTOR_POR_TIPO, terrenoAtipico } from "./guia-por-tipo";
 import { diagnosticarProyecto } from "./diagnostico-pedagogico";
-import { GUIA_EXTRA_POR_TIPO } from "./guia-extra-por-tipo";
+import { GUIA_EXTRA_POR_TIPO, MESES_BUFFER_POR_TIPO } from "./guia-extra-por-tipo";
+import { calcularCapitalTrabajoBase } from "./flujo-proyecto";
 import { construirFlujoCaja } from "./flujo-proyecto";
 
 const terrenoDe = (p: ReturnType<(typeof PLANTILLAS)[number]["crear"]>) =>
@@ -45,6 +46,22 @@ describe("guía por tipo de negocio", () => {
       expect(g.proyeccion.length, tipo + " proyeccion").toBeGreaterThan(0);
       expect(g.capital.length, tipo + " capital").toBeGreaterThan(0);
       expect(g.financiamiento.length, tipo + " financiamiento").toBeGreaterThan(0);
+    }
+  });
+
+  it("el capital de trabajo de cada ejemplo cubre lo que calcula el Paso 8 con el buffer de su tipo", () => {
+    for (const pl of PLANTILLAS) {
+      const p = pl.crear();
+      expect(p.mesesBufferCapitalTrabajo, pl.clave).toBe(MESES_BUFFER_POR_TIPO[pl.categoria]);
+      expect(p.capitalTrabajo, pl.clave).toBeGreaterThanOrEqual(calcularCapitalTrabajoBase(p) - 1);
+    }
+  });
+
+  it("cada ejemplo respeta su etiqueta: viable y marginal ganan, rechazo pierde, sin etiqueta gana", () => {
+    for (const pl of PLANTILLAS) {
+      const van = (construirFlujoCaja(pl.crear()) as any).indicadores.van;
+      if (pl.veredicto === "rechazo") expect(van, pl.clave).toBeLessThan(0);
+      else expect(van, pl.clave).toBeGreaterThan(0);
     }
   });
 

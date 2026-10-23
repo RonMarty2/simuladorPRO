@@ -108,3 +108,31 @@ export const GUIA_EXTRA_POR_TIPO: Record<CategoriaPlantilla, GuiaTipoExtra> = {
     financiamiento: ["Fondeo con depósitos, líneas de bancos o fondos de inversión", "Pregúntate qué pasa si el financista te retira la línea"],
   },
 };
+
+/**
+ * Meses de costos operativos que conviene tener como capital de trabajo, por tipo.
+ * Es el "buffer" del Paso 8: el capital sale de (costos operativos del año 1 x meses / 12).
+ * Un restaurante repone insumos cada semana; una campaña agrícola gasta meses antes de
+ * cosechar; una plataforma gasta casi todo antes de vender. Criterio del equipo.
+ */
+export const MESES_BUFFER_POR_TIPO: Record<CategoriaPlantilla, number> = {
+  gastronomia: 2,
+  produccion: 3,
+  comercio: 2,
+  servicios: 2,
+  suscripcion: 3,
+  medios: 3,
+  turismo: 3,
+  agricultura: 6,
+  costo_beneficio: 1,
+  marketing: 1,
+  social: 3,
+  eventos: 3,
+  alquiler: 3,
+  tecnologia: 6,
+  salud_privada: 3,
+  educacion_privada: 3,
+  franquicia: 3,
+  concesion: 2,
+  microcredito: 3,
+};
