@@ -273,6 +273,8 @@ muestra el desglose A/B/C/D con barras (qué eligió el alumno).
 | 043 | `eventos_agricultura.sql` | 11 eventos de agricultura y agroindustria. Aplicada el 2026-10-23. |
 | 044 | `eventos_servicios.sql` | 7 eventos de servicios (solo situaciones válidas para cualquier servicio; lo de software va en tecnología). Aplicada el 2026-10-23. |
 | 045 | `eventos_tecnologia.sql` | 8 eventos de tecnología (válidos para SaaS y app de delivery). Aplicada el 2026-10-23. |
+| 046 | `eventos_comunicacion.sql` | 7 eventos de comunicación institucional para el tipo marketing (MKT012-MKT018). Aplicada el 2026-10-23. |
+| 047 | `eventos_educacion_salud.sql` | 8 eventos de educación y salud públicas para el tipo social (SOC012-SOC019). Aplicada el 2026-10-23. |
 | 033 | `docente_lanza_evento_rpc.sql` | Función SECURITY DEFINER `lanzar_evento_a_simulaciones(uuid[], text)`: el docente solo podía LEER simulaciones, el UPDATE de `evento_forzado_id` no afectaba filas ("llegó a 0 alumnos"). La función solo escribe ese campo en simulaciones activas de cursos del docente. Aplicada el 2026-10-18. (028-032: Semana E y grupos, ver archivos.) |
 
 ---
@@ -641,13 +643,13 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
 
 ### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
 Estado: Fase 2 del plan COMPLETA para todas las categorías con plantilla. Migraciones
-036 a 045 aplicadas en Supabase; la tabla `eventos` tiene 172 filas (50 generales y
-122 propios por tipo, 034 a 045). Publicado en `main` (a54b0cc). 469 tests en verde,
+036 a 047 aplicadas en Supabase; la tabla `eventos` tiene 187 filas (50 generales y
+137 propios por tipo, 034 a 047). Publicado en `main` (a54b0cc). 469 tests en verde,
 build OK. Sin cambios de app para el alumno: solo eventos nuevos en la base. Recetas y reglas operativas: plan §5 y §6.
 
-Siguiente (en este orden sugerido): 1.2 mostrar bien la etiqueta de tipo en el lanzador
-del docente (hoy muestra `tipo:turismo`); usar las fichas sin aprovechar para eventos
-(comunicación institucional, educación pública, salud pública); Fase 3 (plantillas
+Hecho también: 1.2 (el lanzador del docente muestra el nombre del tipo) y las fichas
+de comunicación, educación y salud públicas ya tienen eventos (046, 047).
+Siguiente: Fase 3 (plantillas
 nuevas: clínica, colegio, franquicia, concesión, microcrédito); Fase 4 (variables e
 indicadores propios por tipo: cambia fórmulas, REQUIERE OK del owner). Pendientes del
 owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4

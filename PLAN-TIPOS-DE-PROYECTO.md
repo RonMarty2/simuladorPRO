@@ -66,8 +66,8 @@ posterior a la 033.
 | producto-unidades | gastronomia, produccion, comercio | HECHO (036) |
 | publicidad-medios | medios | HECHO (037) |
 | eventos-servicios-sorpresa | eventos | HECHO (038) |
-| marketing (+ comunicacion-institucional) | marketing | HECHO (039 y 046, comunicacion institucional escrita y por aplicar) |
-| social-ong + educacion-publica + salud-publica | social | HECHO (040 social-ong aplicado; 047 educacion y salud publicas escrita y por aplicar) |
+| marketing (+ comunicacion-institucional) | marketing | HECHO (039 y 046, aplicadas) |
+| social-ong + educacion-publica + salud-publica | social | HECHO (040 social-ong aplicado; 047 educacion y salud publicas aplicada) |
 | ahorro-eficiencia | costo_beneficio | HECHO (041) |
 | alquiler-activos | alquiler | HECHO (042, aplicada) |
 | agro-campana | agricultura | HECHO (043, aplicada) |
