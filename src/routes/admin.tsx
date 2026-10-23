@@ -24,6 +24,7 @@ import {
 import type { Perfil, Rol } from "@/types/usuario";
 import { cn } from "@/lib/utils";
 import { puedeAdministrarSemanaE } from "@/lib/permisos-admin";
+import { confirmar } from "@/components/ui/confirmar";
 
 type Tab = "usuarios" | "cursos" | "proyectos";
 
@@ -202,7 +203,7 @@ function FilaUsuario({ usuario, onCambio }: { usuario: Perfil; onCambio: () => v
   };
 
   const toggleAdmin = async () => {
-    if (!confirm(`¿${usuario.es_admin ? "Quitar" : "Dar"} permisos de admin a ${usuario.email}?`)) return;
+    if (!(await confirmar(`¿${usuario.es_admin ? "Quitar" : "Dar"} permisos de admin a ${usuario.email}?`))) return;
     setCambiando(true);
     try {
       await setearAdmin(usuario.id, !usuario.es_admin);
@@ -275,7 +276,7 @@ function TabCursos() {
   }, []);
 
   const borrar = async (id: string, nombre: string) => {
-    if (!confirm(`¿Borrar definitivamente el curso "${nombre}" y TODOS sus proyectos y entregas?`)) return;
+    if (!(await confirmar(`¿Borrar definitivamente el curso "${nombre}" y TODOS sus proyectos y entregas?`, { textoOk: "Borrar", peligro: true }))) return;
     await borrarCursoComoAdmin(id);
     cargar();
   };
@@ -408,7 +409,7 @@ function TabProyectos() {
 
   const traerAMisProyectos = async (p: any) => {
     if (!user) return;
-    if (!confirm(`¿Traer una copia de "${p.nombre}" a tus proyectos? El original no se toca.`)) return;
+    if (!(await confirmar(`¿Traer una copia de "${p.nombre}" a tus proyectos? El original no se toca.`))) return;
     setClonandoId(p.id);
     setAviso(null);
     try {

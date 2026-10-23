@@ -18,6 +18,7 @@ import type { Curso } from "@/lib/cursos-supabase";
 import type { Evento } from "@/types/evento";
 import { cn } from "@/lib/utils";
 import { etiquetaSectorEvento } from "@/lib/lanzador-eventos";
+import { confirmar } from "@/components/ui/confirmar";
 
 /**
  * Lanzador de situaciones en vivo. El docente elige un evento del catálogo
@@ -156,9 +157,10 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   const lanzar = async () => {
     if (!seleccionado || !user) return;
     if (
-      !window.confirm(
-        `¿Lanzar «${seleccionado.titulo}» al curso ahora? Afecta a los alumnos en vivo y no se puede deshacer.`
-      )
+      !(await confirmar(
+        `¿Lanzar «${seleccionado.titulo}» al curso ahora? Afecta a los alumnos en vivo y no se puede deshacer.`,
+        { textoOk: "Lanzar" }
+      ))
     ) {
       return;
     }

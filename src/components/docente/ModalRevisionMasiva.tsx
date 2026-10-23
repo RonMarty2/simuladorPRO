@@ -4,6 +4,7 @@ import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
+import { confirmar } from "@/components/ui/confirmar";
 
 /**
  * Modal de "revisar todas las entregas pendientes del estudiante / grupo de
@@ -73,9 +74,9 @@ export default function ModalRevisionMasiva({
     setEstados((prev) => ({ ...prev, [id]: { ...prev[id], ...cambios } }));
   };
 
-  const aplicarATodas = () => {
+  const aplicarATodas = async () => {
     if (!estadoActual) return;
-    if (!confirm("¿Aplicar esta misma decisión, nota y comentario a todas las etapas?")) return;
+    if (!(await confirmar("¿Aplicar esta misma decisión, nota y comentario a todas las etapas?", { textoOk: "Aplicar" }))) return;
     setEstados((prev) => {
       const next = { ...prev };
       for (const e of ordenadas) {

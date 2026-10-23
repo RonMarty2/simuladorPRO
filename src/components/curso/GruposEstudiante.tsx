@@ -41,6 +41,7 @@ import {
   type NivelSemanaE,
 } from "@/lib/semana-e";
 import { cn } from "@/lib/utils";
+import { confirmar } from "@/components/ui/confirmar";
 
 export default function GruposEstudiante({
   curso,
@@ -103,9 +104,10 @@ export default function GruposEstudiante({
     const eliminaEquipo = curso.es_semana_e && miGrupoDetalle?.miembros.length === 1;
     if (
       eliminaEquipo &&
-      !window.confirm(
-        "Eres el último integrante. Al continuar se eliminarán este equipo y su proyecto de Semana E. ¿Deseas eliminarlos?"
-      )
+      !(await confirmar(
+        "Eres el último integrante. Al continuar se eliminarán este equipo y su proyecto de Semana E. ¿Deseas eliminarlos?",
+        { textoOk: "Eliminar", peligro: true }
+      ))
     ) {
       return;
     }

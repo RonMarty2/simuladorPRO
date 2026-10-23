@@ -6,6 +6,7 @@ import RootLayout from "@/components/layout/RootLayout";
 import Login from "@/routes/login";
 import Registro from "@/routes/registro";
 import SemanaEEntrada from "@/routes/semana-e-entrada";
+import { ConfirmarHost } from "@/components/ui/confirmar";
 
 // El resto de rutas se cargan bajo demanda (code-splitting). Esto saca del
 // bundle inicial las librerías pesadas que solo viven en algunas rutas:
@@ -36,6 +37,8 @@ function Cargando() {
 
 export default function App() {
   return (
+    <>
+    <ConfirmarHost />
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
@@ -169,5 +172,6 @@ export default function App() {
         }
       />
     </Routes>
+    </>
   );
 }

@@ -27,6 +27,7 @@ import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
 import PanelPostmortem from "@/components/simulacion/PanelPostmortem";
 import type { OpcionDecision } from "@/types/evento";
 import type { Proyecto } from "@/types/proyecto";
+import { confirmar } from "@/components/ui/confirmar";
 
 export default function SimularProyecto() {
   const user = useAuthStore((s) => s.user);
@@ -207,8 +208,8 @@ export default function SimularProyecto() {
             </div>
           </div>
           <button
-            onClick={() => {
-              if (window.confirm("¿Abandonar la simulación? Se perderá el avance de esta simulación.")) {
+            onClick={async () => {
+              if (await confirmar("¿Abandonar la simulación? Se perderá el avance de esta simulación.", { textoOk: "Abandonar", peligro: true })) {
                 abandonar();
               }
             }}

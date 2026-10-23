@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto";
 import { eliminarProyecto, listarCasosDelCurso } from "@/lib/proyecto-supabase";
 import type { Proyecto } from "@/types/proyecto";
+import { confirmar } from "@/components/ui/confirmar";
 
 const fmtFecha = (s?: string | null) =>
   s ? new Date(s).toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -30,7 +31,7 @@ export default function CasosCurso({ cursoId }: { cursoId: string }) {
   };
 
   const borrar = async (p: Proyecto) => {
-    if (!confirm(`¿Borrar definitivamente el caso "${p.nombre}"? Los estudiantes que ya lo tomaron mantienen su copia, pero nadie nuevo podrá tomarlo.`)) return;
+    if (!(await confirmar(`¿Borrar definitivamente el caso "${p.nombre}"? Los estudiantes que ya lo tomaron mantienen su copia, pero nadie nuevo podrá tomarlo.`, { textoOk: "Borrar", peligro: true }))) return;
     setBorrandoId(p.id);
     setError(null);
     try {

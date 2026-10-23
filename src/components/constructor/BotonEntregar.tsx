@@ -9,6 +9,7 @@ import {
 } from "@/lib/proyecto-supabase";
 import { obtenerCursoPorId } from "@/lib/cursos-supabase";
 import type { Entrega } from "@/types/proyecto";
+import { confirmar } from "@/components/ui/confirmar";
 
 interface Props {
   indicadores: IndicadoresEntrega;
@@ -80,7 +81,7 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
 
   const entregar = async () => {
     if (!proyecto) return;
-    if (!window.confirm("¿Entregar esta etapa al docente para su revisión?")) return;
+    if (!(await confirmar("¿Entregar esta etapa al docente para su revisión?", { textoOk: "Entregar" }))) return;
     setEntregando(true);
     setMensaje(null);
     try {

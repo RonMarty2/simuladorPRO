@@ -31,6 +31,7 @@ import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEst
 import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
 import { datosFaltantes } from "@/lib/datos-faltantes";
+import { confirmar } from "@/components/ui/confirmar";
 
 const TOTAL_PASOS = 9;
 
@@ -184,7 +185,7 @@ export default function ConstruirProyecto() {
 
   const abandonarProyecto = async () => {
     if (!proyecto) return;
-    if (!confirm(`¿Borrar definitivamente "${proyecto.nombre}"?`)) return;
+    if (!(await confirmar(`¿Borrar definitivamente "${proyecto.nombre}"?`, { textoOk: "Borrar", peligro: true }))) return;
     await eliminarProyecto(proyecto.id);
     limpiar();
     // Limpia el proyecto activo de localStorage para que la siguiente carga

@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, X, XCircle, Zap } from "lucide-react";
 import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
+import { confirmar } from "@/components/ui/confirmar";
 
 /**
  * Modal "Calificar todo igual" — el caso típico: el docente ya miró el trabajo
@@ -30,9 +31,10 @@ export default function ModalCalificarTodoIgual({
 
   const guardar = async () => {
     if (entregas.length === 0) return;
-    if (!confirm(
-      `Vas a poner ${decision === "aprobada" ? "APROBADA" : "REPROBADA"} con nota ${nota} a las ${entregas.length} etapas pendientes de ${titular}. ¿Confirmas?`
-    )) return;
+    if (!(await confirmar(
+      `Vas a poner ${decision === "aprobada" ? "APROBADA" : "REPROBADA"} con nota ${nota} a las ${entregas.length} etapas pendientes de ${titular}. ¿Confirmas?`,
+      { textoOk: "Confirmar" }
+    ))) return;
     setGuardando(true);
     setError(null);
     try {
