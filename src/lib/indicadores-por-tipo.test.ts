@@ -88,6 +88,28 @@ describe("indicadores propios por tipo", () => {
     }
   });
 
+  it("el microcrédito muestra margen, autosuficiencia y el efecto de duplicar la mora", () => {
+    const panel = indicadoresPorTipo(crear("microcredito"));
+    expect(panel).not.toBeNull();
+    expect(ids(panel)).toEqual(
+      expect.arrayContaining(["ingreso-credito", "margen-financiero", "autosuficiencia", "mora-doble", "creditos-por-oficial", "rentabilidad-capital"])
+    );
+  });
+
+  it("sin costos de mora no aparece el indicador de mora doble", () => {
+    const p = crear("microcredito");
+    p.costosDirectos = p.costosDirectos.filter((c) => !/mora|previsi/i.test(c.descripcion));
+    expect(ids(indicadoresPorTipo(p))).not.toContain("mora-doble");
+  });
+
+  it("todas las plantillas de microcrédito calculan sin errores", () => {
+    for (const pl of PLANTILLAS.filter((x) => x.categoria === "microcredito")) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
   it("todas las plantillas de turismo calculan sin errores", () => {
     for (const pl of PLANTILLAS.filter((x) => x.categoria === "turismo")) {
       const panel = indicadoresPorTipo(pl.crear());

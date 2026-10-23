@@ -10,7 +10,7 @@ import type { Proyecto } from "../types/proyecto";
  * cambian el VAN, la TIR ni la caja de nadie. Si falta un dato opcional (por
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
- * Hoy existen los paneles de turismo, suscripción y salud privada. Los demás tipos devuelven null.
+ * Hoy existen los paneles de turismo, suscripción, salud privada y microcrédito. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -37,6 +37,7 @@ export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null 
   if (proyecto.tipoNegocio === "turismo") return indicadoresTurismo(proyecto);
   if (proyecto.tipoNegocio === "suscripcion") return indicadoresSuscripcion(proyecto);
   if (proyecto.tipoNegocio === "salud_privada") return indicadoresSaludPrivada(proyecto);
+  if (proyecto.tipoNegocio === "microcredito") return indicadoresMicrocredito(proyecto);
   return null;
 }
 
@@ -416,6 +417,124 @@ function indicadoresSaludPrivada(p: Proyecto): PanelIndicadores | null {
     titulo: "Indicadores de salud privada",
     introduccion:
       "Estas métricas son las que mira un gerente de clínica. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresMicrocredito(p: Proyecto): PanelIndicadores | null {
+  if (p.modeloIngreso === "costo_beneficio" || p.productos.length === 0) return null;
+
+  const flujo = construirFlujoCaja(p);
+  const ing1 = flujo.ingresos?.[0] ?? 0;
+  if (ing1 <= 0) return null;
+
+  // Créditos colocados el año 1 (el producto con más unidades es el crédito; el resto son comisiones sobre ellos).
+  const creditos = Math.max(...p.productos.map((x) => Number(x.cantidades?.[0] ?? 0)));
+  if (creditos <= 0) return null;
+
+  // Costos directos del año 1 por tipo, según su descripción.
+  const total = (re: RegExp) =>
+    (p.costosDirectos ?? [])
+      .filter((c) => re.test(c.descripcion.toLowerCase()))
+      .reduce((a, c) => {
+        const prod = p.productos.find((x) => x.id === c.productoId);
+        const unidades = prod ? Number(prod.cantidades?.[0] ?? 0) : creditos;
+        return a + c.cantidadPorUnidad * c.costoUnitario * unidades;
+      }, 0);
+  const fondeo = total(/fondeo/);
+  const mora = total(/mora|previsi/);
+
+  const gastosOperativos =
+    (flujo.personal?.[0] ?? 0) + (flujo.gastosAdmin?.[0] ?? 0) + (flujo.gastosComerc?.[0] ?? 0) + (flujo.imprevistos?.[0] ?? 0);
+  const resultado = ing1 - (flujo.costosProduccion?.[0] ?? 0) - gastosOperativos;
+
+  const indicadores: IndicadorPropio[] = [];
+
+  indicadores.push({
+    id: "ingreso-credito",
+    nombre: "Ingreso por crédito (intereses y comisiones)",
+    valor: bs(ing1 / creditos),
+    detalle:
+      "Lo que te deja cada crédito colocado en el año 1 antes de costos. La tasa no se elige: se despeja del costo de fondeo, la mora y los gastos de operar.",
+    severidad: "info",
+  });
+
+  if (fondeo > 0 || mora > 0) {
+    const margen = (ing1 - fondeo - mora) / ing1;
+    indicadores.push({
+      id: "margen-financiero",
+      nombre: "Margen después de fondeo y mora",
+      valor: pct(margen),
+      detalle: `De cada boliviano que cobras, ${pct(fondeo / ing1)} se va en el costo de la plata que prestas y ${pct(mora / ing1)} en la previsión por mora. Lo que queda tiene que pagar oficiales, oficina y todo lo demás.`,
+      severidad: margen < 0.3 ? "advertencia" : "ok",
+    });
+  }
+
+  if (gastosOperativos > 0 && (fondeo > 0 || mora > 0)) {
+    const autosuficiencia = (ing1 - fondeo - mora) / gastosOperativos;
+    indicadores.push({
+      id: "autosuficiencia",
+      nombre: "Autosuficiencia operativa",
+      valor: `${autosuficiencia.toFixed(2).replace(".", ",")} veces`,
+      detalle:
+        autosuficiencia < 1
+          ? "Tu margen financiero no alcanza a pagar tus gastos de operar: la cooperativa se come su propio capital."
+          : "Cuántas veces el margen financiero cubre tus gastos de operar. Debajo de 1 pierdes; cerca de 1 no tienes colchón para la mora.",
+      severidad: autosuficiencia < 1 ? "critico" : autosuficiencia < 1.2 ? "advertencia" : "ok",
+    });
+  }
+
+  // ¿Qué pasa si la mora se duplica?
+  if (mora > 0) {
+    const conMoraDoble = resultado - mora;
+    indicadores.push({
+      id: "mora-doble",
+      nombre: "Resultado del año 1 si la mora se duplica",
+      valor: bs(conMoraDoble),
+      detalle: `Hoy el resultado operativo del año 1 es ${bs(resultado)}. ${
+        conMoraDoble < 0
+          ? "Con la previsión por mora al doble, pasas a pérdida: la mora es lo que decide este negocio."
+          : conMoraDoble < resultado * 0.5
+            ? "Con la previsión al doble pierdes más de la mitad del resultado: tienes poco margen para una crisis."
+            : "Con la previsión al doble sigues ganando una parte importante."
+      }`,
+      severidad: conMoraDoble < 0 ? "critico" : conMoraDoble < resultado * 0.5 ? "advertencia" : "ok",
+    });
+  }
+
+  // Productividad de los oficiales de crédito
+  const oficiales = (p.personal ?? [])
+    .filter((x) => /oficial|asesor/i.test(x.puesto))
+    .reduce((a, x) => a + x.cantidad, 0);
+  if (oficiales > 0) {
+    const porOficial = creditos / oficiales;
+    indicadores.push({
+      id: "creditos-por-oficial",
+      nombre: "Créditos colocados por oficial de crédito al año",
+      valor: Math.round(porOficial).toLocaleString("es-BO"),
+      detalle:
+        "Un oficial que coloca más créditos baja tu costo por crédito, pero si va demasiado rápido analiza menos y la mora aparece un año después.",
+      severidad: "info",
+    });
+  }
+
+  // Rentabilidad sobre el dinero que se presta
+  if (p.capitalTrabajo > 0) {
+    const rent = resultado / p.capitalTrabajo;
+    indicadores.push({
+      id: "rentabilidad-capital",
+      nombre: "Resultado del año 1 sobre el capital que prestas",
+      valor: pct(rent, 1),
+      detalle:
+        "Resultado operativo del año 1 (antes de impuestos, intereses y depreciación) dividido entre tu capital de trabajo, que aquí es la plata que se presta. No es la TIR del proyecto: sirve para comparar con lo que te pagaría dejar esa plata en un depósito a plazo fijo.",
+      severidad: rent <= 0 ? "critico" : rent < 0.05 ? "advertencia" : "ok",
+    });
+  }
+
+  return {
+    titulo: "Indicadores de microcrédito y finanzas",
+    introduccion:
+      "Estas métricas son las que mira una cooperativa o una entidad de microfinanzas. Son informativas: no cambian tu VAN ni tu flujo de caja.",
     indicadores,
   };
 }
