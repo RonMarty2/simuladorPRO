@@ -39,6 +39,29 @@ describe("indicadores propios por tipo", () => {
     expect(indicadoresPorTipo(crear("clinica"))).toBeNull();
   });
 
+  it("el gimnasio muestra los indicadores de suscripción", () => {
+    const panel = indicadoresPorTipo(crear("gimnasio"));
+    expect(panel).not.toBeNull();
+    expect(ids(panel)).toEqual(
+      expect.arrayContaining(["mrr", "arpu", "churn", "cac", "recuperacion-cac", "ltv-cac", "base-equilibrio"])
+    );
+  });
+
+  it("todas las plantillas de suscripción calculan sin errores", () => {
+    for (const pl of PLANTILLAS.filter((x) => x.categoria === "suscripcion")) {
+      const panel = indicadoresPorTipo(pl.crear());
+      expect(panel, pl.clave).not.toBeNull();
+      for (const i of panel!.indicadores) expect(i.valor + i.detalle, pl.clave + i.id).not.toMatch(/NaN|Infinity/);
+    }
+  });
+
+  it("bajas muy altas hacen que la base nunca llegue al equilibrio", () => {
+    const p = crear("gimnasio");
+    p.suscripcionV2!.churnMensual = 0.4;
+    const panel = indicadoresPorTipo(p)!;
+    expect(panel.indicadores.find((i) => i.id === "base-equilibrio")!.severidad).toBe("critico");
+  });
+
   it("todas las plantillas de turismo calculan sin errores", () => {
     for (const pl of PLANTILLAS.filter((x) => x.categoria === "turismo")) {
       const panel = indicadoresPorTipo(pl.crear());

@@ -1,5 +1,6 @@
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { calcularEquilibrioPorProducto } from "./equilibrio-por-producto";
+import { obtenerPlanesSuscripcion } from "./planes-suscripcion";
 import type { Proyecto } from "../types/proyecto";
 
 /**
@@ -9,7 +10,7 @@ import type { Proyecto } from "../types/proyecto";
  * cambian el VAN, la TIR ni la caja de nadie. Si falta un dato opcional (por
  * ejemplo la capacidad), el indicador que lo necesita simplemente no aparece.
  *
- * Hoy existe el panel de turismo. Los demás tipos devuelven null.
+ * Hoy existen los paneles de turismo y suscripción. Los demás tipos devuelven null.
  */
 
 export type SeveridadIndicador = "ok" | "info" | "advertencia" | "critico";
@@ -34,6 +35,7 @@ const bs = (x: number) => `Bs ${Math.round(x).toLocaleString("es-BO")}`;
 
 export function indicadoresPorTipo(proyecto: Proyecto): PanelIndicadores | null {
   if (proyecto.tipoNegocio === "turismo") return indicadoresTurismo(proyecto);
+  if (proyecto.tipoNegocio === "suscripcion") return indicadoresSuscripcion(proyecto);
   return null;
 }
 
@@ -149,6 +151,142 @@ function indicadoresTurismo(p: Proyecto): PanelIndicadores | null {
     titulo: "Indicadores de turismo y hospitalidad",
     introduccion:
       "Estas métricas son las que usa un hotel, hostal u operadora para decidir. Son informativas: no cambian tu VAN ni tu flujo de caja.",
+    indicadores,
+  };
+}
+
+function indicadoresSuscripcion(p: Proyecto): PanelIndicadores | null {
+  if (p.modeloIngreso !== "suscripcion") return null;
+  const planes = obtenerPlanesSuscripcion(p);
+  if (planes.length === 0) return null;
+
+  // Cada plan pesa según los clientes que maneja (base inicial más altas de un mes).
+  const peso = (x: (typeof planes)[number]) => x.suscriptoresIniciales + x.altasMensuales;
+  const pesoTotal = planes.reduce((a, x) => a + peso(x), 0);
+  if (pesoTotal <= 0) return null;
+
+  const subs0 = planes.reduce((a, x) => a + x.suscriptoresIniciales, 0);
+  const altas = planes.reduce((a, x) => a + x.altasMensuales, 0);
+  const mrr0 = planes.reduce((a, x) => a + x.suscriptoresIniciales * x.cuotaMensual, 0);
+  const arpu = planes.reduce((a, x) => a + peso(x) * x.cuotaMensual, 0) / pesoTotal;
+  const churn = planes.reduce((a, x) => a + peso(x) * x.churnMensual, 0) / pesoTotal;
+  if (arpu <= 0) return null;
+
+  const flujo = construirFlujoCaja(p);
+  const eq = calcularEquilibrioPorProducto(p);
+  const ing1 = flujo.ingresos?.[0] ?? 0;
+  if (ing1 <= 0) return null;
+
+  // Costo variable por cliente-mes: costos directos del año 1 entre los clientes-mes que los generaron.
+  const clientesMes = ing1 / arpu;
+  const costoVarMes = (flujo.costosProduccion?.[0] ?? 0) / clientesMes;
+  const margenMes = arpu - costoVarMes;
+
+  const indicadores: IndicadorPropio[] = [];
+
+  indicadores.push({
+    id: "mrr",
+    nombre: "Ingreso recurrente mensual de arranque (MRR)",
+    valor: bs(mrr0),
+    detalle:
+      "Lo que cobrarías cada mes con los clientes con los que empiezas, si no se fuera ni llegara nadie. Es la base sobre la que se construye el resto.",
+    severidad: "info",
+  });
+
+  indicadores.push({
+    id: "arpu",
+    nombre: "Cuota promedio por cliente (ARPU)",
+    valor: `${bs(arpu)}/mes`,
+    detalle: `Después de los costos directos por cliente te quedan ${bs(margenMes)} al mes por cada uno. Ese margen paga tus costos fijos.`,
+    severidad: margenMes <= 0 ? "critico" : "info",
+  });
+
+  if (churn > 0) {
+    const anual = 1 - Math.pow(1 - churn, 12);
+    indicadores.push({
+      id: "churn",
+      nombre: "Bajas por mes (churn)",
+      valor: pct(churn, 1),
+      detalle: `Equivale a perder ${pct(anual)} de tus clientes en un año, y cada cliente se queda en promedio ${(1 / churn).toFixed(0)} meses. Retener es más barato que conseguir clientes nuevos.`,
+      severidad: anual > 0.6 ? "advertencia" : "ok",
+    });
+  }
+
+  const gastoCaptacionMes = (flujo.gastosComerc?.[0] ?? 0) / 12;
+  if (altas > 0 && gastoCaptacionMes > 0) {
+    const cac = gastoCaptacionMes / altas;
+    indicadores.push({
+      id: "cac",
+      nombre: "Costo de conseguir un cliente nuevo (CAC)",
+      valor: bs(cac),
+      detalle:
+        "Tu gasto de comercialización de un mes dividido entre las altas de ese mes. Solo cuenta lo que pusiste en comercialización: si captar clientes también te cuesta sueldos o descuentos, tu CAC real es mayor.",
+      severidad: "info",
+    });
+
+    if (margenMes > 0) {
+      const meses = cac / margenMes;
+      indicadores.push({
+        id: "recuperacion-cac",
+        nombre: "Meses para recuperar lo que costó el cliente",
+        valor: `${meses.toFixed(1).replace(".", ",")} meses`,
+        detalle:
+          meses > 12
+            ? "Tardas más de un año en recuperar lo gastado en cada cliente: si se va antes, pierdes plata con él."
+            : "Es lo que tarda el margen de un cliente en pagar su captación. Mientras más corto, antes crece tu caja.",
+        severidad: meses > 12 ? "advertencia" : "ok",
+      });
+
+      if (churn > 0) {
+        const ltv = margenMes / churn;
+        const razon = ltv / cac;
+        const lectura =
+          razon < 1
+            ? "Cuesta más conseguirlo que lo que deja: cada cliente nuevo te hace perder."
+            : razon < 3
+              ? "Por debajo de 3 a 1 el crecimiento deja poco margen para errores."
+              : "Es una relación sana: cada boliviano de captación vuelve multiplicado.";
+        indicadores.push({
+          id: "ltv-cac",
+          nombre: "Valor de un cliente contra su costo de captación (LTV:CAC)",
+          valor: `${razon.toFixed(1).replace(".", ",")} a 1`,
+          detalle: `Un cliente te deja unos ${bs(ltv)} de margen en toda su vida. ${lectura}`,
+          severidad: razon < 1 ? "critico" : razon < 3 ? "advertencia" : "ok",
+        });
+      }
+    }
+  }
+
+  if (margenMes > 0 && eq.costosFijos > 0) {
+    const equilibrio = eq.costosFijos / 12 / margenMes;
+    const detalleBase = `Con el margen por cliente de arriba, necesitas al menos ${Math.ceil(equilibrio).toLocaleString("es-BO")} clientes activos para cubrir tus costos fijos.`;
+    if (churn > 0 && altas > 0) {
+      const estable = altas / churn;
+      const nunca = estable < equilibrio;
+      indicadores.push({
+        id: "base-equilibrio",
+        nombre: "Clientes necesarios para no perder",
+        valor: Math.ceil(equilibrio).toLocaleString("es-BO"),
+        detalle: `${detalleBase} Con tus altas y tus bajas, tu base se estabiliza en unos ${Math.round(estable).toLocaleString("es-BO")} clientes${
+          nunca ? ": nunca llegas al equilibrio sin más altas o menos bajas." : "."
+        }`,
+        severidad: nunca ? "critico" : subs0 < equilibrio ? "advertencia" : "ok",
+      });
+    } else {
+      indicadores.push({
+        id: "base-equilibrio",
+        nombre: "Clientes necesarios para no perder",
+        valor: Math.ceil(equilibrio).toLocaleString("es-BO"),
+        detalle: detalleBase,
+        severidad: subs0 < equilibrio ? "advertencia" : "ok",
+      });
+    }
+  }
+
+  return {
+    titulo: "Indicadores de suscripción y membresías",
+    introduccion:
+      "Estas métricas son las que usa un negocio recurrente para decidir. Son informativas: no cambian tu VAN ni tu flujo de caja.",
     indicadores,
   };
 }
