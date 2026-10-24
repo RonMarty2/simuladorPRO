@@ -49,6 +49,14 @@ export const TIPOS_EXCLUIDOS_POR_EVENTO: Record<string, string[]> = {
   // Falla de maquinaria y tarifa eléctrica industrial: no aplican a quien no opera planta.
   EVT043: ["microcredito", "marketing", "social", "costo_beneficio", "educacion_privada", "alquiler"],
   EVT045: ["microcredito", "marketing", "social", "costo_beneficio", "educacion_privada"],
+  // Videos virales de clientes: no aplican a quien no vende a clientes finales.
+  EVT025: ["social", "costo_beneficio", "microcredito", "concesion"],
+  EVT026: ["social", "costo_beneficio", "microcredito", "concesion"],
+  // Inversionista interesado, premio empresarial y fondos PYME: no aplican a un proyecto social,
+  // a un ahorro interno de una empresa ni a una concesión regulada.
+  EVT047: ["social", "costo_beneficio", "concesion"],
+  EVT048: ["social", "costo_beneficio", "concesion"],
+  EVT050: ["social", "costo_beneficio", "concesion"],
 };
 
 /** Verdadero si el evento general corresponde al tipo de negocio (o si no hay dato para decidir). */

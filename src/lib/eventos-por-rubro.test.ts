@@ -34,6 +34,13 @@ describe("eventoCompatibleConTipo", () => {
     }
   });
 
+  it("una posta de salud no recibe la reseña viral de un cliente ni el inversionista interesado", () => {
+    for (const codigo of ["EVT025", "EVT026", "EVT047", "EVT048", "EVT050"]) {
+      expect(eventoCompatibleConTipo(codigo, "social")).toBe(false);
+    }
+    expect(eventoCompatibleConTipo("EVT025", "gastronomia")).toBe(true);
+  });
+
   it("una distribuidora sí recibe el cliente grande que pide plazo", () => {
     expect(eventoCompatibleConTipo("EVT035", "comercio")).toBe(true);
   });

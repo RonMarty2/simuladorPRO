@@ -732,6 +732,11 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
   Supabase el 2026-10-23; 060 pendiente de pegar por el owner.
   Siguen sin modelar: inventario en bodega (cuanta plata queda parada en stock) y plazo de pago a proveedores.
   Los coeficientes de cada mecanica son criterio del equipo, sin validar con gremios.
+- Recorrido en la app real despues de la mecanica propia (2026-10-23, noche): posta de salud (tarjetas "Fondos recibidos"
+  y "Fondos menos gastos"), estacionamiento ("Ocupacion contratada" e "Inquilinos morosos"), restaurante ("Merma"; llego
+  PRD013 de la 060) y camara de frio ("Beneficio logrado"; llegaron CBN012/014/015 de la 057). Las migraciones 054 a 060
+  estan aplicadas. Se acotaron mas eventos generales (EVT025/026/047/048/050) para social, costo-beneficio y concesion.
+  Quedan sin ver en pantalla: turismo con temporadas, medios, franquicia, tecnologia, eventos, educacion, concesion.
 - Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS
   llegan: turnos 41, 45, 55) y microcredito. Faltan 16 tipos. Al jugar siempre la opcion A el
   microcredito quebro en el mes 15; no es error de calculo (sin eventos gana Bs 47.000 al mes).
