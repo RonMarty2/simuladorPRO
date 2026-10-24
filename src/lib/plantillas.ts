@@ -771,7 +771,7 @@ function gimnasio(): Proyecto {
     personal: [puesto("Personal trainers", 6, 3800), puesto("Recepción", 3, 3300), puesto("Limpieza/mantenimiento", 3, 3300), puesto("Gerente", 1, 7000), puesto("Community manager", 1, 3500)],
     costosDirectos: [directo(idMembresia, "comision_venta", "Comisión de pasarela por socio/año", "socio/año", 1, Math.round(precioAnual * 0.04))],
     costosAdministracion: [gasto("Alquiler", 18000), gasto("Servicios básicos (alto consumo)", 7000), gasto("Mantenimiento de máquinas", 4000), gasto("Software de gestión", 1500), gasto("Seguros", 2000)],
-    costosComercializacion: [gasto("Marketing digital", 6000), gasto("Promociones de temporada", 2000)],
+    costosComercializacion: [gasto("Marketing digital y pauta", 14000), gasto("Promociones, pases de prueba y comisiones de venta", 6000)],
     productos: [{ id: idMembresia, nombre: "Membresía anual", unidadMedida: "socio/año", cantidades: baseAnual, precios: [precioAnual, precioAnual, precioAnual, precioAnual, precioAnual] }],
     ...finCapm(),
     crecimientoIngresosAnual: 0.1, crecimientoCostosAnual: 0.04,
