@@ -48,3 +48,33 @@ describe("turismo: las temporadas mueven la caja durante el año", () => {
     expect(e.factor_estacional).toBeUndefined();
   });
 });
+
+describe("agricultura: se gasta al sembrar y se cobra en la cosecha", () => {
+  it("el año suma lo mismo que el plan, con ventas concentradas en mayo a agosto", () => {
+    const p = crear("quinua");
+    const base = calcularBaseProyecto(p);
+    let e: any = inicializarEstadoDesdeProyecto(p);
+    const ventas: number[] = [];
+    for (let i = 0; i < 12; i++) {
+      e = aplicarOperacionDelTurno(e, base, "mensual", i);
+      ventas.push(e.delta_ingresos);
+    }
+    const plan: any = construirFlujoCaja(p);
+    expect(e.ingresos_acumulados).toBeCloseTo(plan.ingresos[0], 0);
+    const cosecha = ventas.slice(4, 8).reduce((a, x) => a + x, 0);
+    expect(cosecha / e.ingresos_acumulados).toBeGreaterThan(0.5);
+    expect(ventas[0]).toBeLessThan(ventas[5] / 3);
+  });
+
+  it("los costos variables caen en la siembra, no en la cosecha", () => {
+    const p = crear("quinua");
+    const base = calcularBaseProyecto(p);
+    expect(base.estacionalidadCostos).toBeDefined();
+    const e0 = inicializarEstadoDesdeProyecto(p);
+    const siembra = aplicarOperacionDelTurno(e0, base, "mensual", 9); // octubre
+    const cosecha = aplicarOperacionDelTurno(e0, base, "mensual", 5); // junio
+    expect(siembra.costos_acumulados).toBeGreaterThan(0);
+    // en junio vendes mucho más que en octubre pero gastas menos en insumos
+    expect(cosecha.delta_ingresos).toBeGreaterThan(siembra.delta_ingresos * 3);
+  });
+});

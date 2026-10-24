@@ -27,7 +27,7 @@ import {
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { eventoCompatibleConTipo } from "./eventos-por-rubro";
 import { obtenerPlanesSuscripcion } from "./planes-suscripcion";
-import { factorDelMes, perfilEstacional } from "./estacionalidad";
+import { factorDelMes, perfilEstacional, perfilEstacionalCostos } from "./estacionalidad";
 import { DIAS_COBRO_POR_TIPO } from "./guia-extra-por-tipo";
 import type { CategoriaPlantilla } from "./plantillas";
 
@@ -571,6 +571,8 @@ export interface MetricasProyectoBase {
   mora?: PlanMora;
   /** Solo negocios con temporadas: cuánto vende cada mes del año frente al promedio (12 factores). */
   estacionalidad?: number[];
+  /** Si los costos variables siguen otro calendario que las ventas (agricultura): su perfil mensual. */
+  estacionalidadCostos?: number[];
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -645,6 +647,7 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     suscripcion: construirPlanSocios(p) ?? undefined,
     mora: construirPlanMora(p) ?? undefined,
     estacionalidad: perfilEstacional(p.tipoNegocio),
+    estacionalidadCostos: perfilEstacionalCostos(p.tipoNegocio),
     ingresosAnuales,
     costosAnualesFijos: personal + admin + comerc,
     costoInsumosPorUnidad,
@@ -711,12 +714,14 @@ export function aplicarOperacionDelTurno(
     // tope de la capacidad instalada (si el proyecto la declara).
     // Temporada: en meses altos vendes más que el promedio, en bajos menos (el año suma igual).
     const perfil = base.estacionalidad;
-    let temporada = 1;
-    if (perfil) {
+    const promedioPerfil = (pf: number[]) => {
       let suma = 0;
-      for (let j = 0; j < meses; j++) suma += factorDelMes(perfil, turno * meses + j);
-      temporada = suma / meses;
-    }
+      for (let j = 0; j < meses; j++) suma += factorDelMes(pf, turno * meses + j);
+      return suma / meses;
+    };
+    const temporada = perfil ? promedioPerfil(perfil) : 1;
+    // Los costos variables siguen a las ventas, salvo que el tipo tenga su propio calendario.
+    const temporadaCostos = base.estacionalidadCostos ? promedioPerfil(base.estacionalidadCostos) : temporada;
     let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion) * temporada;
     if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
 
@@ -726,7 +731,10 @@ export function aplicarOperacionDelTurno(
       base.mora && estado.mora_multiplicador !== undefined
         ? 1 + base.mora.parteDelCosto * (estado.mora_multiplicador - 1)
         : 1;
-    const costoInsumosMes = (insumosAnio / 12) * demanda * estado.costos_multiplicador * efectoMora;
+    const demandaCostos = base.estacionalidadCostos
+      ? Math.min(demanda / temporada * temporadaCostos, tope ?? Infinity)
+      : demanda;
+    const costoInsumosMes = (insumosAnio / 12) * demandaCostos * estado.costos_multiplicador * efectoMora;
     const costoFijoMes = (fijosAnio / 12) * estado.costos_multiplicador;
     ingresoPeriodo = ingresoMes * meses;
     costoPeriodo = (costoInsumosMes + costoFijoMes + cuotaMes) * meses;
