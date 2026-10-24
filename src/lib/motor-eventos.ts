@@ -25,6 +25,7 @@ import {
   obtenerTasasAportes,
 } from "./calculo-financiero";
 import { construirFlujoCaja } from "./flujo-proyecto";
+import { eventoCompatibleConTipo } from "./eventos-por-rubro";
 import { DIAS_COBRO_POR_TIPO } from "./guia-extra-por-tipo";
 import type { CategoriaPlantilla } from "./plantillas";
 
@@ -159,7 +160,8 @@ export function seleccionarEventoTurno(
     (e) =>
       turnoActual >= e.turno_minimo &&
       !eventosYaUsados.includes(e.id) &&
-      eventoAplicaAProyecto(e.sectores_afectados, sectorProyecto, config.tipoNegocio)
+      eventoAplicaAProyecto(e.sectores_afectados, sectorProyecto, config.tipoNegocio) &&
+      eventoCompatibleConTipo(e.codigo, config.tipoNegocio)
   );
   if (candidatos.length === 0) return null;
 
@@ -513,91 +515,91 @@ export function aplicarOperacionDelTurno(
   };
 }
 
-
-// ============================================================================
-// GOLPE DEL EVENTO
-// ============================================================================
-
-/**
- * Cuánto de lo que cuenta la noticia le pasa a tu negocio SIN importar qué decidas.
- * Cada evento trae un golpe (`modificadores`) además de las consecuencias de cada
- * opción. Antes el golpe no se aplicaba: los eventos solo ofrecían opciones que
- * mejoraban el negocio y hasta los ejemplos de rechazo terminaban ganando. Con 1 el
- * golpe es completo (demasiado duro: 32% de los proyectos viables quebraban aun
- * decidiendo bien); con 0,6 el que decide bien casi siempre sobrevive y los
- * proyectos malos mayormente fracasan. Medido con `docs` del plan, paso 5.4.
- */
-export const INTENSIDAD_GOLPE_EVENTO = 0.6;
-
-function consecuenciasDelGolpe(evento: Evento, intensidad: number): Record<string, string> {
-  const salida: Record<string, string> = {};
-  for (const m of evento.modificadores?.variables_afectadas ?? []) {
-    if (!m || typeof m.valor !== "number" || !(m.campo in aliasACampo)) continue;
-    const v = m.valor;
-    salida[m.campo] =
-      m.operacion === "multiplicar"
-        ? `*${1 + (v - 1) * intensidad}`
-        : m.operacion === "sumar"
-          ? `+${v * intensidad}`
-          : m.operacion === "restar"
-            ? `-${v * intensidad}`
-            : m.operacion === "porcentaje"
-              ? `${v * intensidad >= 0 ? "+" : ""}${v * intensidad}%`
-              : `${v}`;
-  }
-  return salida;
-}
-
-/** Aplica el golpe del evento al estado (a la intensidad indicada). */
-export function aplicarGolpeDelEvento(
-  estado: EstadoSimulacion,
-  evento: Evento,
-  intensidad = INTENSIDAD_GOLPE_EVENTO
-): EstadoSimulacion {
-  let nuevo = { ...estado };
-  for (const [campo, valor] of Object.entries(consecuenciasDelGolpe(evento, intensidad))) {
-    nuevo = aplicarConsecuenciaAlEstado(nuevo, campo, valor);
-  }
-  return nuevo;
-}
-
-const ETIQUETA_GOLPE: Record<string, string> = {
-  demanda_multiplicador: "Ventas",
-  precio_venta_multiplicador: "Precios",
-  costos_multiplicador: "Costos",
-  caja: "Caja",
-  deuda: "Deuda",
-  reputacion: "Reputación",
-  dias_cobro: "Días de cobro",
-};
-
-/**
- * Resumen legible del golpe ("Ventas -15%, Costos +6%") para mostrárselo al alumno
- * antes de que decida: es lo que le pasa aunque elija bien.
- */
-export function resumenGolpeEvento(evento: Evento, intensidad = INTENSIDAD_GOLPE_EVENTO): string[] {
-  const base: EstadoSimulacion = {
-    caja: 100, deuda: 100, precio_venta_multiplicador: 1, demanda_multiplicador: 1, costos_multiplicador: 1,
-    reputacion: 0.5, ingresos_acumulados: 0, costos_acumulados: 0, utilidad_acumulada: 0,
-    ultimo_evento: null, ultima_decision: null, ultimo_feedback: null, delta_caja: 0, delta_ingresos: 0,
-    dias_cobro: 30, cuentas_por_cobrar: 0,
-  };
-  const despues = aplicarGolpeDelEvento(base, evento, intensidad);
-  const partes: string[] = [];
-  const claves = ["demanda_multiplicador", "precio_venta_multiplicador", "costos_multiplicador", "caja", "deuda", "reputacion", "dias_cobro"] as const;
-  for (const k of claves) {
-    const antes = Number(base[k] ?? 0);
-    const ahora = Number(despues[k] ?? 0);
-    if (!antes || Math.abs(ahora - antes) < 1e-9) continue;
-    if (k === "dias_cobro") {
-      partes.push(`${ETIQUETA_GOLPE[k]} ${ahora > antes ? "+" : ""}${Math.round(ahora - antes)}`);
-      continue;
-    }
-    const pct = Math.round(((ahora - antes) / antes) * 100);
-    if (pct !== 0) partes.push(`${ETIQUETA_GOLPE[k]} ${pct > 0 ? "+" : ""}${pct}%`);
-  }
-  return partes;
-}
+
+// ============================================================================
+// GOLPE DEL EVENTO
+// ============================================================================
+
+/**
+ * Cuánto de lo que cuenta la noticia le pasa a tu negocio SIN importar qué decidas.
+ * Cada evento trae un golpe (`modificadores`) además de las consecuencias de cada
+ * opción. Antes el golpe no se aplicaba: los eventos solo ofrecían opciones que
+ * mejoraban el negocio y hasta los ejemplos de rechazo terminaban ganando. Con 1 el
+ * golpe es completo (demasiado duro: 32% de los proyectos viables quebraban aun
+ * decidiendo bien); con 0,6 el que decide bien casi siempre sobrevive y los
+ * proyectos malos mayormente fracasan. Medido con `docs` del plan, paso 5.4.
+ */
+export const INTENSIDAD_GOLPE_EVENTO = 0.6;
+
+function consecuenciasDelGolpe(evento: Evento, intensidad: number): Record<string, string> {
+  const salida: Record<string, string> = {};
+  for (const m of evento.modificadores?.variables_afectadas ?? []) {
+    if (!m || typeof m.valor !== "number" || !(m.campo in aliasACampo)) continue;
+    const v = m.valor;
+    salida[m.campo] =
+      m.operacion === "multiplicar"
+        ? `*${1 + (v - 1) * intensidad}`
+        : m.operacion === "sumar"
+          ? `+${v * intensidad}`
+          : m.operacion === "restar"
+            ? `-${v * intensidad}`
+            : m.operacion === "porcentaje"
+              ? `${v * intensidad >= 0 ? "+" : ""}${v * intensidad}%`
+              : `${v}`;
+  }
+  return salida;
+}
+
+/** Aplica el golpe del evento al estado (a la intensidad indicada). */
+export function aplicarGolpeDelEvento(
+  estado: EstadoSimulacion,
+  evento: Evento,
+  intensidad = INTENSIDAD_GOLPE_EVENTO
+): EstadoSimulacion {
+  let nuevo = { ...estado };
+  for (const [campo, valor] of Object.entries(consecuenciasDelGolpe(evento, intensidad))) {
+    nuevo = aplicarConsecuenciaAlEstado(nuevo, campo, valor);
+  }
+  return nuevo;
+}
+
+const ETIQUETA_GOLPE: Record<string, string> = {
+  demanda_multiplicador: "Ventas",
+  precio_venta_multiplicador: "Precios",
+  costos_multiplicador: "Costos",
+  caja: "Caja",
+  deuda: "Deuda",
+  reputacion: "Reputación",
+  dias_cobro: "Días de cobro",
+};
+
+/**
+ * Resumen legible del golpe ("Ventas -15%, Costos +6%") para mostrárselo al alumno
+ * antes de que decida: es lo que le pasa aunque elija bien.
+ */
+export function resumenGolpeEvento(evento: Evento, intensidad = INTENSIDAD_GOLPE_EVENTO): string[] {
+  const base: EstadoSimulacion = {
+    caja: 100, deuda: 100, precio_venta_multiplicador: 1, demanda_multiplicador: 1, costos_multiplicador: 1,
+    reputacion: 0.5, ingresos_acumulados: 0, costos_acumulados: 0, utilidad_acumulada: 0,
+    ultimo_evento: null, ultima_decision: null, ultimo_feedback: null, delta_caja: 0, delta_ingresos: 0,
+    dias_cobro: 30, cuentas_por_cobrar: 0,
+  };
+  const despues = aplicarGolpeDelEvento(base, evento, intensidad);
+  const partes: string[] = [];
+  const claves = ["demanda_multiplicador", "precio_venta_multiplicador", "costos_multiplicador", "caja", "deuda", "reputacion", "dias_cobro"] as const;
+  for (const k of claves) {
+    const antes = Number(base[k] ?? 0);
+    const ahora = Number(despues[k] ?? 0);
+    if (!antes || Math.abs(ahora - antes) < 1e-9) continue;
+    if (k === "dias_cobro") {
+      partes.push(`${ETIQUETA_GOLPE[k]} ${ahora > antes ? "+" : ""}${Math.round(ahora - antes)}`);
+      continue;
+    }
+    const pct = Math.round(((ahora - antes) / antes) * 100);
+    if (pct !== 0) partes.push(`${ETIQUETA_GOLPE[k]} ${pct > 0 ? "+" : ""}${pct}%`);
+  }
+  return partes;
+}
 
 // ============================================================================
 // AVANZAR TURNO COMPLETO
