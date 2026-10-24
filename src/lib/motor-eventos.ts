@@ -27,6 +27,7 @@ import {
 import { construirFlujoCaja } from "./flujo-proyecto";
 import { eventoCompatibleConTipo } from "./eventos-por-rubro";
 import { obtenerPlanesSuscripcion } from "./planes-suscripcion";
+import { factorDelMes, perfilEstacional } from "./estacionalidad";
 import { DIAS_COBRO_POR_TIPO } from "./guia-extra-por-tipo";
 import type { CategoriaPlantilla } from "./plantillas";
 
@@ -61,6 +62,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     cuentas_por_cobrar: 0,
     ...estadoInicialSuscripcion(proyecto),
     ...estadoInicialMicrocredito(proyecto),
+    ...estadoEstacional(proyecto, 0),
   };
 }
 
@@ -154,6 +156,15 @@ export function construirPlanMora(p: Proyecto): PlanMora | null {
   }
   if (!(moraAnual > 0) || !(totalAnual > 0)) return null;
   return { parteDelCosto: moraAnual / totalAnual, moraBase };
+}
+
+/** Temporada del mes k (solo negocios con perfil estacional). */
+function estadoEstacional(
+  p: Proyecto,
+  k: number
+): Pick<EstadoSimulacion, "factor_estacional" | "mes_del_anio"> | Record<string, never> {
+  const perfil = perfilEstacional(p.tipoNegocio);
+  return perfil ? { factor_estacional: factorDelMes(perfil, k), mes_del_anio: ((k % 12) + 12) % 12 } : {};
 }
 
 function estadoInicialMicrocredito(
@@ -558,6 +569,8 @@ export interface MetricasProyectoBase {
   suscripcion?: PlanSocios;
   /** Solo microcrédito: qué parte del costo es previsión por mora. */
   mora?: PlanMora;
+  /** Solo negocios con temporadas: cuánto vende cada mes del año frente al promedio (12 factores). */
+  estacionalidad?: number[];
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -631,6 +644,7 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     limiteDemanda: hayCapacidad ? limiteDemanda : undefined,
     suscripcion: construirPlanSocios(p) ?? undefined,
     mora: construirPlanMora(p) ?? undefined,
+    estacionalidad: perfilEstacional(p.tipoNegocio),
     ingresosAnuales,
     costosAnualesFijos: personal + admin + comerc,
     costoInsumosPorUnidad,
@@ -695,7 +709,15 @@ export function aplicarOperacionDelTurno(
   } else {
     // Demanda efectiva: la planeada, movida por los eventos y por la reputación, y con el
     // tope de la capacidad instalada (si el proyecto la declara).
-    let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion);
+    // Temporada: en meses altos vendes más que el promedio, en bajos menos (el año suma igual).
+    const perfil = base.estacionalidad;
+    let temporada = 1;
+    if (perfil) {
+      let suma = 0;
+      for (let j = 0; j < meses; j++) suma += factorDelMes(perfil, turno * meses + j);
+      temporada = suma / meses;
+    }
+    let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion) * temporada;
     if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
 
     const ingresoMes = (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda;
@@ -727,10 +749,19 @@ export function aplicarOperacionDelTurno(
       ? { mora_multiplicador: Math.max(0.5, Math.min(3, moraDelSiguienteMes(estado))) }
       : {};
 
+  const temporadaSiguiente: Partial<EstadoSimulacion> =
+    estado.factor_estacional !== undefined && base.estacionalidad
+      ? {
+          factor_estacional: factorDelMes(base.estacionalidad, (turno + 1) * meses),
+          mes_del_anio: (((turno + 1) * meses) % 12 + 12) % 12,
+        }
+      : {};
+
   return diluirMultiplicadores({
     ...estado,
     ...sociosNuevo,
     ...moraNueva,
+    ...temporadaSiguiente,
     cuentas_por_cobrar: cuentasPorCobrar,
     caja: estado.caja + flujoDelPeriodo,
     delta_caja: flujoDelPeriodo,

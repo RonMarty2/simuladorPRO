@@ -28,6 +28,7 @@ import PanelPostmortem from "@/components/simulacion/PanelPostmortem";
 import type { OpcionDecision } from "@/types/evento";
 import type { Proyecto } from "@/types/proyecto";
 import { confirmar } from "@/components/ui/confirmar";
+import { NOMBRES_MES } from "@/lib/estacionalidad";
 
 export default function SimularProyecto() {
   const user = useAuthStore((s) => s.user);
@@ -221,7 +222,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -255,6 +256,14 @@ export default function SimularProyecto() {
               positivo={sim.estado_actual.socios > 0}
             />
           )}
+          {sim.estado_actual.factor_estacional !== undefined && (
+            <Metrica
+              titulo={`Temporada · ${NOMBRES_MES[sim.estado_actual.mes_del_anio ?? 0]}`}
+              valor={textoTemporada(sim.estado_actual.factor_estacional)}
+              detalle={`Este mes vendes ${fmtNum(sim.estado_actual.factor_estacional * 100, 0)}% del promedio`}
+              positivo={sim.estado_actual.factor_estacional >= 0.85}
+            />
+          )}
           {sim.estado_actual.mora_multiplicador !== undefined && (
             <Metrica
               titulo="Mora de la cartera"
@@ -285,13 +294,13 @@ export default function SimularProyecto() {
             Noticia del mes — {eventoActual.codigo}
           </div>
           <h2 className="text-lg font-semibold tracking-tight">{eventoActual.titulo}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{eventoActual.descripcion}</p>
-          {resumenGolpeEvento(eventoActual).length > 0 && (
-            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-              <strong>Esto le pasa a tu negocio aunque decidas bien:</strong>{" "}
-              {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
-            </p>
-          )}
+          <p className="mt-2 text-sm text-muted-foreground">{eventoActual.descripcion}</p>
+          {resumenGolpeEvento(eventoActual).length > 0 && (
+            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+              <strong>Esto le pasa a tu negocio aunque decidas bien:</strong>{" "}
+              {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
+            </p>
+          )}
 
           <div className="mt-5 space-y-2">
             <div className="text-sm font-medium">¿Qué decides?</div>
@@ -352,6 +361,13 @@ export default function SimularProyecto() {
       {historial.length > 0 && <GraficosHistorial historial={historial} />}
     </div>
   );
+}
+
+/** Etiqueta de la temporada según cuánto se vende frente al promedio del año. */
+function textoTemporada(factor: number): string {
+  if (factor >= 1.15) return "Temporada alta";
+  if (factor <= 0.85) return "Temporada baja";
+  return "Temporada media";
 }
 
 /** Mora para mostrar: en porcentaje de la cartera si el plan la declara, si no, "x veces la prevista". */

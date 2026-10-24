@@ -62,6 +62,13 @@ export interface EstadoSimulacion {
   mora_multiplicador?: number;
   /** Mora prevista del plan como fracción de la cartera (0,052 = 5,2%), si se pudo calcular. */
   mora_base?: number;
+
+  /**
+   * Solo negocios con temporadas (turismo): cuánto vende el mes que se va a jugar frente al promedio
+   * del año (1,4 = temporada alta, 0,7 = baja) y qué mes es (0 = enero).
+   */
+  factor_estacional?: number;
+  mes_del_anio?: number;
 }
 
 export interface Simulacion {

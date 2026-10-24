@@ -46,11 +46,12 @@ describe("reputación, capacidad y cobranza en la simulación", () => {
     const base = calcularBaseProyecto(p);
     expect(base.limiteDemanda).toBeDefined();
     const e0 = inicializarEstadoDesdeProyecto(p);
-    const disparada = aplicarOperacionDelTurno({ ...e0, demanda_multiplicador: 5 }, base, "mensual", 0);
-    const tope = aplicarOperacionDelTurno({ ...e0, demanda_multiplicador: base.limiteDemanda![0] }, base, "mensual", 0);
+    // turno 6 = julio, temporada alta: ahi es donde la capacidad aprieta
+    const disparada = aplicarOperacionDelTurno({ ...e0, demanda_multiplicador: 5 }, base, "mensual", 6);
+    const tope = aplicarOperacionDelTurno({ ...e0, demanda_multiplicador: base.limiteDemanda![0] * 2 }, base, "mensual", 6);
     expect(disparada.delta_ingresos).toBeCloseTo(tope.delta_ingresos, 0);
-    // Y es bastante más que lo planeado, pero no 5 veces
-    const planeado = aplicarOperacionDelTurno(e0, base, "mensual", 0);
+    // Y es algo mas que lo planeado, pero no 5 veces
+    const planeado = aplicarOperacionDelTurno(e0, base, "mensual", 6);
     expect(disparada.delta_ingresos).toBeGreaterThan(planeado.delta_ingresos);
     expect(disparada.delta_ingresos).toBeLessThan(planeado.delta_ingresos * 2);
   });
