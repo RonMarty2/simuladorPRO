@@ -198,20 +198,27 @@ const IMPAGOS_BASE_POR_TIPO: Record<string, number> = {
   salud_privada: 0.08,
   educacion_privada: 0.06,
   concesion: 0.07,
+  medios: 0.05, // anunciantes que pagan tarde o no pagan
 };
 const INERCIA_OCUPACION_POR_TIPO: Record<string, number> = {
   alquiler: 0.15,
   educacion_privada: 0.08,
   concesion: 0.1,
+  medios: 0.12, // la audiencia se construye y se pierde de a poco
+  franquicia: 0.12, // la fuerza de la marca mueve a los clientes con retraso
+  tecnologia: 0.12, // los usuarios activos de una plataforma crecen y se van de a poco
 };
 
 function estadoInicialContratos(
   p: Proyecto
-): Pick<EstadoSimulacion, "impagos_multiplicador" | "ocupacion_relativa"> | Record<string, never> {
+): Pick<EstadoSimulacion, "impagos_multiplicador" | "ocupacion_relativa" | "tipo_negocio"> | Record<string, never> {
   const tipo = p.tipoNegocio ?? "";
+  // Las suscripciones ya llevan sus socios vivos: no necesitan además esta inercia.
+  const conSocios = p.modeloIngreso === "suscripcion";
   return {
     ...(tipo in IMPAGOS_BASE_POR_TIPO ? { impagos_multiplicador: 1 } : {}),
-    ...(tipo in INERCIA_OCUPACION_POR_TIPO ? { ocupacion_relativa: 1 } : {}),
+    ...(tipo in INERCIA_OCUPACION_POR_TIPO && !conSocios ? { ocupacion_relativa: 1 } : {}),
+    ...(tipo ? { tipo_negocio: tipo } : {}),
   };
 }
 
@@ -490,6 +497,9 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   ocupacion: "ocupacion_relativa",
   inquilinos: "ocupacion_relativa",
   matricula: "ocupacion_relativa",
+  audiencia: "ocupacion_relativa",
+  usuarios_activos: "ocupacion_relativa",
+  marca: "ocupacion_relativa",
   // Beneficio logrado frente al esperado (ahorro, ventas adicionales)
   ahorro: "eficacia_multiplicador",
   eficacia: "eficacia_multiplicador",

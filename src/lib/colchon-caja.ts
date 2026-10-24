@@ -34,13 +34,13 @@ export function calcularMinimoCaja(p: Proyecto): MinimoCaja {
   return { minimo, mes };
 }
 
-/** Sube el capital de trabajo lo justo (más 25% de margen para imprevistos) para que la caja no sea negativa. */
+/** Sube el capital de trabajo lo justo (más 60% de margen para imprevistos) para que la caja no sea negativa. */
 export function conColchonDeCaja(p: Proyecto): Proyecto {
   let actual = p;
-  for (let vuelta = 0; vuelta < 3; vuelta++) {
+  for (let vuelta = 0; vuelta < 8; vuelta++) {
     const { minimo } = calcularMinimoCaja(actual);
     if (minimo >= 0) break;
-    const extra = Math.ceil((-minimo * 1.25) / 1000) * 1000;
+    const extra = Math.ceil((-minimo * 1.6) / 1000) * 1000;
     actual = { ...actual, capitalTrabajo: actual.capitalTrabajo + extra };
   }
   return actual;

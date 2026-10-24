@@ -14,6 +14,9 @@ const PERFILES_BRUTOS: Record<string, number[]> = {
   turismo: [0.85, 0.75, 0.7, 0.85, 1.05, 1.25, 1.45, 1.4, 1.2, 1.1, 0.8, 1.05],
   // Agricultura de altiplano y valles: se vende después de la cosecha (mayo a agosto).
   agricultura: [0.3, 0.3, 0.4, 0.9, 2.0, 2.3, 2.0, 1.6, 0.8, 0.4, 0.3, 0.3],
+  // Festivales, ferias y producciones: casi todo lo que se vende cae en las semanas del evento
+  // (aquí, julio y agosto) y los gastos de preparación empiezan meses antes.
+  eventos: [0.1, 0.1, 0.1, 0.1, 0.3, 0.6, 4.0, 5.0, 0.8, 0.4, 0.3, 0.3],
 };
 
 /**
@@ -22,6 +25,7 @@ const PERFILES_BRUTOS: Record<string, number[]> = {
  */
 const PERFILES_BRUTOS_COSTOS: Record<string, number[]> = {
   agricultura: [0.8, 0.8, 0.8, 1.2, 1.0, 0.8, 0.6, 0.6, 1.5, 1.7, 1.4, 0.8],
+  eventos: [0.5, 0.5, 0.6, 0.8, 1.2, 1.8, 2.0, 1.6, 0.8, 0.6, 0.5, 0.6],
 };
 
 export const NOMBRES_MES = [

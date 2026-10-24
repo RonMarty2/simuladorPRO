@@ -715,9 +715,17 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
     los contratos y matriculas se mueven con inercia (la ocupacion sigue a la demanda con retraso) y una parte
     de lo facturado no se cobra (morosidad de inquilinos, glosas, pensiones, tarifas). Eventos ALQ012-015,
     SAL012-015, EDP010-012 y CON011-013 (migracion 058).
-  Migraciones 054 a 057 aplicadas en Supabase el 2026-10-23; 058 pendiente de pegar por el owner.
-  Faltan con calculo comun: medios, eventos, franquicia,
-  concesion, tecnologia, gastronomia/produccion/comercio/servicios (inventario, merma, capacidad).
+  * Medios (audiencia e anunciantes morosos), franquicia (fuerza de la marca), tecnologia (usuarios activos):
+    reutilizan `ocupacion_relativa` e `impagos_multiplicador` con inercia 0,12 (alias `audiencia`, `marca`,
+    `usuarios_activos`); las suscripciones SaaS usan sus socios. Eventos: calendario propio en
+    `lib/estacionalidad.ts` (casi todo se vende en julio y agosto, gastos desde meses antes). Eventos
+    MED011-013, EVE011-013, FRA011-013, TEC009-011 (migracion 059).
+    El festival paso a necesitar mucho mas capital de trabajo (de 443.000 a 1.074.000) porque el motor ahora ve
+    que los ingresos llegan juntos: se recalibro (factor 1,12) para que siga siendo marginal. El colchon de
+    caja (`conColchonDeCaja`) ahora deja 60% de margen en vez de 25%. Festival y feria quiebran casi siempre
+    jugando al azar (son un solo golpe al año).
+  Migraciones 054 a 058 aplicadas en Supabase el 2026-10-23; 059 pendiente de pegar por el owner.
+  Faltan con calculo comun: gastronomia/produccion/comercio/servicios (inventario, merma, capacidad).
   Los coeficientes de cada mecanica son criterio del equipo, sin validar con gremios.
 - Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS
   llegan: turnos 41, 45, 55) y microcredito. Faltan 16 tipos. Al jugar siempre la opcion A el

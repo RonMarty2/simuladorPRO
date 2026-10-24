@@ -258,7 +258,7 @@ export default function SimularProyecto() {
           )}
           {sim.estado_actual.ocupacion_relativa !== undefined && (
             <Metrica
-              titulo="Ocupación contratada"
+              titulo={ETIQUETA_OCUPACION[sim.estado_actual.tipo_negocio ?? ""] ?? "Ocupación contratada"}
               valor={`${fmtNum(sim.estado_actual.ocupacion_relativa * 100, 0)}%`}
               detalle="Del plan; cambia despacio"
               positivo={sim.estado_actual.ocupacion_relativa >= 0.9}
@@ -266,7 +266,7 @@ export default function SimularProyecto() {
           )}
           {sim.estado_actual.impagos_multiplicador !== undefined && (
             <Metrica
-              titulo="Impagos"
+              titulo={ETIQUETA_IMPAGOS[sim.estado_actual.tipo_negocio ?? ""] ?? "Impagos"}
               valor={`${fmtNum(sim.estado_actual.impagos_multiplicador, 1)}x`}
               detalle="Veces lo previsto"
               positivo={sim.estado_actual.impagos_multiplicador <= 1.5}
@@ -402,6 +402,23 @@ export default function SimularProyecto() {
     </div>
   );
 }
+
+/** Cómo se llama, en cada rubro, lo que cambia despacio y lo que se deja de cobrar. */
+const ETIQUETA_OCUPACION: Record<string, string> = {
+  alquiler: "Ocupación contratada",
+  educacion_privada: "Matrícula frente al plan",
+  concesion: "Clientes conectados",
+  medios: "Audiencia frente al plan",
+  franquicia: "Fuerza de la marca",
+  tecnologia: "Usuarios activos",
+};
+const ETIQUETA_IMPAGOS: Record<string, string> = {
+  alquiler: "Inquilinos morosos",
+  salud_privada: "Glosas e impagos",
+  educacion_privada: "Pensiones impagas",
+  concesion: "Tarifas impagas",
+  medios: "Anunciantes morosos",
+};
 
 /** Etiqueta de la temporada según cuánto se vende frente al promedio del año. */
 function textoTemporada(factor: number): string {

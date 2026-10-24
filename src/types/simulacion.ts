@@ -98,6 +98,8 @@ export interface EstadoSimulacion {
    * llegan de un mes a otro.
    */
   ocupacion_relativa?: number;
+  /** Tipo de negocio del proyecto, para nombrar bien lo que se muestra (audiencia, matrícula, marca...). */
+  tipo_negocio?: string;
 }
 
 export interface Simulacion {

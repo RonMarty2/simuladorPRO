@@ -93,3 +93,40 @@ describe("alquiler, salud, educación y concesión: contratos e impagos", () => 
     expect(e.ocupacion_relativa).toBeUndefined();
   });
 });
+
+describe("medios, franquicia, tecnología y eventos: audiencia, marca, usuarios y calendario", () => {
+  it("cada rubro arranca con sus variables, y las suscripciones no duplican la inercia", () => {
+    for (const c of ["medio", "radio", "youtube", "franquicia", "appdelivery"]) {
+      expect(inicializarEstadoDesdeProyecto(crear(c)).ocupacion_relativa, c).toBe(1);
+    }
+    expect(inicializarEstadoDesdeProyecto(crear("medio")).impagos_multiplicador).toBe(1);
+    expect(inicializarEstadoDesdeProyecto(crear("saas")).ocupacion_relativa).toBeUndefined();
+    expect(inicializarEstadoDesdeProyecto(crear("saas")).socios).toBeGreaterThan(0);
+  });
+
+  it("sin eventos reproduce el plan del año 1", () => {
+    for (const c of ["medio", "radio", "youtube", "podcastauspicios", "franquicia", "appdelivery", "festival", "feria", "pelicula"]) {
+      const { e, p } = correr(c, 12);
+      const plan: any = construirFlujoCaja(p);
+      expect(e.ingresos_acumulados, c).toBeCloseTo(plan.ingresos[0], 0);
+    }
+  });
+
+  it("una marca que se debilita se siente despacio", () => {
+    const p = crear("franquicia");
+    const base = calcularBaseProyecto(p);
+    let e: any = { ...inicializarEstadoDesdeProyecto(p), demanda_multiplicador: 0.7 };
+    e = aplicarOperacionDelTurno(e, base, "mensual", 0);
+    expect(e.ocupacion_relativa).toBeGreaterThan(0.9);
+  });
+
+  it("un festival vende casi todo en julio y agosto", () => {
+    const p = crear("festival");
+    const base = calcularBaseProyecto(p);
+    let e: any = inicializarEstadoDesdeProyecto(p);
+    const ventas: number[] = [];
+    for (let i = 0; i < 12; i++) { e = aplicarOperacionDelTurno(e, base, "mensual", i); ventas.push(e.delta_ingresos); }
+    const total = ventas.reduce((a, x) => a + x, 0);
+    expect((ventas[6] + ventas[7]) / total).toBeGreaterThan(0.5);
+  });
+});
