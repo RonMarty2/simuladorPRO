@@ -503,7 +503,7 @@ export function aplicarOperacionDelTurno(
   const cuentasPorCobrar = pendiente - cobrado;
   const flujoDelPeriodo = cobrado - costoPeriodo - impuestoPeriodo;
 
-  return {
+  return diluirMultiplicadores({
     ...estado,
     cuentas_por_cobrar: cuentasPorCobrar,
     caja: estado.caja + flujoDelPeriodo,
@@ -512,7 +512,7 @@ export function aplicarOperacionDelTurno(
     ingresos_acumulados: estado.ingresos_acumulados + ingresoPeriodo,
     costos_acumulados: estado.costos_acumulados + costoPeriodo + impuestoPeriodo,
     utilidad_acumulada: estado.utilidad_acumulada + utilidadDespuesImp,
-  };
+  }, meses);
 }
 
 
@@ -530,6 +530,25 @@ export function aplicarOperacionDelTurno(
  * proyectos malos mayormente fracasan. Medido con `docs` del plan, paso 5.4.
  */
 export const INTENSIDAD_GOLPE_EVENTO = 0.6;
+
+/**
+ * Los efectos de los eventos no son para siempre: una crisis de contenedores o un paro
+ * se van diluyendo. Cada mes, los multiplicadores de precio, demanda y costos recorren
+ * esta fracción del camino de vuelta a 1. Sin esto los golpes se acumulaban durante los
+ * 60 meses y hasta un negocio sano quebraba sin haber decidido nada mal.
+ */
+export const DECAIMIENTO_MENSUAL_MULTIPLICADORES = 0.1;
+
+function diluirMultiplicadores(estado: EstadoSimulacion, meses: number): EstadoSimulacion {
+  const resto = Math.pow(1 - DECAIMIENTO_MENSUAL_MULTIPLICADORES, meses);
+  const volver = (m: number) => 1 + (m - 1) * resto;
+  return {
+    ...estado,
+    precio_venta_multiplicador: volver(estado.precio_venta_multiplicador),
+    demanda_multiplicador: volver(estado.demanda_multiplicador),
+    costos_multiplicador: volver(estado.costos_multiplicador),
+  };
+}
 
 function consecuenciasDelGolpe(evento: Evento, intensidad: number): Record<string, string> {
   const salida: Record<string, string> = {};

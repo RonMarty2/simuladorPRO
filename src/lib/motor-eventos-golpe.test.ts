@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { PLANTILLAS } from "./plantillas";
 import {
+  DECAIMIENTO_MENSUAL_MULTIPLICADORES,
   INTENSIDAD_GOLPE_EVENTO,
   LIMITES_MULTIPLICADORES,
   aplicarDecisionAEstado,
@@ -32,7 +33,19 @@ describe("golpe del evento", () => {
     const e1 = aplicarGolpeDelEvento(e0, ev);
     expect(e1.demanda_multiplicador).toBeCloseTo(1 + (0.5 - 1) * INTENSIDAD_GOLPE_EVENTO, 5);
     const r = avanzarTurnoConDecision(e0, calcularBaseProyecto(p), "mensual", ev, opcion({ caja: "+1000" }));
-    expect(r.estadoDespues.demanda_multiplicador).toBeCloseTo(e1.demanda_multiplicador, 5);
+    // el golpe sigue ahi tras la decision; solo se diluye un poco con el mes que pasa
+    const esperado = 1 + (e1.demanda_multiplicador - 1) * (1 - DECAIMIENTO_MENSUAL_MULTIPLICADORES);
+    expect(r.estadoDespues.demanda_multiplicador).toBeCloseTo(esperado, 5);
+  });
+
+  it("los golpes se diluyen con los meses y no son para siempre", () => {
+    const p = crear("restaurante");
+    const base = calcularBaseProyecto(p);
+    let e = aplicarGolpeDelEvento(inicializarEstadoDesdeProyecto(p), eventoDe([{ campo: "costos", operacion: "multiplicar", valor: 1.5 }]));
+    const inicial = e.costos_multiplicador - 1;
+    for (let i = 0; i < 12; i++) e = aplicarOperacionDelTurno(e, base, "mensual", i);
+    expect(e.costos_multiplicador - 1).toBeLessThan(inicial * 0.4);
+    expect(e.costos_multiplicador).toBeGreaterThan(1);
   });
 
   it("campos que el motor no maneja se ignoran sin romper nada", () => {
