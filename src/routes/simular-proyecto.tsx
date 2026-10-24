@@ -221,7 +221,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -243,6 +243,18 @@ export default function SimularProyecto() {
             valor={`${fmtNum((sim.estado_actual.reputacion * 100), 0)}%`}
             positivo={sim.estado_actual.reputacion >= 0.5}
           />
+          {sim.estado_actual.socios !== undefined && (
+            <Metrica
+              titulo="Socios activos"
+              valor={fmtNum(sim.estado_actual.socios, 0)}
+              detalle={
+                sim.estado_actual.altas_mes !== undefined
+                  ? `+${fmtNum(sim.estado_actual.altas_mes, 0)} altas, -${fmtNum(sim.estado_actual.bajas_mes ?? 0, 0)} bajas`
+                  : undefined
+              }
+              positivo={sim.estado_actual.socios > 0}
+            />
+          )}
         </div>
       </div>
 
@@ -338,11 +350,13 @@ function Metrica({
   titulo,
   valor,
   delta,
+  detalle,
   positivo,
 }: {
   titulo: string;
   valor: string;
   delta?: number;
+  detalle?: string;
   positivo: boolean;
 }) {
   return (
@@ -355,6 +369,7 @@ function Metrica({
       >
         {valor}
       </div>
+      {detalle && <div className="text-[11px] text-muted-foreground">{detalle}</div>}
       {delta !== undefined && Math.abs(delta) > 0.01 && (
         <div
           className={`text-[11px] ${
@@ -470,6 +485,9 @@ function PantallaFinalizada({
             titulo="Reputación final"
             valor={`${fmtNum((simulacion.estado_actual.reputacion * 100), 0)}%`}
           />
+          {simulacion.estado_actual.socios !== undefined && (
+            <ResumenCelda titulo="Socios al final" valor={fmtNum(simulacion.estado_actual.socios, 0)} />
+          )}
         </div>
 
         <button

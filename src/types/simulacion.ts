@@ -43,6 +43,17 @@ export interface EstadoSimulacion {
   dias_cobro?: number;
   /** Lo vendido y todavía no cobrado (Bs). Opcional, 0 si no existe. */
   cuentas_por_cobrar?: number;
+
+  /**
+   * Solo proyectos de suscripción: socios activos hoy. Opcional: las simulaciones viejas
+   * y los demás tipos no lo traen y usan el cálculo de siempre.
+   */
+  socios?: number;
+  /** Altas y bajas del último mes (para mostrar al alumno). */
+  altas_mes?: number;
+  bajas_mes?: number;
+  /** Multiplica las bajas del plan (1 = normal). Los eventos lo mueven y se diluye con los meses. */
+  churn_multiplicador?: number;
 }
 
 export interface Simulacion {
