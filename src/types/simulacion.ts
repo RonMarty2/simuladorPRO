@@ -69,6 +69,16 @@ export interface EstadoSimulacion {
    */
   factor_estacional?: number;
   mes_del_anio?: number;
+
+  /**
+   * Solo proyectos sociales: qué parte de los fondos previstos llega de verdad (1 = todos;
+   * un recorte presupuestario lo baja). El proyecto no vende: lo financia un tercero.
+   */
+  presupuesto_multiplicador?: number;
+  /** Valor social generado hasta hoy (Bs). No es plata en la caja. */
+  beneficio_social_acumulado?: number;
+  /** Qué parte del servicio planeado se está entregando este mes (1 = todo). */
+  cobertura?: number;
 }
 
 export interface Simulacion {

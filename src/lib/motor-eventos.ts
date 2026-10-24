@@ -63,6 +63,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     ...estadoInicialSuscripcion(proyecto),
     ...estadoInicialMicrocredito(proyecto),
     ...estadoEstacional(proyecto, 0),
+    ...estadoInicialSocial(proyecto),
   };
 }
 
@@ -165,6 +166,14 @@ function estadoEstacional(
 ): Pick<EstadoSimulacion, "factor_estacional" | "mes_del_anio"> | Record<string, never> {
   const perfil = perfilEstacional(p.tipoNegocio);
   return perfil ? { factor_estacional: factorDelMes(perfil, k), mes_del_anio: ((k % 12) + 12) % 12 } : {};
+}
+
+/** Proyectos sociales: no venden, los financia un tercero y el beneficio no entra a la caja. */
+function estadoInicialSocial(
+  p: Proyecto
+): Pick<EstadoSimulacion, "presupuesto_multiplicador" | "beneficio_social_acumulado" | "cobertura"> | Record<string, never> {
+  if (p.tipoNegocio !== "social") return {};
+  return { presupuesto_multiplicador: 1, beneficio_social_acumulado: 0, cobertura: 1 };
 }
 
 function estadoInicialMicrocredito(
@@ -434,6 +443,12 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   morosidad: "mora_multiplicador",
   incobrables: "mora_multiplicador",
   previsiones: "mora_multiplicador",
+  // Proyectos sociales: fondos que llegan de quien financia
+  presupuesto: "presupuesto_multiplicador",
+  financiamiento_publico: "presupuesto_multiplicador",
+  transferencias: "presupuesto_multiplicador",
+  donaciones: "presupuesto_multiplicador",
+  subvencion: "presupuesto_multiplicador",
   // Percepción del cliente y del equipo: se reflejan en la reputación
   calidad: "reputacion",
   servicio: "reputacion",
@@ -449,6 +464,7 @@ export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
   costos_multiplicador: [0.8, 2.0],
   churn_multiplicador: [0.4, 3.0],
   mora_multiplicador: [0.5, 3.0],
+  presupuesto_multiplicador: [0, 1.6],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -481,6 +497,7 @@ function aplicarConsecuenciaAlEstado(
   // Los socios solo existen en proyectos de suscripción: en los demás el efecto no aplica.
   if (claveEstado === "socios" && estado.socios === undefined) return estado;
   if (claveEstado === "mora_multiplicador" && estado.mora_multiplicador === undefined) return estado;
+  if (claveEstado === "presupuesto_multiplicador" && estado.presupuesto_multiplicador === undefined) return estado;
   const valorActual =
     claveEstado === "dias_cobro"
       ? (estado.dias_cobro ?? 30)
@@ -688,6 +705,8 @@ export function aplicarOperacionDelTurno(
   let ingresoPeriodo = 0;
   let costoPeriodo = 0;
   let sociosNuevo: Partial<EstadoSimulacion> = {};
+  let socialNuevo: Partial<EstadoSimulacion> = {};
+  let exentoImpuestos = false;
 
   if (base.suscripcion && estado.socios !== undefined) {
     // Suscripción: los socios son un inventario vivo que entra y sale mes a mes.
@@ -709,6 +728,24 @@ export function aplicarOperacionDelTurno(
       vivo = { ...vivo, socios: paso.sociosSig };
     }
     sociosNuevo = { socios: vivo.socios, altas_mes: altasTotal / meses, bajas_mes: bajasTotal / meses };
+  } else if (estado.presupuesto_multiplicador !== undefined) {
+    // Proyecto social: la caja recibe los fondos de quien lo financia (no el beneficio, que
+    // es valor social y no plata) y paga lo que cuesta operar. Si los fondos se recortan, o los
+    // costos suben, la reserva se consume y el servicio se corta.
+    let servicio = estado.demanda_multiplicador * factorReputacion(estado.reputacion);
+    if (tope !== undefined && Number.isFinite(tope)) servicio = Math.min(servicio, tope);
+    // Atender más gente cuesta más (medicinas, materiales, horas): parte del gasto sigue al servicio.
+    const costoOperarMes =
+      ((insumosAnio / 12) * servicio + (fijosAnio / 12) * (0.7 + 0.3 * servicio)) * estado.costos_multiplicador;
+    const fondosPrevistosMes = insumosAnio / 12 + fijosAnio / 12 + cuotaMes;
+    ingresoPeriodo = fondosPrevistosMes * estado.presupuesto_multiplicador * meses;
+    costoPeriodo = (costoOperarMes + cuotaMes) * meses;
+    exentoImpuestos = true;
+    socialNuevo = {
+      cobertura: servicio,
+      beneficio_social_acumulado:
+        (estado.beneficio_social_acumulado ?? 0) + (ingresosAnio / 12) * servicio * meses,
+    };
   } else {
     // Demanda efectiva: la planeada, movida por los eventos y por la reputación, y con el
     // tope de la capacidad instalada (si el proyecto la declara).
@@ -740,7 +777,7 @@ export function aplicarOperacionDelTurno(
     costoPeriodo = (costoInsumosMes + costoFijoMes + cuotaMes) * meses;
   }
   const utilidadPeriodo = ingresoPeriodo - costoPeriodo;
-  const impuestoPeriodo = Math.max(0, utilidadPeriodo) * 0.25;
+  const impuestoPeriodo = exentoImpuestos ? 0 : Math.max(0, utilidadPeriodo) * 0.25;
   const utilidadDespuesImp = utilidadPeriodo - impuestoPeriodo;
 
   // Cobranza a crédito: con más de 30 días, solo se cobra una parte de lo pendiente cada
@@ -768,6 +805,7 @@ export function aplicarOperacionDelTurno(
   return diluirMultiplicadores({
     ...estado,
     ...sociosNuevo,
+    ...socialNuevo,
     ...moraNueva,
     ...temporadaSiguiente,
     cuentas_por_cobrar: cuentasPorCobrar,
@@ -814,6 +852,13 @@ function diluirMultiplicadores(estado: EstadoSimulacion, meses: number): EstadoS
     costos_multiplicador: volver(estado.costos_multiplicador),
     ...(estado.churn_multiplicador !== undefined
       ? { churn_multiplicador: volver(estado.churn_multiplicador) }
+      : {}),
+    // Un recorte de presupuesto dura más que una crisis pasajera: se recupera a la mitad de velocidad.
+    ...(estado.presupuesto_multiplicador !== undefined
+      ? {
+          presupuesto_multiplicador:
+            1 + (estado.presupuesto_multiplicador - 1) * Math.pow(1 - DECAIMIENTO_MENSUAL_MULTIPLICADORES / 2, meses),
+        }
       : {}),
   };
 }

@@ -222,7 +222,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -230,12 +230,12 @@ export default function SimularProyecto() {
             positivo={sim.estado_actual.caja > 0}
           />
           <Metrica
-            titulo="Ingresos acum."
+            titulo={sim.estado_actual.presupuesto_multiplicador !== undefined ? "Fondos recibidos" : "Ingresos acum."}
             valor={formatearBolivianos(sim.estado_actual.ingresos_acumulados)}
             positivo
           />
           <Metrica
-            titulo="Utilidad acum."
+            titulo={sim.estado_actual.presupuesto_multiplicador !== undefined ? "Fondos menos gastos" : "Utilidad acum."}
             valor={formatearBolivianos(sim.estado_actual.utilidad_acumulada)}
             positivo={sim.estado_actual.utilidad_acumulada >= 0}
           />
@@ -255,6 +255,22 @@ export default function SimularProyecto() {
               }
               positivo={sim.estado_actual.socios > 0}
             />
+          )}
+          {sim.estado_actual.presupuesto_multiplicador !== undefined && (
+            <>
+              <Metrica
+                titulo="Beneficio social"
+                valor={formatearBolivianos(sim.estado_actual.beneficio_social_acumulado ?? 0)}
+                detalle="Valor para la gente, no es plata en caja"
+                positivo
+              />
+              <Metrica
+                titulo="Cobertura del servicio"
+                valor={`${fmtNum((sim.estado_actual.cobertura ?? 1) * 100, 0)}%`}
+                detalle={`Fondos que llegan: ${fmtNum(sim.estado_actual.presupuesto_multiplicador * 100, 0)}% de lo previsto`}
+                positivo={(sim.estado_actual.cobertura ?? 1) >= 0.85 && sim.estado_actual.presupuesto_multiplicador >= 0.85}
+              />
+            </>
           )}
           {sim.estado_actual.factor_estacional !== undefined && (
             <Metrica
@@ -517,6 +533,12 @@ function PantallaFinalizada({
           />
           {simulacion.estado_actual.socios !== undefined && (
             <ResumenCelda titulo="Socios al final" valor={fmtNum(simulacion.estado_actual.socios, 0)} />
+          )}
+          {simulacion.estado_actual.presupuesto_multiplicador !== undefined && (
+            <ResumenCelda
+              titulo="Beneficio social generado"
+              valor={formatearBolivianos(simulacion.estado_actual.beneficio_social_acumulado ?? 0)}
+            />
           )}
           {simulacion.estado_actual.mora_multiplicador !== undefined && (
             <ResumenCelda
