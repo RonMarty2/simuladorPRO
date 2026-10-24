@@ -161,7 +161,11 @@ NO se adapta todavía (y por qué):
          de los eventos generales (por ejemplo EVT001 D, `costos *0.6`) dan una mejora neta sobre
          no haber tenido el evento. Hacer que la reputación pese en la demanda sería un cambio de
          motor; queda anotado para decidir con datos de alumnos reales.
-- [~] 5.3 (2026-10-23, parcial: hostal como estudiante en la app real, flujo completo OK) Probar en la app real un proyecto de cada tipo (ver memoria
+      4. (2026-10-23, tarde) Causa de que el azar quebrara 75%: los golpes se acumulaban 60 meses. Se
+         agrego `DECAIMIENTO_MENSUAL_MULTIPLICADORES = 0.1` (los multiplicadores vuelven a 1): no-rechazo
+         quiebra 2% bien jugado y 39% al azar. Decision abierta del owner: dureza (0,15 o 0,20 la baja).
+         Tambien: eventos generales acotados por rubro (`lib/eventos-por-rubro.ts`).
+- [~] 5.3 (2026-10-23, parcial: hostal, gimnasio y microcredito como estudiante en la app real, flujo completo OK; faltan 16 tipos) Probar en la app real un proyecto de cada tipo (ver memoria
       "probar todos los tipos").
 
 ## 5. Procedimiento para cada tipo en la Fase 2 (receta probada con 034 y 035)

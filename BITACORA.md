@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-23 — eventos propios por tipo de proyecto (migraciones 034 a 045) (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
+> **Última actualización**: 2026-10-23 — golpes de eventos que se diluyen, eventos generales por rubro y prueba en app real (eventos propios por tipo: migraciones 034 a 053) (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -683,6 +683,21 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
 - Los multiplicadores acumulados tienen tope (`LIMITES_MULTIPLICADORES`).
 - Control permanente de equilibrio en `motor-eventos-golpe.test.ts`: viables bien jugados casi no
   quiebran, rechazos bien jugados fracasan.
+- Los golpes se diluyen (2026-10-23, tarde): `DECAIMIENTO_MENSUAL_MULTIPLICADORES = 0.1` en
+  `lib/motor-eventos.ts`. Cada mes precio, demanda y costos vuelven 10% hacia 1. Antes se acumulaban
+  60 meses (costos x1,4 a x1,7 y quiebra de 80 a 100% sin decidir nada). Medido en las 56 plantillas
+  (20 partidas, evento mensual al 40%): proyectos no-rechazo quiebran 2% decidiendo bien y 39% al
+  azar (con 0,03: 3% y 61%; con 0,06: 3% y 51%). El azar aun es mas duro que el 24% que se medio
+  antes; subir el decaimiento a 0,15 o 0,20 es una decision de dificultad (borra tambien efectos
+  que el alumno elige). Campana de TV (70%) y panel solar (40%) fracasan menos de lo ideal.
+- Eventos generales acotados por rubro: `lib/eventos-por-rubro.ts` (tabla `TIPOS_POR_EVENTO_GENERAL` y
+  `TIPOS_EXCLUIDOS_POR_EVENTO`, solo para proyectos con `tipoNegocio`; los viejos no cambian). Cubre
+  EVT004, 006, 017, 018, 019, 024, 027, 028, 035, 036, 038, 043, 044 y 045. Criterio del equipo, sin
+  validar con gremios; puede haber otros eventos generales que no calcen con algun rubro.
+- Gimnasio: marketing 14.000 y promociones 6.000 al mes (CAC de Bs 333, LTV:CAC de 14 a 1; VAN 263.000).
+- Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS
+  llegan: turnos 41, 45, 55) y microcredito. Faltan 16 tipos. Al jugar siempre la opcion A el
+  microcredito quebro en el mes 15; no es error de calculo (sin eventos gana Bs 47.000 al mes).
 Pendientes del owner: verificar en la app que llegan eventos TUR/SUS, decidir si se investigan los 4
 tipos sin ficha y si `docs/metodologia/` se sube a GitHub.
 
