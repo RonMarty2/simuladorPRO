@@ -724,8 +724,13 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
     que los ingresos llegan juntos: se recalibro (factor 1,12) para que siga siendo marginal. El colchon de
     caja (`conColchonDeCaja`) ahora deja 60% de margen en vez de 25%. Festival y feria quiebran casi siempre
     jugando al azar (son un solo golpe al año).
-  Migraciones 054 a 058 aplicadas en Supabase el 2026-10-23; 059 pendiente de pegar por el owner.
-  Faltan con calculo comun: gastronomia/produccion/comercio/servicios (inventario, merma, capacidad).
+  * Gastronomia, produccion y comercio (`merma_multiplicador`, alias `merma`, `desperdicio`, `robos`): lo que se
+    compra y se pierde encarece los insumos; la merma sube sola si cae la demanda (mercaderia que se echa a
+    perder) y pesa mas en gastronomia (8%) que en produccion (4%) o comercio (2,5%). Servicios reutiliza la
+    cartera de clientes con inercia e impagos. Eventos PRD013-016 y SRV008-010 (migracion 060).
+  Con esto los 19 tipos tienen mecanica propia dentro de la simulacion. Migraciones 054 a 059 aplicadas en
+  Supabase el 2026-10-23; 060 pendiente de pegar por el owner.
+  Siguen sin modelar: inventario en bodega (cuanta plata queda parada en stock) y plazo de pago a proveedores.
   Los coeficientes de cada mecanica son criterio del equipo, sin validar con gremios.
 - Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS
   llegan: turnos 41, 45, 55) y microcredito. Faltan 16 tipos. Al jugar siempre la opcion A el

@@ -222,7 +222,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined || sim.estado_actual.eficacia_multiplicador !== undefined || sim.estado_actual.ocupacion_relativa !== undefined || sim.estado_actual.impagos_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined || sim.estado_actual.eficacia_multiplicador !== undefined || sim.estado_actual.ocupacion_relativa !== undefined || sim.estado_actual.impagos_multiplicador !== undefined || sim.estado_actual.merma_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -262,6 +262,14 @@ export default function SimularProyecto() {
               valor={`${fmtNum(sim.estado_actual.ocupacion_relativa * 100, 0)}%`}
               detalle="Del plan; cambia despacio"
               positivo={sim.estado_actual.ocupacion_relativa >= 0.9}
+            />
+          )}
+          {sim.estado_actual.merma_multiplicador !== undefined && (
+            <Metrica
+              titulo="Merma"
+              valor={`${fmtNum(sim.estado_actual.merma_multiplicador, 1)}x`}
+              detalle="Veces la prevista (desperdicio, vencidos, robos)"
+              positivo={sim.estado_actual.merma_multiplicador <= 1.5}
             />
           )}
           {sim.estado_actual.impagos_multiplicador !== undefined && (
@@ -411,6 +419,7 @@ const ETIQUETA_OCUPACION: Record<string, string> = {
   medios: "Audiencia frente al plan",
   franquicia: "Fuerza de la marca",
   tecnologia: "Usuarios activos",
+  servicios: "Cartera de clientes",
 };
 const ETIQUETA_IMPAGOS: Record<string, string> = {
   alquiler: "Inquilinos morosos",
@@ -418,6 +427,7 @@ const ETIQUETA_IMPAGOS: Record<string, string> = {
   educacion_privada: "Pensiones impagas",
   concesion: "Tarifas impagas",
   medios: "Anunciantes morosos",
+  servicios: "Clientes morosos",
 };
 
 /** Etiqueta de la temporada según cuánto se vende frente al promedio del año. */

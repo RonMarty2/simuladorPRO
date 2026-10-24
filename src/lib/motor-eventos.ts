@@ -66,6 +66,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     ...estadoInicialSocial(proyecto),
     ...estadoInicialEficacia(proyecto),
     ...estadoInicialContratos(proyecto),
+    ...estadoInicialMerma(proyecto),
   };
 }
 
@@ -199,6 +200,7 @@ const IMPAGOS_BASE_POR_TIPO: Record<string, number> = {
   educacion_privada: 0.06,
   concesion: 0.07,
   medios: 0.05, // anunciantes que pagan tarde o no pagan
+  servicios: 0.04, // clientes que se atrasan o no pagan una factura
 };
 const INERCIA_OCUPACION_POR_TIPO: Record<string, number> = {
   alquiler: 0.15,
@@ -207,6 +209,7 @@ const INERCIA_OCUPACION_POR_TIPO: Record<string, number> = {
   medios: 0.12, // la audiencia se construye y se pierde de a poco
   franquicia: 0.12, // la fuerza de la marca mueve a los clientes con retraso
   tecnologia: 0.12, // los usuarios activos de una plataforma crecen y se van de a poco
+  servicios: 0.1, // la cartera de clientes con contratos cambia despacio
 };
 
 function estadoInicialContratos(
@@ -220,6 +223,22 @@ function estadoInicialContratos(
     ...(tipo in INERCIA_OCUPACION_POR_TIPO && !conSocios ? { ocupacion_relativa: 1 } : {}),
     ...(tipo ? { tipo_negocio: tipo } : {}),
   };
+}
+
+/** Merma normal de cada rubro como fracción de lo que se compra, y cuánto se agrava cuando baja la demanda. */
+const MERMA_BASE_POR_TIPO: Record<string, number> = {
+  gastronomia: 0.08, // perecederos: se echan a perder si no se venden
+  produccion: 0.04, // desperdicio y productos rechazados
+  comercio: 0.025, // mercadería vencida, robos y obsolescencia
+};
+const MERMA_PRESION_POR_TIPO: Record<string, number> = {
+  gastronomia: 0.4,
+  produccion: 0.15,
+  comercio: 0.2,
+};
+
+function estadoInicialMerma(p: Proyecto): Pick<EstadoSimulacion, "merma_multiplicador"> | Record<string, never> {
+  return p.tipoNegocio && p.tipoNegocio in MERMA_BASE_POR_TIPO ? { merma_multiplicador: 1 } : {};
 }
 
 function estadoInicialMicrocredito(
@@ -500,6 +519,12 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   audiencia: "ocupacion_relativa",
   usuarios_activos: "ocupacion_relativa",
   marca: "ocupacion_relativa",
+  // Merma: desperdicio, vencidos y robos
+  merma: "merma_multiplicador",
+  desperdicio: "merma_multiplicador",
+  mermas: "merma_multiplicador",
+  robos: "merma_multiplicador",
+  perdidas_inventario: "merma_multiplicador",
   // Beneficio logrado frente al esperado (ahorro, ventas adicionales)
   ahorro: "eficacia_multiplicador",
   eficacia: "eficacia_multiplicador",
@@ -531,6 +556,7 @@ export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
   eficacia_multiplicador: [0.2, 1.6],
   impagos_multiplicador: [0.5, 4.0],
   ocupacion_relativa: [0, 1.6],
+  merma_multiplicador: [0.5, 4.0],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -566,6 +592,7 @@ function aplicarConsecuenciaAlEstado(
   if (claveEstado === "presupuesto_multiplicador" && estado.presupuesto_multiplicador === undefined) return estado;
   if (claveEstado === "eficacia_multiplicador" && estado.eficacia_multiplicador === undefined) return estado;
   if (claveEstado === "impagos_multiplicador" && estado.impagos_multiplicador === undefined) return estado;
+  if (claveEstado === "merma_multiplicador" && estado.merma_multiplicador === undefined) return estado;
   if (claveEstado === "ocupacion_relativa" && estado.ocupacion_relativa === undefined) return estado;
   const valorActual =
     claveEstado === "dias_cobro"
@@ -853,7 +880,12 @@ export function aplicarOperacionDelTurno(
     const demandaCostos = base.estacionalidadCostos
       ? Math.min(demanda / temporada * temporadaCostos, tope ?? Infinity)
       : demanda;
-    const costoInsumosMes = (insumosAnio / 12) * demandaCostos * estado.costos_multiplicador * efectoMora;
+    // Merma: lo que se compra y se pierde (desperdicio, vencidos, robos) sube el costo de insumos.
+    const mermaBase = MERMA_BASE_POR_TIPO[base.tipoNegocio ?? ""] ?? 0;
+    const efectoMerma =
+      estado.merma_multiplicador !== undefined ? 1 + mermaBase * (estado.merma_multiplicador - 1) : 1;
+    const costoInsumosMes =
+      (insumosAnio / 12) * demandaCostos * estado.costos_multiplicador * efectoMora * efectoMerma;
     const costoFijoMes = (fijosAnio / 12) * estado.costos_multiplicador;
     ingresoPeriodo = ingresoMes * meses;
     costoPeriodo = (costoInsumosMes + costoFijoMes + cuotaMes) * meses;
@@ -895,6 +927,14 @@ export function aplicarOperacionDelTurno(
     contratosNuevo.impagos_multiplicador = Math.max(0.5, Math.min(4, 1 + (siguiente - 1) * (1 - 0.04)));
   }
 
+  const mermaNueva: Partial<EstadoSimulacion> = {};
+  if (estado.merma_multiplicador !== undefined) {
+    // Si vendes menos de lo que compraste, la mercadería se echa a perder o queda parada.
+    const presion = Math.max(0, 1 - estado.demanda_multiplicador) * (MERMA_PRESION_POR_TIPO[base.tipoNegocio ?? ""] ?? 0.2);
+    const siguiente = estado.merma_multiplicador + presion;
+    mermaNueva.merma_multiplicador = Math.max(0.5, Math.min(4, 1 + (siguiente - 1) * (1 - 0.05)));
+  }
+
   const temporadaSiguiente: Partial<EstadoSimulacion> =
     estado.factor_estacional !== undefined && base.estacionalidad
       ? {
@@ -908,6 +948,7 @@ export function aplicarOperacionDelTurno(
     ...sociosNuevo,
     ...socialNuevo,
     ...contratosNuevo,
+    ...mermaNueva,
     ...moraNueva,
     ...temporadaSiguiente,
     cuentas_por_cobrar: cuentasPorCobrar,

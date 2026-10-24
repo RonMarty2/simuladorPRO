@@ -130,3 +130,52 @@ describe("medios, franquicia, tecnología y eventos: audiencia, marca, usuarios 
     expect((ventas[6] + ventas[7]) / total).toBeGreaterThan(0.5);
   });
 });
+
+describe("gastronomía, producción, comercio y servicios: merma y cartera de clientes", () => {
+  it("gastronomía, producción y comercio llevan merma; servicios lleva cartera de clientes", () => {
+    for (const c of ["restaurante", "cafeteria", "fabrica", "distribuidora", "ferreteria"]) {
+      expect(inicializarEstadoDesdeProyecto(crear(c)).merma_multiplicador, c).toBe(1);
+    }
+    for (const c of ["lavanderia", "consultora", "agenciamkt"]) {
+      const e = inicializarEstadoDesdeProyecto(crear(c));
+      expect(e.ocupacion_relativa, c).toBe(1);
+      expect(e.impagos_multiplicador, c).toBe(1);
+      expect(e.merma_multiplicador, c).toBeUndefined();
+    }
+  });
+
+  it("sin eventos reproduce el plan del año 1", () => {
+    for (const c of ["restaurante", "panaderia", "fabrica", "distribuidora", "lavanderia", "consultora"]) {
+      const { e, p } = correr(c, 12);
+      const plan: any = construirFlujoCaja(p);
+      expect(e.ingresos_acumulados, c).toBeCloseTo(plan.ingresos[0], 0);
+    }
+  });
+
+  it("más merma encarece los insumos y deja menos caja", () => {
+    for (const c of ["restaurante", "fabrica", "distribuidora"]) {
+      const normal = correr(c, 12).e;
+      const peor = correr(c, 12, (e) => aplicarDecisionAEstado(e, evento, opcion({ merma: "*3" }))).e;
+      expect(peor.caja, c).toBeLessThan(normal.caja);
+    }
+  });
+
+  it("si cae la demanda la mercadería se echa a perder: la merma sube sola", () => {
+    const { e } = correr("restaurante", 6, (e) => ({ ...e, demanda_multiplicador: 0.6 }));
+    expect(e.merma_multiplicador).toBeGreaterThan(1.1);
+  });
+
+  it("la merma pesa más en gastronomía que en comercio", () => {
+    const rest = correr("restaurante", 12, (e) => aplicarDecisionAEstado(e, evento, opcion({ merma: "*3" })));
+    const dist = correr("distribuidora", 12, (e) => aplicarDecisionAEstado(e, evento, opcion({ merma: "*3" })));
+    const dRest = (correr("restaurante", 12).e.caja - rest.e.caja) / correr("restaurante", 12).e.ingresos_acumulados;
+    const dDist = (correr("distribuidora", 12).e.caja - dist.e.caja) / correr("distribuidora", 12).e.ingresos_acumulados;
+    expect(dRest).toBeGreaterThan(dDist);
+  });
+
+  it("merma e impagos no hacen nada en otros tipos", () => {
+    const antes = inicializarEstadoDesdeProyecto(crear("gimnasio"));
+    const despues = aplicarDecisionAEstado(antes, evento, opcion({ merma: "*3" }));
+    expect(despues.merma_multiplicador).toBeUndefined();
+  });
+});

@@ -100,6 +100,12 @@ export interface EstadoSimulacion {
   ocupacion_relativa?: number;
   /** Tipo de negocio del proyecto, para nombrar bien lo que se muestra (audiencia, matrícula, marca...). */
   tipo_negocio?: string;
+
+  /**
+   * Negocios que compran insumos o mercadería (gastronomía, producción, comercio): cuánta merma
+   * hay frente a la prevista (1 = la del plan; desperdicio, productos vencidos, robos, rechazos).
+   */
+  merma_multiplicador?: number;
 }
 
 export interface Simulacion {
