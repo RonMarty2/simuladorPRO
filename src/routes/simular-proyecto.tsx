@@ -222,7 +222,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined || sim.estado_actual.eficacia_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -254,6 +254,14 @@ export default function SimularProyecto() {
                   : undefined
               }
               positivo={sim.estado_actual.socios > 0}
+            />
+          )}
+          {sim.estado_actual.eficacia_multiplicador !== undefined && (
+            <Metrica
+              titulo="Beneficio logrado"
+              valor={`${fmtNum(sim.estado_actual.eficacia_multiplicador * 100, 0)}%`}
+              detalle="De lo que prometia el proyecto"
+              positivo={sim.estado_actual.eficacia_multiplicador >= 0.85}
             />
           )}
           {sim.estado_actual.presupuesto_multiplicador !== undefined && (

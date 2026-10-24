@@ -64,6 +64,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     ...estadoInicialMicrocredito(proyecto),
     ...estadoEstacional(proyecto, 0),
     ...estadoInicialSocial(proyecto),
+    ...estadoInicialEficacia(proyecto),
   };
 }
 
@@ -174,6 +175,17 @@ function estadoInicialSocial(
 ): Pick<EstadoSimulacion, "presupuesto_multiplicador" | "beneficio_social_acumulado" | "cobertura"> | Record<string, never> {
   if (p.tipoNegocio !== "social") return {};
   return { presupuesto_multiplicador: 1, beneficio_social_acumulado: 0, cobertura: 1 };
+}
+
+/**
+ * Costo-beneficio y marketing: el "ingreso" es un beneficio que se estima (ahorro de costos,
+ * pérdidas evitadas, ventas adicionales de una campaña). Lo que se logra de verdad puede
+ * quedar por debajo de lo esperado: la eficacia dice cuánto.
+ */
+function estadoInicialEficacia(p: Proyecto): Pick<EstadoSimulacion, "eficacia_multiplicador"> | Record<string, never> {
+  return p.tipoNegocio === "costo_beneficio" || p.tipoNegocio === "marketing"
+    ? { eficacia_multiplicador: 1 }
+    : {};
 }
 
 function estadoInicialMicrocredito(
@@ -443,6 +455,12 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   morosidad: "mora_multiplicador",
   incobrables: "mora_multiplicador",
   previsiones: "mora_multiplicador",
+  // Beneficio logrado frente al esperado (ahorro, ventas adicionales)
+  ahorro: "eficacia_multiplicador",
+  eficacia: "eficacia_multiplicador",
+  efectividad: "eficacia_multiplicador",
+  ventas_incrementales: "eficacia_multiplicador",
+  beneficio_esperado: "eficacia_multiplicador",
   // Proyectos sociales: fondos que llegan de quien financia
   presupuesto: "presupuesto_multiplicador",
   financiamiento_publico: "presupuesto_multiplicador",
@@ -465,6 +483,7 @@ export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
   churn_multiplicador: [0.4, 3.0],
   mora_multiplicador: [0.5, 3.0],
   presupuesto_multiplicador: [0, 1.6],
+  eficacia_multiplicador: [0.2, 1.6],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -498,6 +517,7 @@ function aplicarConsecuenciaAlEstado(
   if (claveEstado === "socios" && estado.socios === undefined) return estado;
   if (claveEstado === "mora_multiplicador" && estado.mora_multiplicador === undefined) return estado;
   if (claveEstado === "presupuesto_multiplicador" && estado.presupuesto_multiplicador === undefined) return estado;
+  if (claveEstado === "eficacia_multiplicador" && estado.eficacia_multiplicador === undefined) return estado;
   const valorActual =
     claveEstado === "dias_cobro"
       ? (estado.dias_cobro ?? 30)
@@ -762,7 +782,8 @@ export function aplicarOperacionDelTurno(
     let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion) * temporada;
     if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
 
-    const ingresoMes = (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda;
+    const ingresoMes =
+      (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda * (estado.eficacia_multiplicador ?? 1);
     // Microcrédito: la previsión por mora sigue a la mora viva, no al plan.
     const efectoMora =
       base.mora && estado.mora_multiplicador !== undefined
@@ -852,6 +873,9 @@ function diluirMultiplicadores(estado: EstadoSimulacion, meses: number): EstadoS
     costos_multiplicador: volver(estado.costos_multiplicador),
     ...(estado.churn_multiplicador !== undefined
       ? { churn_multiplicador: volver(estado.churn_multiplicador) }
+      : {}),
+    ...(estado.eficacia_multiplicador !== undefined
+      ? { eficacia_multiplicador: volver(estado.eficacia_multiplicador) }
       : {}),
     // Un recorte de presupuesto dura más que una crisis pasajera: se recupera a la mitad de velocidad.
     ...(estado.presupuesto_multiplicador !== undefined

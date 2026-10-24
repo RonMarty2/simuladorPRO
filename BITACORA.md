@@ -695,6 +695,26 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
   EVT004, 006, 017, 018, 019, 024, 027, 028, 035, 036, 038, 043, 044 y 045. Criterio del equipo, sin
   validar con gremios; puede haber otros eventos generales que no calcen con algun rubro.
 - Gimnasio: marketing 14.000 y promociones 6.000 al mes (CAC de Bs 333, LTV:CAC de 14 a 1; VAN 263.000).
+- MECANICA PROPIA POR TIPO dentro de la simulacion (2026-10-23, tarde; el owner pidio que cada tipo tenga su
+  propia manera de evaluar viabilidad, no solo noticias). Cada variable es opcional en `EstadoSimulacion`
+  (las simulaciones viejas siguen con el calculo comun) y sin eventos reproduce exactamente el plan del
+  constructor. Hecho:
+  * Suscripcion (`socios`, `churn_multiplicador`, `construirPlanSocios`): socios con altas y bajas mes a mes;
+    el precio, la reputacion y la demanda mueven las bajas. Eventos SUS011-016 (migracion 054).
+  * Microcredito (`mora_multiplicador`, `construirPlanMora`, `COEF_MORA`): la mora sube si se coloca apurado o
+    cae la reputacion y pesa en la prevision. Eventos MIC012-017 (migracion 055).
+  * Turismo y agricultura (`lib/estacionalidad.ts`, `factor_estacional`): temporadas; el total anual es el del
+    plan, la caja sube y baja. Agricultura tiene ademas calendario propio de costos (se gasta al sembrar).
+    Se asume que el primer mes es enero.
+  * Social (`presupuesto_multiplicador`, `beneficio_social_acumulado`, `cobertura`): antes el beneficio social
+    entraba a la caja como si fuera plata; ahora lo financia un tercero y el beneficio no es caja. Eventos
+    SOC012-017 (migracion 056).
+  * Costo-beneficio y marketing (`eficacia_multiplicador`, alias `ahorro`): beneficio logrado frente al
+    esperado. Eventos CBN012-015 y MKT012-015 (migracion 057).
+  Migraciones 054 a 055 aplicadas en Supabase el 2026-10-23; 056 y 057 pendientes de pegar por el owner.
+  Faltan con calculo comun: alquiler, salud privada, educacion privada, medios, eventos, franquicia,
+  concesion, tecnologia, gastronomia/produccion/comercio/servicios (inventario, merma, capacidad).
+  Los coeficientes de cada mecanica son criterio del equipo, sin validar con gremios.
 - Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS
   llegan: turnos 41, 45, 55) y microcredito. Faltan 16 tipos. Al jugar siempre la opcion A el
   microcredito quebro en el mes 15; no es error de calculo (sin eventos gana Bs 47.000 al mes).

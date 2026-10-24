@@ -79,6 +79,12 @@ export interface EstadoSimulacion {
   beneficio_social_acumulado?: number;
   /** Qué parte del servicio planeado se está entregando este mes (1 = todo). */
   cobertura?: number;
+
+  /**
+   * Proyectos que se evalúan por un beneficio incremental (ahorro, pérdidas evitadas, ventas
+   * adicionales): qué parte del beneficio esperado se está logrando de verdad (1 = todo lo previsto).
+   */
+  eficacia_multiplicador?: number;
 }
 
 export interface Simulacion {
