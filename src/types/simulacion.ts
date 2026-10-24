@@ -54,6 +54,14 @@ export interface EstadoSimulacion {
   bajas_mes?: number;
   /** Multiplica las bajas del plan (1 = normal). Los eventos lo mueven y se diluye con los meses. */
   churn_multiplicador?: number;
+
+  /**
+   * Solo microcrédito: cuánto pesa la mora frente a la prevista (1 = la del plan). Sube si
+   * creces demasiado rápido o pierdes reputación y los eventos la mueven directamente.
+   */
+  mora_multiplicador?: number;
+  /** Mora prevista del plan como fracción de la cartera (0,052 = 5,2%), si se pudo calcular. */
+  mora_base?: number;
 }
 
 export interface Simulacion {

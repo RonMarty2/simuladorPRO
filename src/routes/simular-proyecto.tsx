@@ -221,7 +221,7 @@ export default function SimularProyecto() {
         <div className="mt-2 h-1.5 w-full rounded bg-muted">
           <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
         </div>
-        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
             titulo="Caja"
             valor={formatearBolivianos(sim.estado_actual.caja)}
@@ -253,6 +253,14 @@ export default function SimularProyecto() {
                   : undefined
               }
               positivo={sim.estado_actual.socios > 0}
+            />
+          )}
+          {sim.estado_actual.mora_multiplicador !== undefined && (
+            <Metrica
+              titulo="Mora de la cartera"
+              valor={textoMora(sim.estado_actual.mora_multiplicador, sim.estado_actual.mora_base)}
+              detalle={`${fmtNum(sim.estado_actual.mora_multiplicador, 1)} veces la prevista`}
+              positivo={sim.estado_actual.mora_multiplicador <= 1.5}
             />
           )}
         </div>
@@ -344,6 +352,12 @@ export default function SimularProyecto() {
       {historial.length > 0 && <GraficosHistorial historial={historial} />}
     </div>
   );
+}
+
+/** Mora para mostrar: en porcentaje de la cartera si el plan la declara, si no, "x veces la prevista". */
+function textoMora(multiplicador: number, base?: number): string {
+  if (base !== undefined) return `${fmtNum(base * multiplicador * 100, 1)}%`;
+  return `${fmtNum(multiplicador, 1)}x`;
 }
 
 function Metrica({
@@ -487,6 +501,12 @@ function PantallaFinalizada({
           />
           {simulacion.estado_actual.socios !== undefined && (
             <ResumenCelda titulo="Socios al final" valor={fmtNum(simulacion.estado_actual.socios, 0)} />
+          )}
+          {simulacion.estado_actual.mora_multiplicador !== undefined && (
+            <ResumenCelda
+              titulo="Mora al final"
+              valor={textoMora(simulacion.estado_actual.mora_multiplicador, simulacion.estado_actual.mora_base)}
+            />
           )}
         </div>
 

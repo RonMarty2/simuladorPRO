@@ -60,6 +60,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     dias_cobro: DIAS_COBRO_POR_TIPO[proyecto.tipoNegocio as CategoriaPlantilla] ?? 30,
     cuentas_por_cobrar: 0,
     ...estadoInicialSuscripcion(proyecto),
+    ...estadoInicialMicrocredito(proyecto),
   };
 }
 
@@ -118,6 +119,66 @@ function estadoInicialSuscripcion(
   const plan = construirPlanSocios(p);
   return plan ? { socios: plan.sociosPlan[0], churn_multiplicador: 1 } : {};
 }
+
+// ============================================================================
+// MICROCRÉDITO: la mora es una variable viva
+// ============================================================================
+
+/** Cuánto del costo directo del crédito es previsión por mora, y la mora prevista del plan. */
+export interface PlanMora {
+  /** Parte del costo directo anual que es previsión por mora (0 a 1). */
+  parteDelCosto: number;
+  /** Mora prevista como fracción de la cartera, si el crédito declara su monto. */
+  moraBase?: number;
+}
+
+export function construirPlanMora(p: Proyecto): PlanMora | null {
+  if (p.tipoNegocio !== "microcredito") return null;
+  const esMora = (d: string) => /mora|previsi/i.test(d);
+  let moraAnual = 0;
+  let totalAnual = 0;
+  let moraBase: number | undefined;
+  for (const prod of p.productos) {
+    const unidades = Number(prod.cantidades?.[0] ?? 0);
+    for (const c of p.costosDirectos ?? []) {
+      if ((c.productoId ?? null) !== prod.id) continue;
+      const monto = c.cantidadPorUnidad * c.costoUnitario * unidades;
+      totalAnual += monto;
+      if (esMora(c.descripcion)) {
+        moraAnual += monto;
+        const credito = prod.nombre.match(/Bs\s?([\d.]+)/);
+        const valor = credito ? Number(credito[1].replace(/\./g, "")) : 0;
+        if (valor > 0) moraBase = (c.cantidadPorUnidad * c.costoUnitario) / valor;
+      }
+    }
+  }
+  if (!(moraAnual > 0) || !(totalAnual > 0)) return null;
+  return { parteDelCosto: moraAnual / totalAnual, moraBase };
+}
+
+function estadoInicialMicrocredito(
+  p: Proyecto
+): Pick<EstadoSimulacion, "mora_multiplicador" | "mora_base"> | Record<string, never> {
+  const plan = construirPlanMora(p);
+  if (!plan) return {};
+  return { mora_multiplicador: 1, ...(plan.moraBase !== undefined ? { mora_base: plan.moraBase } : {}) };
+}
+
+/**
+ * La mora del mes que viene: crece cuando colocas mucho más de lo previsto (los créditos
+ * apurados se deterioran meses después) y cuando tu reputación cae; con el tiempo se va
+ * recuperando despacio.
+ */
+function moraDelSiguienteMes(estado: EstadoSimulacion): number {
+  const actual = estado.mora_multiplicador ?? 1;
+  const crecimientoApurado = Math.max(0, estado.demanda_multiplicador - 1.1) * COEF_MORA.crecimiento;
+  const reputacionBaja = Math.max(0, 0.5 - estado.reputacion) * COEF_MORA.reputacion;
+  const siguiente = actual + crecimientoApurado + reputacionBaja;
+  return 1 + (siguiente - 1) * (1 - COEF_MORA.recuperacion);
+}
+
+/** Qué tanto mueve cada cosa a la mora. Criterio del equipo, sin validar con gremios. */
+export const COEF_MORA = { crecimiento: 0.25, reputacion: 0.2, recuperacion: 0.03 };
 
 /**
  * Un mes de un negocio de suscripción. Los socios son un inventario vivo:
@@ -357,6 +418,11 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   bajas: "churn_multiplicador",
   cancelaciones: "churn_multiplicador",
   abandono: "churn_multiplicador",
+  // Microcrédito: mora de la cartera
+  mora: "mora_multiplicador",
+  morosidad: "mora_multiplicador",
+  incobrables: "mora_multiplicador",
+  previsiones: "mora_multiplicador",
   // Percepción del cliente y del equipo: se reflejan en la reputación
   calidad: "reputacion",
   servicio: "reputacion",
@@ -371,6 +437,7 @@ export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
   demanda_multiplicador: [0.3, 1.5],
   costos_multiplicador: [0.8, 2.0],
   churn_multiplicador: [0.4, 3.0],
+  mora_multiplicador: [0.5, 3.0],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -402,6 +469,7 @@ function aplicarConsecuenciaAlEstado(
 
   // Los socios solo existen en proyectos de suscripción: en los demás el efecto no aplica.
   if (claveEstado === "socios" && estado.socios === undefined) return estado;
+  if (claveEstado === "mora_multiplicador" && estado.mora_multiplicador === undefined) return estado;
   const valorActual =
     claveEstado === "dias_cobro"
       ? (estado.dias_cobro ?? 30)
@@ -488,6 +556,8 @@ export interface MetricasProyectoBase {
   limiteDemanda?: number[];
   /** Solo suscripción: plan de socios mes a mes. Con esto los socios son una variable viva. */
   suscripcion?: PlanSocios;
+  /** Solo microcrédito: qué parte del costo es previsión por mora. */
+  mora?: PlanMora;
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -560,6 +630,7 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
   return {
     limiteDemanda: hayCapacidad ? limiteDemanda : undefined,
     suscripcion: construirPlanSocios(p) ?? undefined,
+    mora: construirPlanMora(p) ?? undefined,
     ingresosAnuales,
     costosAnualesFijos: personal + admin + comerc,
     costoInsumosPorUnidad,
@@ -628,7 +699,12 @@ export function aplicarOperacionDelTurno(
     if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
 
     const ingresoMes = (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda;
-    const costoInsumosMes = (insumosAnio / 12) * demanda * estado.costos_multiplicador;
+    // Microcrédito: la previsión por mora sigue a la mora viva, no al plan.
+    const efectoMora =
+      base.mora && estado.mora_multiplicador !== undefined
+        ? 1 + base.mora.parteDelCosto * (estado.mora_multiplicador - 1)
+        : 1;
+    const costoInsumosMes = (insumosAnio / 12) * demanda * estado.costos_multiplicador * efectoMora;
     const costoFijoMes = (fijosAnio / 12) * estado.costos_multiplicador;
     ingresoPeriodo = ingresoMes * meses;
     costoPeriodo = (costoInsumosMes + costoFijoMes + cuotaMes) * meses;
@@ -646,9 +722,15 @@ export function aplicarOperacionDelTurno(
   const cuentasPorCobrar = pendiente - cobrado;
   const flujoDelPeriodo = cobrado - costoPeriodo - impuestoPeriodo;
 
+  const moraNueva: Partial<EstadoSimulacion> =
+    estado.mora_multiplicador !== undefined
+      ? { mora_multiplicador: Math.max(0.5, Math.min(3, moraDelSiguienteMes(estado))) }
+      : {};
+
   return diluirMultiplicadores({
     ...estado,
     ...sociosNuevo,
+    ...moraNueva,
     cuentas_por_cobrar: cuentasPorCobrar,
     caja: estado.caja + flujoDelPeriodo,
     delta_caja: flujoDelPeriodo,
