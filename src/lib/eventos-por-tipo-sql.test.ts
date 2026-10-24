@@ -14,7 +14,7 @@ const ESTADO: EstadoSimulacion = {
   caja: 100000, deuda: 50000, precio_venta_multiplicador: 1, demanda_multiplicador: 1,
   costos_multiplicador: 1, reputacion: 0.5, ingresos_acumulados: 0, costos_acumulados: 0,
   utilidad_acumulada: 0, ultimo_evento: null, ultima_decision: null, ultimo_feedback: null,
-  delta_caja: 0, delta_ingresos: 0, socios: 100, churn_multiplicador: 1, mora_multiplicador: 1, presupuesto_multiplicador: 1, dias_cobro: 30, eficacia_multiplicador: 1,
+  delta_caja: 0, delta_ingresos: 0, socios: 100, churn_multiplicador: 1, mora_multiplicador: 1, presupuesto_multiplicador: 1, dias_cobro: 30, eficacia_multiplicador: 1, impagos_multiplicador: 1, ocupacion_relativa: 1,
 };
 
 function leerEventos(sql: string) {

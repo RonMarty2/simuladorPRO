@@ -711,8 +711,12 @@ Motor de la simulación (cambiado el 2026-10-23, simulaciones en curso incluidas
     SOC012-017 (migracion 056).
   * Costo-beneficio y marketing (`eficacia_multiplicador`, alias `ahorro`): beneficio logrado frente al
     esperado. Eventos CBN012-015 y MKT012-015 (migracion 057).
-  Migraciones 054 a 055 aplicadas en Supabase el 2026-10-23; 056 y 057 pendientes de pegar por el owner.
-  Faltan con calculo comun: alquiler, salud privada, educacion privada, medios, eventos, franquicia,
+  * Alquiler, salud privada, educacion privada y concesion (`ocupacion_relativa`, `impagos_multiplicador`):
+    los contratos y matriculas se mueven con inercia (la ocupacion sigue a la demanda con retraso) y una parte
+    de lo facturado no se cobra (morosidad de inquilinos, glosas, pensiones, tarifas). Eventos ALQ012-015,
+    SAL012-015, EDP010-012 y CON011-013 (migracion 058).
+  Migraciones 054 a 057 aplicadas en Supabase el 2026-10-23; 058 pendiente de pegar por el owner.
+  Faltan con calculo comun: medios, eventos, franquicia,
   concesion, tecnologia, gastronomia/produccion/comercio/servicios (inventario, merma, capacidad).
   Los coeficientes de cada mecanica son criterio del equipo, sin validar con gremios.
 - Prueba en la app real (como estudiante, 2026-10-23): hostal, gimnasio (suscripcion, eventos SUS

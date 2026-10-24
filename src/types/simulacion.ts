@@ -85,6 +85,19 @@ export interface EstadoSimulacion {
    * adicionales): qué parte del beneficio esperado se está logrando de verdad (1 = todo lo previsto).
    */
   eficacia_multiplicador?: number;
+
+  /**
+   * Negocios que cobran a crédito o por contrato (alquiler, salud privada, educación privada,
+   * concesión): cuánto pesan los impagos frente a los previstos (1 = los del plan; las glosas
+   * de aseguradoras, la morosidad de inquilinos o de pensiones).
+   */
+  impagos_multiplicador?: number;
+  /**
+   * Negocios con contratos o matrículas (alquiler, educación, concesión): qué parte de lo
+   * planeado está ocupado hoy (1 = el plan). Cambia despacio porque los clientes no se van ni
+   * llegan de un mes a otro.
+   */
+  ocupacion_relativa?: number;
 }
 
 export interface Simulacion {

@@ -65,6 +65,7 @@ export function inicializarEstadoDesdeProyecto(proyecto: Proyecto): EstadoSimula
     ...estadoEstacional(proyecto, 0),
     ...estadoInicialSocial(proyecto),
     ...estadoInicialEficacia(proyecto),
+    ...estadoInicialContratos(proyecto),
   };
 }
 
@@ -186,6 +187,32 @@ function estadoInicialEficacia(p: Proyecto): Pick<EstadoSimulacion, "eficacia_mu
   return p.tipoNegocio === "costo_beneficio" || p.tipoNegocio === "marketing"
     ? { eficacia_multiplicador: 1 }
     : {};
+}
+
+/**
+ * Negocios con contratos y cobranza: la ocupación se mueve despacio y una parte de lo
+ * facturado puede no cobrarse. Cada tipo tiene su propia inercia y sus impagos normales.
+ */
+const IMPAGOS_BASE_POR_TIPO: Record<string, number> = {
+  alquiler: 0.04,
+  salud_privada: 0.08,
+  educacion_privada: 0.06,
+  concesion: 0.07,
+};
+const INERCIA_OCUPACION_POR_TIPO: Record<string, number> = {
+  alquiler: 0.15,
+  educacion_privada: 0.08,
+  concesion: 0.1,
+};
+
+function estadoInicialContratos(
+  p: Proyecto
+): Pick<EstadoSimulacion, "impagos_multiplicador" | "ocupacion_relativa"> | Record<string, never> {
+  const tipo = p.tipoNegocio ?? "";
+  return {
+    ...(tipo in IMPAGOS_BASE_POR_TIPO ? { impagos_multiplicador: 1 } : {}),
+    ...(tipo in INERCIA_OCUPACION_POR_TIPO ? { ocupacion_relativa: 1 } : {}),
+  };
 }
 
 function estadoInicialMicrocredito(
@@ -455,6 +482,14 @@ const aliasACampo: Record<string, keyof EstadoSimulacion> = {
   morosidad: "mora_multiplicador",
   incobrables: "mora_multiplicador",
   previsiones: "mora_multiplicador",
+  // Contratos y cobranza: impagos de inquilinos, pensiones o aseguradoras
+  impagos: "impagos_multiplicador",
+  glosas: "impagos_multiplicador",
+  morosidad_inquilinos: "impagos_multiplicador",
+  pensiones_impagas: "impagos_multiplicador",
+  ocupacion: "ocupacion_relativa",
+  inquilinos: "ocupacion_relativa",
+  matricula: "ocupacion_relativa",
   // Beneficio logrado frente al esperado (ahorro, ventas adicionales)
   ahorro: "eficacia_multiplicador",
   eficacia: "eficacia_multiplicador",
@@ -484,6 +519,8 @@ export const LIMITES_MULTIPLICADORES: Record<string, [number, number]> = {
   mora_multiplicador: [0.5, 3.0],
   presupuesto_multiplicador: [0, 1.6],
   eficacia_multiplicador: [0.2, 1.6],
+  impagos_multiplicador: [0.5, 4.0],
+  ocupacion_relativa: [0, 1.6],
 };
 
 // "+1500" en estos campos es un pago en Bs: sale de la caja una sola vez
@@ -518,6 +555,8 @@ function aplicarConsecuenciaAlEstado(
   if (claveEstado === "mora_multiplicador" && estado.mora_multiplicador === undefined) return estado;
   if (claveEstado === "presupuesto_multiplicador" && estado.presupuesto_multiplicador === undefined) return estado;
   if (claveEstado === "eficacia_multiplicador" && estado.eficacia_multiplicador === undefined) return estado;
+  if (claveEstado === "impagos_multiplicador" && estado.impagos_multiplicador === undefined) return estado;
+  if (claveEstado === "ocupacion_relativa" && estado.ocupacion_relativa === undefined) return estado;
   const valorActual =
     claveEstado === "dias_cobro"
       ? (estado.dias_cobro ?? 30)
@@ -610,6 +649,8 @@ export interface MetricasProyectoBase {
   estacionalidad?: number[];
   /** Si los costos variables siguen otro calendario que las ventas (agricultura): su perfil mensual. */
   estacionalidadCostos?: number[];
+  /** Tipo de negocio (para las reglas de contratos e impagos). */
+  tipoNegocio?: string;
 }
 
 export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
@@ -685,6 +726,7 @@ export function calcularBaseProyecto(p: Proyecto): MetricasProyectoBase {
     mora: construirPlanMora(p) ?? undefined,
     estacionalidad: perfilEstacional(p.tipoNegocio),
     estacionalidadCostos: perfilEstacionalCostos(p.tipoNegocio),
+    tipoNegocio: p.tipoNegocio,
     ingresosAnuales,
     costosAnualesFijos: personal + admin + comerc,
     costoInsumosPorUnidad,
@@ -780,10 +822,19 @@ export function aplicarOperacionDelTurno(
     // Los costos variables siguen a las ventas, salvo que el tipo tenga su propio calendario.
     const temporadaCostos = base.estacionalidadCostos ? promedioPerfil(base.estacionalidadCostos) : temporada;
     let demanda = estado.demanda_multiplicador * factorReputacion(estado.reputacion) * temporada;
+    // Contratos y matrículas: la ocupación sigue a la demanda con retraso, no de un mes a otro.
+    const ocupacionHoy = estado.ocupacion_relativa;
+    if (ocupacionHoy !== undefined) demanda = ocupacionHoy * temporada;
     if (tope !== undefined && Number.isFinite(tope)) demanda = Math.min(demanda, tope);
 
+    // Impagos: lo facturado que no se cobra (glosas, inquilinos morosos, pensiones impagas).
+    const impagosBase = IMPAGOS_BASE_POR_TIPO[base.tipoNegocio ?? ""] ?? 0;
+    const cobrable =
+      estado.impagos_multiplicador !== undefined
+        ? Math.max(0, 1 - impagosBase * (estado.impagos_multiplicador - 1))
+        : 1;
     const ingresoMes =
-      (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda * (estado.eficacia_multiplicador ?? 1);
+      (ingresosAnio / 12) * estado.precio_venta_multiplicador * demanda * (estado.eficacia_multiplicador ?? 1) * cobrable;
     // Microcrédito: la previsión por mora sigue a la mora viva, no al plan.
     const efectoMora =
       base.mora && estado.mora_multiplicador !== undefined
@@ -815,6 +866,25 @@ export function aplicarOperacionDelTurno(
       ? { mora_multiplicador: Math.max(0.5, Math.min(3, moraDelSiguienteMes(estado))) }
       : {};
 
+  const contratosNuevo: Partial<EstadoSimulacion> = {};
+  if (estado.ocupacion_relativa !== undefined) {
+    const inercia = INERCIA_OCUPACION_POR_TIPO[base.tipoNegocio ?? ""] ?? 0.1;
+    // Lo que el mercado pediría hoy: demanda y reputación, y menos si subes mucho el precio.
+    let objetivo =
+      estado.demanda_multiplicador *
+      factorReputacion(estado.reputacion) *
+      (1 - 0.8 * Math.max(0, estado.precio_venta_multiplicador - 1));
+    if (tope !== undefined && Number.isFinite(tope)) objetivo = Math.min(objetivo, tope);
+    const pasos = 1 - Math.pow(1 - inercia, meses);
+    contratosNuevo.ocupacion_relativa = Math.max(0, estado.ocupacion_relativa + (objetivo - estado.ocupacion_relativa) * pasos);
+  }
+  if (estado.impagos_multiplicador !== undefined) {
+    // Con la economía floja (demanda baja) se atrasan más; con el tiempo se normaliza.
+    const presion = Math.max(0, 0.95 - estado.demanda_multiplicador) * 0.5;
+    const siguiente = estado.impagos_multiplicador + presion;
+    contratosNuevo.impagos_multiplicador = Math.max(0.5, Math.min(4, 1 + (siguiente - 1) * (1 - 0.04)));
+  }
+
   const temporadaSiguiente: Partial<EstadoSimulacion> =
     estado.factor_estacional !== undefined && base.estacionalidad
       ? {
@@ -827,6 +897,7 @@ export function aplicarOperacionDelTurno(
     ...estado,
     ...sociosNuevo,
     ...socialNuevo,
+    ...contratosNuevo,
     ...moraNueva,
     ...temporadaSiguiente,
     cuentas_por_cobrar: cuentasPorCobrar,
