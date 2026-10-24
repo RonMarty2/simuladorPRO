@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-23 — golpes de eventos que se diluyen, eventos generales por rubro y prueba en app real (eventos propios por tipo: migraciones 034 a 053) (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
+> **Última actualización**: 2026-10-23 (noche) — mecánica propia por tipo dentro de la simulación para los 19 tipos (migraciones 054 a 060), golpes de eventos que se diluyen y eventos generales por rubro (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -648,6 +648,34 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
       - 373 tests (antes 293). Sin migraciones.
 
 ### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+RESUMEN DE LA SESION DEL 2026-10-23 (ultimo estado, leer esto primero)
+Pedido del owner: que cada tipo de proyecto sea unico y tenga su propia manera de evaluar su viabilidad, no solo
+noticias distintas. Resultado, todo publicado en `main` (ultimo commit 1efd6d3), 720 tests en verde, build OK:
+1. Motor: los golpes de los eventos ya no se acumulan 60 meses; se diluyen 10% por mes
+   (`DECAIMIENTO_MENSUAL_MULTIPLICADORES`). Jugando bien quiebra ~2%, al azar ~40% en promedio.
+2. Eventos generales acotados por rubro: `lib/eventos-por-rubro.ts` (tablas `TIPOS_POR_EVENTO_GENERAL` y
+   `TIPOS_EXCLUIDOS_POR_EVENTO`). Solo para proyectos con `tipoNegocio`.
+3. Mecanica propia por tipo en `lib/motor-eventos.ts` (cada variable es opcional en `EstadoSimulacion`; las
+   simulaciones viejas siguen con el calculo comun; sin eventos se reproduce el plan del constructor):
+   suscripcion = socios vivos | microcredito = mora | turismo/agricultura/eventos = temporadas
+   (`lib/estacionalidad.ts`) | social = fondos de un tercero y beneficio que no es caja | costo-beneficio y marketing =
+   beneficio logrado vs esperado | alquiler, educacion, concesion, medios, franquicia, tecnologia, servicios =
+   ocupacion con inercia + impagos | salud privada = impagos y glosas | gastronomia, produccion, comercio = merma.
+   El detalle por tipo, los alias de eventos y los eventos nuevos estan mas abajo (lista "MECANICA PROPIA POR TIPO").
+4. Pantalla del alumno (`routes/simular-proyecto.tsx`): tarjetas segun el rubro (Socios activos, Mora, Temporada,
+   Fondos recibidos, Beneficio social, Cobertura, Beneficio logrado, Ocupacion/Audiencia/Marca/Usuarios, Impagos, Merma).
+5. Migraciones 054 a 060 (71 eventos nuevos): todas aplicadas en Supabase por el owner. No se modifico ninguna anterior.
+6. Plantillas: gimnasio con marketing realista (CAC Bs 333); festival recalibrado (factor 1,12; necesita Bs 1,07 millones de
+   capital de trabajo porque sus ingresos llegan juntos); el colchon de caja (`conColchonDeCaja`) deja 60% de margen.
+7. Prueba en la app real como estudiante: hostal, gimnasio, microcredito, posta de salud, estacionamiento, restaurante y
+   camara de frio. Sin ver en pantalla: turismo con temporadas, medios, franquicia, tecnologia, eventos, educacion,
+   concesion (solo por tests). Quedaron copias de prueba en la cuenta de estudiante del owner.
+PENDIENTE: (a) calibrar los coeficientes y calendarios con datos de Bolivia (son criterio del equipo); (b) modelar
+inventario en bodega y plazo de pago a proveedores; (c) decidir la dureza del juego (al azar quiebran entre 40% y 70%
+los negocios sanos; subir `DECAIMIENTO_MENSUAL_MULTIPLICADORES` a 0,15 o 0,20 la baja); (d) ver en pantalla los tipos
+que faltan; (e) los 4 tipos sin ficha (cultural, TI interna, infraestructura publica, cumplimiento normativo);
+(f) decidir si `docs/metodologia/` se sube a GitHub.
+Lo que sigue es el estado anterior de la sesion (se conserva como historia):
 Estado: Fases 1.2, 2 y 3 del plan COMPLETAS para todas las categorías con plantilla. Migraciones
 036 a 052 aplicadas en Supabase; la tabla `eventos` tiene 238 filas (50 generales y
 188 propios por tipo, 034 a 052). Publicado en `main` (ead8e79). 513 tests en verde,

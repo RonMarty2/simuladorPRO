@@ -143,6 +143,11 @@ NO se adapta todavía (y por qué):
 - La guía, los escenarios y las cifras de las 56 plantillas son criterio del equipo, sin validar con
   gremios (ver docs/metodologia/VALIDACION-PLANTILLAS.md).
 
+- [x] 4.4 (2026-10-23, noche) CAMINO B HECHO para los 19 tipos, pedido por el owner ("cada proyecto es unico y su manera de
+      manejar la viabilidad es diferente"): variables propias dentro del motor (socios, mora, temporadas, fondos sociales,
+      beneficio logrado, ocupacion con inercia, impagos, merma) con eventos nuevos en las migraciones 054 a 060 (aplicadas).
+      Detalle en la bitacora, seccion "Retomar aqui". Falta: inventario/proveedores, calibrar con datos de Bolivia.
+
 ### Fase 5. Calibración y cierre
 - [ ] 5.1 Calibrar las cifras "estimación" con datos de Bolivia (docentes,
       gremios, empresarios; cada ficha lista a quién preguntar en su sección 10).
