@@ -89,8 +89,7 @@ Nota: la categoría `tecnologia` mezcla SaaS (suscripción) y app de delivery
       infraestructura pública, B9 cumplimiento normativo). DECIDIR con el
       owner si vale el gasto (cada ficha cuesta unos 150.000 a 200.000 tokens
       con un agente; son los tipos menos probables en sus cursos).
-- [ ] 0.4 Decidir con el owner si `docs/metodologia/` se sube a GitHub (antes
-      confirmar si el repo es público; ver bitácora, pendientes del owner).
+- [x] 0.4 Decidir con el owner si `docs/metodologia/` se sube a GitHub (2026-10-27: aprobado por el owner y subido a main).
 
 ### Fase 1. Base técnica
 - [x] 1.1 `tipoNegocio` en el proyecto y filtro de eventos por tipo (597ac05).
