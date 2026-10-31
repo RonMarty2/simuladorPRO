@@ -385,6 +385,22 @@ desaparece de "Pendientes" con un solo clic.
 Implementación: `EntregasCurso` calcula `otrasPendientes` filtrando las del
 mismo grupo (excluyendo la abierta) y se las pasa al `ModalRevisarEntrega`.
 
+### 2026-10-30 · Constructor: no pisar lo escrito al renovarse la sesión
+
+Reporte de varios alumnos (examen): "se satura, lleno datos, no deja
+modificar, se actualiza y se borra". Causa: `construir-proyecto.tsx`
+recargaba el proyecto desde la base cada vez que cambiaba el objeto `user`
+(Supabase lo renueva en cada refresco de token), y `cargar()` pisaba las
+ediciones sin guardar. Si además la base respondía lenta salía el cartel
+"Tiempo agotado: listando tus proyectos".
+
+Arreglo (commit 1c69019): el efecto de carga depende de `user?.id`; no se
+llama `cargar()` si el proyecto en memoria es del mismo id y igual o más
+nuevo; timeouts de `listarMisProyectos` subidos a 12 s / 20 s. Pendiente:
+otras rutas usan `[user]` como dependencia (dashboard-estudiante,
+evaluacion-final, mis-entregas, etc.); solo leen datos, pero conviene
+revisar si causan recargas innecesarias.
+
 ---
 
 ## 8. Variables de entorno
