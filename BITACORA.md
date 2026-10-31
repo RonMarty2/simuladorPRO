@@ -396,10 +396,10 @@ ediciones sin guardar. Si además la base respondía lenta salía el cartel
 
 Arreglo (commit 1c69019): el efecto de carga depende de `user?.id`; no se
 llama `cargar()` si el proyecto en memoria es del mismo id y igual o más
-nuevo; timeouts de `listarMisProyectos` subidos a 12 s / 20 s. Pendiente:
-otras rutas usan `[user]` como dependencia (dashboard-estudiante,
-evaluacion-final, mis-entregas, etc.); solo leen datos, pero conviene
-revisar si causan recargas innecesarias.
+nuevo; timeouts de `listarMisProyectos` subidos a 12 s / 20 s. Las otras
+rutas que usan `[user]` como dependencia (dashboards, evaluacion-final,
+mis-entregas, etc.) se revisaron: solo leen datos, no hay nada sin guardar
+que perder, no requieren cambio.
 
 ---
 
