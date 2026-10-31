@@ -113,11 +113,12 @@ export async function listarMisProyectos(estudianteId: string): Promise<Proyecto
 
   let resp;
   try {
-    resp = await conTimeout(hacerQuery(), 5000, "listando tus proyectos");
+    // Con muchos alumnos conectados a la vez (exámenes) 5s se quedaba corto.
+    resp = await conTimeout(hacerQuery(), 12000, "listando tus proyectos");
   } catch (primerError) {
     // Reintento con timeout más generoso
     try {
-      resp = await conTimeout(hacerQuery(), 10000, "listando tus proyectos (reintento)");
+      resp = await conTimeout(hacerQuery(), 20000, "listando tus proyectos (reintento)");
     } catch {
       // Si el reintento también falla, propagar el primer error (más descriptivo)
       throw primerError;

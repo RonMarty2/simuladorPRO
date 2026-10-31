@@ -121,6 +121,10 @@ export default function ConstruirProyecto() {
     });
   };
 
+  // Depende de user?.id (no del objeto user): Supabase renueva el objeto en cada
+  // refresco de token, y recargar acá pisaba con la copia de la base lo que el
+  // alumno estaba escribiendo.
+  const userId = user?.id;
   useEffect(() => {
     if (!user) return;
     Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
@@ -154,7 +158,12 @@ export default function ConstruirProyecto() {
             limpiar();
             return;
           }
-          cargar(elegido);
+          // Si ya hay en memoria una copia igual o más nueva (ediciones aún sin
+          // guardar), no la pisamos con la de la base.
+          const enMemoria = useProyectoStore.getState().proyecto;
+          const memoriaMasNueva =
+            enMemoria?.id === elegido.id && enMemoria.actualizado_en >= elegido.actualizado_en;
+          if (!memoriaMasNueva) cargar(elegido);
           if (modoSemanaE) {
             guardarProyectoSemanaEActivo(user.id, elegido.id);
           } else {
@@ -174,7 +183,8 @@ export default function ConstruirProyecto() {
         setErrorCarga(e?.message ?? String(e));
       })
       .finally(() => setIniciando(false));
-  }, [user, cargar, limpiar, modoSemanaE, proyectoSemanaEUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, cargar, limpiar, modoSemanaE, proyectoSemanaEUrl]);
 
   useEffect(() => {
     if (!proyecto || pasosVisibles.includes(pasoActual)) return;
