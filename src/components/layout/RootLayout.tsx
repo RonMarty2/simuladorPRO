@@ -16,6 +16,7 @@ import {
   PanelLeftOpen,
   PlayCircle,
   ShieldCheck,
+  TrendingUp,
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -149,8 +150,10 @@ export default function RootLayout() {
               {lateralOculto ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </button>
           )}
-          <div className="h-6 w-6 flex-shrink-0 rounded bg-primary" />
-          <span className="truncate text-sm font-semibold tracking-tight">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <TrendingUp className="h-4 w-4" />
+          </div>
+          <span className="truncate font-display text-lg font-bold tracking-tight">
             Simulador de Proyectos de Inversión
           </span>
           <span className="hidden flex-shrink-0 rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground sm:inline">

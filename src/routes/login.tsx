@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/stores/auth-store";
 import BotonGoogle from "@/components/auth/BotonGoogle";
+import { TrendingUp } from "lucide-react";
 import CreditoAutor from "@/components/layout/CreditoAutor";
 
 const esquema = z.object({
@@ -37,7 +38,10 @@ export default function Login() {
   const destinoPostLogin = (rol: "docente" | "estudiante") =>
     rol === "docente" ? "/docente" : "/estudiante";
 
-  if (inicializado && user && perfil) {
+  // Solo en desarrollo: ?vista=1 deja ver el formulario aunque haya sesion (modo local), para revisar el diseno.
+  const vistaPrevia = import.meta.env.DEV && new URLSearchParams(location.search).get("vista") === "1";
+
+  if (!vistaPrevia && inicializado && user && perfil) {
     const desde = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
     return <Navigate to={desde ?? destinoPostLogin(perfil.rol)} replace />;
   }
@@ -45,7 +49,7 @@ export default function Login() {
   // Sesión activa pero el perfil todavía no llegó (query a la BD en curso o
   // intermitencia). NO mostrar el form: sería confuso pedirle al usuario que
   // se loguee de nuevo cuando ya está logueado.
-  if (inicializado && user && !perfil) {
+  if (!vistaPrevia && inicializado && user && !perfil) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
         <div className="max-w-sm space-y-3">
@@ -77,10 +81,10 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex w-full max-w-sm flex-col">
-      <div className="w-full rounded-lg border border-border bg-card p-8 shadow-sm">
+      <div className="w-full rounded-xl border border-border bg-card p-8 shadow-lg shadow-primary/5">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary" />
-          <h1 className="text-lg font-semibold tracking-tight text-card-foreground">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"><TrendingUp className="h-6 w-6" /></div>
+          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
             Iniciar sesión
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -106,7 +110,7 @@ export default function Login() {
               id="email"
               type="email"
               autoComplete="email"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               {...register("email")}
             />
             {errors.email && (
@@ -122,7 +126,7 @@ export default function Login() {
               id="password"
               type="password"
               autoComplete="current-password"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               {...register("password")}
             />
             {errors.password && (
@@ -139,7 +143,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="h-11 w-full rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
           >
             {cargando ? "Ingresando…" : "Ingresar"}
           </button>
@@ -147,7 +151,7 @@ export default function Login() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           ¿No tienes cuenta?{" "}
-          <Link to="/registro" className="font-medium text-foreground underline">
+          <Link to="/registro" className="font-semibold text-primary underline-offset-2 hover:underline">
             Regístrate
           </Link>
         </p>
@@ -174,7 +178,7 @@ export default function Login() {
           }}
           className="mt-2 rounded-md border border-border bg-card px-3 py-1.5 text-[11px] hover:bg-secondary"
         >
-          🧹 Borrar todo lo guardado en este navegador
+          Borrar todo lo guardado en este navegador
         </button>
       </details>
 

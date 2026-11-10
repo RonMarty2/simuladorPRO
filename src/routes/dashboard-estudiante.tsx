@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
+import { ArrowRight, BookOpen, DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   buscarCursoPorCodigo,
@@ -177,7 +177,7 @@ export default function DashboardEstudiante() {
       />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Hola, {perfil?.nombre} 👋</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Hola, {perfil?.nombre}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Tus proyectos, organizados por curso. Haz clic en uno para seguir trabajándolo.
           </p>
@@ -197,22 +197,22 @@ export default function DashboardEstudiante() {
           en mobile). Card destacado para que cualquier alumno la encuentre. */}
       <button
         onClick={() => navigate(modoSemanaE ? "/ejemplos?semanae=1" : "/ejemplos")}
-        className="flex w-full items-center gap-3 rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-3 text-left transition hover:border-indigo-400 hover:shadow-md dark:border-indigo-800 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40"
+        className="flex w-full items-center gap-3 rounded-lg border border-border bg-accent p-3 text-left text-accent-foreground shadow-sm transition hover:border-primary/40 hover:shadow-md"
       >
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-lg shadow-md">
-          📖
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <BookOpen className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
+          <div className="font-display text-base font-bold">
             Galería de más de 50 proyectos de ejemplo
           </div>
-          <div className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
+          <div className="text-xs opacity-80">
             Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
             Mira ejemplos completos antes de armar el tuyo.
           </div>
         </div>
-        <span className="hidden flex-shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white sm:inline">
-          Ver galería →
+        <span className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground sm:inline-flex">
+          Ver galería <ArrowRight className="h-3.5 w-3.5" />
         </span>
       </button>
 
@@ -527,9 +527,15 @@ export default function DashboardEstudiante() {
       )}
 
       {!cargando && proyectos.length === 0 && inscripciones.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
-          Todavía no estás en ningún curso. Inscríbete con el{" "}
-          <strong>código de 6 letras</strong> que te da tu docente para empezar a trabajar.
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            <GraduationCap className="h-6 w-6" />
+          </div>
+          <div className="font-display text-lg font-semibold">Todavía no estás en ningún curso</div>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Inscríbete con el <strong>código de 6 letras</strong> que te da tu docente para
+            empezar a trabajar.
+          </p>
         </div>
       )}
 
@@ -554,7 +560,7 @@ export default function DashboardEstudiante() {
           <button
             type="submit"
             disabled={inscribiendo || codigoInscripcion.length !== 6}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
           >
             {inscribiendo ? "..." : "Inscribirme"}
           </button>

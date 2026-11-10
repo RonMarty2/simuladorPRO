@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
@@ -11,6 +11,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Atkinson Hyperlegible", "Segoe UI", "system-ui", "-apple-system", "sans-serif"],
+        display: ["Crimson Pro", "Georgia", "Times New Roman", "serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TrendingUp } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,7 +41,8 @@ export default function Registro() {
     defaultValues: { rol: "estudiante" },
   });
 
-  if (inicializado && user && perfil) {
+  const vistaPrevia = import.meta.env.DEV && new URLSearchParams(window.location.search).get("vista") === "1";
+  if (!vistaPrevia && inicializado && user && perfil) {
     return <Navigate to={perfil.rol === "docente" ? "/docente" : "/estudiante"} replace />;
   }
 
@@ -58,10 +60,10 @@ export default function Registro() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex w-full max-w-md flex-col">
-      <div className="w-full rounded-lg border border-border bg-card p-8 shadow-sm">
+      <div className="w-full rounded-xl border border-border bg-card p-8 shadow-lg shadow-primary/5">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary" />
-          <h1 className="text-lg font-semibold tracking-tight text-card-foreground">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"><TrendingUp className="h-6 w-6" /></div>
+          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
             Crear cuenta
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -86,7 +88,7 @@ export default function Registro() {
               </label>
               <input
                 id="nombre"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 {...register("nombre")}
               />
               {errors.nombre && (
@@ -99,7 +101,7 @@ export default function Registro() {
               </label>
               <input
                 id="apellido"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 {...register("apellido")}
               />
               {errors.apellido && (
@@ -116,7 +118,7 @@ export default function Registro() {
               id="email"
               type="email"
               autoComplete="email"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               {...register("email")}
             />
             {errors.email && (
@@ -132,7 +134,7 @@ export default function Registro() {
               id="password"
               type="password"
               autoComplete="new-password"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               {...register("password")}
             />
             {errors.password && (
@@ -156,7 +158,7 @@ export default function Registro() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="h-11 w-full rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
           >
             {cargando ? "Creando cuenta…" : "Crear cuenta"}
           </button>
@@ -164,7 +166,7 @@ export default function Registro() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           ¿Ya tienes cuenta?{" "}
-          <Link to="/login" className="font-medium text-foreground underline">
+          <Link to="/login" className="font-semibold text-primary underline-offset-2 hover:underline">
             Inicia sesión
           </Link>
         </p>
