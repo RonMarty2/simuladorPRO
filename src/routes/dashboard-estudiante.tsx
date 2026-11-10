@@ -177,9 +177,9 @@ export default function DashboardEstudiante() {
       />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Hola, {perfil?.nombre}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tus proyectos, organizados por curso. Haz clic en uno para seguir trabajándolo.
+          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Hola, {perfil?.nombre}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Panel de proyectos y cursos activos
           </p>
         </div>
         {PUEDE_CREAR_LIBRE && (
@@ -204,11 +204,10 @@ export default function DashboardEstudiante() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-display text-base font-bold">
-            Galería de más de 50 proyectos de ejemplo
+            Galería de proyectos de ejemplo
           </div>
           <div className="text-xs opacity-80">
-            Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
-            Mira ejemplos completos antes de armar el tuyo.
+            Modelos de referencia listos para comparar o usar como base
           </div>
         </div>
         <span className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground sm:inline-flex">

@@ -1,5 +1,5 @@
 import type { CategoriaPlantilla } from "./plantillas";
-import type { ModeloIngreso } from "@/types/proyecto";
+import type { ModeloIngreso } from "@/lib/proyecto-factory";
 
 export type FamiliaNegocio =
   | "produccion"

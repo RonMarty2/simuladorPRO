@@ -55,18 +55,18 @@ export default function GuiaTipoNegocio({ etapa }: { etapa: EtapaGuia }) {
   const items = lista(guia, etapa, tipo!);
 
   return (
-    <div className="rounded-md border border-sky-300 bg-sky-50/60 p-3 text-xs dark:border-sky-800 dark:bg-sky-950/30">
+    <div className="rounded-xl border border-border bg-accent/35 p-3.5 text-xs">
       <button
         type="button"
         onClick={() => setAbierta((v) => !v)}
-        className="flex w-full items-center gap-1.5 text-left font-semibold text-sky-900 dark:text-sky-100"
+        className="flex w-full items-center gap-1.5 text-left font-semibold text-foreground hover:text-primary"
       >
-        {abierta ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        <Lightbulb className="h-3.5 w-3.5" />
-        Guía para {guia.titulo.toLowerCase()}: {TITULO[etapa].toLowerCase()}
+        {abierta ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronRight className="h-3.5 w-3.5 text-primary" />}
+        <Lightbulb className="h-3.5 w-3.5 text-primary" />
+        Guía de referencia para {guia.titulo}: {TITULO[etapa].toLowerCase()}
       </button>
       {abierta && (
-        <div className="mt-2 space-y-2 text-sky-950/90 dark:text-sky-100/90">
+        <div className="mt-2.5 space-y-2 text-foreground/90">
           {items.length > 0 ? (
             <ul className="list-disc space-y-0.5 pl-5">
               {items.map((i) => (
@@ -80,7 +80,7 @@ export default function GuiaTipoNegocio({ etapa }: { etapa: EtapaGuia }) {
             <p
               className={
                 guia.terreno === "raro"
-                  ? "rounded border border-amber-300 bg-amber-50 p-2 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+                  ? "rounded-lg border border-amber-300/80 bg-amber-50/60 p-2 text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
                   : ""
               }
             >
@@ -88,8 +88,8 @@ export default function GuiaTipoNegocio({ etapa }: { etapa: EtapaGuia }) {
             </p>
           )}
           {guia.cuidado.length > 0 && (
-            <p className="text-[11px] text-sky-900/80 dark:text-sky-100/70">
-              <strong>Ojo:</strong> {guia.cuidado.join(" · ")}
+            <p className="text-[11px] text-muted-foreground">
+              <strong className="text-foreground">Ojo:</strong> {guia.cuidado.join(" · ")}
             </p>
           )}
           <p className="text-[10px] text-muted-foreground">

@@ -12,12 +12,13 @@ export default function Recomendacion({
   children: ReactNode;
 }) {
   return (
-    <details className="rounded-md border border-sky-300 bg-sky-50/60 dark:border-sky-800 dark:bg-sky-950/20">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-2.5 text-xs font-semibold text-sky-900 hover:bg-sky-100/60 dark:text-sky-200 dark:hover:bg-sky-900/30">
+    <details className="group rounded-xl border border-border bg-accent/35 transition-all">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3 text-xs font-semibold text-foreground hover:bg-accent/60">
         <span>{titulo}</span>
-        <span className="flex-shrink-0 text-[11px] font-normal opacity-70">▸ ver / ▾ ocultar</span>
+        <span className="flex-shrink-0 text-[11px] font-medium text-muted-foreground group-open:hidden">▸ ver guía</span>
+        <span className="hidden flex-shrink-0 text-[11px] font-medium text-muted-foreground group-open:inline">▾ ocultar</span>
       </summary>
-      <div className="space-y-2 border-t border-sky-200 p-3 text-[11px] leading-relaxed text-foreground/90 dark:border-sky-900">
+      <div className="space-y-2 border-t border-border/70 p-3.5 text-xs leading-relaxed text-foreground/90">
         {children}
       </div>
     </details>

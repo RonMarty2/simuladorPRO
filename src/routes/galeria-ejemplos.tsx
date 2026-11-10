@@ -2,7 +2,7 @@ import { fmtNum } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy, Filter, ChevronDown,
+  X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy, Filter, ChevronDown, Sparkles,
   UtensilsCrossed, Factory, ShoppingBag, Wrench, Repeat,
   Tv, Mountain, Sprout, Scale, Megaphone, HeartHandshake,
   Ticket, Smartphone, Building2, Activity, GraduationCap,
@@ -52,6 +52,109 @@ import { guardarProyectoActivo } from "@/components/constructor/SelectorProyecto
  * Organizada por CATEGORÍAS. Cada plantilla es solo de lectura: NO se guarda
  * y NO se mezcla con los proyectos del alumno.
  */
+const LECCIONES_CATEGORIA: Record<string, { titulo: string; comparativa: string; leccion: string }> = {
+  todas: {
+    titulo: "Laboratorio Comparativo de Proyectos",
+    comparativa: "57 modelos completos en 19 sectores económicos de Bolivia",
+    leccion: "Cada sector tiene su propio motor financiero: en producción domina la maquinaria, en tecnología el desarrollo inicial, en suscripción la retención de clientes, y en servicios la planilla de personal. Selecciona cualquier categoría abajo para ver sus particularidades.",
+  },
+  gastronomia: {
+    titulo: "Gastronomía: El impacto del alquiler y la maquinaria",
+    comparativa: "Cafetería al paso vs. Restaurante temático vs. Food Truck",
+    leccion: "Compara cómo la inversión inicial en adecuación de cocina y alquiler mensual determina cuántos platos o cafés diarios necesitas vender antes de alcanzar tu punto de equilibrio.",
+  },
+  produccion: {
+    titulo: "Producción Industrial: Economías de escala",
+    comparativa: "Taller artesanal vs. Fábrica de alimentos",
+    leccion: "Observa el peso de la maquinaria fija y cómo el costo unitario de materia prima disminuye cuando el volumen de producción crece.",
+  },
+  comercio: {
+    titulo: "Comercio: Rotación de inventario y capital de trabajo",
+    comparativa: "Tienda física vs. E-commerce",
+    leccion: "En comercio el dinero está inmovilizado en mercadería (stock). La clave es la rotación rápida para no asfixiar la caja.",
+  },
+  servicios: {
+    titulo: "Servicios: Intensivos en planilla y tiempo",
+    comparativa: "Consultoría vs. Centro de estética",
+    leccion: "Casi no hay inventario físico; el costo principal son los sueldos y aportes patronales. La rentabilidad depende de la ocupación horaria.",
+  },
+  suscripcion: {
+    titulo: "Suscripción: El valor de la recurrencia (LTV)",
+    comparativa: "Gimnasio con cuota mensual vs. Academia digital",
+    leccion: "El ingreso mensual es predecible, pero el crecimiento depende de mantener baja la tasa de cancelación (churn) frente al costo de adquirir nuevos clientes.",
+  },
+  medios: {
+    titulo: "Medios y Publicidad: Audiencia masiva vs. Nicho",
+    comparativa: "Canal de YouTube vs. Podcast premium",
+    leccion: "Un canal gratuito requiere millones de reproducciones para vivir de anuncios; un formato de suscripción especializada vive con una base reducida pero fiel.",
+  },
+  turismo: {
+    titulo: "Turismo y Hospitalidad: Estacionalidad y Ocupación",
+    comparativa: "Hotel boutique vs. Operadora de excursiones",
+    leccion: "Flujos de caja muy marcados por temporada alta y baja. El hotel inmoviliza capital en infraestructura; la agencia opera con capital ligero y comisiones.",
+  },
+  agricultura: {
+    titulo: "Agricultura: Ciclos de cosecha y riesgo climático",
+    comparativa: "Cultivo a campo abierto vs. Invernadero tecnificado",
+    leccion: "Se invierte durante meses antes de ver el primer ingreso por cosecha. El capital de trabajo y las reservas de caja son cruciales.",
+  },
+  costo_beneficio: {
+    titulo: "Costo-Beneficio: Justificar ahorros e inversión",
+    comparativa: "Energía solar vs. Modernización de maquinaria",
+    leccion: "No siempre se busca vender más: muchos proyectos se aprueban porque reducen gastos operativos mes a mes de forma garantizada.",
+  },
+  marketing: {
+    titulo: "Marketing: Ventas incrementales atribuibles",
+    comparativa: "Campaña de lanzamiento vs. Expansión de canal",
+    leccion: "La inversión publicitaria debe generar un margen bruto adicional que supere con creces el presupuesto de la campaña.",
+  },
+  social: {
+    titulo: "Impacto Social: Retorno cuantificado en bienestar",
+    comparativa: "Centro de salud comunitario vs. Proyecto de agua",
+    leccion: "El beneficio social se traduce a bolivianos medibles (días laborales ganados, ahorro en salud) con supuestos claros.",
+  },
+  eventos: {
+    titulo: "Eventos: Concentración extrema del riesgo",
+    comparativa: "Festival musical vs. Feria comercial",
+    leccion: "Todos los gastos se desembolsan por adelantado y los ingresos entran en 48 horas. Una mala fecha o clima adverso define el resultado.",
+  },
+  tecnologia: {
+    titulo: "Tecnología: Alto desarrollo inicial vs. Costo marginal cero",
+    comparativa: "SaaS de suscripción vs. App transaccional",
+    leccion: "Crear el software requiere una gran inversión diferida; pero atender al usuario número 10.000 cuesta casi lo mismo que al número 100.",
+  },
+  alquiler: {
+    titulo: "Alquiler e Inmuebles: Inversión pesada y flujo constante",
+    comparativa: "Edificio de oficinas vs. Bodegas de alquiler",
+    leccion: "El activo fijo (terreno y edificación) es gigantesco, pero el flujo mensual de arriendos es de los más estables y seguros del mercado.",
+  },
+  salud_privada: {
+    titulo: "Salud Privada: Equipos de alta gama y plazos de cobranza",
+    comparativa: "Clínica médica vs. Laboratorio de análisis",
+    leccion: "Equipos con depreciación rápida y regulaciones sanitarias estrictas. La caja debe soportar 60 a 90 días de crédito a aseguradoras y cajas.",
+  },
+  educacion_privada: {
+    titulo: "Educación Privada: Matrículas y costos docentes",
+    comparativa: "Colegio privado vs. Instituto técnico",
+    leccion: "Ingresos concentrados en meses escolares (febrero a noviembre). La planilla docente no se detiene en vacaciones, exigiendo colchón de caja.",
+  },
+  franquicia: {
+    titulo: "Franquicias: Marca probada a cambio de regalías",
+    comparativa: "Franquicia gastronómica vs. Franquicia de servicios",
+    leccion: "Menor riesgo de mercado gracias a la marca, pero con canon de entrada inicial y regalías mensuales que reducen tu margen neto.",
+  },
+  concesion: {
+    titulo: "Concesiones: Inversión a 20 años y tarifa regulada",
+    comparativa: "Red de agua potable vs. Concesión de peaje",
+    leccion: "Inversión inicial millonaria que se recupera lentamente a lo largo de décadas con tarifas supervisadas por el Estado.",
+  },
+  microcredito: {
+    titulo: "Microcrédito: Fondeo, colocación y previsión de mora",
+    comparativa: "Cooperativa de ahorro y crédito vs. Fintech de micropréstamos",
+    leccion: "El negocio no es solo prestar, sino a qué tasa te prestas tú (costo de fondeo) y cuánto reservas para clientes que se retrasan en pagar.",
+  },
+};
+
 export default function GaleriaEjemplos() {
   const [abierto, setAbierto] = useState<PlantillaMeta | null>(null);
   const [aPublicar, setAPublicar] = useState<PlantillaMeta | null>(null);
@@ -69,6 +172,8 @@ export default function GaleriaEjemplos() {
     return PLANTILLAS.filter((p) => p.categoria === filtroCategoria);
   }, [filtroCategoria]);
 
+  const [mostrarGuia, setMostrarGuia] = useState<boolean>(true);
+
   // Para la vista "todas", agrupamos por categoría
   const porCategoria = useMemo(() => {
     const m = new Map<CategoriaPlantilla, PlantillaMeta[]>();
@@ -79,26 +184,92 @@ export default function GaleriaEjemplos() {
     return m;
   }, [plantillasFiltradas]);
 
+  const leccionActual = LECCIONES_CATEGORIA[filtroCategoria] ?? LECCIONES_CATEGORIA.todas;
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2.5 font-display text-3xl font-bold tracking-tight">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="flex items-center gap-2.5 font-display text-2xl font-bold tracking-tight sm:text-3xl">
           <BookOpen className="h-7 w-7 text-primary" />
           Galería de proyectos de ejemplo
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {PLANTILLAS.length} proyectos modelo <strong>completos</strong> agrupados por categoría.
-          Vitrina para que el alumno explore distintos tipos de negocio y se vuelva experto
-          comparándolos. El ejemplo original no cambia: si quieres trabajarlo, usa{" "}
-          <strong>Usar como base</strong> para crear tu propia copia.
-        </p>
+        <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">
+          {PLANTILLAS.length} proyectos disponibles
+        </span>
       </div>
 
-      <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 p-3.5 text-xs leading-relaxed text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-        Idea pedagógica: comparar 3 cafeterías muestra cómo el tamaño cambia los
-        indicadores. Comparar restaurante vs food truck muestra estructuras de costo
-        distintas. Comparar podcast premium vs canal de YouTube muestra suscripción vs
-        publicidad sobre el mismo creador.
+      {/* Guía Pedagógica Dinámica por Sector (Dirección A) */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3 w-3" />
+              Guía de Análisis
+            </span>
+            <span className="font-display text-sm font-bold text-foreground">
+              {leccionActual.titulo}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMostrarGuia((v) => !v)}
+            className="text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {mostrarGuia ? "Ocultar guía ▴" : "Ver guía ▾"}
+          </button>
+        </div>
+
+        {mostrarGuia && (
+          <div className="mt-3 space-y-3">
+            <div className="rounded-xl border border-border/70 bg-accent/30 p-3 text-xs leading-relaxed text-foreground">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Comparativa clave · {leccionActual.comparativa}
+              </div>
+              <p className="mt-1">
+                {leccionActual.leccion}
+              </p>
+            </div>
+
+            {filtroCategoria === "todas" ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-medium text-muted-foreground">Explora por rubro:</span>
+                {[
+                  { cat: "gastronomia", label: "🍽️ Gastronomía" },
+                  { cat: "tecnologia", label: "📱 Tecnología" },
+                  { cat: "produccion", label: "🏭 Producción" },
+                  { cat: "salud_privada", label: "🏥 Salud" },
+                  { cat: "turismo", label: "🏔️ Turismo" },
+                  { cat: "suscripcion", label: "🔄 Suscripción" },
+                  { cat: "comercio", label: "📦 Comercio" },
+                  { cat: "microcredito", label: "🏦 Microcrédito" },
+                ].map((s) => (
+                  <button
+                    key={s.cat}
+                    type="button"
+                    onClick={() => setFiltroCategoria(s.cat as any)}
+                    className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  Mostrando únicamente proyectos de <strong>{CATEGORIAS[filtroCategoria as CategoriaPlantilla]?.titulo}</strong>.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFiltroCategoria("todas")}
+                  className="font-bold text-primary hover:underline"
+                >
+                  ↺ Ver todos los 57 proyectos
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filtro por categoría: desplegable compacto y limpio */}
