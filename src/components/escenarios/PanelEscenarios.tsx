@@ -37,10 +37,13 @@ import { resolverEscenarios, resumenCambios } from "@/lib/escenarios-por-tipo";
 import { GUIA_POR_TIPO } from "@/lib/guia-por-tipo";
 
 const COLORES: Record<NombreEscenario, string> = {
-  optimista: "#10b981",     // emerald-500
-  base: "#3b82f6",          // blue-500
-  pesimista: "#ef4444",     // red-500
-  personalizado: "#a855f7", // purple-500
+  optimista: "#0f766e",     // teal-700
+  base: "#334155",          // slate-700
+  pesimista: "#be123c",     // rose-700
+  personalizado: "#b45309", // amber-700
+
+
+
 };
 
 export default function PanelEscenarios({

@@ -760,7 +760,7 @@ function LaboratorioViabilidad({
               titulo={modelo.nivel === "avanzado" ? "Cobertura deuda" : "Recuperación"}
               base={modelo.nivel === "avanzado" ? formatoCobertura(base.resultado.indicadores.sd) : formatoRecuperacion(base.resultado.indicadores.payback)}
               actual={modelo.nivel === "avanzado" ? formatoCobertura(resultado.indicadores.sd) : formatoRecuperacion(resultado.indicadores.payback)}
-              positivo={modelo.nivel === "avanzado" ? resultado.indicadores.sd >= 1 : resultado.indicadores.payback >= 0}
+              positivo={modelo.nivel === "avanzado" ? (Number.isFinite(resultado.indicadores.sd) && resultado.indicadores.sd >= 1) : (Number.isFinite(resultado.indicadores.payback) && resultado.indicadores.payback > 0)}
             />
           </div>
 

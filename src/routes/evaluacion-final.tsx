@@ -149,7 +149,7 @@ export default function EvaluacionFinal() {
               labelFormatter={(l) => l}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Bar dataKey="proyectado" fill="#94a3b8" name="Proyectado" />
+            <Bar dataKey="proyectado" fill="#78716c" name="Proyectado" />
             <Bar dataKey="real" fill="hsl(var(--primary))" name="Real" />
           </BarChart>
         </ResponsiveContainer>
@@ -216,11 +216,9 @@ export default function EvaluacionFinal() {
       <div className="rounded-lg border border-dashed border-border bg-card/50 p-4 text-xs text-muted-foreground">
         <div className="mb-1 flex items-center gap-2 font-medium">
           <TrendingUp className="h-3.5 w-3.5" />
-          Retroalimentación con IA
+          Retroalimentación cualitativa y estratégica
         </div>
-        Próximamente: aquí aparecerá un análisis personalizado generado por IA con
-        recomendaciones específicas sobre tus decisiones. Requiere configurar la API
-        de Claude — se habilita en FASE 9.
+        Síntesis analítica asistida por IA: el informe ejecutivo contrastará la consistencia entre tu presupuesto base y las decisiones de respuesta ante choques de mercado.
       </div>
     </div>
   );

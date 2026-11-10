@@ -219,7 +219,7 @@ function agregarPortada(
     [lbl("IR (Índice de Rentabilidad)"), N(calc.indicadores.ir)],
     [lbl("RBC (Relación Beneficio/Costo)"), N(calc.indicadores.rbc)],
     [lbl("TRC (Tasa de Retorno Contable)"), P(calc.indicadores.trc)],
-    [lbl("SD (Cobertura de Deuda)"), N(calc.indicadores.sd)],
+    [lbl("SD (Cobertura de Deuda)"), Number.isFinite(calc.indicadores.sd) ? N(calc.indicadores.sd) : lbl("Sin deuda")],
     [],
     [sec("CONTENIDO DEL LIBRO", true)],
     [lbl("1."), lbl("Datos del proyecto")],
@@ -595,7 +595,7 @@ function agregarIndicadores(
     [lblB("IR — Índice de Rentabilidad"), { f: `=NPV(B4,${rangoAnios})/(-${refAno0})`, t: "n", s: { ...ST.num, font: { sz: 10, bold: true } } } as any],
     [lblB("RBC — Relación Beneficio/Costo"), N(calc.indicadores.rbc)],
     [lblB("TRC — Tasa de Retorno Contable"), P(calc.indicadores.trc)],
-    [lblB("SD — Cobertura del Servicio de Deuda"), N(calc.indicadores.sd)],
+    [lblB("SD — Cobertura del Servicio de Deuda"), Number.isFinite(calc.indicadores.sd) ? N(calc.indicadores.sd) : lbl("Sin deuda")],
     [],
     [sub("El periodo de recuperación, RBC, TRC y SD se exportan como valores calculados por la aplicación.")],
   ];

@@ -178,7 +178,7 @@ export default function Paso9Resumen() {
                 ? `${fmtNum(calc.indicadores.sd, 2)} veces`
                 : "Sin deuda"
             }
-            positivo={calc.indicadores.sd >= 1}
+            positivo={Number.isFinite(calc.indicadores.sd) && calc.indicadores.sd >= 1}
             pregunta="¿Cuántas veces el flujo cubre la cuota del banco?"
             interpretacion={
               !isFinite(calc.indicadores.sd)

@@ -61,7 +61,7 @@ export default function CatalogoEventos() {
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
         Error al cargar eventos: {error}
         <p className="mt-2 text-xs">
-          ¿Corriste las migraciones 005 y 006 en Supabase?
+          No fue posible sincronizar el catálogo de contingencias de mercado. Reintenta la conexión o contacta a soporte.
         </p>
       </div>
     );
@@ -177,10 +177,10 @@ function FiltroPill({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs transition ${
+      className={`inline-flex min-h-[38px] items-center justify-center rounded-lg px-3.5 py-1.5 text-xs font-medium transition ${
         activo
-          ? "bg-primary text-primary-foreground"
-          : "bg-secondary text-foreground hover:bg-secondary/70"
+          ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+          : "bg-secondary text-foreground hover:bg-secondary/70 border border-border/50"
       }`}
     >
       {children}

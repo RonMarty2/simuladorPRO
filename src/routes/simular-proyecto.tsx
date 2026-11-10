@@ -345,7 +345,7 @@ export default function SimularProyecto() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{eventoActual.descripcion}</p>
           {resumenGolpeEvento(eventoActual).length > 0 && (
             <p className="mt-3 rounded-lg border border-amber-300/80 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-              <strong>Esto le pasa a tu negocio aunque decidas bien:</strong>{" "}
+              <strong>Impacto macroeconómico ineludible:</strong>{" "}
               {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
             </p>
           )}
@@ -391,9 +391,9 @@ export default function SimularProyecto() {
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center shadow-xs">
-          <div className="font-display text-base font-bold">Mes tranquilo — sin eventos relevantes</div>
+          <div className="font-display text-base font-bold">Periodo operativo estable</div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Tu negocio opera con normalidad este mes.
+            Las variables de mercado operan dentro de los márgenes previstos.
           </p>
         </div>
       )}
@@ -670,7 +670,7 @@ function PantallaInicio({
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Antes de empezar</div>
         <h1 className="mt-1 font-display text-2xl font-bold tracking-tight">Simulación de {proyecto.nombre}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tu plan funciona sobre el papel. Aquí lo pones a prueba contra la realidad.
+          Del modelo financiero al entorno dinámico: evalúa la resiliencia de tu estructura operativa ante la incertidumbre económica.
         </p>
         <ol className="mt-5 space-y-3">
           {pasos.map((paso, i) => (
@@ -791,7 +791,7 @@ function InformeFinal({
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
           to="/escenarios"
-          className="inline-flex items-center gap-1.5 rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-2xs transition hover:bg-accent"
         >
           Comparar con tus escenarios
         </Link>
@@ -823,13 +823,13 @@ function SelectorProyectoSimular({
 }) {
   const tipoMeta = (p: Proyecto) => {
     if (p.tipo === "proyecto_grupal") {
-      return { emoji: "", label: "Grupal", clase: "border-violet-400 bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100" };
+      return { emoji: "", label: "Grupal", clase: "border-border bg-accent/40 text-foreground" };
     }
     if (p.caso_origen_id) {
       // copia del caso del docente — viene de un caso_curso
-      return { emoji: "", label: "Caso del curso", clase: "border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" };
+      return { emoji: "", label: "Caso del curso", clase: "border-primary/30 bg-primary/10 text-primary" };
     }
-    return { emoji: "", label: "Individual", clase: "border-sky-400 bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-100" };
+    return { emoji: "", label: "Individual", clase: "border-border bg-secondary/50 text-muted-foreground" };
   };
 
   return (

@@ -89,7 +89,7 @@ export default function DashboardDocente() {
               onClick={() => adminSemanaE && setMostrarFormSemanaE(true)}
               disabled={!adminSemanaE}
               className={cn(
-                "flex items-center gap-1.5 rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90",
+                "flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition hover:bg-primary/20",
                 !adminSemanaE && "hidden"
               )}
               title="Crea un evento Semana E aparte: nace oculto y solo Ronald puede publicarlo."
