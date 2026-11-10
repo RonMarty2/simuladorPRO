@@ -820,9 +820,38 @@ const RUBROS_NEGOCIO: Record<string, RubroNegocio> = {
     capital: { modo: "inventario", dias: 45, cosa: "materia prima y producto terminado" },
   },
   comercio: {
-    titulo: "Indicadores de comercio",
-    introduccion: INTRO_PRODUCTOS,
-    capital: { modo: "inventario", dias: 60, cosa: "mercadería" },
+    titulo: "Indicadores de comercio y retail",
+    introduccion:
+      "Estas métricas son las que mira el dueño de un comercio minorista o tienda retail: rotación de stock, ticket promedio y resistencia ante la presión de precios del mercado informal.",
+    capital: { modo: "inventario", dias: 60, cosa: "mercadería en vitrina y bodega" },
+    extras: (c) => {
+      const salida: IndicadorPropio[] = [];
+      const unidadesTotales = c.p.productos.reduce((a, pr) => a + Number(pr.cantidades?.[0] ?? 0), 0);
+      if (unidadesTotales > 0) {
+        const ticket = c.ing1 / unidadesTotales;
+        salida.push({
+          id: "ticket-promedio",
+          nombre: "Ticket promedio por unidad vendida",
+          valor: bs(ticket),
+          detalle: `En promedio cada venta genera ${bs(ticket)}. Si el mercado informal presiona precios, elevar la asesoría y fidelización defiende este número.`,
+          severidad: "info",
+        });
+      }
+      // Prueba de estrés: qué pasa si la presión del mercado informal obliga a bajar precios 15%
+      const resultadoConPresion = c.resultado - c.ing1 * 0.15;
+      salida.push({
+        id: "estres-presion-precio",
+        nombre: "Prueba de estrés: precios -15% por competencia informal",
+        valor: bs(resultadoConPresion),
+        detalle: `Si debes bajar tus precios un 15% por competencia informal sin lograr abaratar tus costos de compra, tu resultado anual pasa a ${bs(resultadoConPresion)}. ${
+          resultadoConPresion <= 0
+            ? "Entras en pérdida: competir solo por precio te quiebra; tu defensa debe ser autenticidad, garantía y asesoría."
+            : "Sigues ganando, pero tu margen de maniobra se reduce drásticamente."
+        }`,
+        severidad: resultadoConPresion <= 0 ? "critico" : "advertencia",
+      });
+      return salida;
+    },
   },
   servicios: {
     titulo: "Indicadores de servicios profesionales",

@@ -30,34 +30,11 @@ import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
 import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
+import { titulosCortosPorTipo, titulosPasosPorTipo } from "@/lib/pasos-por-tipo";
 import { datosFaltantes } from "@/lib/datos-faltantes";
 import { confirmar } from "@/components/ui/confirmar";
 
 const TOTAL_PASOS = 9;
-
-const titulosPasos: Record<number, string> = {
-  1: "Datos generales",
-  2: "Proyección de demanda",
-  3: "Inversiones en activo fijo",
-  4: "Personal + aportes patronales",
-  5: "Costos directos de producción",
-  6: "Gastos administrativos y comercialización",
-  7: "Financiamiento + WACC",
-  8: "Capital de trabajo (se calcula de los anteriores)",
-  9: "Resumen y flujo de caja",
-};
-
-const titulosCortos: Record<number, string> = {
-  1: "Datos",
-  2: "Demanda",
-  3: "Inversiones",
-  4: "Personal",
-  5: "Costos directos",
-  6: "Gastos op.",
-  7: "Financiam.",
-  8: "Capital",
-  9: "Resumen",
-};
 
 const LS_KEY_PASO = "simulador.pasoActual";
 
@@ -98,6 +75,14 @@ export default function ConstruirProyecto() {
   const pasosVisibles = useMemo(
     () => (proyecto ? pasosVisiblesDelProyecto(proyecto) : Array.from({ length: TOTAL_PASOS }, (_, i) => i + 1)),
     [proyecto]
+  );
+  const titulos = useMemo(
+    () => titulosPasosPorTipo(proyecto?.tipoNegocio, proyecto?.modeloIngreso),
+    [proyecto?.tipoNegocio, proyecto?.modeloIngreso]
+  );
+  const titulosCortos = useMemo(
+    () => titulosCortosPorTipo(proyecto?.tipoNegocio, proyecto?.modeloIngreso),
+    [proyecto?.tipoNegocio, proyecto?.modeloIngreso]
   );
   const indicePasoActual = Math.max(0, pasosVisibles.indexOf(pasoActual));
 
@@ -268,7 +253,7 @@ export default function ConstruirProyecto() {
         pasosVisibles={pasosVisibles}
         estadoGuardado={estadoGuardado}
         onCambiarPaso={setPasoActual}
-        titulos={titulosPasos}
+        titulos={titulos}
         titulosCortos={titulosCortos}
         pasosSinDatos={datosFaltantes(proyecto).map((d) => d.paso)}
       />
@@ -293,7 +278,7 @@ export default function ConstruirProyecto() {
 
         <div className="flex flex-col items-center gap-1.5 text-center">
           <span className="text-xs text-muted-foreground">
-            {titulosPasos[pasoActual]}
+            {titulos[pasoActual] ?? `Paso ${pasoActual}`}
           </span>
           <div className="flex items-center gap-1.5">
             <BotonGuardarComoCaso />

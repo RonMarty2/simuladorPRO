@@ -628,6 +628,85 @@ function ferreteria(): Proyecto {
   };
 }
 
+function perfumeriaLux(): Proyecto {
+  const idOriginal = nuevoId(), idArabe = nuevoId(), idTravel = nuevoId();
+  return {
+    ...base(),
+    nombre: "Perfumería LUX — Cochabamba",
+    ubicacion: "Cochabamba, zona central (tienda física + WhatsApp)",
+    descripcion:
+      "Retail formal de fragancias de diseñador y perfumes árabes auténticos en Cochabamba. Asesoría olfativa personalizada, probadores y compra informada frente al mercado informal.",
+    sector: "comercio",
+    modeloIngreso: "unidades",
+    inversiones: {
+      terreno: [],
+      obrasCiviles: [inv("Adecuación de tienda y vitrinas con iluminación LED", "obra", 1, 35000, 10)],
+      maquinaria: [
+        inv("Sistema POS, lector y computadoras de caja", "set", 1, 10000, 5),
+        inv("Climatización y control de temperatura para fragancias", "equipo", 1, 8000, 5),
+      ],
+      mobiliario: [
+        inv("Vitrinas de pared en vidrio templado y mostradores", "set", 1, 18000, 10),
+        inv("Barra de asesoría olfativa y probadores", "set", 1, 7000, 10),
+      ],
+      activoDiferido: [
+        inv("Licencia comercial Cochabamba, NIT y registro de marca", "global", 1, 5000, 5),
+        inv("Identidad visual, señalética y catálogo digital", "global", 1, 3000, 5),
+      ],
+    },
+    capitalTrabajo: 85000,
+    personal: [
+      puesto("Encargado de tienda y compras", 1, 4500),
+      puesto("Asesores de fragancias y ventas (tienda + WhatsApp)", 2, 3200),
+    ],
+    costosDirectos: [
+      directo(idOriginal, "mercaderia", "Costo de importación / reposición (100 ml original)", "frasco", 1, 450),
+      directo(idOriginal, "empaque", "Empaque de lujo y bolsa institucional", "und", 1, 8),
+      directo(idArabe, "mercaderia", "Costo de fragancias árabes auténticas (100 ml)", "frasco", 1, 210),
+      directo(idArabe, "empaque", "Empaque y bolsa institucional", "und", 1, 8),
+      directo(idTravel, "mercaderia", "Costo de frascos travel y líneas 30-50 ml", "frasco", 1, 120),
+      directo(idTravel, "empaque", "Empaque y probador", "und", 1, 5),
+    ],
+    costosAdministracion: [
+      gasto("Alquiler de local comercial céntrico", 4000),
+      gasto("Servicios básicos, internet y climatización", 1200),
+      gasto("Software de inventario y contabilidad", 800),
+    ],
+    costosComercializacion: [
+      gasto("Pauta digital en Meta (Instagram/Facebook Cochabamba)", 2500),
+      gasto("Material educativo de autenticidad, testers y muestras", 1000),
+    ],
+    productos: [
+      {
+        id: idOriginal,
+        nombre: "Fragancias de diseñador originales (100 ml)",
+        unidadMedida: "frasco",
+        cantidades: serie(1200, 0.05),
+        precios: serie(750, 0.03, 2),
+      },
+      {
+        id: idArabe,
+        nombre: "Perfumes árabes de alta gama (100 ml)",
+        unidadMedida: "frasco",
+        cantidades: serie(1800, 0.06),
+        precios: serie(380, 0.03, 2),
+      },
+      {
+        id: idTravel,
+        nombre: "Líneas de entrada y travel size (30-50 ml)",
+        unidadMedida: "frasco",
+        cantidades: serie(1500, 0.05),
+        precios: serie(220, 0.03, 2),
+      },
+    ],
+    ...finCapm(),
+    crecimientoIngresosAnual: 0.05,
+    crecimientoCostosAnual: 0.035,
+    tasasCrecCantidad: [5, 6, 5, 5],
+    tasasCrecPrecio: [3, 3, 3, 3],
+  };
+}
+
 // ============================================================================
 // SERVICIOS PROFESIONALES
 // ============================================================================
@@ -2233,6 +2312,7 @@ const PLANTILLAS_SIN_COLCHON: PlantillaMeta[] = [
   { clave: "textil", titulo: "Taller textil de alpaca", emoji: "🧶", categoria: "produccion", sector: "Producción", modelo: "unidades", modeloLabel: "Producción", escala: "Mediano", resumen: "Sweaters, bufandas y gorros para exportación.", crear: () => calibrarDemanda(textilSweaters(), 0.79) },
 
   // Comercio
+  { clave: "perfumerialux", titulo: "Perfumería LUX — Cochabamba", emoji: "✨", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "Retail de fragancias originales y árabes con asesoría y canal digital.", ensena: "En perfumería comercial, el stock inmovilizado y la rotación mandan. Educar sobre autenticidad crea fidelidad frente a Marketplace.", veredicto: "viable", crear: () => calibrarDemanda(perfumeriaLux(), 0.65) },
   { clave: "distribuidora", titulo: "Distribuidora mayorista", emoji: "📦", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Grande", resumen: "Compra y reventa al por mayor a tiendas de barrio.", crear: () => calibrarDemanda(distribuidora(), 1.34) },
   { clave: "tiendaonline", titulo: "Tienda online", emoji: "🛒", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "E-commerce de electrónica, hogar y accesorios.", crear: () => calibrarDemanda(tiendaOnline(), 0.45) },
   { clave: "ferreteria", titulo: "Ferretería de barrio", emoji: "🔧", categoria: "comercio", sector: "Comercio", modelo: "unidades", modeloLabel: "Comercio", escala: "Mediano", resumen: "Herramientas, materiales de construcción y pintura.", crear: () => calibrarDemanda(ferreteria(), 0.42) },

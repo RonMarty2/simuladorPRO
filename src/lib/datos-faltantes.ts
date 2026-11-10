@@ -1,4 +1,5 @@
 import type { Proyecto } from "@/types/proyecto";
+import { pasosVisiblesDelProyecto } from "./semana-e";
 
 export interface DatoFaltante {
   paso: number;
@@ -10,6 +11,7 @@ export interface DatoFaltante {
  * un proyecto puede no tener personal o costos directos, asi que no bloquea nada.
  */
 export function datosFaltantes(p: Proyecto): DatoFaltante[] {
+  const visibles = new Set(pasosVisiblesDelProyecto(p));
   const faltan: DatoFaltante[] = [];
   const inversiones = Object.values(p.inversiones ?? {}).flat() as { costoTotal?: number }[];
   if (!inversiones.some((i) => (i.costoTotal ?? 0) > 0)) {
@@ -20,5 +22,5 @@ export function datosFaltantes(p: Proyecto): DatoFaltante[] {
   if (!(p.costosAdministracion ?? []).length && !(p.costosComercializacion ?? []).length) {
     faltan.push({ paso: 6, etiqueta: "Gastos operativos" });
   }
-  return faltan;
+  return faltan.filter((f) => visibles.has(f.paso));
 }

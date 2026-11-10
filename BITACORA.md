@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-10-23 (noche) — mecánica propia por tipo dentro de la simulación para los 19 tipos (migraciones 054 a 060), golpes de eventos que se diluyen y eventos generales por rubro (ver `PLAN-TIPOS-DE-PROYECTO.md` y "Retomar aquí" en §10)
+> **Última actualización**: 2026-11-10 — Modularidad del constructor por familia de negocio, Reto Perfumería LUX (plantilla, guía y migración 061 con 12 eventos) y panel de retail (ver "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -663,7 +663,21 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         actualizada por el OTA (§7.7) tras recargar.
       - 373 tests (antes 293). Sin migraciones.
 
-### Retomar aquí (cierre de sesión 2026-10-23) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+### Retomar aquí (cierre de sesión 2026-11-10) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
+RESUMEN DE LA SESIÓN DEL 2026-11-10 (último estado, leer esto primero)
+Pedido del owner: Eliminar la rigidez del constructor (que forzaba 9 pasos y lógica de fábrica a todos los proyectos), incorporar el Reto Perfumería LUX con datos de mercado de Cochabamba, banco de situaciones de perfumería retail y panel de indicadores sin romper compatibilidad.
+Resultado: 732 tests en verde, build OK, migración 061 aplicada en Supabase:
+1. **Modularidad del Constructor por familia de negocio**: Se creó `src/lib/pasos-por-tipo.ts` para adaptar el número de etapas y los títulos según el modelo de negocio.
+   - Proyectos de `marketing` y `costo_beneficio` tienen 7 pasos naturales (se omiten etapas de costos de fábrica con materias primas y de inventario de materia prima).
+   - Proyectos de `comercio` (retail) adaptan su terminología completa (Paso 5: Costo de compra de mercadería, Paso 3: Adecuación y vitrinas, Paso 8: Rotación de mercadería).
+   - `BarraProgreso`, `construir-proyecto.tsx`, `semana-e.ts` y `datos-faltantes.ts` se sincronizan para no alertar de datos faltantes en pasos omitidos.
+2. **Plantilla Perfumería LUX — Cochabamba**: Agregada a `lib/plantillas.ts` (categoría comercio) con 3 líneas calibradas (Originales 100 ml, Árabes 100 ml, Travel 30-50 ml), estructura de inversión comercial y capital de trabajo para 2 a 3 meses de rotación.
+3. **Migración 061 (Eventos LUX)**: `supabase/migrations/061_eventos_perfumeria_lux.sql` con 12 situaciones curadas (`LUX001` a `LUX012`) aplicadas en Supabase por el owner: dilemas reales de comparación con Marketplace, rumores en redes, quiebre en Día de la Madre, dólar paralelo y competencia informal.
+4. **Panel de indicadores de retail**: Enriquecido `RUBROS_NEGOCIO.comercio` en `lib/indicadores-por-tipo.ts` con ticket promedio y prueba de estrés ante presión de precios informales (-15%).
+5. **Guía didáctica para estudiantes**: `docs/RETO_PERFUMERIA_LUX_GUIA_SIMULACIONES.md` con las instrucciones paso a paso para la Simulación 1 (Campaña de marketing) y Simulación 2 (Tienda comercial).
+PENDIENTE: (a) incorporar dataset piloto de Cochabamba de Muse/Nokar cuando esté disponible; (b) calibrar umbrales finos con datos recolectados.
+
+### Sesión 2026-10-23 (noche) — Eventos por tipo y golpes que se diluyen
 RESUMEN DE LA SESION DEL 2026-10-23 (ultimo estado, leer esto primero)
 Pedido del owner: que cada tipo de proyecto sea unico y tenga su propia manera de evaluar su viabilidad, no solo
 noticias distintas. Resultado, todo publicado en `main` (ultimo commit 1efd6d3), 720 tests en verde, build OK:
