@@ -69,14 +69,14 @@ export class ErrorBoundary extends Component<Props, State> {
             className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-800"
             onClick={() => window.location.reload()}
           >
-            🔄 Recargar página
+            Recargar página
           </button>
           <button
             type="button"
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
             onClick={this.limpiarYReiniciar}
           >
-            🧹 Limpiar todo y volver a login
+            Limpiar todo y volver a login
           </button>
 
           <details className="mt-4 text-left">

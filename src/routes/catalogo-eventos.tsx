@@ -20,21 +20,6 @@ const etiquetasCategoria: Record<CategoriaEvento, string> = {
   oportunidad: "Oportunidad",
 };
 
-const coloresCategoria: Record<CategoriaEvento, string> = {
-  macroeconomico: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-  laboral: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  sectorial: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
-  logistico: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
-  tecnologico: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200",
-  climatico: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
-  financiero: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-  internacional: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200",
-  comercio: "bg-pink-100 text-pink-800 dark:bg-pink-950 dark:text-pink-200",
-  servicios: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200",
-  produccion: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200",
-  oportunidad: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-};
-
 export default function CatalogoEventos() {
   const perfil = useAuthStore((s) => s.perfil);
   const [eventos, setEventos] = useState<Evento[] | null>(null);
@@ -92,7 +77,7 @@ export default function CatalogoEventos() {
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Catálogo de eventos</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Catálogo de eventos</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Los <strong>{eventos.length} eventos</strong> económicos bolivianos que el motor de
             simulación inyectará turno a turno en cada proyecto.
@@ -123,26 +108,24 @@ export default function CatalogoEventos() {
           return (
             <div
               key={e.id}
-              className="rounded-lg border border-border bg-card p-4 transition hover:border-foreground/40"
+              className="rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-primary/50 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Newspaper className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs font-mono text-muted-foreground">{e.codigo}</span>
+                  <Newspaper className="h-4 w-4 text-primary" />
+                  <span className="font-mono text-xs font-semibold text-muted-foreground">{e.codigo}</span>
                 </div>
                 <span
-                  className={`rounded px-2 py-0.5 text-[11px] font-medium ${
-                    coloresCategoria[e.categoria as CategoriaEvento] ?? ""
-                  }`}
+                  className="rounded-md border border-border bg-secondary/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
                 >
                   {etiquetasCategoria[e.categoria as CategoriaEvento] ?? e.categoria}
                 </span>
               </div>
 
-              <h3 className="mt-2 text-sm font-semibold tracking-tight">{e.titulo}</h3>
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-3">{e.descripcion}</p>
+              <h3 className="mt-2.5 font-display text-base font-bold text-foreground">{e.titulo}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-3">{e.descripcion}</p>
 
-              <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
                 <span>Prob: {(e.probabilidad * 100).toFixed(0)}%</span>
                 <span>·</span>
                 <span>Desde turno {e.turno_minimo}</span>
@@ -152,7 +135,7 @@ export default function CatalogoEventos() {
 
               <button
                 onClick={() => setExpandido(abierto ? null : e.id)}
-                className="mt-3 text-xs font-medium text-foreground underline underline-offset-2"
+                className="mt-3 text-xs font-semibold text-primary underline underline-offset-4 hover:opacity-80"
               >
                 {abierto ? "Ocultar decisiones" : "Ver opciones de decisión"}
               </button>

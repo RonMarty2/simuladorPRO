@@ -17,29 +17,28 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
   const [pasosAbiertos, setPasosAbiertos] = useState(true);
 
   return (
-    <div className="mb-3 overflow-hidden rounded-lg border-2 border-fuchsia-300 bg-gradient-to-br from-fuchsia-50 via-violet-50 to-sky-50 dark:border-fuchsia-900 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30">
-      <div className="px-4 pt-3">
-        <div className="flex items-center gap-2 text-base font-extrabold tracking-tight text-fuchsia-900 dark:text-fuchsia-200">
-          <Sparkles className="h-5 w-5" />
-          🎓 Semana E · {curso.nombre}
+    <div className="mb-4 overflow-hidden rounded-xl border border-primary/25 bg-card shadow-sm">
+      <div className="bg-accent/30 p-4">
+        <div className="flex items-center gap-2 font-display text-base font-bold text-foreground">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Semana E · {curso.nombre}
         </div>
-        <p className="mt-1 text-xs text-fuchsia-900/80 dark:text-fuchsia-200/80">
-          Bienvenida/o al evento. Aquí vas a <strong>armar tu proyecto, simularlo y ver si es
-          viable</strong>. No hay notas, no hay calificaciones — el objetivo es que aprendas
-          jugando con los números reales.
+        <p className="mt-1 text-xs text-muted-foreground">
+          Bienvenida/o al evento. Aquí vas a <strong className="text-foreground">armar tu proyecto, simularlo y ver si es
+          viable</strong>. No hay notas ni calificaciones: el objetivo es que aprendas experimentando con números y supuestos reales.
         </p>
       </div>
 
       <button
         onClick={() => setPasosAbiertos((v) => !v)}
-        className="mt-2 flex w-full items-center gap-1.5 border-t border-fuchsia-200 bg-fuchsia-100/50 px-4 py-2 text-left text-xs font-semibold text-fuchsia-900 hover:bg-fuchsia-100 dark:border-fuchsia-900 dark:bg-fuchsia-950/40 dark:text-fuchsia-200 dark:hover:bg-fuchsia-900/40"
+        className="flex w-full items-center gap-1.5 border-t border-border bg-accent/50 px-4 py-2.5 text-left text-xs font-semibold text-foreground transition-colors hover:bg-accent"
       >
-        {pasosAbiertos ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        {pasosAbiertos ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronRight className="h-3.5 w-3.5 text-primary" />}
         Qué hacer · 5 pasos para terminar el evento
       </button>
 
       {pasosAbiertos && (
-        <ol className="space-y-1.5 border-t border-fuchsia-200 px-4 py-3 text-xs dark:border-fuchsia-900">
+        <ol className="space-y-2 border-t border-border px-4 py-3.5 text-xs">
           <PasoChecklist
             n={1}
             titulo="Únete o crea tu grupo"
@@ -65,9 +64,9 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
             titulo="Cierra el análisis con tu equipo"
             detalle="Revisen juntos el Resumen, expliquen qué cambiarían para mejorar la viabilidad y comparen el resultado con otro grupo."
           />
-          <div className="mt-2 rounded-md border border-sky-200 bg-sky-50/70 p-2 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-            🎯 <strong>Meta del evento</strong>: terminar los 5 pasos. Si te trabas, pregúntale
-            a tu docente o intercambia con otro grupo. NO hay nota — hay aprendizaje.
+          <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
+            <strong className="text-primary">Meta del evento</strong>: terminar los 5 pasos. Si te trabas, pregúntale
+            a tu docente o intercambia con otro grupo. Enfocado en el aprendizaje práctico.
           </div>
         </ol>
       )}
@@ -77,13 +76,13 @@ export default function BannerSemanaE({ curso }: { curso: Curso }) {
 
 function PasoChecklist({ n, titulo, detalle }: { n: number; titulo: string; detalle: string }) {
   return (
-    <li className={cn("flex gap-2")}>
-      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-fuchsia-600 dark:text-fuchsia-400" />
+    <li className={cn("flex gap-2.5")}>
+      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
       <div className="min-w-0">
         <div className="font-semibold text-foreground">
           {n}. {titulo}
         </div>
-        <div className="text-[11px] text-muted-foreground">{detalle}</div>
+        <div className="text-xs text-muted-foreground">{detalle}</div>
       </div>
     </li>
   );

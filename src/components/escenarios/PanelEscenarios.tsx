@@ -90,7 +90,7 @@ export default function PanelEscenarios({
     <div className="mx-auto max-w-7xl space-y-4 p-3 sm:p-5">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold tracking-tight">📊 Escenarios — análisis de sensibilidad</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Escenarios — análisis de sensibilidad</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Compara cómo se mueven los indicadores del proyecto si cambian las variables clave.
           El proyecto base es <strong>{proyecto.nombre}</strong>.
@@ -98,16 +98,16 @@ export default function PanelEscenarios({
       </div>
 
       {delTipo && (
-        <div className="rounded-lg border border-sky-300 bg-sky-50/60 p-3 text-xs dark:border-sky-800 dark:bg-sky-950/30">
-          <div className="mb-1.5 font-semibold text-sky-900 dark:text-sky-100">
+        <div className="rounded-lg rounded-xl border border-border bg-card p-4 text-xs shadow-sm">
+          <div className="mb-2 font-display text-sm font-bold text-foreground">
             Escenarios propios de tu tipo de negocio{tituloTipo ? `: ${tituloTipo}` : ""}
           </div>
           <p className="mb-1.5">
-            <strong className="text-red-700 dark:text-red-300">Pesimista.</strong> {delTipo.motivoPesimista}{" "}
+            <strong className="text-destructive font-semibold">Pesimista.</strong> {delTipo.motivoPesimista}{" "}
             <span className="text-muted-foreground">({resumenCambios(pesimista)})</span>
           </p>
           <p>
-            <strong className="text-emerald-700 dark:text-emerald-300">Optimista.</strong> {delTipo.motivoOptimista}{" "}
+            <strong className="text-primary font-bold">Optimista.</strong> {delTipo.motivoOptimista}{" "}
             <span className="text-muted-foreground">({resumenCambios(optimista)})</span>
           </p>
           <p className="mt-1.5 text-[10px] text-muted-foreground">
@@ -120,7 +120,7 @@ export default function PanelEscenarios({
       {faltantes.length > 0 && (
         <div
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+          className="rounded-lg rounded-xl border border-amber-300/70 bg-amber-50/70 p-4 text-xs leading-relaxed text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
         >
           <strong>Resultado provisional.</strong> Aún no cargaste datos en:{" "}
           {faltantes.map((f) => `paso ${f.paso} (${f.etiqueta})`).join(", ")}. Los escenarios
@@ -184,14 +184,14 @@ export default function PanelEscenarios({
       <AnalisisRiesgo proyecto={proyecto} optimista={optimista} pesimista={pesimista} />
 
       {/* Sliders de "Mi escenario" */}
-      <div className="rounded-lg border border-purple-200 bg-purple-50/40 dark:border-purple-900 dark:bg-purple-950/20">
+      <div className="rounded-lg rounded-xl border border-border bg-card shadow-sm">
         <button
           onClick={() => setSlidersAbierto((v) => !v)}
           className="flex w-full items-center justify-between gap-2 p-3 text-left"
         >
           <div className="flex items-center gap-2">
             {slidersAbierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            <Sliders className="h-4 w-4 text-purple-700 dark:text-purple-300" />
+            <Sliders className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">Mi escenario · arma tu propio stress test</span>
           </div>
           <span className="text-[11px] text-muted-foreground">
@@ -200,7 +200,7 @@ export default function PanelEscenarios({
         </button>
 
         {slidersAbierto && (
-          <div className="space-y-3 border-t border-purple-200 p-3 dark:border-purple-900">
+          <div className="space-y-3 border-t border-border p-4">
             <GrupoSliders titulo="Ingresos">
               <SliderPorcentual
                 label="Precio"
@@ -333,7 +333,7 @@ function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
           {escenario.etiqueta}
         </span>
         {viable ? (
-          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary font-bold">
             <CheckCircle2 className="h-3 w-3" />
             VIABLE
           </span>
@@ -400,7 +400,7 @@ function TablaIndicadores({ escenarios }: { escenarios: EscenarioCalculado[] }) 
             {escenarios.map((e) => (
               <td key={e.nombre} className="p-2 text-right">
                 {esViable(e.flujo) ? (
-                  <span className="text-emerald-700 dark:text-emerald-300">✓ SÍ</span>
+                  <span className="text-primary font-bold">✓ SÍ</span>
                 ) : (
                   <span className="text-rose-700 dark:text-rose-300">✗ NO</span>
                 )}

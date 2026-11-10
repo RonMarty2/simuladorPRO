@@ -111,23 +111,23 @@ export default function SemanaEEntrada() {
 
   if (inicializado && user && perfil && necesitaConfirmarNombre) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-fuchsia-50 via-violet-50 to-sky-50 p-4 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
         <form
           onSubmit={guardarNombreYEntrar}
-          className="w-full max-w-md space-y-4 rounded-xl border-2 border-fuchsia-300 bg-card p-6 shadow-lg dark:border-fuchsia-900"
+          className="w-full max-w-md space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
         >
           <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 text-white">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Sparkles className="h-6 w-6" />
             </div>
-            <h1 className="mt-3 text-xl font-extrabold tracking-tight">¿Cómo te llamas?</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">¿Cómo te llamas?</h1>
+            <p className="mt-1.5 text-xs text-muted-foreground">
               Este es el nombre que verán tus compañeros en el grupo.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1 text-xs font-medium">
+            <label className="space-y-1.5 text-xs font-medium text-foreground">
               <span>Nombre</span>
               <input
                 value={nombre}
@@ -136,10 +136,10 @@ export default function SemanaEEntrada() {
                 autoFocus
                 autoComplete="given-name"
                 placeholder="Tu nombre"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
-            <label className="space-y-1 text-xs font-medium">
+            <label className="space-y-1.5 text-xs font-medium text-foreground">
               <span>Apellido <span className="font-normal text-muted-foreground">(opcional)</span></span>
               <input
                 value={apellido}
@@ -147,13 +147,13 @@ export default function SemanaEEntrada() {
                 maxLength={70}
                 autoComplete="family-name"
                 placeholder="Tu apellido"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
           </div>
 
           {error && (
-            <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {error}
             </div>
           )}
@@ -161,7 +161,7 @@ export default function SemanaEEntrada() {
           <button
             type="submit"
             disabled={guardandoNombre || nombre.trim().length < 2}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
           >
             {guardandoNombre && <Loader2 className="h-4 w-4 animate-spin" />}
             {guardandoNombre ? "Guardando…" : "Guardar y entrar"}
@@ -174,43 +174,43 @@ export default function SemanaEEntrada() {
   // Si está en proceso de auto-inscribir vía sesión existente, mostrar loader.
   if (inicializado && user && (autoInscribiendo || perfil)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-fuchsia-50 via-violet-50 to-sky-50 p-4 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
         <div className="space-y-3 text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-fuchsia-600" />
-          <p className="text-sm font-medium">Inscribiéndote al evento…</p>
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm font-medium text-muted-foreground">Inscribiéndote al evento…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-fuchsia-50 via-violet-50 to-sky-50 p-4 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30">
-      <div className="w-full max-w-md space-y-5 rounded-xl border-2 border-fuchsia-300 bg-card p-6 shadow-lg dark:border-fuchsia-900">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 text-white">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Sparkles className="h-6 w-6" />
           </div>
-          <h1 className="mt-3 text-xl font-extrabold tracking-tight">
-            🎓 Bienvenido a Semana E
+          <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">
+            Bienvenido a Semana E
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             Evento de viabilidad de proyectos · sin notas
           </p>
         </div>
 
-        <div className="rounded-md border border-sky-200 bg-sky-50/70 p-3 text-[11px] text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-          <strong>¿Qué vas a hacer aquí?</strong>
-          <ol className="ml-4 mt-1 list-decimal space-y-0.5">
+        <div className="rounded-xl border border-primary/20 bg-accent/40 p-4 text-xs text-foreground">
+          <p className="font-semibold text-primary">¿Qué vas a hacer aquí?</p>
+          <ol className="ml-4 mt-2 list-decimal space-y-1 text-muted-foreground">
             <li>Entras con tu cuenta Google en segundos.</li>
             <li>Te unes o formas un grupo con tus compañeros.</li>
             <li>Arman juntos un proyecto: producto, costos, inversión.</li>
             <li>Ven si el VAN/TIR cierra y simulan 5 años.</li>
-            <li>NO hay notas. Hay aprendizaje.</li>
+            <li><span className="font-medium text-foreground">Sin calificaciones</span>, enfocado en el aprendizaje práctico.</li>
           </ol>
         </div>
 
         {error && (
-          <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
             {error}
           </div>
         )}
@@ -218,11 +218,11 @@ export default function SemanaEEntrada() {
         <button
           onClick={entrarConGoogle}
           disabled={cargandoGoogle}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-sm font-bold transition hover:bg-secondary disabled:opacity-50"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold transition hover:bg-accent disabled:opacity-50"
         >
           {cargandoGoogle ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
               Abriendo Google…
             </>
           ) : (
@@ -250,9 +250,9 @@ export default function SemanaEEntrada() {
           )}
         </button>
 
-        <div className="text-center text-[11px] text-muted-foreground">
+        <div className="text-center text-xs text-muted-foreground">
           ¿Eres docente o estudiante regular?{" "}
-          <Link to="/login" className="font-medium text-foreground underline">
+          <Link to="/login" className="font-semibold text-primary underline underline-offset-2">
             Ingresar normal
           </Link>
         </div>

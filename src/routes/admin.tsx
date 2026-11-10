@@ -43,14 +43,14 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ShieldCheck className="h-5 w-5" />
+    <div className="space-y-5">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">Panel admin</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight">Panel admin</h1>
             <p className="text-xs text-muted-foreground">
               Vista global del simulador. Aquí ves y modificas todo el sistema.
             </p>
@@ -59,31 +59,31 @@ export default function AdminPanel() {
 
         {/* Estadísticas */}
         {stats && (
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
-            <StatCard label="Usuarios" valor={stats.totalUsuarios} icon="👥" />
-            <StatCard label="Docentes" valor={stats.totalDocentes} icon="🎓" />
-            <StatCard label="Estudiantes" valor={stats.totalEstudiantes} icon="📚" />
-            <StatCard label="Cursos" valor={stats.totalCursos} icon="🏫" />
-            <StatCard label="Casos curso" valor={stats.totalCasosCurso} icon="📋" />
-            <StatCard label="Proyectos" valor={stats.totalProyectos} icon="📁" />
-            <StatCard label="Entregas" valor={stats.totalEntregas} icon="📤" />
-            <StatCard label="Pendientes" valor={stats.entregasPendientes} icon="⏳" />
-            <StatCard label="Admins" valor={stats.totalAdmins} icon="🛡️" />
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+            <StatCard label="Usuarios" valor={stats.totalUsuarios} />
+            <StatCard label="Docentes" valor={stats.totalDocentes} />
+            <StatCard label="Estudiantes" valor={stats.totalEstudiantes} />
+            <StatCard label="Cursos" valor={stats.totalCursos} />
+            <StatCard label="Casos curso" valor={stats.totalCasosCurso} />
+            <StatCard label="Proyectos" valor={stats.totalProyectos} />
+            <StatCard label="Entregas" valor={stats.totalEntregas} />
+            <StatCard label="Pendientes" valor={stats.entregasPendientes} />
+            <StatCard label="Admins" valor={stats.totalAdmins} />
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-2 border-b border-border pb-1">
         {(["usuarios", "cursos", "proyectos"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-t-md px-4 py-2 text-sm font-medium transition",
+              "rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all",
               tab === t
-                ? "border-x border-t border-border bg-card text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
           >
             {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -98,12 +98,11 @@ export default function AdminPanel() {
   );
 }
 
-function StatCard({ label, valor, icon }: { label: string; valor: number; icon: string }) {
+function StatCard({ label, valor }: { label: string; valor: number }) {
   return (
-    <div className="rounded-md border border-border bg-card p-2 text-center">
-      <div className="text-base">{icon}</div>
-      <div className="text-xl font-bold tabular-nums">{valor}</div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    <div className="rounded-xl border border-border bg-card/60 p-3 text-center shadow-xs">
+      <div className="font-display text-2xl font-bold tabular-nums text-foreground">{valor}</div>
+      <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -241,7 +240,7 @@ function FilaUsuario({ usuario, onCambio }: { usuario: Perfil; onCambio: () => v
               : "bg-secondary text-muted-foreground hover:bg-secondary/70"
           )}
         >
-          {usuario.es_admin ? "🛡️ Admin" : "—"}
+          {usuario.es_admin ? "Admin" : "—"}
         </button>
       </td>
       <td className="p-2 text-right text-[11px] text-muted-foreground">
@@ -459,7 +458,7 @@ function TabProyectos() {
                 <tr key={p.id} className="border-t border-border/40 hover:bg-secondary/20">
                   <td className="p-2 font-medium">{p.nombre}</td>
                   <td className="p-2 text-center text-[11px]">
-                    {p.tipo === "caso_curso" ? "🎓 caso" : p.tipo === "entrega_estudiante" ? "📝 entrega" : "📁 libre"}
+                    {p.tipo === "caso_curso" ? "caso" : p.tipo === "entrega_estudiante" ? "entrega" : "libre"}
                   </td>
                   <td className="p-2 font-mono text-[11px]">{p.estudiante_id?.slice(0, 8) ?? "—"}</td>
                   <td className="p-2 font-mono text-[11px]">{p.curso_id?.slice(0, 8) ?? "—"}</td>
@@ -475,7 +474,7 @@ function TabProyectos() {
                       disabled={clonandoId === p.id}
                       className="rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
                     >
-                      {clonandoId === p.id ? "Copiando…" : "📥 Traer a los míos"}
+                      {clonandoId === p.id ? "Copiando…" : "Traer a los míos"}
                     </button>
                   </td>
                 </tr>

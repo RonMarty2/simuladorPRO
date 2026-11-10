@@ -13,7 +13,7 @@ const CFG: Record<
 > = {
   entrega_estudiante: {
     label: "Caso del curso",
-    icono: "🎓",
+    icono: "",
     clase:
       "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700",
     banner:
@@ -21,7 +21,7 @@ const CFG: Record<
   },
   caso_curso: {
     label: "Plantilla del docente",
-    icono: "📚",
+    icono: "",
     clase:
       "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700",
     banner:
@@ -29,7 +29,7 @@ const CFG: Record<
   },
   proyecto_grupal: {
     label: "Grupal",
-    icono: "🤝",
+    icono: "",
     clase:
       "bg-violet-100 text-violet-900 border-violet-300 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-700",
     banner:
@@ -37,7 +37,7 @@ const CFG: Record<
   },
   libre: {
     label: "Individual",
-    icono: "📁",
+    icono: "",
     clase:
       "bg-sky-100 text-sky-900 border-sky-300 dark:bg-sky-900/40 dark:text-sky-200 dark:border-sky-700",
     banner:

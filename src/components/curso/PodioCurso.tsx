@@ -74,7 +74,7 @@ export default function PodioCurso({ cursoId, cursoNombre, miEstudianteId }: Pro
     if (miEstudianteId !== null) return null;
     return (
       <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center">
-        <div className="mx-auto mb-2 text-3xl">🏆</div>
+        <Trophy className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
         <h3 className="text-sm font-semibold">Aún no se puede armar el podio</h3>
         <p className="mt-1 text-xs text-muted-foreground">
           Se necesitan al menos <strong>3 estudiantes con nota</strong> (individuales) o{" "}
@@ -640,7 +640,7 @@ function TuTarjetaIndividual({ mi }: { mi: import("@/lib/podio-supabase").MiPosi
             </div>
           ) : mi.puesto <= 3 ? (
             <div className="mt-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-              ¡Estás en el podio! 🏆
+              ¡Estás en el podio! 
             </div>
           ) : (
             <div className="mt-0.5 text-[11px] text-violet-800 dark:text-violet-300">

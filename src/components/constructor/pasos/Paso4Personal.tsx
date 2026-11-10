@@ -447,7 +447,7 @@ export default function Paso4Personal() {
           )}
         </div>
 
-        <Recomendacion titulo="💡 ¿Cómo defino los puestos y sueldos? — buenas prácticas">
+        <Recomendacion titulo="¿Cómo defino los puestos y sueldos? — buenas prácticas">
           <p>
             <strong>Plantilla mínima viable:</strong> arranca solo con los puestos
             imprescindibles. Cada persona es un <em>costo fijo</em> que sube tu punto de

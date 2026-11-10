@@ -89,7 +89,7 @@ export default function EvaluacionFinal() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card p-6">
-        <h1 className="text-xl font-semibold tracking-tight">Evaluación final</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">Evaluación final</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Comparación entre lo que <em>proyectaste</em> al construir el proyecto y lo que{" "}
           <em>realmente pasó</em> en la simulación de 5 años con eventos bolivianos.
@@ -156,8 +156,8 @@ export default function EvaluacionFinal() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-50 p-4 dark:bg-emerald-950/30">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+        <div className="rounded-lg rounded-xl border border-primary/30 bg-primary/10 p-5 shadow-xs">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold font-display text-base font-bold text-primary">
             <CheckCircle2 className="h-4 w-4" />
             Aciertos
           </div>
@@ -177,8 +177,8 @@ export default function EvaluacionFinal() {
           )}
         </div>
 
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-destructive">
+        <div className="rounded-lg rounded-xl border border-destructive/30 bg-destructive/5 p-5 shadow-xs">
+          <div className="mb-2 flex items-center gap-2 font-display text-base font-bold text-destructive">
             <XCircle className="h-4 w-4" />
             Errores
           </div>
@@ -199,12 +199,12 @@ export default function EvaluacionFinal() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-amber-500/40 bg-amber-50 p-5 dark:bg-amber-950/30">
+      <div className="rounded-lg rounded-xl border border-amber-300/70 bg-amber-50/70 p-5 text-amber-950 shadow-xs dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
           <Lightbulb className="h-4 w-4" />
           Calificación sugerida
         </div>
-        <div className="text-3xl font-bold text-amber-900 dark:text-amber-200">
+        <div className="font-display text-3xl font-bold tabular-nums text-amber-900 dark:text-amber-200">
           {fmtNum(analisis.calificacion, 0)}/100
         </div>
         <div className="mt-2 text-xs text-amber-800/80 dark:text-amber-300/80">

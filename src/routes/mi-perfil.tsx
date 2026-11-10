@@ -37,30 +37,30 @@ export default function MiPerfil() {
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
-      <div className="rounded-lg border border-border bg-card p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <User className="h-5 w-5" />
+      <div className="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+        <div className="mb-6 flex items-center gap-3.5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <User className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-base font-semibold">Mi perfil</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight">Mi perfil</h1>
             <p className="text-xs text-muted-foreground">
               Edita tu nombre y datos personales.
             </p>
           </div>
         </div>
 
-        <form onSubmit={guardar} className="space-y-3">
+        <form onSubmit={guardar} className="space-y-4">
           {/* Email (read-only) */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Email
             </label>
             <input
               type="email"
               value={perfil.email}
               disabled
-              className="w-full rounded-md border border-input bg-secondary/30 px-3 py-2 text-sm text-muted-foreground"
+              className="h-11 w-full rounded-lg border border-input bg-secondary/40 px-3.5 text-sm text-muted-foreground"
             />
             <p className="text-[11px] text-muted-foreground">
               El email no se puede cambiar (es el identificador de tu cuenta).
@@ -68,8 +68,8 @@ export default function MiPerfil() {
           </div>
 
           {/* Nombre */}
-          <div className="space-y-1">
-            <label htmlFor="nombre" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="nombre" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Nombre
             </label>
             <input
@@ -78,13 +78,13 @@ export default function MiPerfil() {
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ronald"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Apellido */}
-          <div className="space-y-1">
-            <label htmlFor="apellido" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="apellido" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Apellido
             </label>
             <input
@@ -93,20 +93,20 @@ export default function MiPerfil() {
               value={apellido}
               onChange={(e) => setApellido(e.target.value)}
               placeholder="Martínez"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Rol (read-only) */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Rol del sistema
             </label>
             <div className="flex items-center gap-2 text-sm">
-              <span className="rounded-md bg-secondary px-2 py-1 capitalize">{perfil.rol}</span>
+              <span className="rounded-md border border-border bg-secondary px-2.5 py-1 text-xs font-semibold capitalize text-foreground">{perfil.rol}</span>
               {perfil.es_admin && (
-                <span className="rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground">
-                  🛡️ Admin
+                <span className="rounded-md bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
+                  Admin
                 </span>
               )}
             </div>
@@ -119,11 +119,11 @@ export default function MiPerfil() {
             <div
               className={
                 mensaje.tipo === "ok"
-                  ? "flex items-center gap-2 rounded-md border border-emerald-400 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"
-                  : "rounded-md border border-destructive/60 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                  ? "flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3.5 py-2.5 text-xs font-semibold text-primary"
+                  : "rounded-lg border border-destructive/60 bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive"
               }
             >
-              {mensaje.tipo === "ok" && <CheckCircle2 className="h-3.5 w-3.5" />}
+              {mensaje.tipo === "ok" && <CheckCircle2 className="h-4 w-4" />}
               {mensaje.texto}
             </div>
           )}
@@ -131,9 +131,9 @@ export default function MiPerfil() {
           <button
             type="submit"
             disabled={guardando}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
           >
-            {guardando && <Loader2 className="h-3 w-3 animate-spin" />}
+            {guardando && <Loader2 className="h-4 w-4 animate-spin" />}
             Guardar cambios
           </button>
         </form>

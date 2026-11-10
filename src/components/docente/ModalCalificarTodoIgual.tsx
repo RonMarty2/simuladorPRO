@@ -94,7 +94,7 @@ export default function ModalCalificarTodoIgual({
             )}
           >
             {resultado.fallidas === 0 ? (
-              <span>✅ Calificadas {resultado.ok} etapas. Cerrando…</span>
+              <span>Calificadas {resultado.ok} etapas. Cerrando…</span>
             ) : (
               <span>
                 ⚠ Se calificaron {resultado.ok} de {entregas.length}. Faltaron{" "}

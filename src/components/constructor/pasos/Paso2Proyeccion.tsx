@@ -122,10 +122,10 @@ export default function Paso2Proyeccion() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
-      <div ref={containerRef} className="space-y-3 rounded-lg border border-border bg-card p-5">
+      <div ref={containerRef} className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-sm">
         <GuiaTipoNegocio etapa="proyeccion" />
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
             Paso 2 · Proyección de demanda
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -166,7 +166,7 @@ export default function Paso2Proyeccion() {
                     ) : (
                       <ChevronRight className="h-3.5 w-3.5" />
                     )}
-                    📈 Tasas de crecimiento (aplican a todos)
+                    Tasas de crecimiento (aplican a todos)
                     {!tasasAbierto && (
                       <span className="ml-1 normal-case text-[11px] font-normal opacity-70">
                         — clic para editar
@@ -286,7 +286,7 @@ export default function Paso2Proyeccion() {
           {/* Tasas de crecimiento */}
           <details className="rounded-md border-l-4 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20">
             <summary className="cursor-pointer list-none p-2.5 text-[11px] font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
-              📈 Tasas de crecimiento (aplican a todos) · tocar para editar
+              Tasas de crecimiento (aplican a todos) · tocar para editar
             </summary>
             <div className="space-y-2 p-2.5 pt-0">
               {[
@@ -461,7 +461,7 @@ export default function Paso2Proyeccion() {
           Agregar producto
         </button>
 
-        <Recomendacion titulo="💡 ¿De dónde saco la cantidad y el precio? — buenas prácticas">
+        <Recomendacion titulo="¿De dónde saco la cantidad y el precio? — buenas prácticas">
           <p>
             <strong>La cantidad NO se inventa.</strong> Estímala por uno de estos dos caminos:
           </p>
@@ -724,7 +724,7 @@ function PanelSuscripcion({ proyecto }: { proyecto: Proyecto }) {
           </table>
         </div>
 
-        <Recomendacion titulo="💡 Varios planes: ¿cuándo conviene?">
+        <Recomendacion titulo="Varios planes: ¿cuándo conviene?">
           <p>
             <strong>Un solo plan</strong> es lo más simple y suele alcanzar para empezar. Usa
             varios planes cuando tu producto sirva a perfiles muy distintos (ej. lector ocasional
@@ -858,7 +858,7 @@ function PanelPublicidad({
           </table>
         </div>
 
-        <Recomendacion titulo="💡 ¿De dónde saco la audiencia y el CPM? — buenas prácticas">
+        <Recomendacion titulo="¿De dónde saco la audiencia y el CPM? — buenas prácticas">
           <p>
             <strong>Audiencia:</strong> si ya tienes canal, usa tus datos reales (analytics,
             descargas, oyentes). Si recién arrancas, usa comparables de tu nicho y empieza{" "}
@@ -967,7 +967,7 @@ function PanelCostoBeneficio({
           beneficio incremental supera lo que cuesta el plan.
         </div>
 
-        <Recomendacion titulo="💡 ¿Cómo estimo el beneficio incremental? — buenas prácticas">
+        <Recomendacion titulo="¿Cómo estimo el beneficio incremental? — buenas prácticas">
           <p>
             <strong>El beneficio incremental NO son las ventas totales.</strong> Es la
             diferencia entre el negocio <strong>CON</strong> el plan y <strong>SIN</strong> el

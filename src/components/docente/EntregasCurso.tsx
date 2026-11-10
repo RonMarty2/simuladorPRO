@@ -329,7 +329,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
               ? "No hay entregas grupales pendientes."
               : "Sin entregas grupales en este filtro."
             : filtro === "pendiente"
-              ? "No hay entregas individuales pendientes 🎉"
+              ? "No hay entregas individuales pendientes "
               : "Sin entregas individuales en este filtro."}
         </div>
       ) : (

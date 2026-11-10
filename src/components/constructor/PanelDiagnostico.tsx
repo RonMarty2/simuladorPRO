@@ -59,7 +59,7 @@ export default function PanelDiagnostico({ proyecto }: { proyecto: Proyecto }) {
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
-          🔍 Diagnóstico de tu proyecto
+          Diagnóstico de tu proyecto
         </h3>
         {saludable ? (
           <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">

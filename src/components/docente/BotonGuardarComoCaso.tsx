@@ -246,7 +246,7 @@ function ModalGuardar({
 
           {/* Ficha pedagógica */}
           <div className="rounded-md border border-border bg-secondary/30 p-2 text-[11px] text-muted-foreground">
-            <strong className="text-foreground">📌 Notas:</strong> Tu caso completo queda
+            <strong className="text-foreground">Notas:</strong> Tu caso completo queda
             guardado como referencia para comparar contra cada entrega del estudiante. Los
             estudiantes que tomen el caso DESPUÉS de cambios tuyos verán los nuevos valores;
             los que ya empezaron mantienen su versión.

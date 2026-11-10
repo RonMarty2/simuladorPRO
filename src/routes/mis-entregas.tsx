@@ -2,6 +2,7 @@ import { fmtNum } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { tirCalculable } from "@/lib/acotar-numero";
 import {
+  BookOpenCheck,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -79,11 +80,11 @@ export default function MisEntregas() {
 
   if (entregas.length === 0) {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-dashed border-border bg-card p-8 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-md bg-secondary">
-          📭
+      <div className="mx-auto max-w-md rounded-xl border border-dashed border-border bg-card/60 p-8 text-center shadow-xs">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <BookOpenCheck className="h-6 w-6" />
         </div>
-        <h2 className="text-base font-semibold">Sin entregas aún</h2>
+        <h2 className="font-display text-lg font-bold">Sin entregas aún</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           Cuando completes un caso del curso y lo entregues para revisión, aparecerá aquí
           su historial.
@@ -100,10 +101,10 @@ export default function MisEntregas() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">📝 Mis entregas</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h1 className="font-display text-3xl font-bold tracking-tight">Mis entregas</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Historial completo de las entregas que hiciste para revisión de tus docentes.
         </p>
       </div>
@@ -112,14 +113,14 @@ export default function MisEntregas() {
         const curso = cursos[cursoId];
         const promedio = promedios[cursoId];
         return (
-          <div key={cursoId} className="space-y-3 rounded-lg border border-border bg-card p-4">
+          <div key={cursoId} className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
             {/* Header del curso */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold">
+                <div className="font-display text-base font-bold text-foreground">
                   {curso?.nombre ?? "Curso en el que ya no estás inscrito"}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {curso?.materia ?? ""}
                   {curso?.paralelo ? ` · ${curso.paralelo}` : ""}
                 </div>
@@ -127,12 +128,12 @@ export default function MisEntregas() {
 
               {/* Card de promedio */}
               {promedio && promedio.entregas_revisadas > 0 && (
-                <div className="rounded-md border-2 border-primary bg-primary/10 px-3 py-2 text-center">
-                  <div className="flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                    <TrendingUp className="h-3 w-3" />
+                <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-center shadow-xs">
+                  <div className="flex items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
                     Promedio
                   </div>
-                  <div className="text-2xl font-bold text-primary">
+                  <div className="font-display text-3xl font-bold text-primary tabular-nums">
                     {promedio.promedio_nota ?? "—"}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
@@ -250,7 +251,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
           {/* Sugerencia automática */}
           {entrega.sugerencia_automatica && (
             <div className="rounded bg-white/40 px-2 py-1 dark:bg-black/20">
-              <strong>🤖 Sistema sugirió:</strong> {entrega.sugerencia_automatica}{" "}
+              <strong>Sistema sugirió:</strong> {entrega.sugerencia_automatica}{" "}
               {entrega.sugerencia_nota !== null && `(${entrega.sugerencia_nota}/100)`}
               {entrega.sugerencia_razones && entrega.sugerencia_razones.length > 0 && (
                 <ul className="ml-3 mt-0.5 list-disc opacity-80">
@@ -266,7 +267,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
           {entrega.comentario_docente && (
             <div className="rounded bg-white/60 p-2 dark:bg-black/30">
               <div className="text-[11px] font-semibold opacity-75">
-                💬 Comentario del docente:
+                Comentario del docente:
               </div>
               <div className="mt-0.5">{entrega.comentario_docente}</div>
             </div>

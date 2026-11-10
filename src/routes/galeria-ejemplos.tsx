@@ -1,13 +1,41 @@
 import { fmtNum } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy } from "lucide-react";
+import {
+  X, BookOpen, Eye, Send, Loader2, CheckCircle2, Copy, Filter, ChevronDown,
+  UtensilsCrossed, Factory, ShoppingBag, Wrench, Repeat,
+  Tv, Mountain, Sprout, Scale, Megaphone, HeartHandshake,
+  Ticket, Smartphone, Building2, Activity, GraduationCap,
+  BadgePercent, Droplet, Landmark, LayoutGrid, type LucideIcon
+} from "lucide-react";
 import {
   PLANTILLAS,
   CATEGORIAS,
   type PlantillaMeta,
   type CategoriaPlantilla,
 } from "@/lib/plantillas";
+
+const ICONOS_CATEGORIA: Record<string, LucideIcon> = {
+  gastronomia: UtensilsCrossed,
+  produccion: Factory,
+  comercio: ShoppingBag,
+  servicios: Wrench,
+  suscripcion: Repeat,
+  medios: Tv,
+  turismo: Mountain,
+  agricultura: Sprout,
+  costo_beneficio: Scale,
+  marketing: Megaphone,
+  social: HeartHandshake,
+  eventos: Ticket,
+  tecnologia: Smartphone,
+  alquiler: Building2,
+  salud_privada: Activity,
+  educacion_privada: GraduationCap,
+  franquicia: BadgePercent,
+  concesion: Droplet,
+  microcredito: Landmark,
+};
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
@@ -54,8 +82,8 @@ export default function GaleriaEjemplos() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
-          <BookOpen className="h-5 w-5 text-primary" />
+        <h1 className="flex items-center gap-2.5 font-display text-3xl font-bold tracking-tight">
+          <BookOpen className="h-7 w-7 text-primary" />
           Galería de proyectos de ejemplo
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -66,88 +94,106 @@ export default function GaleriaEjemplos() {
         </p>
       </div>
 
-      <div className="rounded-md border border-amber-300 bg-amber-50/60 px-3 py-2 text-[11px] text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-        💡 Idea pedagógica: comparar 3 cafeterías muestra cómo el tamaño cambia los
+      <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 p-3.5 text-xs leading-relaxed text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        Idea pedagógica: comparar 3 cafeterías muestra cómo el tamaño cambia los
         indicadores. Comparar restaurante vs food truck muestra estructuras de costo
         distintas. Comparar podcast premium vs canal de YouTube muestra suscripción vs
         publicidad sobre el mismo creador.
       </div>
 
-      {/* Filtros por categoría */}
-      <div className="flex flex-wrap gap-1.5">
-        <FiltroCategoria
-          activa={filtroCategoria === "todas"}
-          onClick={() => setFiltroCategoria("todas")}
-          emoji="🎯"
-          label={`Todas (${PLANTILLAS.length})`}
-        />
-        {categoriasUsadas.map((cat) => {
-          const meta = CATEGORIAS[cat];
-          const total = PLANTILLAS.filter((p) => p.categoria === cat).length;
-          return (
-            <FiltroCategoria
-              key={cat}
-              activa={filtroCategoria === cat}
-              onClick={() => setFiltroCategoria(cat)}
-              emoji={meta.emoji}
-              label={`${meta.titulo} (${total})`}
-            />
-          );
-        })}
+      {/* Filtro por categoría: desplegable compacto y limpio */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-sm">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-primary">
+            <Filter className="h-4 w-4" />
+          </div>
+          <select
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value as any)}
+            className="h-11 w-full appearance-none rounded-xl border border-input bg-card pl-10 pr-9 text-xs font-bold text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="todas">Todas las categorías ({PLANTILLAS.length} proyectos)</option>
+            {categoriasUsadas.map((cat) => {
+              const meta = CATEGORIAS[cat];
+              const total = PLANTILLAS.filter((p) => p.categoria === cat).length;
+              return (
+                <option key={cat} value={cat}>
+                  {meta.titulo} ({total})
+                </option>
+              );
+            })}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
+            <ChevronDown className="h-4 w-4" />
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Mostrando <strong className="text-foreground">{plantillasFiltradas.length}</strong> de {PLANTILLAS.length} ejemplos
+        </div>
       </div>
 
       {/* Grid de plantillas, agrupadas por categoría */}
       <div className="space-y-6">
         {Array.from(porCategoria.entries()).map(([cat, plantillas]) => {
           const meta = CATEGORIAS[cat];
+          const IconoCat = ICONOS_CATEGORIA[cat] ?? LayoutGrid;
           return (
             <section key={cat} className="space-y-3">
-              <div className="flex items-baseline gap-2 border-b border-border pb-1.5">
-                <span className="text-xl">{meta.emoji}</span>
+              <div className="flex items-center gap-2.5 border-b border-border pb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <IconoCat className="h-4 w-4" />
+                </div>
                 <div>
-                  <h2 className="text-base font-bold">{meta.titulo}</h2>
-                  <p className="text-[11px] text-muted-foreground">{meta.descripcion}</p>
+                  <h2 className="font-display text-base font-bold text-foreground">{meta.titulo}</h2>
+                  <p className="text-xs text-muted-foreground">{meta.descripcion}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {plantillas.map((pl) => (
-                  <div
-                    key={pl.clave}
-                    className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition hover:border-primary hover:shadow-md"
-                  >
-                    <button onClick={() => setAbierto(pl)} className="flex flex-col gap-2 text-left">
-                      <div className="flex items-center justify-between">
-                        <span className="text-3xl">{pl.emoji}</span>
-                        <ChipEscala escala={pl.escala} />
-                      </div>
-                      <div className="text-sm font-bold leading-tight">{pl.titulo}</div>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
-                          {pl.modeloLabel}
-                        </span>
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                          {pl.sector}
-                        </span>
-                        {pl.veredicto && <ChipVeredicto veredicto={pl.veredicto} />}
-                      </div>
-                      <p className="text-[11px] leading-snug text-muted-foreground">{pl.resumen}</p>
-                      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary">
-                        <Eye className="h-3.5 w-3.5" />
-                        Ver proyecto completo
-                      </div>
-                    </button>
-                    {esDocente && (
-                      <button
-                        onClick={() => setAPublicar(pl)}
-                        className="mt-1 flex items-center justify-center gap-1.5 rounded-md border border-emerald-400 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                        title="Publicar este ejemplo como caso del curso para tus alumnos"
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                        Publicar como caso del curso
+                {plantillas.map((pl) => {
+                  const IconoPl = ICONOS_CATEGORIA[pl.categoria] ?? LayoutGrid;
+                  return (
+                    <div
+                      key={pl.clave}
+                      className="group flex flex-col gap-2.5 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+                    >
+                      <button onClick={() => setAbierto(pl)} className="flex flex-col gap-2 text-left">
+                        <div className="flex items-center justify-between">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs transition group-hover:bg-primary group-hover:text-primary-foreground">
+                            <IconoPl className="h-5 w-5" />
+                          </div>
+                          <ChipEscala escala={pl.escala} />
+                        </div>
+                        <div className="font-display text-base font-bold leading-tight text-foreground transition group-hover:text-primary">
+                          {pl.titulo}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                            {pl.modeloLabel}
+                          </span>
+                          <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {pl.sector}
+                          </span>
+                          {pl.veredicto && <ChipVeredicto veredicto={pl.veredicto} />}
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">{pl.resumen}</p>
+                        <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary">
+                          <Eye className="h-3.5 w-3.5" />
+                          Ver proyecto completo
+                        </div>
                       </button>
-                    )}
-                  </div>
-                ))}
+                      {esDocente && (
+                        <button
+                          onClick={() => setAPublicar(pl)}
+                          className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                          title="Publicar este ejemplo como caso del curso para tus alumnos"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          Publicar como caso del curso
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           );
@@ -350,53 +396,20 @@ function ModalPublicarCaso({
   );
 }
 
-function FiltroCategoria({
-  activa,
-  onClick,
-  emoji,
-  label,
-}: {
-  activa: boolean;
-  onClick: () => void;
-  emoji: string;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
-        activa
-          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-          : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"
-      )}
-    >
-      <span>{emoji}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
 function ChipVeredicto({ veredicto }: { veredicto: "viable" | "marginal" | "rechazo" }) {
   const meta = {
-    viable: { texto: "Viable", clase: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200" },
-    marginal: { texto: "Marginal", clase: "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200" },
-    rechazo: { texto: "Ejemplo de rechazo", clase: "bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200" },
+    viable: { texto: "Viable", clase: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800" },
+    marginal: { texto: "Marginal", clase: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-800" },
+    rechazo: { texto: "Ejemplo de rechazo", clase: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-800" },
   }[veredicto];
   return (
-    <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-bold", meta.clase)}>{meta.texto}</span>
+    <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide", meta.clase)}>{meta.texto}</span>
   );
 }
 
 function ChipEscala({ escala }: { escala: "Pequeño" | "Mediano" | "Grande" }) {
-  const clase =
-    escala === "Pequeño"
-      ? "bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200"
-      : escala === "Mediano"
-        ? "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200"
-        : "bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200";
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold uppercase", clase)}>
+    <span className="rounded-md border border-border bg-secondary/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
       {escala}
     </span>
   );
@@ -460,8 +473,10 @@ function VisorPlantilla({
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-card shadow-xl">
         <header className="flex items-center justify-between gap-2 border-b border-border p-4">
           <div className="min-w-0">
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <span className="text-xl">{plantilla.emoji}</span>
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BookOpen className="h-4 w-4" />
+              </div>
               <span className="truncate">{proyecto.nombre}</span>
             </h2>
             <p className="mt-0.5 text-[11px] text-muted-foreground">

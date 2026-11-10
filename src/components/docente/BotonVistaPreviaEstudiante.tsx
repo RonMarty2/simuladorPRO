@@ -73,7 +73,7 @@ function ModalVistaPrevia({ onCerrar }: { onCerrar: () => void }) {
         <div className="flex items-center justify-between border-b border-border p-4">
           <div>
             <h2 className="text-base font-semibold">
-              👁️ Vista previa: así verá tu estudiante el caso
+              Vista previa: así verá tu estudiante el caso
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               "{proyecto.nombre}" · El estudiante empieza a trabajar desde el{" "}
@@ -106,7 +106,7 @@ function ModalVistaPrevia({ onCerrar }: { onCerrar: () => void }) {
 
         {/* Footer */}
         <div className="border-t border-border bg-secondary/30 p-3 text-[11px] text-muted-foreground">
-          <strong className="text-foreground">💡 Esto es solo una vista.</strong>{" "}
+          <strong className="text-foreground">Esto es solo una vista.</strong>{" "}
           No afecta a estudiantes que ya tomaron el caso. Para validar el flujo
           completo de entrega/revisión necesitarías una cuenta de estudiante real
           (ventana incógnito).

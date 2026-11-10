@@ -246,7 +246,7 @@ export default function Paso9Resumen() {
           </span>
         </h3>
         <div className="mb-2 text-[11px] text-muted-foreground md:hidden">
-          👉 Desliza la tabla para ver los 5 años (el concepto queda fijo).
+          Desliza la tabla para ver los 5 años (el concepto queda fijo).
         </div>
         <table className="w-full min-w-[700px] text-xs">
           <thead className="text-muted-foreground">
@@ -491,7 +491,7 @@ function AnalisisAvanzadoV2({
       {/* Glosario rápido de las siglas del panel V2 */}
       <details className="mt-3 max-w-4xl rounded-md border border-border bg-card p-2 text-[11px]">
         <summary className="cursor-pointer font-semibold text-foreground">
-          📖 ¿Qué significan estas siglas? (clic para abrir)
+          ¿Qué significan estas siglas? (clic para abrir)
         </summary>
         <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
           <div className="rounded bg-secondary/40 px-2 py-1">
@@ -874,7 +874,7 @@ function PanelMonteCarlo({
     <details className="mt-3 max-w-4xl overflow-hidden rounded-md border border-border bg-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3 hover:bg-secondary/40">
         <span className="text-sm font-semibold">
-          🎲 Análisis de riesgo (Monte Carlo) — ¿qué tan probable es ganar?
+          Análisis de riesgo (Monte Carlo) — ¿qué tan probable es ganar?
         </span>
         <span className="flex-shrink-0 text-[11px] text-muted-foreground">▸ ver / ▾ ocultar</span>
       </summary>
@@ -920,7 +920,7 @@ function PanelMonteCarlo({
             onClick={() => setSeed((s) => s + 1)}
             className="rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium hover:bg-secondary"
           >
-            🔄 Volver a correr
+            Volver a correr
           </button>
         </div>
 
@@ -972,7 +972,7 @@ function PanelMonteCarlo({
 
         {/* Cómo leerla — guía didáctica */}
         <div className="mt-3 space-y-1.5 rounded-md bg-secondary/30 p-3 text-[11px] leading-snug">
-          <div className="font-semibold">📖 Cómo leerla:</div>
+          <div className="font-semibold">Cómo leerla:</div>
           <div>
             <strong>{fmtNum((prob * 100), 0)}%</strong> significa que, de cada 100 veces que
             abrieras este negocio (con esos márgenes de incertidumbre), en{" "}
@@ -1444,7 +1444,7 @@ function BotonExportarExcel({ proyecto }: { proyecto: any }) {
       title="Descarga el proyecto en .xlsx con todas las etapas, la presentación ejecutiva y fórmulas Excel."
       className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-emerald-400/60 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
     >
-      📊 {exportando ? "Generando…" : "Exportar a Excel"}
+      {exportando ? "Generando…" : "Exportar a Excel"}
     </button>
   );
 }

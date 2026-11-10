@@ -167,7 +167,7 @@ export default function Paso2Inversiones() {
           />
         ))}
 
-        <Recomendacion titulo="💡 ¿Qué inversiones poner y cómo estimarlas? — buenas prácticas">
+        <Recomendacion titulo="¿Qué inversiones poner y cómo estimarlas? — buenas prácticas">
           <p>
             Incluye <strong>todo lo que compras UNA vez al inicio</strong> para poder operar
             (no lo que se gasta mes a mes — eso son costos, van en otros pasos).

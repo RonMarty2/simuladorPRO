@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
+import { ArrowRight, BookOpen, Users, DoorOpen, FolderOpen, GraduationCap, KeyRound, Loader2, Plus, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   buscarCursoPorCodigo,
@@ -28,8 +28,8 @@ import { cn } from "@/lib/utils";
 
 const ESTADO_LABEL: Record<string, { txt: string; clase: string }> = {
   construyendo: { txt: "En construcción", clase: "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200" },
-  completo: { txt: "Completo", clase: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200" },
-  simulando: { txt: "Simulando", clase: "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200" },
+  completo: { txt: "Completo", clase: "bg-emerald-100 text-accent-foreground" },
+  simulando: { txt: "Simulando", clase: "bg-sky-100 text-accent-foreground" },
   finalizado: { txt: "Finalizado", clase: "bg-secondary text-muted-foreground" },
 };
 
@@ -308,7 +308,7 @@ export default function DashboardEstudiante() {
               {/* Banner Semana E (si aplica) — reemplaza al podio en modo evento. */}
               {curso.es_semana_e && <BannerSemanaE curso={curso} />}
 
-              {/* ── 🏆 PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
+              {/* ── PODIO DEL CURSO (solo si hay suficientes calificados) ── */}
               {/* En modo Semana E no se muestra: no hay notas, no hay competencia. */}
               {user && !curso.es_semana_e && (
                 <div className="mb-3">
@@ -341,20 +341,20 @@ export default function DashboardEstudiante() {
                     )}
                     {hayCasos && (
               <>
-              {/* ── 1. 🎓 CASO DEL CURSO (emerald) — contraído por defecto ── */}
-              <details className="group overflow-hidden rounded-md border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-100/60 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-900/30">
+              {/* ── 1. CASO DEL CURSO (emerald) — contraído por defecto ── */}
+              <details className="group overflow-hidden rounded-md border border-border bg-card">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-border bg-accent px-3 py-2">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                      <span className="text-base">🎓</span>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-accent-foreground">
+                      <GraduationCap className="h-4 w-4" />
                       <span>Caso del curso</span>
                       {(casosDisponibles.length + casosTomados.length) > 0 && (
-                        <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[11px] font-bold text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100">
+                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
                           {casosDisponibles.length + casosTomados.length}
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-emerald-900/70 dark:text-emerald-200/70">
+                    <div className="text-[11px] text-accent-foreground/70">
                       Los proyectos que el docente publicó para tomar y trabajar.
                     </div>
                   </div>
@@ -388,7 +388,7 @@ export default function DashboardEstudiante() {
                         return (
                           <div
                             key={c.id}
-                            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-200 bg-card p-2 dark:border-emerald-900"
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card p-2"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-semibold">{c.nombre}</div>
@@ -403,7 +403,7 @@ export default function DashboardEstudiante() {
                             <button
                               onClick={() => tomarCaso(c.id)}
                               disabled={tomandoCaso === c.id}
-                              className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                              className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                             >
                               {tomandoCaso === c.id ? "Tomando…" : "Tomar este caso"}
                             </button>
@@ -419,20 +419,20 @@ export default function DashboardEstudiante() {
                     )}
                     {muestraIndividual && (
               <>
-              {/* ── 2. 📁 CASO INDIVIDUAL (sky) — contraído por defecto ──── */}
-              <details className="group mt-3 overflow-hidden rounded-md border border-sky-200 bg-sky-50/40 dark:border-sky-900 dark:bg-sky-950/20">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/60 px-3 py-2 dark:border-sky-900 dark:bg-sky-900/30">
+              {/* ── 2. CASO INDIVIDUAL (sky) — contraído por defecto ──── */}
+              <details className="group mt-3 overflow-hidden rounded-md border border-border bg-card">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-border bg-accent px-3 py-2">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-sky-900 dark:text-sky-100">
-                      <span className="text-base">📁</span>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-accent-foreground">
+                      <FolderOpen className="h-4 w-4" />
                       <span>Caso individual</span>
                       {proyectosLibres.length > 0 && (
-                        <span className="rounded bg-sky-200 px-1.5 py-0.5 text-[11px] font-bold text-sky-900 dark:bg-sky-800 dark:text-sky-100">
+                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
                           {proyectosLibres.length}
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-sky-900/70 dark:text-sky-200/70">
+                    <div className="text-[11px] text-accent-foreground/70">
                       Tu propio proyecto del curso — lo armas tú desde cero.
                     </div>
                   </div>
@@ -474,15 +474,15 @@ export default function DashboardEstudiante() {
               {/* En Semana E es la acción principal; en cursos normales conserva "Caso grupal". */}
               <details
                 open={curso.es_semana_e ? true : undefined}
-                className="group mt-3 overflow-hidden rounded-md border border-violet-200 bg-violet-50/40 dark:border-violet-900 dark:bg-violet-950/20"
+                className="group mt-3 overflow-hidden rounded-md border border-border bg-card"
               >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-violet-200 bg-violet-100/60 px-3 py-2 dark:border-violet-900 dark:bg-violet-900/30">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-border bg-accent px-3 py-2">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
-                      <span className="text-base">🤝</span>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-accent-foreground">
+                      <Users className="h-4 w-4" />
                       <span>{curso.es_semana_e ? "Forma tu equipo de Semana E" : "Caso grupal"}</span>
                     </div>
-                    <div className="text-[11px] text-violet-900/70 dark:text-violet-200/70">
+                    <div className="text-[11px] text-accent-foreground/70">
                       {curso.es_semana_e
                         ? "Crea un equipo o encuentra el de tus compañeros por nombre o código."
                         : "Trabajen en equipo sobre un mismo proyecto."}

@@ -151,7 +151,7 @@ export default function ModalRevisionMasiva({
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
-              📚 Revisando a
+              Revisando a
             </div>
             <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
               {titular}
@@ -317,7 +317,7 @@ function FormEtapa({
                   : "border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
             )}
           >
-            🤖 Sugiere: <strong>{entrega.sugerencia_automatica}</strong>
+            Sugiere: <strong>{entrega.sugerencia_automatica}</strong>
             {entrega.sugerencia_nota !== null && ` · ${entrega.sugerencia_nota}/100`}
           </div>
         )}
@@ -326,7 +326,7 @@ function FormEtapa({
       {/* Detalle paso a paso (colapsado por defecto en cada paso) */}
       <details className="rounded-md border border-border">
         <summary className="cursor-pointer px-3 py-2 text-xs font-semibold hover:bg-secondary/40">
-          📂 Ver detalle de lo que entregó en esta etapa
+          Ver detalle de lo que entregó en esta etapa
         </summary>
         <div className="border-t border-border p-3">
           <DetalleEntregaPasoAPaso

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
  * para no ensuciar la vista. Reutilizable en cualquier etapa del constructor.
  */
 export default function Recomendacion({
-  titulo = "💡 ¿De dónde saco estos números? — buenas prácticas",
+  titulo = "¿De dónde saco estos números? — buenas prácticas",
   children,
 }: {
   titulo?: string;

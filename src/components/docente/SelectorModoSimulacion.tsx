@@ -16,19 +16,19 @@ const MODOS: Array<{ valor: ModoSimulacion; titulo: string; desc: string; icon: 
     valor: "automatico",
     titulo: "Automático",
     desc: "El sistema sortea eventos al azar según probabilidad real. El estudiante avanza solo. Bueno para tareas.",
-    icon: "🎲",
+    icon: "",
   },
   {
     valor: "docente_dispara",
     titulo: "Docente dispara cada evento",
     desc: "Tú lanzas los eventos manualmente desde tu panel cuando lo decidas. Ideal para clase presencial sincronizada.",
-    icon: "🎯",
+    icon: "",
   },
   {
     valor: "curado",
     titulo: "Eventos curados por el docente",
     desc: "Tú eliges de los 50 eventos cuáles enfrentarán tus estudiantes. Ideal para examen con intención pedagógica clara.",
-    icon: "📋",
+    icon: "",
   },
 ];
 
@@ -118,7 +118,7 @@ function SelectorEventosCurados({
         className="flex w-full items-center justify-between text-xs font-semibold"
       >
         <span>
-          📋 Eventos seleccionados:{" "}
+          Eventos seleccionados:{" "}
           <span className="text-primary">{seleccionados.length}</span>
         </span>
         {abierto ? (
@@ -216,7 +216,7 @@ function SelectorEventosCurados({
           )}
 
           <div className="rounded bg-background px-2 py-1 text-[11px] text-muted-foreground">
-            💡 Tip: los eventos seleccionados se aplicarán <strong>en orden</strong> a lo
+            Tip: los eventos seleccionados se aplicarán <strong>en orden</strong> a lo
             largo de los turnos del curso. Si eliges más eventos que turnos, los últimos
             se omiten.
           </div>

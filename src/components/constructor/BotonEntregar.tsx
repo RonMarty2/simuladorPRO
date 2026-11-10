@@ -125,7 +125,7 @@ export default function BotonEntregar({ indicadores, paso }: Props) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold">
-            {paso ? `📤 Entregar etapa ${paso} para revisión` : "📤 Entregar para revisión del docente"}
+            {paso ? `Entregar etapa ${paso} para revisión` : "Entregar para revisión del docente"}
           </h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             Tu proyecto se guarda como una "foto" y queda esperando que el docente lo revise.

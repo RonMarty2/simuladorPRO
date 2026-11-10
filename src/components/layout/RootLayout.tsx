@@ -17,6 +17,7 @@ import {
   PlayCircle,
   ShieldCheck,
   TrendingUp,
+  UserRound,
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -111,10 +112,10 @@ export default function RootLayout() {
         onClick={onClick}
         className={({ isActive }) =>
           cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+            "flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold tracking-wide transition-all",
             isActive
-              ? "bg-primary text-primary-foreground"
-              : "text-foreground/80 hover:bg-accent hover:text-accent-foreground"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "text-foreground/80 hover:bg-accent/60 hover:text-accent-foreground"
           )
         }
       >
@@ -173,7 +174,7 @@ export default function RootLayout() {
               </div>
               <div className="capitalize text-muted-foreground">
                 {perfil.rol}
-                {perfil.es_admin && " · 🛡️"}
+                {perfil.es_admin && " · "}
               </div>
             </button>
           )}
@@ -245,7 +246,7 @@ export default function RootLayout() {
                     }}
                     className="mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground/80 hover:bg-accent"
                   >
-                    <span className="h-4 w-4 flex-shrink-0 text-center">👤</span>
+                    <UserRound className="h-4 w-4 flex-shrink-0" />
                     <span>Mi perfil</span>
                   </button>
                 )}

@@ -198,13 +198,13 @@ export default function SimularProyecto() {
       )}
 
       {/* Header con turno y métricas */}
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Simulación · {proyecto.nombre}
             </div>
-            <div className="text-base font-semibold tracking-tight">
+            <div className="font-display text-xl font-bold tracking-tight">
               Mes {mesActual} de {mesesTotales}
             </div>
           </div>
@@ -214,13 +214,13 @@ export default function SimularProyecto() {
                 abandonar();
               }
             }}
-            className="text-xs text-muted-foreground transition hover:text-destructive"
+            className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
           >
             Abandonar simulación
           </button>
         </div>
-        <div className="mt-2 h-1.5 w-full rounded bg-muted">
-          <div className="h-full rounded bg-primary transition-all" style={{ width: `${progreso}%` }} />
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progreso}%` }} />
         </div>
         <div className={`mt-3 grid grid-cols-2 gap-3 ${sim.estado_actual.socios !== undefined || sim.estado_actual.mora_multiplicador !== undefined || sim.estado_actual.factor_estacional !== undefined || sim.estado_actual.presupuesto_multiplicador !== undefined || sim.estado_actual.eficacia_multiplicador !== undefined || sim.estado_actual.ocupacion_relativa !== undefined || sim.estado_actual.impagos_multiplicador !== undefined || sim.estado_actual.merma_multiplicador !== undefined ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           <Metrica
@@ -328,58 +328,70 @@ export default function SimularProyecto() {
         <div
           className={
             sim?.evento_forzado_id
-              ? "rounded-lg border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-md dark:from-amber-950/30 dark:to-orange-950/30"
-              : "rounded-lg border border-border bg-card p-6"
+              ? "rounded-xl border-2 border-amber-400 bg-amber-50/70 p-6 shadow-md dark:border-amber-700 dark:bg-amber-950/30"
+              : "rounded-xl border border-border bg-card p-6 shadow-sm"
           }
         >
           {sim?.evento_forzado_id && (
-            <div className="mb-3 flex items-center gap-2 rounded-md bg-amber-200/60 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:bg-amber-800/40 dark:text-amber-100">
-              🎲 SITUACIÓN LANZADA POR TU DOCENTE EN VIVO
+            <div className="mb-3 flex items-center gap-2 rounded-md bg-amber-200/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
+              SITUACIÓN LANZADA POR TU DOCENTE EN VIVO
             </div>
           )}
-          <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Newspaper className="h-3.5 w-3.5" />
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            <Newspaper className="h-4 w-4" />
             Noticia del mes — {eventoActual.codigo}
           </div>
-          <h2 className="text-lg font-semibold tracking-tight">{eventoActual.titulo}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{eventoActual.descripcion}</p>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">{eventoActual.titulo}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{eventoActual.descripcion}</p>
           {resumenGolpeEvento(eventoActual).length > 0 && (
-            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <p className="mt-3 rounded-lg border border-amber-300/80 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
               <strong>Esto le pasa a tu negocio aunque decidas bien:</strong>{" "}
               {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
             </p>
           )}
 
-          <div className="mt-5 space-y-2">
-            <div className="text-sm font-medium">¿Qué decides?</div>
-            {eventoActual.opciones_decision.map((op) => (
-              <label
-                key={op.letra}
-                className={`flex cursor-pointer gap-3 rounded-md border p-3 transition ${
-                  opcionSeleccionada?.letra === op.letra
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-accent"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="decision"
-                  checked={opcionSeleccionada?.letra === op.letra}
-                  onChange={() => setOpcionSeleccionada(op)}
-                  className="mt-1"
-                />
-                <div className="flex-1 text-sm">
-                  <div className="font-medium">
-                    {op.letra}. {op.texto}
+          <div className="mt-6 space-y-2.5">
+            <div className="font-display text-base font-bold text-foreground">¿Qué decides?</div>
+            {eventoActual.opciones_decision.map((op) => {
+              const elegida = opcionSeleccionada?.letra === op.letra;
+              return (
+                <label
+                  key={op.letra}
+                  className={cn(
+                    "flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all",
+                    elegida
+                      ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
+                      : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="decision"
+                    checked={elegida}
+                    onChange={() => setOpcionSeleccionada(op)}
+                    className="sr-only"
+                  />
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                      elegida
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    {op.letra}
+                  </span>
+                  <div className="flex-1 text-sm font-medium leading-snug">
+                    {op.texto}
                   </div>
-                </div>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-border bg-card p-6 text-center">
-          <div className="text-sm font-medium">Mes tranquilo — sin eventos relevantes</div>
+        <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center shadow-xs">
+          <div className="font-display text-base font-bold">Mes tranquilo — sin eventos relevantes</div>
           <p className="mt-1 text-xs text-muted-foreground">
             Tu negocio opera con normalidad este mes.
           </p>
@@ -457,20 +469,20 @@ function Metrica({
   positivo: boolean;
 }) {
   return (
-    <div className="rounded-md border border-border p-2">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{titulo}</div>
+    <div className="rounded-lg border border-border bg-card/60 p-2.5 shadow-xs">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{titulo}</div>
       <div
-        className={`text-sm font-semibold ${
+        className={`font-display text-base font-bold tabular-nums ${
           positivo ? "text-foreground" : "text-destructive"
         }`}
       >
         {valor}
       </div>
-      {detalle && <div className="text-[11px] text-muted-foreground">{detalle}</div>}
+      {detalle && <div className="text-[10px] text-muted-foreground">{detalle}</div>}
       {delta !== undefined && Math.abs(delta) > 0.01 && (
         <div
-          className={`text-[11px] ${
-            delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"
+          className={`text-[10px] font-semibold tabular-nums ${
+            delta > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
           }`}
         >
           {delta > 0 ? "+" : ""}
@@ -811,13 +823,13 @@ function SelectorProyectoSimular({
 }) {
   const tipoMeta = (p: Proyecto) => {
     if (p.tipo === "proyecto_grupal") {
-      return { emoji: "🤝", label: "Grupal", clase: "border-violet-400 bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100" };
+      return { emoji: "", label: "Grupal", clase: "border-violet-400 bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100" };
     }
     if (p.caso_origen_id) {
       // copia del caso del docente — viene de un caso_curso
-      return { emoji: "🎓", label: "Caso del curso", clase: "border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" };
+      return { emoji: "", label: "Caso del curso", clase: "border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" };
     }
-    return { emoji: "📁", label: "Individual", clase: "border-sky-400 bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-100" };
+    return { emoji: "", label: "Individual", clase: "border-sky-400 bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-100" };
   };
 
   return (

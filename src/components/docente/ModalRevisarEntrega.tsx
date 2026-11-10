@@ -67,7 +67,7 @@ export default function ModalRevisarEntrega({
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
-              {yaRevisada ? "👁 Viendo revisión de" : "📝 Revisando a"}
+              {yaRevisada ? "Viendo revisión de" : "Revisando a"}
             </div>
             <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
               {entrega.perfil
@@ -132,7 +132,7 @@ export default function ModalRevisarEntrega({
               )}
             >
               <div className="flex items-center gap-2 text-sm font-semibold">
-                🤖 Sugerencia automática:{" "}
+                Sugerencia automática:{" "}
                 <span className="uppercase">{entrega.sugerencia_automatica}</span>
                 {entrega.sugerencia_nota !== null && (
                   <span className="ml-auto text-base">{entrega.sugerencia_nota}/100</span>

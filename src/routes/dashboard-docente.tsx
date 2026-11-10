@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
+import { AlertTriangle, BookOpen, Copy, GraduationCap, Plus, Trash2, Trophy, Users } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   actualizarEstadoCurso,
@@ -71,7 +71,7 @@ export default function DashboardDocente() {
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Panel del docente</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Panel del docente</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Hola {perfil?.nombre} — gestiona tus cursos y ve cómo van tus estudiantes.
           </p>
@@ -94,7 +94,7 @@ export default function DashboardDocente() {
               )}
               title="Crea un evento Semana E aparte: nace oculto y solo Ronald puede publicarlo."
             >
-              🎓 Crear Semana E
+              Crear Semana E
             </button>
           </div>
         )}
@@ -103,21 +103,19 @@ export default function DashboardDocente() {
       {/* CTA visible: galería de ejemplos para usar en clase. */}
       <Link
         to="/ejemplos"
-        className="flex w-full items-center gap-3 rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-3 text-left transition hover:border-indigo-400 hover:shadow-md dark:border-indigo-800 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40"
+        className="flex w-full items-center gap-3 rounded-xl border border-border bg-accent p-3.5 text-left text-accent-foreground shadow-sm transition hover:border-primary/40 hover:shadow-md"
       >
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-lg shadow-md">
-          📖
-        </div>
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm"><BookOpen className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
+          <div className="font-display text-base font-bold">
             Galería de más de 50 proyectos de ejemplo para enseñar en clase
           </div>
-          <div className="text-[11px] text-indigo-800/80 dark:text-indigo-300">
+          <div className="text-xs opacity-85">
             Restaurantes, fábricas, podcast, canal de YouTube, gimnasio, turismo, agricultura…
             Comparalos con tus alumnos para que se vuelvan expertos.
           </div>
         </div>
-        <span className="hidden flex-shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white sm:inline">
+        <span className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground sm:inline-flex">
           Ver galería →
         </span>
       </Link>
@@ -226,13 +224,13 @@ function FormCrearSemanaE({
   return (
     <form
       onSubmit={submit}
-      className="space-y-3 rounded-lg border-2 border-fuchsia-300 bg-gradient-to-br from-fuchsia-50/70 via-violet-50/70 to-sky-50/70 p-4 dark:border-fuchsia-900 dark:from-fuchsia-950/30 dark:via-violet-950/30 dark:to-sky-950/30"
+      className="space-y-3 rounded-lg rounded-xl border border-border bg-card p-5 shadow-sm"
     >
       <div>
-        <h2 className="text-sm font-bold text-fuchsia-900 dark:text-fuchsia-200">
-          🎓 Crear evento Semana E
+        <h2 className="text-sm font-bold text-foreground font-display text-base font-bold">
+          Crear evento Semana E
         </h2>
-        <p className="mt-0.5 text-[11px] text-fuchsia-900/80 dark:text-fuchsia-200/80">
+        <p className="mt-0.5 text-[11px] text-muted-foreground text-xs">
           Curso especial sin calificaciones, con banner de bienvenida y checklist paso a paso.
           Nace oculto: publÃ­calo cuando quieras abrir la entrada a estudiantes.
         </p>
@@ -401,7 +399,7 @@ function FormCrearCurso({
       </div>
 
       {/* Explicación de qué es la simulación, con ejemplos reales */}
-      <Recomendacion titulo="🎲 ¿Qué es la simulación? Turnos, frecuencia y modo — con ejemplos">
+      <Recomendacion titulo="¿Qué es la simulación? Turnos, frecuencia y modo — con ejemplos">
         <p>
           Después de <strong>construir su proyecto</strong> (las 9 etapas: inversión, costos,
           financiamiento, flujo…), cada estudiante lo pone a prueba en una{" "}
@@ -480,7 +478,7 @@ function FormCrearCurso({
       {/* Qué tipos de proyecto se pueden SIMULAR en este curso */}
       <div className="rounded-md border border-amber-300 bg-amber-50/40 p-3 dark:border-amber-800 dark:bg-amber-950/20">
         <div className="mb-2 text-xs font-semibold text-amber-900 dark:text-amber-100">
-          🎲 ¿Qué tipos de proyecto se pueden simular en este curso?
+          ¿Qué tipos de proyecto se pueden simular en este curso?
         </div>
         <p className="mb-2 text-[11px] text-amber-800/80 dark:text-amber-300">
           El alumno solo va a ver en su pantalla "Simular" los tipos que marques. El lanzador
@@ -495,7 +493,7 @@ function FormCrearCurso({
               className="mt-0.5"
             />
             <span>
-              🎓 <strong>Caso del curso</strong> — la copia del caso que publicaste como
+              <strong>Caso del curso</strong> — la copia del caso que publicaste como
               docente (recomendado: todos analizan el mismo proyecto).
             </span>
           </label>
@@ -507,7 +505,7 @@ function FormCrearCurso({
               className="mt-0.5"
             />
             <span>
-              📁 <strong>Proyecto individual</strong> — el proyecto propio del alumno (cada uno
+              <strong>Proyecto individual</strong> — el proyecto propio del alumno (cada uno
               su idea distinta).
             </span>
           </label>
@@ -519,7 +517,7 @@ function FormCrearCurso({
               className="mt-0.5"
             />
             <span>
-              🤝 <strong>Proyecto grupal</strong> — el proyecto compartido del grupo (si el
+              <strong>Proyecto grupal</strong> — el proyecto compartido del grupo (si el
               grupal está habilitado en el curso).
             </span>
           </label>
@@ -706,7 +704,7 @@ function CursoCard({
             )}
             {curso.es_semana_e && (
               <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                🎓 Semana E
+                Semana E
               </span>
             )}
           </div>
@@ -758,27 +756,27 @@ function CursoCard({
           </button>
           {!curso.es_semana_e && (
             <button onClick={() => irA("entregas")} className={claseTab("entregas")}>
-              📥 Entregas
+              Entregas
             </button>
           )}
           <button onClick={() => irA("grupos")} className={claseTab("grupos")}>
-            🤝 Grupos
+            Grupos
           </button>
           {!curso.es_semana_e && (
             <button onClick={() => irA("casos")} className={claseTab("casos")}>
-              🎓 Casos
+              Casos
             </button>
           )}
           {!curso.es_semana_e && (
             <button onClick={() => irA("lanzador")} className={claseTab("lanzador")}>
-              🎲 Lanzar situación
+              Lanzar situación
             </button>
           )}
           <button onClick={() => irA("escenarios")} className={claseTab("escenarios")}>
-            📊 Escenarios
+            Escenarios
           </button>
           <button onClick={() => irA("diagnostico")} className={claseTab("diagnostico")}>
-            🔍 Diagnóstico
+            Diagnóstico
           </button>
           {expandido && (
             <button

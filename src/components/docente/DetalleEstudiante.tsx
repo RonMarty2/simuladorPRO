@@ -202,7 +202,7 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
                       <div className="font-medium">Turno {h.numero_turno}</div>
                       {h.eventos_aplicados && h.eventos_aplicados.length > 0 ? (
                         <div className="text-muted-foreground">
-                          📰 {h.eventos_aplicados[0].titulo}
+                          {h.eventos_aplicados[0].titulo}
                           {h.decision_tomada && (
                             <div className="ml-3 italic">→ Opción {h.decision_tomada.opcion?.letra}: {h.decision_tomada.opcion?.texto}</div>
                           )}

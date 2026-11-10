@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
@@ -43,7 +44,7 @@ export default function ProtectedRoute() {
     return (
       <div className="flex h-app w-screen items-center justify-center bg-background p-6">
         <div className="max-w-md space-y-4 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <div className="text-3xl">🤔</div>
+          <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
           <h2 className="text-base font-semibold text-foreground">
             No pudimos cargar tu perfil
           </h2>
@@ -60,7 +61,7 @@ export default function ProtectedRoute() {
               }}
               className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              🔄 Reintentar carga del perfil
+              Reintentar carga del perfil
             </button>
             <button
               onClick={async () => {
@@ -83,7 +84,7 @@ export default function ProtectedRoute() {
               }}
               className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary"
             >
-              🚪 Cerrar sesión y volver a entrar (limpieza total)
+              Cerrar sesión y volver a entrar (limpieza total)
             </button>
           </div>
 

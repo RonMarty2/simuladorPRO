@@ -62,16 +62,16 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
   const alcancesDisponibles = useMemo(() => {
     const opts: { value: AlcanceLanzamiento; emoji: string; label: string }[] = [];
     if (curso?.simulacion_caso_curso ?? true) {
-      opts.push({ value: "caso", emoji: "🎓", label: "Caso del curso" });
+      opts.push({ value: "caso", emoji: "", label: "Caso del curso" });
     }
     if (curso?.simulacion_individual ?? false) {
-      opts.push({ value: "individual", emoji: "📁", label: "Individual" });
+      opts.push({ value: "individual", emoji: "", label: "Individual" });
     }
     if (curso?.simulacion_grupal ?? true) {
-      opts.push({ value: "grupal", emoji: "🤝", label: "Grupal" });
+      opts.push({ value: "grupal", emoji: "", label: "Grupal" });
     }
     if (opts.length > 1) {
-      opts.unshift({ value: "todos", emoji: "🎯", label: "Todos" });
+      opts.unshift({ value: "todos", emoji: "", label: "Todos" });
     }
     return opts;
   }, [curso]);
@@ -359,7 +359,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1">
                 <span className="text-[11px] text-muted-foreground">
-                  {e.opciones_decision.length} decisiones · 🎯
+                  {e.opciones_decision.length} decisiones · 
                 </span>
                 {e.sectores_afectados.includes("todos") ? (
                   <span className="rounded bg-emerald-100 px-1 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
@@ -385,7 +385,7 @@ export default function LanzadorEventos({ cursoId }: { cursoId: string }) {
       {seleccionado && !aplicaATodos && (
         <div className="rounded-md border border-sky-300 bg-sky-50/60 p-3 dark:border-sky-800 dark:bg-sky-950/30">
           <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-sky-900 dark:text-sky-100">
-            🎯 Este evento solo aplica a:{" "}
+            Este evento solo aplica a:{" "}
             {seleccionado.sectores_afectados.map((s) => (
               <span
                 key={s}
@@ -569,15 +569,15 @@ function ModalConfigSimulacion({
         <div className="space-y-2">
           <label className="flex cursor-pointer items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50/40 p-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/20">
             <input type="checkbox" checked={caso} onChange={(e) => setCaso(e.target.checked)} className="mt-0.5" />
-            <span>🎓 <strong>Caso del curso</strong> — la copia del caso que publicaste como docente.</span>
+            <span><strong>Caso del curso</strong> — la copia del caso que publicaste como docente.</span>
           </label>
           <label className="flex cursor-pointer items-start gap-2 rounded-md border border-sky-200 bg-sky-50/40 p-2 text-xs dark:border-sky-900 dark:bg-sky-950/20">
             <input type="checkbox" checked={individual} onChange={(e) => setIndividual(e.target.checked)} className="mt-0.5" />
-            <span>📁 <strong>Proyecto individual</strong> — el proyecto propio del alumno.</span>
+            <span><strong>Proyecto individual</strong> — el proyecto propio del alumno.</span>
           </label>
           <label className="flex cursor-pointer items-start gap-2 rounded-md border border-violet-200 bg-violet-50/40 p-2 text-xs dark:border-violet-900 dark:bg-violet-950/20">
             <input type="checkbox" checked={grupal} onChange={(e) => setGrupal(e.target.checked)} className="mt-0.5" />
-            <span>🤝 <strong>Proyecto grupal</strong> — el proyecto compartido del grupo.</span>
+            <span><strong>Proyecto grupal</strong> — el proyecto compartido del grupo.</span>
           </label>
         </div>
 

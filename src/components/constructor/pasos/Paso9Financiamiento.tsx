@@ -937,7 +937,7 @@ function BloqueWACC({
       {/* Glosario rápido — qué significan las siglas */}
       <details className="rounded-md border border-border bg-card p-2 text-[11px]" open>
         <summary className="cursor-pointer font-semibold text-foreground">
-          📖 ¿Qué significan las siglas que vas a ver?
+          ¿Qué significan las siglas que vas a ver?
         </summary>
         <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
           <div className="rounded bg-amber-50 px-2 py-1 dark:bg-amber-950/30">
@@ -1095,7 +1095,7 @@ function BloqueWACC({
 
       {/* Lectura del WACC */}
       <div className="rounded-md bg-secondary/40 p-2 text-[11px] text-muted-foreground">
-        <strong className="text-foreground">📖 Cómo se lee:</strong> tu proyecto debe rendir
+        <strong className="text-foreground">Cómo se lee:</strong> tu proyecto debe rendir
         al menos <strong className="text-foreground">{(wacc * 100).toFixed(2)}%</strong> anual
         para no destruir valor. Si la TIR queda por encima → el VAN es positivo y el proyecto
         crea valor. Si queda por debajo → estás perdiendo plata aunque el negocio dé utilidad.

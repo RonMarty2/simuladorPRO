@@ -414,7 +414,7 @@ function ModalNuevoProyecto({
           </div>
 
           <div className="rounded-md bg-secondary/50 p-2 text-[11px] text-muted-foreground">
-            💡 Tus proyectos anteriores se conservan. Vas a poder cambiar entre
+            Tus proyectos anteriores se conservan. Vas a poder cambiar entre
             ellos desde el selector de arriba.
           </div>
 
@@ -427,12 +427,12 @@ function ModalNuevoProyecto({
                 Docente: carga un ejemplo completo para ver y entender:
               </div>
               <div className="grid grid-cols-2 gap-1.5">
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploCafeteriaV2)} disabled={guardando} titulo="☕ Cafetería" sub="Servicios · unidades" />
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPanaderiaV2)} disabled={guardando} titulo="🥖 Panadería" sub="Producción · unidades" />
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploTiendaV2)} disabled={guardando} titulo="🛒 Tienda" sub="Comercio · unidades" />
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPodcastV2)} disabled={guardando} titulo="🎙️ Podcast" sub="Suscripción" />
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPublicidadV2)} disabled={guardando} titulo="📺 Canal" sub="Publicidad · CPM" />
-                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPlanMarketingV2)} disabled={guardando} titulo="📣 Plan mkt" sub="Costo-beneficio" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploCafeteriaV2)} disabled={guardando} titulo="Cafetería" sub="Servicios · unidades" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPanaderiaV2)} disabled={guardando} titulo="Panadería" sub="Producción · unidades" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploTiendaV2)} disabled={guardando} titulo="Tienda" sub="Comercio · unidades" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPodcastV2)} disabled={guardando} titulo="Podcast" sub="Suscripción" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPublicidadV2)} disabled={guardando} titulo="Canal" sub="Publicidad · CPM" />
+                <BotonEjemplo onClick={() => cargarEjemplo(crearProyectoEjemploPlanMarketingV2)} disabled={guardando} titulo="Plan mkt" sub="Costo-beneficio" />
               </div>
 
               {/* Reinicio: deja la plataforma limpia con solo los 6 ejemplos */}

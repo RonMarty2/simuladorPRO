@@ -248,10 +248,10 @@ export default function ConstruirProyecto() {
       <BannerTipoProyecto tipo={proyecto.tipo} />
 
       {/* Acciones globales: disponibles en Semana E, cursos normales, grupos e individuales. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-emerald-50 p-3 dark:border-violet-900 dark:from-violet-950/30 dark:via-background dark:to-emerald-950/20">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
         <div>
-          <div className="text-xs font-bold">¿Qué quieres hacer con tu proyecto?</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="font-display text-sm font-bold">¿Qué quieres hacer con tu proyecto?</div>
+          <div className="text-xs text-muted-foreground">
             Prueba escenarios optimista y pesimista, simula 5 años con eventos reales, preséntalo o descarga el Excel.
           </div>
         </div>

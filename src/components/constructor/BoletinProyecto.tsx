@@ -25,7 +25,7 @@ export default function BoletinProyecto({ proyecto }: { proyecto: Proyecto }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">📋 Tu proyecto vs. lo recomendado</h3>
+        <h3 className="text-sm font-semibold">Tu proyecto vs. lo recomendado</h3>
         {puntaje.total > 0 && (
           <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold">
             {puntaje.bien}/{puntaje.total} en verde

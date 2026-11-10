@@ -13,7 +13,6 @@ import { ConfirmarHost } from "@/components/ui/confirmar";
 //   - recharts (gráficos) → simular-proyecto, evaluacion-final, construir
 //   - xlsx → se carga dinámicamente al exportar (ver Paso9Resumen)
 // Resultado: arranque más rápido, sobre todo en celulares con 4G.
-const LaboratorioDiseno = lazy(() => import("@/routes/laboratorio-diseno"));
 const Hub = lazy(() => import("@/routes/hub"));
 const DashboardEstudiante = lazy(() => import("@/routes/dashboard-estudiante"));
 const DashboardDocente = lazy(() => import("@/routes/dashboard-docente"));
@@ -42,7 +41,6 @@ export default function App() {
     <ConfirmarHost />
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/diseno" element={<Suspense fallback={<Cargando />}><LaboratorioDiseno /></Suspense>} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/semanae" element={<SemanaEEntrada />} />
       {import.meta.env.DEV && (

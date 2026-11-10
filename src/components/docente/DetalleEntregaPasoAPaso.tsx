@@ -22,15 +22,15 @@ const TITULOS: Record<number, string> = {
 };
 
 const ICONOS: Record<number, string> = {
-  1: "📝",
-  2: "📈",
-  3: "🏗",
-  4: "👥",
-  5: "🧱",
-  6: "🏢",
-  7: "🏦",
-  8: "💧",
-  9: "📊",
+  1: "",
+  2: "",
+  3: "",
+  4: "",
+  5: "",
+  6: "",
+  7: "",
+  8: "",
+  9: "",
 };
 
 export default function DetalleEntregaPasoAPaso({ proyecto, pasoEntregado }: Props) {
