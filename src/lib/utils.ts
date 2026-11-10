@@ -15,6 +15,7 @@ export function formatearBolivianos(monto: number): string {
 
 /** Número con coma decimal (como se escribe en Bolivia): fmtNum(36.24, 1) -> "36,2". */
 export function fmtNum(n: number, decimales: number): string {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
   return n.toFixed(decimales).replace(".", ",");
 }
 

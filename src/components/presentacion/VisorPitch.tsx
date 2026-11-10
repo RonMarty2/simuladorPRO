@@ -51,7 +51,7 @@ import {
 
 type ModeloPitch = ReturnType<typeof construirModeloPitch>;
 
-const COLORES = ["#7c3aed", "#06b6d4", "#10b981", "#f59e0b", "#f43f5e"];
+const COLORES = ["#0f766e", "#334155", "#b45309", "#047857", "#be123c"];
 
 function fmtBs(valor: number) {
   const abs = Math.abs(valor);
@@ -88,6 +88,18 @@ export default function VisorPitch({
     () => crearAjustesLaboratorioIniciales(proyecto)
   );
   const [montecarlo, setMontecarlo] = useState<ResultadoMontecarlo | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 45) siguiente();
+    else if (diff < -45) anterior();
+    setTouchStartX(null);
+  };
   const diapositiva = modelo.diapositivas[indice];
 
   // La simulación de riesgo es la parte pesada: corre una sola vez al abrir la
@@ -164,7 +176,7 @@ export default function VisorPitch({
   );
 
   return (
-    <div className="flex h-app w-screen flex-col overflow-hidden bg-[#070b17] text-white">
+    <div className="flex h-app w-screen flex-col overflow-hidden bg-[#0b1320] text-white">
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/80 px-3 backdrop-blur md:px-5">
         <div className="min-w-0">
           <div className="truncate text-xs font-bold md:text-sm">{presentacion.titulo}</div>
@@ -209,7 +221,11 @@ export default function VisorPitch({
       </div>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center p-2 md:p-5">
-        <div className="relative aspect-video h-auto max-h-full w-full max-w-[1600px] overflow-hidden rounded-xl border border-white/10 bg-slate-50 text-slate-950 shadow-2xl shadow-violet-950/50">
+        <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="relative w-full max-w-[1400px] overflow-hidden rounded-2xl border border-stone-200/80 bg-white text-stone-900 shadow-2xl transition-all aspect-video portrait:aspect-[4/3] portrait:max-h-[82vh] portrait:min-h-[520px]"
+        >
           <RenderDiapositiva
             id={diapositiva.id}
             proyecto={proyecto}
@@ -252,7 +268,7 @@ export default function VisorPitch({
               key={item.id}
               onClick={() => setIndice(posicion)}
               className={`h-2 rounded-full transition-all ${
-                posicion === indice ? "w-8 bg-fuchsia-400" : "w-2 bg-white/25 hover:bg-white/50"
+                posicion === indice ? "w-8 bg-primary" : "w-2 bg-white/25 hover:bg-white/50"
               }`}
               title={item.titulo}
             />
@@ -331,17 +347,17 @@ function Marco({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-br from-white via-slate-50 to-violet-50 p-[4%]">
-      <div className="absolute -right-[8%] -top-[18%] h-[55%] w-[35%] rounded-full bg-violet-200/50 blur-3xl" />
+    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-br from-[#faf7f0] via-white to-[#f5f0e6] p-[4%] text-stone-900">
+
       <div className="relative z-10 mb-[2.5%]">
-        <div className="text-[clamp(9px,0.8vw,14px)] font-black uppercase tracking-[0.24em] text-violet-600">
+        <div className="text-[clamp(9px,0.8vw,14px)] font-display font-bold uppercase tracking-[0.22em] text-primary">
           {etiqueta}
         </div>
-        <h2 className="mt-[0.5%] text-[clamp(24px,3.1vw,54px)] font-black leading-[1.05] tracking-tight text-slate-950">
+        <h2 className="mt-[0.5%] font-display text-[clamp(22px,2.8vw,46px)] font-bold leading-[1.08] tracking-tight text-stone-950">
           {titulo}
         </h2>
         {subtitulo && (
-          <p className="mt-[0.8%] max-w-[75%] text-[clamp(11px,1.15vw,20px)] leading-snug text-slate-500">
+          <p className="mt-[0.8%] max-w-[75%] text-[clamp(11px,1.15vw,20px)] leading-snug text-stone-600">
             {subtitulo}
           </p>
         )}
@@ -353,11 +369,11 @@ function Marco({
 
 function Portada({ proyecto, presentacion, modelo }: { proyecto: Proyecto; presentacion: PresentacionProyecto; modelo: ModeloPitch }) {
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-[#0c1022] p-[6%] text-white">
-      <div className="absolute -right-[12%] -top-[30%] h-[90%] w-[60%] rounded-full bg-fuchsia-600/30 blur-[90px]" />
-      <div className="absolute -bottom-[40%] -left-[10%] h-[80%] w-[60%] rounded-full bg-cyan-500/20 blur-[100px]" />
+    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-br from-[#0c2423] via-[#0f172a] to-[#1c1917] p-[6%] text-white">
+      <div className="absolute -right-[15%] -top-[30%] h-[80%] w-[55%] rounded-full bg-teal-500/15 blur-[100px]" />
+
       <div className="relative z-10 flex items-center justify-between">
-        <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[clamp(9px,0.85vw,14px)] font-bold uppercase tracking-[0.22em] text-violet-200">
+        <span className="rounded-full border border-teal-500/30 bg-teal-500/15 px-4 py-2 text-[clamp(9px,0.85vw,14px)] font-bold uppercase tracking-[0.22em] text-teal-200">
           Presentación de inversión
         </span>
         <span className="text-[clamp(9px,0.8vw,13px)] font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -365,7 +381,7 @@ function Portada({ proyecto, presentacion, modelo }: { proyecto: Proyecto; prese
         </span>
       </div>
       <div className="relative z-10 my-auto max-w-[82%]">
-        <h1 className="text-[clamp(32px,5.5vw,94px)] font-black leading-[0.95] tracking-[-0.045em]">
+        <h1 className="font-display text-[clamp(30px,5vw,80px)] font-bold leading-[0.98] tracking-tight text-stone-100">
           {presentacion.titulo}
         </h1>
         <p className="mt-[3%] text-[clamp(14px,1.65vw,28px)] font-medium text-violet-200">
@@ -378,7 +394,7 @@ function Portada({ proyecto, presentacion, modelo }: { proyecto: Proyecto; prese
         </div>
       </div>
       <div className="relative z-10 flex items-end justify-between border-t border-white/15 pt-[2.5%]">
-        <span className="text-[clamp(9px,0.75vw,12px)] uppercase tracking-[0.2em] text-slate-500">
+        <span className="text-[clamp(9px,0.75vw,12px)] uppercase tracking-[0.2em] text-stone-600">
           Simulador de Proyectos de Inversión
         </span>
         <span className={`rounded-full px-4 py-2 text-[clamp(10px,0.9vw,15px)] font-black ${modelo.viable ? "bg-emerald-400 text-emerald-950" : "bg-amber-300 text-amber-950"}`}>
@@ -393,21 +409,21 @@ function Oportunidad({ presentacion, etiqueta }: { presentacion: PresentacionPro
   return (
     <Marco etiqueta={etiqueta} titulo="Una oportunidad con una respuesta clara">
       <div className="grid h-full grid-cols-2 gap-[3%]">
-        <div className="flex flex-col justify-between rounded-[2vw] border border-rose-200 bg-rose-50 p-[7%]">
-          <div className="flex h-[clamp(36px,4vw,64px)] w-[clamp(36px,4vw,64px)] items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+        <div className="flex flex-col justify-between rounded-[1.5vw] border border-amber-300/80 bg-amber-50/70 p-[6%] shadow-2xs">
+          <div className="flex h-[clamp(36px,4vw,64px)] w-[clamp(36px,4vw,64px)] items-center justify-center rounded-2xl bg-amber-700 text-white shadow-sm">
             <Target className="h-1/2 w-1/2" />
           </div>
           <div>
-            <div className="mb-[3%] text-[clamp(10px,0.9vw,15px)] font-black uppercase tracking-[0.2em] text-rose-600">El problema</div>
+            <div className="mb-[3%] text-[clamp(10px,0.9vw,15px)] font-black uppercase tracking-[0.2em] text-amber-800">El problema de mercado</div>
             <p className="text-[clamp(15px,1.65vw,28px)] font-bold leading-[1.25] text-slate-900">{presentacion.problema}</p>
           </div>
         </div>
-        <div className="flex flex-col justify-between rounded-[2vw] border border-violet-200 bg-violet-50 p-[7%]">
-          <div className="flex h-[clamp(36px,4vw,64px)] w-[clamp(36px,4vw,64px)] items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-500/20">
+        <div className="flex flex-col justify-between rounded-[1.5vw] border border-primary/30 bg-primary/10 p-[6%] shadow-2xs">
+          <div className="flex h-[clamp(36px,4vw,64px)] w-[clamp(36px,4vw,64px)] items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
             <Lightbulb className="h-1/2 w-1/2" />
           </div>
           <div>
-            <div className="mb-[3%] text-[clamp(10px,0.9vw,15px)] font-black uppercase tracking-[0.2em] text-violet-600">La propuesta</div>
+            <div className="mb-[3%] text-[clamp(10px,0.9vw,15px)] font-black uppercase tracking-[0.2em] text-primary">Nuestra propuesta de valor</div>
             <p className="text-[clamp(15px,1.65vw,28px)] font-bold leading-[1.25] text-slate-900">{presentacion.propuestaValor}</p>
           </div>
         </div>
@@ -735,14 +751,14 @@ function LaboratorioViabilidad({
                 <Gauge className="h-1/2 w-1/2" />
               </div>
               <div>
-                <div className="text-[clamp(9px,0.8vw,12px)] font-black uppercase tracking-[0.16em] text-slate-500">Resultado del escenario</div>
+                <div className="text-[clamp(9px,0.8vw,12px)] font-black uppercase tracking-[0.16em] text-stone-600">Resultado del escenario</div>
                 <div className="text-[clamp(18px,2vw,32px)] font-black text-slate-950">
                   {escenario.viable ? "Proyecto viable" : "Requiere ajustes"}
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[clamp(8px,0.7vw,11px)] font-bold uppercase text-slate-500">Variable más sensible</div>
+              <div className="text-[clamp(8px,0.7vw,11px)] font-bold uppercase text-stone-600">Variable más sensible</div>
               <div className="text-[clamp(12px,1.15vw,18px)] font-black text-violet-700">{analisis.impactos[0]?.variable ?? "—"}</div>
             </div>
           </div>
@@ -766,7 +782,7 @@ function LaboratorioViabilidad({
 
           <div className="grid min-h-0 grid-cols-[0.8fr_1.2fr] gap-[2%]">
             <div className="rounded-[1.2vw] border border-slate-200 bg-white p-[5%]">
-              <div className="text-[clamp(8px,0.72vw,11px)] font-black uppercase tracking-[0.15em] text-slate-500">Qué mueve el VAN</div>
+              <div className="text-[clamp(8px,0.72vw,11px)] font-black uppercase tracking-[0.15em] text-stone-600">Qué mueve el VAN</div>
               <div className="mt-[5%] space-y-[5%]">
                 {analisis.impactos.map((impacto) => (
                   <div key={impacto.variable}>
@@ -852,9 +868,9 @@ function Comparador({
 }) {
   return (
     <div className={`rounded-[1vw] border p-[8%] ${positivo ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-      <div className="text-[clamp(7px,0.62vw,10px)] font-black uppercase tracking-[0.12em] text-slate-500">{titulo}</div>
+      <div className="text-[clamp(7px,0.62vw,10px)] font-black uppercase tracking-[0.12em] text-stone-600">{titulo}</div>
       <div className="mt-[5%] truncate text-[clamp(14px,1.55vw,25px)] font-black text-slate-950">{actual}</div>
-      <div className="mt-[3%] truncate text-[clamp(7px,0.68vw,10px)] text-slate-500">Original: {base}</div>
+      <div className="mt-[3%] truncate text-[clamp(7px,0.68vw,10px)] text-stone-600">Original: {base}</div>
     </div>
   );
 }
@@ -923,7 +939,7 @@ function Indicadores({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: stri
     { nombre: "VAN", valor: fmtBs(modelo.resultado.indicadores.van), lectura: modelo.resultado.indicadores.van > 0 ? "Crea valor" : "Destruye valor" },
     { nombre: "TIR", valor: fmtPct(modelo.resultado.indicadores.tir), lectura: `vs. costo de capital ${fmtPct(modelo.resultado.wacc)}` },
     { nombre: "Recuperación", valor: Number.isFinite(modelo.resultado.indicadores.payback) && modelo.resultado.indicadores.payback >= 0 ? `${fmtNum(modelo.resultado.indicadores.payback, 1)} años` : "No recupera", lectura: "Periodo de recuperación de la inversión" },
-    { nombre: "Rentabilidad", valor: fmtNum(modelo.resultado.indicadores.ir, 2), lectura: "Índice de rentabilidad" },
+    { nombre: "Rentabilidad", valor: Number.isFinite(modelo.resultado.indicadores.ir) ? fmtNum(modelo.resultado.indicadores.ir, 2) : "N/A", lectura: Number.isFinite(modelo.resultado.indicadores.ir) ? "Índice de rentabilidad" : "Sin inversión propia inicial" },
   ];
   return (
     <Marco etiqueta={etiqueta} titulo={modelo.viable ? "Los indicadores respaldan la inversión" : "Los indicadores piden una recalibración"} subtitulo="La decisión combina creación de valor, rendimiento y velocidad de recuperación.">
@@ -931,11 +947,11 @@ function Indicadores({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: stri
         {indicadores.map((indicador, i) => (
           <div key={indicador.nombre} className="flex flex-col justify-between rounded-[1.5vw] border border-slate-200 bg-white p-[6%] shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[clamp(10px,1vw,16px)] font-black uppercase tracking-[0.18em] text-slate-500">{indicador.nombre}</span>
+              <span className="text-[clamp(10px,1vw,16px)] font-black uppercase tracking-[0.18em] text-stone-600">{indicador.nombre}</span>
               <span className={`h-3 w-3 rounded-full ${modelo.viable ? "bg-emerald-400" : i < 2 ? "bg-amber-400" : "bg-violet-400"}`} />
             </div>
             <div className="text-[clamp(24px,3.4vw,58px)] font-black tracking-tight text-slate-950">{indicador.valor}</div>
-            <div className="text-[clamp(10px,1vw,16px)] font-semibold text-slate-500">{indicador.lectura}</div>
+            <div className="text-[clamp(10px,1vw,16px)] font-semibold text-stone-600">{indicador.lectura}</div>
           </div>
         ))}
       </div>
@@ -963,11 +979,11 @@ function IndicadoresDelRubro({ modelo, etiqueta }: { modelo: ModeloPitch; etique
         {elegidos.map((i) => (
           <div key={i.id} className="flex flex-col justify-between overflow-hidden rounded-[1.2vw] border border-slate-200 bg-white p-[4%] shadow-sm">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[clamp(9px,0.9vw,15px)] font-black uppercase tracking-[0.12em] text-slate-500">{i.nombre}</span>
+              <span className="text-[clamp(9px,0.9vw,15px)] font-black uppercase tracking-[0.12em] text-stone-600">{i.nombre}</span>
               <span className={`mt-1 h-3 w-3 flex-shrink-0 rounded-full ${PUNTO_SEVERIDAD[i.severidad]}`} />
             </div>
             <div className="text-[clamp(18px,2.2vw,38px)] font-black leading-tight tracking-tight text-slate-950">{i.valor}</div>
-            <div className="line-clamp-3 text-[clamp(9px,0.85vw,14px)] font-semibold text-slate-500">{i.detalle}</div>
+            <div className="line-clamp-3 text-[clamp(9px,0.85vw,14px)] font-semibold text-stone-600">{i.detalle}</div>
           </div>
         ))}
       </div>
@@ -1019,7 +1035,7 @@ function Escenarios({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: strin
                 <span className={`rounded-full px-2 py-0.5 text-[clamp(8px,0.75vw,12px)] font-black ${e.viable ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{e.viable ? "Viable" : "No viable"}</span>
               </div>
               <div className="text-[clamp(20px,2.6vw,44px)] font-black leading-tight tracking-tight text-slate-950">{fmtBs(e.van)}</div>
-              <div className="text-[clamp(9px,0.9vw,15px)] font-semibold text-slate-500">
+              <div className="text-[clamp(9px,0.9vw,15px)] font-semibold text-stone-600">
                 VAN · TIR {tirCalculable(e.tir) ? fmtPct(e.tir) : "no calculable"} · {Number.isFinite(e.payback) && e.payback >= 0 ? `recupera en ${fmtNum(e.payback, 1)} años` : "no recupera"}
               </div>
             </div>
@@ -1075,12 +1091,12 @@ function SimulacionRiesgo({
     <Marco etiqueta={etiqueta} titulo="¿Qué tan seguro es?" subtitulo="Probamos 500 futuros al azar variando precios, demanda y costos, y medimos en cuántos el proyecto gana dinero.">
       <div className="grid h-full grid-cols-[2fr_3fr_3fr] gap-[2.5%]">
         <div className="flex flex-col justify-center rounded-[1.5vw] border border-slate-200 bg-white p-[8%] text-center shadow-sm">
-          <div className="text-[clamp(9px,0.85vw,14px)] font-black uppercase tracking-[0.18em] text-slate-500">Probabilidad de ganar</div>
+          <div className="text-[clamp(9px,0.85vw,14px)] font-black uppercase tracking-[0.18em] text-stone-600">Probabilidad de ganar</div>
           <div className={`text-[clamp(36px,6vw,104px)] font-black leading-none tracking-tight ${COLOR_VEREDICTO[veredicto.nivel]}`}>
             {montecarlo ? `${Math.round(montecarlo.probVanPositivo * 100)}%` : "…"}
           </div>
           <div className={`mt-[4%] text-[clamp(14px,1.8vw,30px)] font-black ${COLOR_VEREDICTO[veredicto.nivel]}`}>{veredicto.titulo}</div>
-          <div className="mt-[3%] text-[clamp(9px,0.95vw,16px)] leading-snug text-slate-500">{veredicto.detalle}</div>
+          <div className="mt-[3%] text-[clamp(9px,0.95vw,16px)] leading-snug text-stone-600">{veredicto.detalle}</div>
           {montecarlo && (
             <div className="mt-[5%] grid grid-cols-2 gap-2 text-[clamp(8px,0.8vw,13px)] font-semibold text-slate-600">
               <div className="rounded-lg bg-rose-50 p-2">Peor 5%<div className="text-[clamp(11px,1.15vw,19px)] font-black text-rose-700">{fmtBs(montecarlo.p5)}</div></div>
@@ -1127,7 +1143,7 @@ function SimulacionRiesgo({
 
 function Cierre({ presentacion, modelo, etiqueta }: { presentacion: PresentacionProyecto; modelo: ModeloPitch; etiqueta: string }) {
   return (
-    <div className={`relative flex h-full flex-col justify-between overflow-hidden p-[6%] text-white ${modelo.viable ? "bg-gradient-to-br from-emerald-950 via-slate-950 to-violet-950" : "bg-gradient-to-br from-amber-950 via-slate-950 to-violet-950"}`}>
+    <div className={`relative flex h-full flex-col justify-between overflow-hidden p-[6%] text-white ${modelo.viable ? "bg-gradient-to-br from-[#0c2423] via-[#0f172a] to-[#1c1917]" : "bg-gradient-to-br from-[#24130c] via-[#0f172a] to-[#1c1917]"}`}>
       <div className="absolute -right-[10%] -top-[30%] h-[90%] w-[60%] rounded-full bg-violet-500/25 blur-[100px]" />
       <div className="relative z-10 text-[clamp(9px,0.8vw,14px)] font-black uppercase tracking-[0.24em] text-violet-300">{etiqueta}</div>
       <div className="relative z-10 max-w-[88%]">
@@ -1147,10 +1163,10 @@ function Cierre({ presentacion, modelo, etiqueta }: { presentacion: Presentacion
 
 function Kpi({ titulo, valor, color }: { titulo: string; valor: string; color: "violet" | "cyan" | "emerald" | "amber" }) {
   const estilos = {
-    violet: "border-violet-200 bg-violet-50 text-violet-700",
-    cyan: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    violet: "border-primary/25 bg-primary/10 text-primary",
+    cyan: "border-stone-300 bg-stone-50 text-stone-800",
     emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    amber: "border-amber-200 bg-amber-50 text-amber-700",
+    amber: "border-amber-300 bg-amber-50 text-amber-800",
   };
   return (
     <div className={`rounded-[1.2vw] border p-[6%] ${estilos[color]}`}>

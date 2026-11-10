@@ -143,3 +143,64 @@ export function guardarProyectoLocal(p: Proyecto): void {
 export function eliminarProyectoLocal(id: string): void {
   escribirProyectosLocal(leerProyectosLocal().filter((p) => p.id !== id));
 }
+
+// ----------------------------------------------------------------------------
+// Persistencia de cursos en localStorage (para Modo Local / Tablet sin Supabase)
+// ----------------------------------------------------------------------------
+
+const CLAVE_CURSOS = "simulador.local.cursos";
+
+export function leerCursosLocal(): any[] {
+  try {
+    const raw = localStorage.getItem(CLAVE_CURSOS);
+    if (!raw) {
+      const demoCurso = {
+        id: "local-curso-demo-1",
+        docente_id: ID_USUARIO_LOCAL,
+        nombre: "Finanzas Corporativas I",
+        codigo: "FIN101",
+        materia: "Preparación y Evaluación de Proyectos",
+        paralelo: "A",
+        frecuencia_turnos: "mensual",
+        duracion_anios: 5,
+        estado: "activo",
+        universidad: "Universidad Católica Boliviana",
+        modo_simulacion: "automatico",
+        permite_proyecto_libre: true,
+        simulacion_caso_curso: true,
+        simulacion_individual: true,
+        simulacion_grupal: true,
+        creado_en: new Date().toISOString(),
+      };
+      localStorage.setItem(CLAVE_CURSOS, JSON.stringify([demoCurso]));
+      return [demoCurso];
+    }
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+export function guardarCursoLocal(c: any): void {
+  const cursos = leerCursosLocal();
+  const idx = cursos.findIndex((x) => x.id === c.id);
+  if (idx >= 0) cursos[idx] = c;
+  else cursos.unshift(c);
+  try {
+    localStorage.setItem(CLAVE_CURSOS, JSON.stringify(cursos));
+  } catch {
+    // ignore
+  }
+}
+
+export function eliminarCursoLocal(id: string): void {
+  try {
+    localStorage.setItem(
+      CLAVE_CURSOS,
+      JSON.stringify(leerCursosLocal().filter((c) => c.id !== id))
+    );
+  } catch {
+    // ignore
+  }
+}

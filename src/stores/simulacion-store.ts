@@ -215,7 +215,7 @@ export const useSimulacionStore = create<SimulacionState>((set, get) => ({
     const { simulacion } = get();
     if (!simulacion) return;
     await actualizarSimulacion(simulacion.id, {
-      estado: "finalizada",
+      estado: simulacion.estado === "quebrada" ? "quebrada" : "finalizada",
       finalizada_en: new Date().toISOString(),
     });
     set({ simulacion: null, historial: [], eventoActual: null });

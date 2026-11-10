@@ -239,11 +239,23 @@ export function crearProyectoEjemploCafeteriaV2(params: {
     curso_id: params.curso_id ?? null,
     version: "v2",
     tipo: "libre",
-    nombre: params.nombre ?? "cafeteriav2",
+    nombre: params.nombre ?? "Cafetería de Especialidad - Recoleta",
     ubicacion: "Cochabamba, zona Recoleta",
     descripcion:
-      "Cafetería de especialidad: café de origen, postres y almuerzos ligeros. Proyecto de ejemplo en versión extendida (V2).",
+      "Espacio gastronómico y de coworking enfocado en café de origen boliviano, repostería artesanal y almuerzos ligeros en Cochabamba.",
     sector: "servicios",
+
+    presentacion: {
+      titulo: params.nombre ?? "Cafetería de Especialidad",
+      subtitulo: "Gastronomía y Servicios · Evaluación de viabilidad",
+      expositores: "Equipo del proyecto",
+      problema:
+        "En la zona Recoleta existe una alta concentración de profesionales y estudiantes que demandan café de especialidad y espacios confortables, pero la oferta predominante carece de estándares de extracción y conectividad adecuada.",
+      propuestaValor:
+        "Propuesta integral que combina café de especialidad nacional, repostería artesanal y ambiente óptimo para trabajo remoto y reuniones productivas en Cochabamba.",
+      conclusion:
+        "Los resultados financieros confirman la viabilidad del modelo: genera valor (VAN positivo), tasa de retorno superior al costo de capital y cobertura sólida de costos operativos.",
+    },
 
     inversiones: {
       terreno: [],

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   BarChart3,
@@ -45,7 +45,10 @@ export default function PresentarProyecto() {
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [exportando, setExportando] = useState(false);
-  const [presentando, setPresentando] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [presentando, setPresentando] = useState(
+    searchParams.get("pitch") === "1" || searchParams.get("presentar") === "true"
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -182,7 +185,7 @@ export default function PresentarProyecto() {
             <button
               onClick={exportar}
               disabled={exportando}
-              className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-2xs transition hover:bg-accent disabled:opacity-60"
             >
               {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               <span className="hidden sm:inline">Descargar </span>Excel

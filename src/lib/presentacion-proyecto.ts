@@ -83,8 +83,12 @@ export function crearPresentacionPredeterminada(proyecto: Proyecto): Presentacio
     subtitulo: `${sector} · Evaluación de viabilidad`,
     expositores: "Equipo del proyecto",
     problema:
-      proyecto.descripcion?.trim() ||
-      `En ${lugar} identificamos una oportunidad que todavía no está siendo atendida de manera suficiente.`,
+      proyecto.descripcion &&
+      !proyecto.descripcion.toLowerCase().includes("ejemplo") &&
+      !proyecto.descripcion.toLowerCase().includes("versión") &&
+      !proyecto.descripcion.toLowerCase().includes("version")
+        ? proyecto.descripcion.trim()
+        : `En ${lugar} existe una demanda no atendida por una alternativa de calidad en ${oferta}, donde los clientes buscan mejor servicio y confiabilidad operativa.`,
     propuestaValor: `Nuestra propuesta combina ${oferta} con una operación diseñada para crecer de forma rentable en ${lugar}.`,
     conclusion: viable
       ? `Los resultados respaldan la viabilidad del proyecto: crea valor, supera el rendimiento mínimo esperado y presenta una base financiera favorable para su ejecución.`

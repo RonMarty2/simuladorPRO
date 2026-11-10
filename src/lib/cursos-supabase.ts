@@ -1,6 +1,11 @@
 import { supabase } from "./supabase";
 import { normalizarUniversidad } from "./utils";
-import { esModoLocal } from "./modo-local";
+import {
+  eliminarCursoLocal,
+  esModoLocal,
+  guardarCursoLocal,
+  leerCursosLocal,
+} from "./modo-local";
 import type { EscenariosConfig } from "./escenarios";
 
 export type FrecuenciaCurso = "mensual" | "trimestral" | "semestral";
@@ -190,6 +195,9 @@ function generarCodigoCurso(): string {
 }
 
 export async function listarMisCursos(docenteId: string): Promise<Curso[]> {
+  if (esModoLocal()) {
+    return leerCursosLocal() as Curso[];
+  }
   const hacerQuery = () =>
     supabase
       .from("cursos")
@@ -260,6 +268,35 @@ export async function crearCurso(params: {
   grupo_version?: string;
 }): Promise<Curso> {
   const universidad = normalizarUniversidad(params.universidad);
+
+  if (esModoLocal()) {
+    const cursoLocal: Curso = {
+      id: `local-curso-${Date.now()}`,
+      docente_id: params.docente_id,
+      nombre: params.nombre,
+      codigo: generarCodigoCurso(),
+      materia: params.materia,
+      paralelo: params.paralelo ?? null,
+      universidad,
+      frecuencia_turnos: params.frecuencia_turnos,
+      duracion_anios: params.duracion_anios ?? 5,
+      estado: params.estado ?? "activo",
+      modo_simulacion: params.modo_simulacion ?? "automatico",
+      permite_proyecto_libre: params.permite_proyecto_libre ?? true,
+      simulacion_caso_curso: params.simulacion_caso_curso ?? true,
+      simulacion_individual: params.simulacion_individual ?? false,
+      simulacion_grupal: params.simulacion_grupal ?? true,
+      es_semana_e: params.es_semana_e ?? false,
+      grupo_habilitado: params.grupo_habilitado ?? false,
+      grupo_cupo_max: params.grupo_cupo_max ?? 3,
+      grupo_modelo: params.grupo_modelo ?? "gastronomia",
+      grupo_version: params.grupo_version ?? "1.0",
+      grupo_consigna: null,
+      creado_en: new Date().toISOString(),
+    };
+    guardarCursoLocal(cursoLocal);
+    return cursoLocal;
+  }
   // Reintentar si el código colisiona (muy improbable pero por las dudas)
   for (let intento = 0; intento < 5; intento++) {
     const codigo = generarCodigoCurso();
@@ -306,6 +343,10 @@ export async function crearCurso(params: {
  * un docente solo puede borrar sus propios cursos.
  */
 export async function eliminarCurso(cursoId: string): Promise<void> {
+  if (esModoLocal()) {
+    eliminarCursoLocal(cursoId);
+    return;
+  }
   const { error } = await conTimeout(
     supabase.from("cursos").delete().eq("id", cursoId),
     15000,
