@@ -49,12 +49,12 @@ function detalleCostoAnual(sueldoMensual: number, cantidad: number, aportes: Apo
 }
 
 // Mismo patrón visual de Paso 3 (Inversiones): un color por BLOQUE completo.
-// Paso 4 tiene 2 bloques: Personal (azul) y Aportes Patronales (ámbar).
+// Paso 4 tiene 2 bloques: Personal (teal) y Aportes Patronales (ámbar).
 const BLOQUE_PERSONAL = {
-  borde: "border-l-blue-500",
-  bgFila: "bg-blue-50 dark:bg-blue-950/20",
-  bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
-  chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+  borde: "border-l-teal-600",
+  bgFila: "bg-teal-50/50 dark:bg-teal-950/20",
+  bgHeader: "bg-teal-100/60 dark:bg-teal-950/40",
+  chip: "bg-teal-100 text-teal-900 dark:bg-teal-950/60 dark:text-teal-200",
 };
 
 const BLOQUE_APORTES = {
@@ -114,7 +114,7 @@ export default function Paso4Personal() {
         <GuiaTipoNegocio etapa="personal" />
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Paso 4 · Personal</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight text-foreground">Paso 4 · Personal</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Aportes patronales ({(totalTasa * 100).toFixed(2)}%) se calculan
               automáticamente según las tasas de abajo.
@@ -129,7 +129,7 @@ export default function Paso4Personal() {
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Costo anual total
             </div>
-            <div className="text-lg font-bold">{formatearBolivianos(costoAnualTotal)}</div>
+            <div className="font-display text-2xl font-bold tabular-nums text-foreground">{formatearBolivianos(costoAnualTotal)}</div>
           </div>
         </div>
 
@@ -372,7 +372,7 @@ export default function Paso4Personal() {
                 {proyecto.personal.map((p) => {
                   const aportes = calcularAportesPatronales(p.sueldoMensual, tasas);
                   return (
-                    <div key={p.id} className="rounded-md border border-border bg-card p-2">
+                    <div key={p.id} className="rounded-lg border border-border bg-card p-3 shadow-2xs">
                       <div className="flex items-start gap-2">
                         <input
                           type="text"
@@ -380,31 +380,31 @@ export default function Paso4Personal() {
                           onChange={(e) => editar(p.id, { puesto: e.target.value })}
                           onFocus={selectOnFocus}
                           placeholder="Barista, Administrador…"
-                          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                          className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm font-semibold"
                         />
                         <button
                           onClick={() => eliminar(p.id)}
-                          className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           aria-label="Eliminar puesto"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <label className="text-[11px] text-muted-foreground">
+                      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+                        <label className="text-xs text-muted-foreground">
                           Cantidad
                           <InputNumero
                             value={p.cantidad}
                             onChange={(n) => editar(p.id, { cantidad: n })}
-                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-right text-sm"
                           />
                         </label>
-                        <label className="text-[11px] text-muted-foreground">
+                        <label className="text-xs text-muted-foreground">
                           Sueldo mensual (Bs)
                           <InputNumero
                             value={p.sueldoMensual}
                             onChange={(n) => editar(p.id, { sueldoMensual: n })}
-                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-right text-sm"
                           />
                         </label>
                       </div>

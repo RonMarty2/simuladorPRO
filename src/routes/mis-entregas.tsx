@@ -221,7 +221,7 @@ function TarjetaEntrega({ entrega }: { entrega: Entrega }) {
       {abierto && (
         <div className="space-y-2 border-t border-current/20 px-3 py-2 text-[11px]">
           {/* Indicadores de esa entrega */}
-          <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
             <div>
               <div className="opacity-60">VAN</div>
               <div className="font-bold">

@@ -183,7 +183,7 @@ export default function Paso3Capital() {
       <div className="space-y-4 rounded-lg border border-border bg-card p-5">
         <GuiaTipoNegocio etapa="capital" />
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
             Paso 8 · Capital de trabajo
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -403,9 +403,9 @@ export default function Paso3Capital() {
 
         {/* Cuotas de préstamo — informativo: NO es capital de trabajo */}
         {financiamientoConfigurado && (
-          <div className="rounded-md border border-violet-300 bg-violet-50/50 p-3 dark:border-violet-800 dark:bg-violet-950/20">
-            <div className="flex items-start gap-2 text-[11px] text-foreground/90">
-              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-violet-600" />
+          <div className="rounded-lg border border-border bg-accent/40 p-3.5">
+            <div className="flex items-start gap-2 text-xs text-foreground/90">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
                 <strong>
                   Cuota anual de los préstamos: {formatearBolivianos(cuotaAnualPrestamo)}
@@ -413,7 +413,7 @@ export default function Paso3Capital() {
                 (capital + interés). <strong>No</strong> forma parte del capital de trabajo: la
                 deuda se paga con el flujo de cada año y ya está contemplada en el{" "}
                 <strong>Paso 7 · Financiamiento</strong> y en el flujo del Paso 9.
-                <div className="mt-2 overflow-x-auto rounded-md border border-violet-200 bg-card dark:border-violet-900">
+                <div className="mt-2 overflow-x-auto rounded-lg border border-border bg-card">
                   <table className="w-full text-[11px]">
                     <thead className="border-b border-border text-muted-foreground">
                       <tr>
@@ -515,7 +515,7 @@ export default function Paso3Capital() {
               negocio?
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5, 6].map((m) => {
                 const activo = m === mesesBuffer;
                 return (
@@ -524,8 +524,8 @@ export default function Paso3Capital() {
                     onClick={() => aplicarSugerido(m)}
                     className={
                       activo
-                        ? "rounded-md border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-sm"
-                        : "rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+                        ? "flex h-10 min-w-[72px] items-center justify-center rounded-lg border border-primary bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-xs"
+                        : "flex h-10 min-w-[72px] items-center justify-center rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
                     }
                   >
                     {m} {m === 1 ? "mes" : "meses"}

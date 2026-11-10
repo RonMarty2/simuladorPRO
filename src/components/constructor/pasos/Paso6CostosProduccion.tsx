@@ -50,43 +50,43 @@ const SUBCATEGORIAS_POR_SECTOR: Record<Sector, ConfigSubcat[]> = {
   ],
 };
 
-// Paleta de colores por producto (igual que Paso 2 Proyección)
+// Paleta de colores por producto (armonizada con Dirección A)
 const COLORES_PRODUCTO = [
   {
-    borde: "border-l-blue-500",
-    bgFila: "bg-blue-50 dark:bg-blue-950/20",
-    bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
-    chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+    borde: "border-l-teal-600",
+    bgFila: "bg-teal-50/50 dark:bg-teal-950/20",
+    bgHeader: "bg-teal-100/60 dark:bg-teal-950/40",
+    chip: "bg-teal-100 text-teal-900 dark:bg-teal-950/60 dark:text-teal-200",
   },
   {
-    borde: "border-l-emerald-500",
-    bgFila: "bg-emerald-50 dark:bg-emerald-950/20",
-    bgHeader: "bg-emerald-100/70 dark:bg-emerald-950/40",
-    chip: "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
+    borde: "border-l-emerald-600",
+    bgFila: "bg-emerald-50/50 dark:bg-emerald-950/20",
+    bgHeader: "bg-emerald-100/60 dark:bg-emerald-950/40",
+    chip: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200",
   },
   {
-    borde: "border-l-amber-500",
-    bgFila: "bg-amber-50 dark:bg-amber-950/20",
-    bgHeader: "bg-amber-100/70 dark:bg-amber-950/40",
-    chip: "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100",
+    borde: "border-l-amber-600",
+    bgFila: "bg-amber-50/50 dark:bg-amber-950/20",
+    bgHeader: "bg-amber-100/60 dark:bg-amber-950/40",
+    chip: "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200",
   },
   {
-    borde: "border-l-purple-500",
-    bgFila: "bg-purple-50 dark:bg-purple-950/20",
-    bgHeader: "bg-purple-100/70 dark:bg-purple-950/40",
-    chip: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
+    borde: "border-l-stone-600",
+    bgFila: "bg-stone-50/50 dark:bg-stone-950/20",
+    bgHeader: "bg-stone-100/60 dark:bg-stone-950/40",
+    chip: "bg-stone-200 text-stone-900 dark:bg-stone-800 dark:text-stone-100",
   },
   {
-    borde: "border-l-pink-500",
-    bgFila: "bg-pink-50 dark:bg-pink-950/20",
-    bgHeader: "bg-pink-100/70 dark:bg-pink-950/40",
-    chip: "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100",
+    borde: "border-l-orange-600",
+    bgFila: "bg-orange-50/50 dark:bg-orange-950/20",
+    bgHeader: "bg-orange-100/60 dark:bg-orange-950/40",
+    chip: "bg-orange-100 text-orange-900 dark:bg-orange-950/60 dark:text-orange-200",
   },
   {
-    borde: "border-l-cyan-500",
-    bgFila: "bg-cyan-50 dark:bg-cyan-950/20",
-    bgHeader: "bg-cyan-100/70 dark:bg-cyan-950/40",
-    chip: "bg-cyan-200 text-cyan-900 dark:bg-cyan-900/60 dark:text-cyan-100",
+    borde: "border-l-slate-600",
+    bgFila: "bg-slate-50/50 dark:bg-slate-950/20",
+    bgHeader: "bg-slate-100/60 dark:bg-slate-950/40",
+    chip: "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
   },
 ];
 
@@ -149,7 +149,7 @@ export default function Paso6CostosProduccion() {
         <GuiaTipoNegocio etapa="costosDirectos" />
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">
+            <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
               Paso 5 · Costos directos de producción
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -443,7 +443,7 @@ function BloqueProducto({
                   <table className="w-full min-w-[900px] text-xs">
                     <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                       <tr className="border-b border-border">
-                        <th className="p-1.5 text-left">Descripción</th>
+                        <th className="sticky left-0 z-10 bg-card p-1.5 text-left shadow-[1px_0_0_hsl(var(--border))]">Descripción</th>
                         <th className="p-1.5 text-left">Unidad</th>
                         <th
                           className="p-1.5 text-right"
@@ -475,7 +475,7 @@ function BloqueProducto({
                     <tbody>
                       {items.map((it) => (
                         <tr key={it.id} className="border-b border-border/40 last:border-0">
-                          <td className="p-1">
+                          <td className="sticky left-0 z-10 bg-card p-1 shadow-[1px_0_0_hsl(var(--border))]">
                             <input
                               type="text"
                               value={it.descripcion}
@@ -577,7 +577,7 @@ function BloqueProducto({
               {items.length > 0 && (
                 <div className="space-y-2 p-2 md:hidden">
                   {items.map((it) => (
-                    <div key={it.id} className="rounded-md border border-border bg-card p-2">
+                    <div key={it.id} className="rounded-lg border border-border bg-card p-3 shadow-2xs">
                       <div className="flex items-start gap-2">
                         <input
                           type="text"
@@ -585,18 +585,18 @@ function BloqueProducto({
                           onChange={(e) => onEditar(it.id, { descripcion: e.target.value })}
                           onFocus={selectOnFocus}
                           placeholder="Insumo…"
-                          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                          className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm font-semibold"
                         />
                         <button
                           onClick={() => onEliminar(it.id)}
-                          className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           aria-label="Eliminar insumo"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        <label className="text-[11px] text-muted-foreground">
+                      <div className="mt-2.5 grid grid-cols-3 gap-2">
+                        <label className="text-xs text-muted-foreground">
                           Unidad
                           <input
                             type="text"
@@ -604,24 +604,24 @@ function BloqueProducto({
                             onChange={(e) => onEditar(it.id, { unidadMedida: e.target.value })}
                             onFocus={selectOnFocus}
                             placeholder="Lts, kg"
-                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
                           />
                         </label>
-                        <label className="text-[11px] text-muted-foreground">
-                          Cant./u producto
+                        <label className="text-xs text-muted-foreground">
+                          Cant./u
                           <CantidadFraccionInput
                             valorInicial={it.cantidadPorUnidad}
                             onChange={(n) => onEditar(it.id, { cantidadPorUnidad: n })}
-                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-right text-sm"
                           />
                         </label>
-                        <label className="text-[11px] text-muted-foreground">
+                        <label className="text-xs text-muted-foreground">
                           Costo unit. (Bs)
                           <InputNumero
                             value={it.costoUnitario}
                             step="0.01"
                             onChange={(n) => onEditar(it.id, { costoUnitario: n })}
-                            className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-right text-sm"
                           />
                         </label>
                       </div>

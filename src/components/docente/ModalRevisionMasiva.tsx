@@ -148,12 +148,12 @@ export default function ModalRevisionMasiva({
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-card shadow-xl">
         {/* Header — nombre del alumno BIEN PROMINENTE, sticky para que el
             docente no lo pierda mientras revisa y habla con el alumno. */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 p-4 dark:from-indigo-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-accent/40 p-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
               Revisando a
             </div>
-            <h2 className="truncate text-xl font-extrabold tracking-tight text-foreground">
+            <h2 className="truncate font-display text-xl font-bold tracking-tight text-foreground">
               {titular}
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">

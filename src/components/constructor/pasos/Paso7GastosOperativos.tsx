@@ -21,10 +21,10 @@ const CONFIG_ADMIN: ConfigSubcat = {
   label: "Gastos administrativos",
   sugerencia: "Alquiler oficina, servicios básicos, contador, papelería…",
   placeholderDescripcion: "Ej: Alquiler oficina, contador, luz, internet…",
-  borde: "border-l-blue-500",
-  bgFila: "bg-blue-50 dark:bg-blue-950/20",
-  bgHeader: "bg-blue-100/70 dark:bg-blue-950/40",
-  chip: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
+  borde: "border-l-teal-600",
+  bgFila: "bg-teal-50/50 dark:bg-teal-950/20",
+  bgHeader: "bg-teal-100/60 dark:bg-teal-950/40",
+  chip: "bg-teal-100 text-teal-900 dark:bg-teal-950/60 dark:text-teal-200",
 };
 
 const CONFIG_COMERC: ConfigSubcat = {
@@ -71,25 +71,25 @@ export default function Paso7GastosOperativos() {
       <div className="space-y-3 rounded-lg border border-border bg-card p-5">
         <GuiaTipoNegocio etapa="gastos" />
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
             Paso 6 · Gastos administrativos y comercialización
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Gastos fijos del proyecto que no escalan con cada unidad producida.
           </p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div className="rounded-md border border-blue-500/40 bg-blue-50 px-2.5 py-1.5 text-[11px] dark:bg-blue-950/20">
-              <span className="font-semibold text-blue-900 dark:text-blue-100">
+            <div className="rounded-lg border border-teal-500/30 bg-teal-50/60 px-3 py-2 text-xs dark:bg-teal-950/20">
+              <span className="font-semibold text-teal-950 dark:text-teal-100">
                 Administrativos →
               </span>{" "}
-              <span className="text-blue-900/80 dark:text-blue-100/80">
+              <span className="text-teal-900/80 dark:text-teal-100/80">
                 hacen que la empresa <em>funcione</em> (alquiler de oficina, luz, agua,
                 internet, contador externo, papelería). Los <strong>sueldos van en el Paso 4 ·
                 Personal</strong>, no aquí.
               </span>
             </div>
-            <div className="rounded-md border border-emerald-500/40 bg-emerald-50 px-2.5 py-1.5 text-[11px] dark:bg-emerald-950/20">
-              <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-50/60 px-3 py-2 text-xs dark:bg-emerald-950/20">
+              <span className="font-semibold text-emerald-950 dark:text-emerald-100">
                 Comercialización →
               </span>{" "}
               <span className="text-emerald-900/80 dark:text-emerald-100/80">
@@ -368,42 +368,42 @@ function SeccionGastos({
                       onChange={(e) => onEditar(c.id, { descripcion: e.target.value })}
                       onFocus={selectOnFocus}
                       placeholder={config.placeholderDescripcion}
-                      className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs font-semibold"
+                      className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm font-semibold"
                     />
                     <button
                       onClick={() => onEliminar(c.id)}
-                      className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Eliminar gasto"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    <label className="text-[11px] text-muted-foreground">
+                  <div className="mt-2.5 grid grid-cols-3 gap-2">
+                    <label className="text-xs text-muted-foreground">
                       Unidad
                       <select
                         value={c.unidadMedida}
                         onChange={(e) => onEditar(c.id, { unidadMedida: e.target.value as "mes" | "año" })}
-                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                        className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
                       >
                         <option value="mes">Mes</option>
                         <option value="año">Año</option>
                       </select>
                     </label>
-                    <label className="text-[11px] text-muted-foreground">
+                    <label className="text-xs text-muted-foreground">
                       Cantidad
                       <InputNumero
                         value={c.cantidad}
                         onChange={(n) => onEditar(c.id, { cantidad: n })}
-                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                        className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-right text-sm"
                       />
                     </label>
-                    <label className="text-[11px] text-muted-foreground">
+                    <label className="text-xs text-muted-foreground">
                       Costo unit.
                       <InputNumero
                         value={c.costoUnitario}
                         onChange={(n) => onEditar(c.id, { costoUnitario: n })}
-                        className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                        className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-right text-sm"
                       />
                     </label>
                   </div>

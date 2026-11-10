@@ -58,20 +58,20 @@ const categorias: ConfigCategoria[] = [
     label: "Mobiliario",
     ejemplo: "Ej: Mesas, sillas, estantería, vitrina",
     vidaDefault: 7,
-    borde: "border-l-purple-500",
-    chip: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
-    bgFila: "bg-purple-50 dark:bg-purple-950/20",
-    bgHeader: "bg-purple-100/70 dark:bg-purple-950/40",
+    borde: "border-l-stone-500",
+    chip: "bg-stone-200 text-stone-900 dark:bg-stone-800 dark:text-stone-100",
+    bgFila: "bg-stone-50/70 dark:bg-stone-950/20",
+    bgHeader: "bg-stone-100/70 dark:bg-stone-950/40",
   },
   {
     valor: "activoDiferido",
     label: "Activo diferido (intangibles)",
     ejemplo: "Ej: Licencias, registro de marca, software, web",
     vidaDefault: 5,
-    borde: "border-l-pink-500",
-    chip: "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100",
-    bgFila: "bg-pink-50 dark:bg-pink-950/20",
-    bgHeader: "bg-pink-100/70 dark:bg-pink-950/40",
+    borde: "border-l-teal-600",
+    chip: "bg-teal-100 text-teal-900 dark:bg-teal-950/60 dark:text-teal-200",
+    bgFila: "bg-teal-50/50 dark:bg-teal-950/20",
+    bgHeader: "bg-teal-100/60 dark:bg-teal-950/40",
   },
 ];
 
@@ -139,7 +139,7 @@ export default function Paso2Inversiones() {
         <GuiaTipoNegocio etapa="inversiones" />
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">
+            <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
               Paso 3 · Inversiones en activo fijo
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -151,7 +151,7 @@ export default function Paso2Inversiones() {
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
               Total inversiones
             </div>
-            <div className="text-lg font-bold">{formatearBolivianos(totalGeneral)}</div>
+            <div className="font-display text-2xl font-bold tabular-nums text-foreground">{formatearBolivianos(totalGeneral)}</div>
           </div>
         </div>
 
@@ -363,7 +363,7 @@ function SeccionCategoria({
               <table className="w-full text-xs">
                 <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th className={cn("p-1.5 text-left", COLS_ANCHO.descripcion)}>
+                    <th className={cn("sticky left-0 z-10 bg-card p-1.5 text-left shadow-[1px_0_0_hsl(var(--border))]", COLS_ANCHO.descripcion)}>
                       Descripción
                     </th>
                     <th className={cn("p-1.5 text-left", COLS_ANCHO.unidad)}>Unidad</th>
@@ -394,7 +394,7 @@ function SeccionCategoria({
                 <tbody>
                   {items.map((it) => (
                     <tr key={it.id} className="border-b border-border/40 last:border-0">
-                      <td className="p-1">
+                      <td className="sticky left-0 z-10 bg-card p-1 shadow-[1px_0_0_hsl(var(--border))]">
                         <input
                           type="text"
                           value={it.descripcion}
@@ -549,14 +549,14 @@ function SeccionCategoria({
                       />
                       <button
                         onClick={() => onEliminar(it.id)}
-                        className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         aria-label="Eliminar"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-2">
-                      <label className="text-[11px] text-muted-foreground">
+                      <label className="text-xs text-muted-foreground">
                         Unidad
                         <input
                           type="text"
@@ -564,38 +564,38 @@ function SeccionCategoria({
                           onChange={(e) => onEditar(it.id, { unidadMedida: e.target.value })}
                           onFocus={selectOnFocus}
                           placeholder="m², und"
-                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-xs"
+                          className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
                         />
                       </label>
-                      <label className="text-[11px] text-muted-foreground">
+                      <label className="text-xs text-muted-foreground">
                         Cantidad
                         <InputNumero
                           min={0}
                           value={it.cantidad}
                           onChange={(n) => onEditar(it.id, { cantidad: n })}
-                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-right text-sm"
                         />
                       </label>
-                      <label className="text-[11px] text-muted-foreground">
+                      <label className="text-xs text-muted-foreground">
                         Costo unit. (Bs)
                         <InputNumero
                           min={0}
                           value={it.costoUnitario}
                           step="0.01"
                           onChange={(n) => onEditar(it.id, { costoUnitario: n })}
-                          className="mt-0.5 w-full rounded border border-input bg-background px-2 py-1.5 text-right text-xs"
+                          className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2.5 text-right text-sm"
                         />
                       </label>
                     </div>
                     {!sinDepreciacion && (
                       <div className="mt-2">
-                        <label className="text-[11px] text-muted-foreground">
+                        <label className="text-xs text-muted-foreground">
                           Vida útil (años)
                           <InputNumero
                             value={it.vidaUtilAnios ?? 0}
                             onChange={(n) => onEditar(it.id, { vidaUtilAnios: n })}
                             className={cn(
-                              "mt-0.5 w-full rounded border bg-background px-2 py-1.5 text-right text-xs",
+                              "mt-1 h-10 w-full rounded-lg border bg-background px-2.5 text-right text-sm",
                               it.vidaUtilAnios !== null &&
                                 it.vidaUtilAnios > 0 &&
                                 it.vidaUtilAnios < ANIOS_PROYECTO
@@ -606,7 +606,7 @@ function SeccionCategoria({
                         </label>
                       </div>
                     )}
-                    <label className="mt-2 flex items-center gap-2 rounded border border-border bg-secondary/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+                    <label className="mt-2 flex min-h-[40px] items-center gap-2.5 rounded-lg border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
                       <input
                         type="checkbox"
                         checked={it.creditoFiscalIVA ?? config.valor !== "terreno"}

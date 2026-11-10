@@ -564,7 +564,7 @@ function PantallaFinalizada({
         {quebrada ? (
           <>
             <XCircle className="mx-auto h-10 w-10 text-destructive" />
-            <h2 className="mt-3 text-lg font-semibold">Simulación quebrada</h2>
+            <h2 className="mt-3 font-display text-xl font-bold tracking-tight">Simulación quebrada</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Tu caja se quedó en negativo en el mes {simulacion.turno_actual}. El proyecto no
               pudo sostenerse.
@@ -573,7 +573,7 @@ function PantallaFinalizada({
         ) : (
           <>
             <Trophy className="mx-auto h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="mt-3 text-lg font-semibold">Simulación completa</h2>
+            <h2 className="mt-3 font-display text-xl font-bold tracking-tight">Simulación completa</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Llegaste al final de los {simulacion.turnos_totales} turnos.
             </p>
@@ -668,7 +668,7 @@ function PantallaInicio({
     <div className="mx-auto max-w-3xl space-y-4">
       <div className="rounded-lg border border-border bg-card p-6">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Antes de empezar</div>
-        <h1 className="mt-1 text-xl font-bold tracking-tight">Simulación de {proyecto.nombre}</h1>
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight">Simulación de {proyecto.nombre}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Tu plan funciona sobre el papel. Aquí lo pones a prueba contra la realidad.
         </p>
@@ -740,7 +740,7 @@ function InformeFinal({
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <h2 className="text-sm font-semibold">Tu informe</h2>
+      <h2 className="font-display text-base font-bold text-foreground">Tu informe</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Enfrentaste {eventos.length} {eventos.length === 1 ? "noticia" : "noticias"} en {historial.length}{" "}
         {historial.length === 1 ? "turno" : "turnos"}.

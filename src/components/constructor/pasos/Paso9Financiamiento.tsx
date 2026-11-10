@@ -81,7 +81,7 @@ export default function Paso9Financiamiento() {
       <div className="space-y-4 rounded-lg border border-border bg-card p-5">
         <GuiaTipoNegocio etapa="financiamiento" />
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Paso 7 · Financiamiento</h2>
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground">Paso 7 · Financiamiento</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Configura los <strong>dos préstamos</strong> del proyecto: uno para los activos
             fijos y otro para el capital de trabajo. Tasas y plazos suelen ser distintos.
@@ -698,20 +698,20 @@ function PanelCAPM({
   ) => void;
 }) {
   return (
-    <details className="group rounded-md border-2 border-indigo-300 bg-indigo-50/40 dark:border-indigo-800 dark:bg-indigo-950/20">
+    <details className="group rounded-lg border border-border bg-accent/40">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
+          <span className="rounded bg-primary px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground">
             V2
           </span>
-          <h3 className="truncate text-sm font-bold uppercase tracking-wide">
+          <h3 className="truncate font-display text-sm font-bold uppercase tracking-wide">
             Costo del capital propio con CAPM
           </h3>
         </div>
         <div className="flex flex-shrink-0 items-center gap-3">
           <div className="text-right">
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Ke</div>
-            <div className="text-base font-bold text-indigo-700 dark:text-indigo-300">
+            <div className="text-base font-bold text-primary">
               {(ke * 100).toFixed(2)}%
             </div>
           </div>
@@ -722,7 +722,7 @@ function PanelCAPM({
         </div>
       </summary>
 
-      <div className="border-t border-indigo-200 px-4 pb-4 pt-3 dark:border-indigo-900">
+      <div className="border-t border-border px-4 pb-4 pt-3">
         <p className="text-[11px] leading-snug text-muted-foreground">
           El <strong>Ke</strong> es el rendimiento que tú, como dueño, le exiges a tu propia
           plata por meterla en este negocio (en vez de ponerla en algo seguro). En lugar de

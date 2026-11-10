@@ -213,30 +213,30 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
         <button
           onClick={() => setVista("individuales")}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 transition",
+            "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition",
             vista === "individuales"
-              ? "bg-sky-600 text-white"
-              : "border border-border bg-card hover:bg-secondary"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border border-border bg-card text-foreground hover:bg-accent"
           )}
         >
           <User className="h-3.5 w-3.5" />
           Entregas individuales
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+          <span className="rounded bg-black/10 px-1.5 py-0.5 text-[11px] font-semibold dark:bg-white/10">
             {individuales.length}
           </span>
         </button>
         <button
           onClick={() => setVista("grupales")}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 transition",
+            "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition",
             vista === "grupales"
-              ? "bg-violet-600 text-white"
-              : "border border-border bg-card hover:bg-secondary"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border border-border bg-card text-foreground hover:bg-accent"
           )}
         >
           <Users className="h-3.5 w-3.5" />
           Entregas grupales
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+          <span className="rounded bg-black/10 px-1.5 py-0.5 text-[11px] font-semibold dark:bg-white/10">
             {grupales.length}
           </span>
         </button>
@@ -311,7 +311,7 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
       </div>
 
       {vista === "grupales" && (
-        <p className="text-[11px] text-violet-700 dark:text-violet-300">
+        <p className="text-xs font-medium text-primary">
           Cuando calificas una entrega grupal, la nota se acredita al promedio individual de
           TODOS los miembros del grupo.
         </p>
@@ -445,9 +445,9 @@ function TarjetaAgrupada({
             <button
               onClick={() => onCalificarTodoIgual(pendientes)}
               title="Misma nota y comentario para todas las pendientes (sin abrir tab por tab)"
-              className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700"
             >
-              <Zap className="h-3 w-3" />
+              <Zap className="h-3.5 w-3.5" />
               Calificar todo igual
             </button>
           )}
@@ -455,9 +455,9 @@ function TarjetaAgrupada({
             <button
               onClick={() => onRevisarLote(pendientes)}
               title="Revisar etapa por etapa con nota distinta cada una"
-              className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-amber-600"
+              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-amber-700"
             >
-              <Layers className="h-3 w-3" />
+              <Layers className="h-3.5 w-3.5" />
               Revisar las {pendientes.length} pendientes
             </button>
           )}

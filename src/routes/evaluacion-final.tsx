@@ -138,7 +138,7 @@ export default function EvaluacionFinal() {
 
       {/* Gráfico flujos proyectados vs reales */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-2 text-sm font-medium">Flujos: proyectado vs real</h3>
+        <h3 className="mb-2 font-display text-base font-bold text-foreground">Flujos: proyectado vs real</h3>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={comparativo}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -156,8 +156,8 @@ export default function EvaluacionFinal() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg rounded-xl border border-primary/30 bg-primary/10 p-5 shadow-xs">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold font-display text-base font-bold text-primary">
+        <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 shadow-xs">
+          <div className="mb-2 flex items-center gap-2 font-display text-base font-bold text-primary">
             <CheckCircle2 className="h-4 w-4" />
             Aciertos
           </div>
@@ -177,7 +177,7 @@ export default function EvaluacionFinal() {
           )}
         </div>
 
-        <div className="rounded-lg rounded-xl border border-destructive/30 bg-destructive/5 p-5 shadow-xs">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 shadow-xs">
           <div className="mb-2 flex items-center gap-2 font-display text-base font-bold text-destructive">
             <XCircle className="h-4 w-4" />
             Errores
