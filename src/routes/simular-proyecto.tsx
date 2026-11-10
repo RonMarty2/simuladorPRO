@@ -139,10 +139,26 @@ export default function SimularProyecto() {
 
   if (!proyecto) {
     return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-        {proyectosDisponibles.length === 0
-          ? "Por ahora no tienes ningún proyecto habilitado para simular. Tu docente decide qué tipos de proyecto se pueden simular en cada curso."
-          : "Primero construye un proyecto antes de simular."}
+      <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground shadow-2xs">
+        <p>
+          {proyectosDisponibles.length === 0
+            ? "Por ahora no tienes ningún proyecto habilitado para simular. Puedes clonar un proyecto de la galería o crear uno nuevo en el constructor."
+            : "Primero construye un proyecto antes de simular."}
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            to="/ejemplos"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-2xs transition hover:bg-primary/90"
+          >
+            Explorar galería de ejemplos
+          </Link>
+          <Link
+            to="/construir"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-secondary/80"
+          >
+            Crear proyecto en Constructor
+          </Link>
+        </div>
       </div>
     );
   }
