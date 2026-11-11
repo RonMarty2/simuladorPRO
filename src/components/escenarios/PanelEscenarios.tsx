@@ -38,12 +38,9 @@ import { GUIA_POR_TIPO } from "@/lib/guia-por-tipo";
 
 const COLORES: Record<NombreEscenario, string> = {
   optimista: "#0f766e",     // teal-700
-  base: "#334155",          // slate-700
+  base: "#1e293b",          // slate-800
   pesimista: "#be123c",     // rose-700
   personalizado: "#b45309", // amber-700
-
-
-
 };
 
 export default function PanelEscenarios({
@@ -93,37 +90,57 @@ export default function PanelEscenarios({
     <div className="mx-auto max-w-7xl space-y-4 p-3 sm:p-5">
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Escenarios — análisis de sensibilidad</h1>
+        <h1 className="text-xl font-bold tracking-tight">📊 Escenarios — análisis de sensibilidad</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Compara cómo se mueven los indicadores del proyecto si cambian las variables clave.
           El proyecto base es <strong>{proyecto.nombre}</strong>.
         </p>
       </div>
 
-      {delTipo && (
-        <div className="rounded-lg rounded-xl border border-border bg-card p-4 text-xs shadow-sm">
-          <div className="mb-2 font-display text-sm font-bold text-foreground">
-            Escenarios propios de tu tipo de negocio{tituloTipo ? `: ${tituloTipo}` : ""}
-          </div>
-          <p className="mb-1.5">
-            <strong className="text-destructive font-semibold">Pesimista.</strong> {delTipo.motivoPesimista}{" "}
-            <span className="text-muted-foreground">({resumenCambios(pesimista)})</span>
-          </p>
-          <p>
-            <strong className="text-primary font-bold">Optimista.</strong> {delTipo.motivoOptimista}{" "}
-            <span className="text-muted-foreground">({resumenCambios(optimista)})</span>
-          </p>
-          <p className="mt-1.5 text-[10px] text-muted-foreground">
-            Criterio del equipo basado en lo que más golpea a este rubro. Si tu docente configuró
-            otros valores para el curso, esos mandan.
-          </p>
-        </div>
-      )}
-
+      {delTipo && (
+
+        <div className="rounded-lg border border-sky-300 bg-sky-50/60 p-3 text-xs dark:border-sky-800 dark:bg-sky-950/30">
+
+          <div className="mb-1.5 font-semibold text-sky-900 dark:text-sky-100">
+
+            Escenarios propios de tu tipo de negocio{tituloTipo ? `: ${tituloTipo}` : ""}
+
+          </div>
+
+          <p className="mb-1.5">
+
+            <strong className="text-red-700 dark:text-red-300">Pesimista.</strong> {delTipo.motivoPesimista}{" "}
+
+            <span className="text-muted-foreground">({resumenCambios(pesimista)})</span>
+
+          </p>
+
+          <p>
+
+            <strong className="text-emerald-700 dark:text-emerald-300">Optimista.</strong> {delTipo.motivoOptimista}{" "}
+
+            <span className="text-muted-foreground">({resumenCambios(optimista)})</span>
+
+          </p>
+
+          <p className="mt-1.5 text-[10px] text-muted-foreground">
+
+            Criterio del equipo basado en lo que más golpea a este rubro. Si tu docente configuró
+
+            otros valores para el curso, esos mandan.
+
+          </p>
+
+        </div>
+
+      )}
+
+
+
       {faltantes.length > 0 && (
         <div
           role="status"
-          className="rounded-lg rounded-xl border border-amber-300/70 bg-amber-50/70 p-4 text-xs leading-relaxed text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
         >
           <strong>Resultado provisional.</strong> Aún no cargaste datos en:{" "}
           {faltantes.map((f) => `paso ${f.paso} (${f.etiqueta})`).join(", ")}. Los escenarios
@@ -133,10 +150,13 @@ export default function PanelEscenarios({
       )}
 
       {/* Tarjetas resumen de cada escenario */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {escenarios.map((e) => (
-          <TarjetaEscenario key={e.nombre} escenario={e} />
-        ))}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {(() => {
+          const vanBase = escenarios.find((item) => item.nombre === "base")?.flujo.indicadores.van;
+          return escenarios.map((e) => (
+            <TarjetaEscenario key={e.nombre} escenario={e} vanBase={vanBase} />
+          ));
+        })()}
       </div>
 
       {/* Tabla de indicadores */}
@@ -187,14 +207,14 @@ export default function PanelEscenarios({
       <AnalisisRiesgo proyecto={proyecto} optimista={optimista} pesimista={pesimista} />
 
       {/* Sliders de "Mi escenario" */}
-      <div className="rounded-lg rounded-xl border border-border bg-card shadow-sm">
+      <div className="rounded-lg border border-purple-200 bg-purple-50/40 dark:border-purple-900 dark:bg-purple-950/20">
         <button
           onClick={() => setSlidersAbierto((v) => !v)}
           className="flex w-full items-center justify-between gap-2 p-3 text-left"
         >
           <div className="flex items-center gap-2">
             {slidersAbierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            <Sliders className="h-4 w-4 text-primary" />
+            <Sliders className="h-4 w-4 text-purple-700 dark:text-purple-300" />
             <span className="text-sm font-semibold">Mi escenario · arma tu propio stress test</span>
           </div>
           <span className="text-[11px] text-muted-foreground">
@@ -203,7 +223,7 @@ export default function PanelEscenarios({
         </button>
 
         {slidersAbierto && (
-          <div className="space-y-3 border-t border-border p-4">
+          <div className="space-y-3 border-t border-purple-200 p-3 dark:border-purple-900">
             <GrupoSliders titulo="Ingresos">
               <SliderPorcentual
                 label="Precio"
@@ -322,90 +342,187 @@ function SeccionTitulo({ titulo }: { titulo: string }) {
   return <h2 className="mt-2 text-sm font-bold uppercase tracking-wide text-muted-foreground">{titulo}</h2>;
 }
 
-function TarjetaEscenario({ escenario }: { escenario: EscenarioCalculado }) {
+function TarjetaEscenario({
+  escenario,
+  vanBase,
+}: {
+  escenario: EscenarioCalculado;
+  vanBase?: number;
+}) {
   const color = COLORES[escenario.nombre];
   const viable = esViable(escenario.flujo);
   const ind = escenario.flujo.indicadores;
+  const deltaVan = vanBase !== undefined && escenario.nombre !== "base" ? ind.van - vanBase : 0;
+  const deltaPct =
+    vanBase !== undefined && vanBase !== 0 && escenario.nombre !== "base"
+      ? Math.round((deltaVan / Math.abs(vanBase)) * 100)
+      : 0;
+
   return (
-    <div
-      className="rounded-lg border-l-4 border-border bg-card p-3 shadow-sm"
-      style={{ borderLeftColor: color }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold" style={{ color }}>
-          {escenario.etiqueta}
-        </span>
-        {viable ? (
-          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary font-bold">
-            <CheckCircle2 className="h-3 w-3" />
-            VIABLE
+    <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md">
+      <div>
+        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>
+            {escenario.etiqueta}
           </span>
-        ) : (
-          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
-            <XCircle className="h-3 w-3" />
-            NO VIABLE
-          </span>
-        )}
+          {viable ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              <CheckCircle2 className="h-3 w-3" />
+              VIABLE
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+              <XCircle className="h-3 w-3" />
+              NO VIABLE
+            </span>
+          )}
+        </div>
+
+        {/* Métrica Héroe: VAN */}
+        <div className="mt-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Valor Actual Neto (VAN)
+          </div>
+          <div
+            className={cn(
+              "text-xl font-bold tracking-tight mt-0.5 tabular-nums",
+              ind.van > 0 ? "text-foreground" : "text-rose-600 dark:text-rose-400"
+            )}
+          >
+            {formatearBolivianos(ind.van)}
+          </div>
+          {escenario.nombre !== "base" && vanBase !== undefined && (
+            <div
+              className={cn(
+                "text-[10px] font-semibold mt-0.5",
+                deltaVan >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              )}
+            >
+              {deltaVan >= 0 ? "+" : ""}
+              {formatearBolivianos(deltaVan)} ({deltaVan >= 0 ? "+" : ""}
+              {deltaPct}% vs Base)
+            </div>
+          )}
+        </div>
+
+        {/* Métricas secundarias en grilla limpia */}
+        <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
+          <div className="rounded-lg bg-secondary/50 p-1.5">
+            <div className="text-[9px] font-bold uppercase text-muted-foreground">TIR</div>
+            <div className="text-xs font-bold tabular-nums">
+              {tirCalculable(ind.tir) ? `${fmtNum((ind.tir * 100), 1)}%` : "—"}
+            </div>
+          </div>
+          <div className="rounded-lg bg-secondary/50 p-1.5">
+            <div className="text-[9px] font-bold uppercase text-muted-foreground">Payback</div>
+            <div className="text-xs font-bold tabular-nums">
+              {ind.payback !== null && ind.payback >= 0 ? `${fmtNum(ind.payback, 1)} a` : "∞"}
+            </div>
+          </div>
+          <div className="rounded-lg bg-secondary/50 p-1.5">
+            <div className="text-[9px] font-bold uppercase text-muted-foreground">WACC</div>
+            <div className="text-xs font-bold tabular-nums">
+              {`${fmtNum((escenario.flujo.wacc * 100), 1)}%`}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-1 text-[11px]">
-        <Stat label="VAN" v={formatearBolivianos(ind.van)} />
-        <Stat label="TIR" v={tirCalculable(ind.tir) ? `${fmtNum((ind.tir * 100), 1)}%` : "—"} />
-        <Stat label="Recuperación" v={ind.payback !== null && ind.payback >= 0 ? `${fmtNum(ind.payback, 1)} años` : "∞"} />
-        <Stat label="WACC" v={`${fmtNum((escenario.flujo.wacc * 100), 1)}%`} />
-      </div>
-      <div className="mt-2 text-[11px] text-muted-foreground">
+
+      <div className="mt-3 pt-2 border-t border-border/40 text-[11px] text-muted-foreground leading-snug">
         {resumirModificadores(escenario.modificadores)}
       </div>
     </div>
   );
 }
 
-function Stat({ label, v }: { label: string; v: string }) {
-  return (
-    <div className="rounded bg-secondary/40 px-1.5 py-1">
-      <div className="text-[11px] uppercase text-muted-foreground">{label}</div>
-      <div className="font-bold tabular-nums">{v}</div>
-    </div>
-  );
-}
 
 function TablaIndicadores({ escenarios }: { escenarios: EscenarioCalculado[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
       <table className="w-full text-xs">
-        <thead className="bg-secondary">
+        <thead className="bg-secondary/70 border-b border-border">
           <tr>
-            <th className="p-2 text-left font-semibold">Indicador</th>
+            <th className="p-3 text-left font-bold text-foreground">Indicador de rentabilidad</th>
             {escenarios.map((e) => (
-              <th key={e.nombre} className="p-2 text-right font-semibold" style={{ color: COLORES[e.nombre] }}>
+              <th key={e.nombre} className="p-3 text-right font-bold" style={{ color: COLORES[e.nombre] }}>
                 {e.etiqueta}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          <FilaIndicador label="VAN" escenarios={escenarios} sel={(f) => formatearBolivianos(f.indicadores.van)} />
-          <FilaIndicador
-            label="TIR"
-            escenarios={escenarios}
-            sel={(f) => (tirCalculable(f.indicadores.tir) ? `${fmtNum((f.indicadores.tir * 100), 2)}%` : "—")}
-          />
-          <FilaIndicador
-            label="Recuperación"
-            escenarios={escenarios}
-            sel={(f) => (f.indicadores.payback !== null && f.indicadores.payback >= 0 ? `${fmtNum(f.indicadores.payback, 2)} años` : "∞")}
-          />
-          <FilaIndicador label="IR (Índice de rentabilidad)" escenarios={escenarios} sel={(f) => fmtNum(f.indicadores.ir, 2)} />
-          <FilaIndicador label="RBC (Beneficio/Costo)" escenarios={escenarios} sel={(f) => fmtNum(f.indicadores.rbc, 2)} />
-          <FilaIndicador label="WACC" escenarios={escenarios} sel={(f) => `${fmtNum((f.wacc * 100), 2)}%`} />
-          <tr className="border-t-2 border-border bg-primary/5 font-bold">
-            <td className="p-2">¿Viable?</td>
+          {/* Fila VIP VAN */}
+          <tr className="border-b border-border/60 bg-muted/20 font-semibold">
+            <td className="p-3 font-bold text-foreground">
+              VAN (Valor Actual Neto)
+              <span className="block text-[10px] font-normal text-muted-foreground">
+                Creación neta de riqueza por encima del costo de capital
+              </span>
+            </td>
             {escenarios.map((e) => (
-              <td key={e.nombre} className="p-2 text-right">
+              <td
+                key={e.nombre}
+                className={cn(
+                  "p-3 text-right tabular-nums text-sm font-bold",
+                  e.flujo.indicadores.van > 0 ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
+                )}
+              >
+                {formatearBolivianos(e.flujo.indicadores.van)}
+              </td>
+            ))}
+          </tr>
+
+          {/* Fila VIP TIR */}
+          <tr className="border-b border-border/40">
+            <td className="p-2.5 font-medium text-foreground">
+              TIR (Tasa Interna de Retorno)
+              <span className="block text-[10px] text-muted-foreground">Rendimiento porcentual anual</span>
+            </td>
+            {escenarios.map((e) => (
+              <td key={e.nombre} className="p-2.5 text-right tabular-nums font-semibold">
+                {tirCalculable(e.flujo.indicadores.tir) ? `${fmtNum((e.flujo.indicadores.tir * 100), 2)}%` : "—"}
+              </td>
+            ))}
+          </tr>
+
+          <FilaIndicador
+            label="Periodo de Recuperación (Payback)"
+            escenarios={escenarios}
+            sel={(f) =>
+              f.indicadores.payback !== null && f.indicadores.payback >= 0
+                ? `${fmtNum(f.indicadores.payback, 2)} años`
+                : "No recupera (∞)"
+            }
+          />
+          <FilaIndicador
+            label="IR (Índice de rentabilidad)"
+            escenarios={escenarios}
+            sel={(f) => `${fmtNum(f.indicadores.ir, 2)}x`}
+          />
+          <FilaIndicador
+            label="RBC (Relación Beneficio / Costo)"
+            escenarios={escenarios}
+            sel={(f) => `${fmtNum(f.indicadores.rbc, 2)}`}
+          />
+          <FilaIndicador
+            label="Tasa de corte exigida (WACC)"
+            escenarios={escenarios}
+            sel={(f) => `${fmtNum((f.wacc * 100), 2)}%`}
+          />
+
+          {/* Fila de Dictamen */}
+          <tr className="border-t-2 border-border bg-secondary/30">
+            <td className="p-3 font-bold text-foreground">¿Proyecto viable?</td>
+            {escenarios.map((e) => (
+              <td key={e.nombre} className="p-3 text-right">
                 {esViable(e.flujo) ? (
-                  <span className="text-primary font-bold">✓ SÍ</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> SÍ (Viable)
+                  </span>
                 ) : (
-                  <span className="text-rose-700 dark:text-rose-300">✗ NO</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                    <XCircle className="h-3.5 w-3.5" /> NO (Inviable)
+                  </span>
                 )}
               </td>
             ))}
@@ -427,9 +544,9 @@ function FilaIndicador({
 }) {
   return (
     <tr className="border-b border-border/40">
-      <td className="p-2 text-muted-foreground">{label}</td>
+      <td className="p-2.5 text-muted-foreground">{label}</td>
       {escenarios.map((e) => (
-        <td key={e.nombre} className="p-2 text-right tabular-nums">
+        <td key={e.nombre} className="p-2.5 text-right tabular-nums">
           {sel(e.flujo)}
         </td>
       ))}
@@ -439,13 +556,13 @@ function FilaIndicador({
 
 function TablaFlujoCaja({ escenarios }: { escenarios: EscenarioCalculado[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
       <table className="w-full text-xs">
-        <thead className="bg-secondary">
+        <thead className="bg-secondary/70 border-b border-border">
           <tr>
-            <th className="p-2 text-left font-semibold">Año</th>
+            <th className="p-3 text-left font-bold text-foreground">Periodo proyectado</th>
             {escenarios.map((e) => (
-              <th key={e.nombre} className="p-2 text-right font-semibold" style={{ color: COLORES[e.nombre] }}>
+              <th key={e.nombre} className="p-3 text-right font-bold" style={{ color: COLORES[e.nombre] }}>
                 {e.etiqueta}
               </th>
             ))}
@@ -453,9 +570,21 @@ function TablaFlujoCaja({ escenarios }: { escenarios: EscenarioCalculado[] }) {
         </thead>
         <tbody>
           {[0, 1, 2, 3, 4, 5].map((anio) => (
-            <tr key={anio} className="border-b border-border/40">
-              <td className="p-2 text-muted-foreground">
-                {anio === 0 ? "Año 0 (inversión)" : `Año ${anio}`}
+            <tr
+              key={anio}
+              className={cn(
+                "border-b border-border/40 transition-colors",
+                anio === 0 ? "bg-amber-50/40 dark:bg-amber-950/15" : anio === 5 ? "bg-secondary/20" : ""
+              )}
+            >
+              <td className="p-2.5">
+                {anio === 0 ? (
+                  <span className="font-bold text-amber-900 dark:text-amber-300">
+                    Año 0 · Inversión inicial
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground font-medium">Año {anio}</span>
+                )}
               </td>
               {escenarios.map((e) => {
                 const v = e.flujo.flujoCaja[anio] ?? 0;
@@ -463,8 +592,8 @@ function TablaFlujoCaja({ escenarios }: { escenarios: EscenarioCalculado[] }) {
                   <td
                     key={e.nombre}
                     className={cn(
-                      "p-2 text-right tabular-nums",
-                      v >= 0 ? "text-foreground" : "text-rose-700 dark:text-rose-300"
+                      "p-2.5 text-right tabular-nums",
+                      v >= 0 ? "text-foreground font-medium" : "text-rose-700 dark:text-rose-400 font-semibold"
                     )}
                   >
                     {formatearBolivianos(v)}

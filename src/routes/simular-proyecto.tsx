@@ -1,7 +1,7 @@
 import { fmtNum } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Newspaper, PlayCircle, Trophy, XCircle } from "lucide-react";
+import { ChevronRight, Newspaper, PlayCircle, Trophy, XCircle, AlertTriangle } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -360,24 +360,30 @@ export default function SimularProyecto() {
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">{eventoActual.titulo}</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{eventoActual.descripcion}</p>
           {resumenGolpeEvento(eventoActual).length > 0 && (
-            <p className="mt-3 rounded-lg border border-amber-300/80 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-              <strong>Impacto macroeconómico ineludible:</strong>{" "}
-              {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede reducir el daño o aprovechar la situación.
-            </p>
+            <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-300/80 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div>
+                <strong>Impacto macroeconómico ineludible:</strong>{" "}
+                {resumenGolpeEvento(eventoActual).join(", ")}. Tu decisión puede mitigar el impacto o aprovechar la coyuntura.
+              </div>
+            </div>
           )}
 
-          <div className="mt-6 space-y-2.5">
-            <div className="font-display text-base font-bold text-foreground">¿Qué decides?</div>
+          <div className="mt-6 space-y-3">
+            <div className="font-display text-base font-bold text-foreground flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-xs">?</span>
+              ¿Qué decides para el mes?
+            </div>
             {eventoActual.opciones_decision.map((op) => {
               const elegida = opcionSeleccionada?.letra === op.letra;
               return (
                 <label
                   key={op.letra}
                   className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all",
+                    "flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-all duration-150",
                     elegida
-                      ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
-                      : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40"
+                      ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40 scale-[1.005]"
+                      : "border-border bg-card hover:border-primary/50 hover:bg-accent/30 hover:shadow-xs"
                   )}
                 >
                   <input
@@ -389,15 +395,15 @@ export default function SimularProyecto() {
                   />
                   <span
                     className={cn(
-                      "mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                      "mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all shadow-xs",
                       elegida
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground"
+                        ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+                        : "bg-secondary text-foreground border border-border"
                     )}
                   >
                     {op.letra}
                   </span>
-                  <div className="flex-1 text-sm font-medium leading-snug">
+                  <div className="flex-1 text-sm font-medium leading-relaxed text-foreground">
                     {op.texto}
                   </div>
                 </label>
@@ -484,27 +490,55 @@ function Metrica({
   detalle?: string;
   positivo: boolean;
 }) {
+  const esReputacion = titulo.toLowerCase().includes("reputación");
+  const pctRep = esReputacion ? parseInt(valor.replace("%", ""), 10) || 50 : null;
+
   return (
-    <div className="rounded-lg border border-border bg-card/60 p-2.5 shadow-xs">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{titulo}</div>
+    <div className="relative flex flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-card p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm">
       <div
-        className={`font-display text-base font-bold tabular-nums ${
-          positivo ? "text-foreground" : "text-destructive"
-        }`}
-      >
-        {valor}
-      </div>
-      {detalle && <div className="text-[10px] text-muted-foreground">{detalle}</div>}
-      {delta !== undefined && Math.abs(delta) > 0.01 && (
-        <div
-          className={`text-[10px] font-semibold tabular-nums ${
-            delta > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"
-          }`}
-        >
-          {delta > 0 ? "+" : ""}
-          {formatearBolivianos(delta)}
+        className={cn(
+          "absolute top-0 left-0 right-0 h-1",
+          positivo ? "bg-teal-500/80" : "bg-rose-500/80"
+        )}
+      />
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {titulo}
         </div>
-      )}
+        <div
+          className={cn(
+            "mt-1 font-display text-base sm:text-lg font-bold tabular-nums tracking-tight",
+            positivo ? "text-foreground" : "text-rose-600 dark:text-rose-400"
+          )}
+        >
+          {valor}
+        </div>
+        {pctRep !== null && (
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                pctRep >= 65 ? "bg-teal-500" : pctRep >= 45 ? "bg-amber-500" : "bg-rose-500"
+              )}
+              style={{ width: `${Math.min(100, Math.max(0, pctRep))}%` }}
+            />
+          </div>
+        )}
+      </div>
+      <div className="mt-1.5 space-y-0.5">
+        {delta !== undefined && Math.abs(delta) > 0.01 && (
+          <div
+            className={cn(
+              "text-[10px] font-bold tabular-nums",
+              delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+            )}
+          >
+            {delta > 0 ? "▲ +" : "▼ "}
+            {formatearBolivianos(delta)}
+          </div>
+        )}
+        {detalle && <div className="text-[10px] text-muted-foreground leading-tight">{detalle}</div>}
+      </div>
     </div>
   );
 }
@@ -826,7 +860,7 @@ function ResumenCelda({ titulo, valor }: { titulo: string; valor: string }) {
 }
 
 // ============================================================================
-// SelectorProyectoSimular — pills con los proyectos del alumno
+// SelectorProyectoSimular — switcher de portafolio para la simulación
 // ============================================================================
 function SelectorProyectoSimular({
   proyectos,
@@ -839,21 +873,21 @@ function SelectorProyectoSimular({
 }) {
   const tipoMeta = (p: Proyecto) => {
     if (p.tipo === "proyecto_grupal") {
-      return { emoji: "", label: "Grupal", clase: "border-border bg-accent/40 text-foreground" };
+      return { label: "Grupal", badge: "bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300" };
     }
     if (p.caso_origen_id) {
-      // copia del caso del docente — viene de un caso_curso
-      return { emoji: "", label: "Caso del curso", clase: "border-primary/30 bg-primary/10 text-primary" };
+      return { label: "Caso del curso", badge: "bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300" };
     }
-    return { emoji: "", label: "Individual", clase: "border-border bg-secondary/50 text-muted-foreground" };
+    return { label: "Individual", badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" };
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
-      <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        ¿Qué proyecto quieres simular?
+    <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-teal-500" />
+        Portafolio disponible para simulación
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {proyectos.map((p) => {
           const meta = tipoMeta(p);
           const activo = p.id === activoId;
@@ -862,16 +896,20 @@ function SelectorProyectoSimular({
               key={p.id}
               onClick={() => !activo && onCambiar(p)}
               className={cn(
-                "flex items-center gap-1.5 rounded-md border-2 px-2.5 py-1.5 text-xs transition",
+                "group flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
                 activo
-                  ? "border-primary bg-primary text-primary-foreground shadow"
-                  : `${meta.clase} hover:border-primary`
+                  ? "border-teal-600 bg-teal-700 text-white shadow-xs font-semibold"
+                  : "border-border/80 bg-background text-foreground hover:border-teal-500/50 hover:bg-accent/40"
               )}
               title={`${meta.label} — ${p.nombre}`}
             >
-              <span>{meta.emoji}</span>
-              <span className="max-w-[160px] truncate font-semibold">{p.nombre}</span>
-              <span className="rounded bg-black/10 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider dark:bg-white/10">
+              <span className="max-w-[200px] truncate">{p.nombre}</span>
+              <span
+                className={cn(
+                  "rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  activo ? "bg-white/20 text-white" : meta.badge
+                )}
+              >
                 {meta.label}
               </span>
             </button>

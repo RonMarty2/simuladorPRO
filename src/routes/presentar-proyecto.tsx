@@ -253,11 +253,39 @@ export default function PresentarProyecto() {
                 {modelo.viable ? "Plan base: viable" : "Plan base: requiere ajustes"}
               </span>
             </div>
-            <div className="aspect-video overflow-hidden rounded-lg bg-[#0d141e] p-[7%] text-white shadow-md">
-              <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-teal-400">Presentación de inversión</div>
-              <div className="mt-[16%] font-display text-[clamp(18px,2.4vw,34px)] font-bold leading-tight tracking-tight">{presentacion.titulo}</div>
-              <div className="mt-[4%] text-xs text-slate-300">{presentacion.subtitulo}</div>
-              <div className="mt-[10%] border-t border-white/15 pt-[4%] text-[9px] text-slate-400">{presentacion.expositores}</div>
+            <div className="relative aspect-video overflow-hidden rounded-xl bg-[#0a101d] p-5 text-white shadow-lg border border-slate-800 flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-400">Presentación de Inversión</span>
+                <span className="text-[10px] text-slate-400 font-medium">5 años · {modelo.nivel}</span>
+              </div>
+              <div className="my-auto">
+                <div className="font-display text-lg sm:text-xl font-bold leading-tight tracking-tight text-white line-clamp-2">{presentacion.titulo}</div>
+                <div className="mt-1 text-xs text-slate-300 line-clamp-1">{presentacion.subtitulo}</div>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
+                    <div className="text-slate-400">Inversión</div>
+                    <div className="font-bold text-white truncate">{Math.round(modelo.totalProyecto / 1000)}k Bs</div>
+                  </div>
+                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
+                    <div className="text-slate-400">VAN</div>
+                    <div className={`font-bold truncate ${modelo.resultado.indicadores.van > 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                      {Math.round(modelo.resultado.indicadores.van / 1000)}k Bs
+                    </div>
+                  </div>
+                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
+                    <div className="text-slate-400">TIR</div>
+                    <div className="font-bold text-teal-300 truncate">
+                      {Math.round(modelo.resultado.indicadores.tir * 100)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-white/10 pt-2 text-[10px] text-slate-400">
+                <span className="truncate">{presentacion.expositores}</span>
+                <span className={`font-bold ${modelo.viable ? "text-emerald-400" : "text-amber-400"}`}>
+                  {modelo.viable ? "✓ Viable" : "⚠ Ajustar"}
+                </span>
+              </div>
             </div>
           </section>
 
@@ -265,21 +293,73 @@ export default function PresentarProyecto() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-base font-bold">Guion automático</h2>
-                <p className="text-xs text-muted-foreground">Adaptado al nivel {modelo.nivel} y a los datos disponibles.</p>
+                <p className="text-xs text-muted-foreground">Estructurado en 3 actos narrativos · Nivel {modelo.nivel}</p>
               </div>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{modelo.diapositivas.length} diapositivas</span>
             </div>
-            <ol className="mt-4 space-y-2">
-              {modelo.diapositivas.map((diapositiva) => (
-                <li key={diapositiva.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-accent/25 px-3 py-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground font-mono">{String(diapositiva.numero).padStart(2, "0")}</span>
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-foreground">{diapositiva.titulo}</div>
-                    <div className="truncate text-[11px] text-muted-foreground">{diapositiva.etiqueta}</div>
+            <div className="mt-4 space-y-4">
+              {[
+                {
+                  fase: "Acto I",
+                  titulo: "Tesis y Oportunidad",
+                  ids: ["portada", "oportunidad", "mercado"],
+                  color: "border-teal-500/30",
+                  bg: "bg-teal-50/40 dark:bg-teal-950/20",
+                  badge: "bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300",
+                },
+                {
+                  fase: "Acto II",
+                  titulo: "Modelo Económico y Operativo",
+                  ids: ["inversion", "operacion", "equilibrio", "financiamiento", "flujo"],
+                  color: "border-sky-500/30",
+                  bg: "bg-sky-50/40 dark:bg-sky-950/20",
+                  badge: "bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-300",
+                },
+                {
+                  fase: "Acto III",
+                  titulo: "Evaluación, Riesgo y Cierre",
+                  ids: ["indicadores", "tipo", "riesgo", "escenarios", "montecarlo", "laboratorio", "cierre"],
+                  color: "border-amber-500/30",
+                  bg: "bg-amber-50/40 dark:bg-amber-950/20",
+                  badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300",
+                },
+              ].map((fase) => {
+                const diapositivasFase = modelo.diapositivas.filter((d) => fase.ids.includes(d.id));
+                if (diapositivasFase.length === 0) return null;
+                return (
+                  <div key={fase.fase} className={`rounded-xl border ${fase.color} ${fase.bg} p-3`}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {fase.fase} · {fase.titulo}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${fase.badge}`}>
+                        {diapositivasFase.length} {diapositivasFase.length === 1 ? "lámina" : "láminas"}
+                      </span>
+                    </div>
+                    <ol className="space-y-1.5">
+                      {diapositivasFase.map((diapositiva) => (
+                        <li
+                          key={diapositiva.id}
+                          className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-card px-2.5 py-2 shadow-2xs"
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground font-mono">
+                            {String(diapositiva.numero).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-semibold text-foreground">
+                              {diapositiva.titulo}
+                            </div>
+                            <div className="truncate text-[10px] text-muted-foreground">
+                              {diapositiva.etiqueta}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
-                </li>
-              ))}
-            </ol>
+                );
+              })}
+            </div>
           </section>
         </div>
       </main>
