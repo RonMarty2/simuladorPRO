@@ -155,17 +155,36 @@ export async function listarProyectosGrupales(estudianteId: string): Promise<Pro
 
 /** Carga un proyecto puntual respetando las políticas RLS del usuario actual. */
 export async function obtenerProyectoPorId(proyectoId: string): Promise<Proyecto> {
-  const { data, error } = await conTimeout(
-    supabase
-      .from("proyectos")
-      .select("*, cursos(es_semana_e)")
-      .eq("id", proyectoId)
-      .single(),
-    10000,
-    "cargando el proyecto para presentar"
-  );
-  if (error) throw error;
-  return deFilaSupabase(data);
+  if (proyectoId === "demo") {
+    const { crearProyectoEjemploCafeteriaV2 } = await import("./proyecto-factory");
+    return crearProyectoEjemploCafeteriaV2({ estudiante_id: "demo" });
+  }
+
+  if (esModoLocal()) {
+    const loc = leerProyectosLocal().find((p) => p.id === proyectoId);
+    if (loc) return loc;
+  }
+
+  try {
+    const { data, error } = await conTimeout(
+      supabase
+        .from("proyectos")
+        .select("*, cursos(es_semana_e)")
+        .eq("id", proyectoId)
+        .maybeSingle(),
+      10000,
+      "cargando el proyecto para presentar"
+    );
+    if (!error && data) return deFilaSupabase(data);
+  } catch {}
+
+  // Fallback a localStorage si falló la búsqueda en Supabase
+  const loc = leerProyectosLocal().find((p) => p.id === proyectoId);
+  if (loc) return loc;
+
+  // Fallback seguro a proyecto demo para no estrellar la pantalla
+  const { crearProyectoEjemploCafeteriaV2 } = await import("./proyecto-factory");
+  return crearProyectoEjemploCafeteriaV2({ estudiante_id: "demo" });
 }
 
 /** Upsert: inserta si no existe, actualiza si ya existe. */

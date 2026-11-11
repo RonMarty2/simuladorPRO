@@ -28,8 +28,7 @@ export default function PresentarProyecto() {
   const location = useLocation();
   const user = useAuthStore((estado) => estado.user);
   const esDemo =
-    import.meta.env.DEV &&
-    (proyectoId === "demo" || location.pathname === "/presentar/demo");
+    proyectoId === "demo" || location.pathname === "/presentar/demo";
   const proyectoDemo = useMemo(
     () =>
       esDemo
