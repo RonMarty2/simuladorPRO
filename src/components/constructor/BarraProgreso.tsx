@@ -54,9 +54,13 @@ export default function BarraProgreso({
               {nombreProyecto}
             </div>
             <BadgeVersion version={version} />
-            {nivel && (
+            {nivel ? (
               <span className="flex-shrink-0 rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">
                 {nivel.nombre} · {nivel.pasos} etapas
+              </span>
+            ) : (
+              <span className="flex-shrink-0 rounded-md bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 text-xs font-bold text-teal-800 dark:text-teal-300">
+                {numerosPasos.length} pasos adaptados
               </span>
             )}
           </div>

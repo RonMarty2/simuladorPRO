@@ -1,5 +1,5 @@
 import type { NivelSemanaE, Proyecto, VersionProyecto } from "@/types/proyecto";
-import { pasosVisiblesPorTipo } from "./pasos-por-tipo";
+import { pasosVisiblesPorTipo, deducirTipoNegocio } from "./pasos-por-tipo";
 export type { NivelSemanaE } from "@/types/proyecto";
 
 export const NIVELES_SEMANA_E: Array<{
@@ -47,8 +47,11 @@ export function pasosParaNivelSemanaE(nivel?: NivelSemanaE | null): number[] {
 }
 
 export function pasosVisiblesDelProyecto(proyecto: Proyecto): number[] {
-  if (proyecto.nivelSemanaE) return pasosParaNivelSemanaE(proyecto.nivelSemanaE);
-  return pasosVisiblesPorTipo(proyecto.tipoNegocio, proyecto.modeloIngreso);
+  if (esProyectoSemanaE(proyecto) && proyecto.nivelSemanaE) {
+    return pasosParaNivelSemanaE(proyecto.nivelSemanaE);
+  }
+  const tipo = deducirTipoNegocio(proyecto);
+  return pasosVisiblesPorTipo(tipo, proyecto.modeloIngreso);
 }
 
 export function esProyectoSemanaE(proyecto: Proyecto): boolean {

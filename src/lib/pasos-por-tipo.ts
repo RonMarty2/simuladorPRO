@@ -9,6 +9,69 @@ export type FamiliaNegocio =
   | "costo_beneficio"
   | "ocupacion";
 
+/**
+ * Deduce de forma infalible la categoría de negocio de un proyecto,
+ * incluso si fue clonado antes de que existiera el campo tipoNegocio en la base de datos.
+ */
+export function deducirTipoNegocio(proyecto?: {
+  tipoNegocio?: string | null;
+  modeloIngreso?: ModeloIngreso | null;
+  nombre?: string | null;
+  sector?: string | null;
+  costoBeneficioV2?: unknown;
+  suscripcionV2?: unknown;
+} | null): CategoriaPlantilla {
+  if (proyecto?.tipoNegocio) return proyecto.tipoNegocio as CategoriaPlantilla;
+
+  if (proyecto?.costoBeneficioV2 || proyecto?.modeloIngreso === "costo_beneficio") {
+    return "costo_beneficio";
+  }
+  if (proyecto?.suscripcionV2 || proyecto?.modeloIngreso === "suscripcion" || proyecto?.modeloIngreso === "publicidad") {
+    return "suscripcion";
+  }
+
+  const nombre = (proyecto?.nombre ?? "").toLowerCase();
+  if (nombre.includes("gimnasio") || nombre.includes("fitandes") || nombre.includes("saas") || nombre.includes("software") || nombre.includes("academia") || nombre.includes("podcast")) {
+    return "suscripcion";
+  }
+  if (nombre.includes("hostal") || nombre.includes("hotel") || nombre.includes("turismo") || nombre.includes("cabaña")) {
+    return "turismo";
+  }
+  if (nombre.includes("cámara de frío") || nombre.includes("camara de frio") || nombre.includes("lanzamiento") || nombre.includes("reforestacion") || nombre.includes("carbono")) {
+    return "costo_beneficio";
+  }
+  if (nombre.includes("clínica") || nombre.includes("clinica") || nombre.includes("salud") || nombre.includes("hospital")) {
+    return "salud_privada";
+  }
+  if (nombre.includes("colegio") || nombre.includes("escuela") || nombre.includes("instituto") || nombre.includes("educacion")) {
+    return "educacion_privada";
+  }
+  if (nombre.includes("franquicia")) {
+    return "franquicia";
+  }
+  if (nombre.includes("tienda") || nombre.includes("farmacia") || nombre.includes("supermercado") || nombre.includes("boutique") || nombre.includes("perfumer") || nombre.includes("comercio")) {
+    return "comercio";
+  }
+  if (nombre.includes("microcrédito") || nombre.includes("microcredito") || nombre.includes("cooperativa") || nombre.includes("consultor") || nombre.includes("agencia")) {
+    return "microcredito";
+  }
+  if (nombre.includes("panader") || nombre.includes("cafeter") || nombre.includes("restaurante") || nombre.includes("gastronom")) {
+    return "gastronomia";
+  }
+  if (nombre.includes("frutícola") || nombre.includes("agrícola") || nombre.includes("granja") || nombre.includes("campo")) {
+    return "agricultura";
+  }
+  if (nombre.includes("snack") || nombre.includes("fábrica") || nombre.includes("fabrica") || nombre.includes("planta") || nombre.includes("industrial")) {
+    return "produccion";
+  }
+
+  if (proyecto?.sector === "servicios") return "servicios";
+  if (proyecto?.sector === "comercio") return "comercio";
+  if (proyecto?.sector === "agricultura") return "agricultura";
+
+  return "produccion";
+}
+
 export function familiaDeTipo(
   tipoNegocio?: string | null,
   modeloIngreso?: ModeloIngreso | null
@@ -56,7 +119,7 @@ export function familiaDeTipo(
 
 /**
  * Pasos del constructor visibles según la naturaleza real del proyecto.
- * Evita forzar etapas absurdas (como pedir materias primas a una campaña de marketing).
+ * Evita forzar etapas absurdas (como pedir materias primas a una campaña de marketing o a un SaaS).
  */
 export function pasosVisiblesPorTipo(
   tipoNegocio?: string | null,
@@ -66,24 +129,27 @@ export function pasosVisiblesPorTipo(
 
   switch (familia) {
     case "costo_beneficio":
-      // 1: Datos, 2: Beneficio incremental, 3: Inversión inicial, 4: Personal/Equipo, 6: Presupuesto y medios, 7: Financiamiento, 9: Retorno (ROI/VAN)
-      // Se omiten: 5 (costos de producción de fábrica) y 8 (inventario de materia prima)
+      // 7 etapas: 1 Datos, 2 Beneficio, 3 Inversión, 4 Equipo, 6 Presupuesto, 7 Financiamiento, 9 Retorno
+      // Se omiten: 5 (costos de fábrica) y 8 (inventario materia prima)
       return [1, 2, 3, 4, 6, 7, 9];
 
     case "suscripcion":
-      // 1: Datos, 2: Suscriptores y planes, 3: Desarrollo/Equipos, 4: Equipo, 6: Servidores y CAC, 7: Financiamiento, 9: Resumen SaaS
+      // 7 etapas: 1 Datos, 2 Suscriptores, 3 Desarrollo, 4 Equipo, 6 Servidores y CAC, 7 Financiamiento, 9 Métricas SaaS
+      // Se omiten: 5 (costos de fábrica) y 8 (inventario materia prima)
       return [1, 2, 3, 4, 6, 7, 9];
 
     case "servicios":
-      // 1: Datos, 2: Demanda de servicios, 3: Equipamiento, 4: Personal profesional, 5: Insumos directos, 6: Gastos operativos, 7: Financiamiento, 8: Capital, 9: Resumen
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-    case "comercio":
-      // 1: Datos, 2: Ventas/Ticket, 3: Local y vitrinas, 4: Personal comercial, 5: Compra de mercadería, 6: Gastos de tienda, 7: Financiamiento, 8: Stock, 9: Resumen
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      // 8 etapas: 1 Datos, 2 Demanda de servicios, 3 Equipamiento, 4 Personal profesional, 6 Gastos administrativos, 7 Financiamiento, 8 Capital de trabajo, 9 Resumen
+      // Se omite: 5 (costos de producción de fábrica)
+      return [1, 2, 3, 4, 6, 7, 8, 9];
 
     case "ocupacion":
-      // 1: Datos, 2: Capacidad y ocupación, 3: Inversión en activos, 4: Personal de servicio, 5: Costos directos, 6: Gastos fijos, 7: Financiamiento, 8: Capital, 9: Resumen
+      // 8 etapas: 1 Datos, 2 Capacidad y ocupación, 3 Infraestructura/Activos, 4 Personal, 6 Gastos de operación, 7 Financiamiento, 8 Capital de trabajo, 9 Resumen
+      // Se omite: 5 (producción industrial)
+      return [1, 2, 3, 4, 6, 7, 8, 9];
+
+    case "comercio":
+      // 9 etapas comerciales: 1 Datos, 2 Ventas, 3 Local/Vitrinas, 4 Personal comercial, 5 Mercadería (CMV), 6 Gastos de tienda, 7 Financiamiento, 8 Stock, 9 Margen y flujo
       return [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     case "produccion":

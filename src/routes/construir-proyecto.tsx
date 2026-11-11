@@ -30,7 +30,7 @@ import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 import BotonVistaPreviaEstudiante from "@/components/docente/BotonVistaPreviaEstudiante";
 import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { esProyectoSemanaE, pasosVisiblesDelProyecto } from "@/lib/semana-e";
-import { titulosCortosPorTipo, titulosPasosPorTipo } from "@/lib/pasos-por-tipo";
+import { titulosCortosPorTipo, titulosPasosPorTipo, deducirTipoNegocio } from "@/lib/pasos-por-tipo";
 import { datosFaltantes } from "@/lib/datos-faltantes";
 import { confirmar } from "@/components/ui/confirmar";
 
@@ -72,17 +72,18 @@ export default function ConstruirProyecto() {
   const paramsRuta = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const modoSemanaE = paramsRuta.get("semanae") === "1";
   const proyectoSemanaEUrl = paramsRuta.get("proyecto");
+  const tipoDeducido = useMemo(() => deducirTipoNegocio(proyecto), [proyecto]);
   const pasosVisibles = useMemo(
     () => (proyecto ? pasosVisiblesDelProyecto(proyecto) : Array.from({ length: TOTAL_PASOS }, (_, i) => i + 1)),
     [proyecto]
   );
   const titulos = useMemo(
-    () => titulosPasosPorTipo(proyecto?.tipoNegocio, proyecto?.modeloIngreso),
-    [proyecto?.tipoNegocio, proyecto?.modeloIngreso]
+    () => titulosPasosPorTipo(tipoDeducido, proyecto?.modeloIngreso),
+    [tipoDeducido, proyecto?.modeloIngreso]
   );
   const titulosCortos = useMemo(
-    () => titulosCortosPorTipo(proyecto?.tipoNegocio, proyecto?.modeloIngreso),
-    [proyecto?.tipoNegocio, proyecto?.modeloIngreso]
+    () => titulosCortosPorTipo(tipoDeducido, proyecto?.modeloIngreso),
+    [tipoDeducido, proyecto?.modeloIngreso]
   );
   const indicePasoActual = Math.max(0, pasosVisibles.indexOf(pasoActual));
 
