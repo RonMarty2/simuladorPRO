@@ -56,6 +56,49 @@ function finito(valor: number, alternativa = 0) {
   return Number.isFinite(valor) ? valor : alternativa;
 }
 
+function esTextoPlaceholder(txt?: string): boolean {
+  if (!txt) return true;
+  const bajo = txt.toLowerCase();
+  return (
+    bajo.includes("ejemplo") ||
+    bajo.includes("grande de producción") ||
+    bajo.includes("versión") ||
+    bajo.includes("version") ||
+    bajo.includes("planta industrial que produce")
+  );
+}
+
+function generarProblemaPorTipo(proyecto: Proyecto, lugar: string, oferta: string): string {
+  const tipo = proyecto.tipoNegocio;
+  if (tipo === "suscripcion") {
+    return `En ${lugar}, los usuarios buscan flexibilidad y acceso continuo a ${oferta}, evitando costos de entrada altos y contratos rígidos.`;
+  }
+  if (tipo === "turismo") {
+    return `La demanda turística en ${lugar} exige experiencias auténticas con altos estándares de atención, donde la oferta actual es dispersa y carece de confiabilidad.`;
+  }
+  if (tipo === "servicios") {
+    return `Empresas y familias en ${lugar} requieren soluciones confiables y especializadas en ${oferta}, enfrentando tiempos de respuesta lentos y poca consistencia en la entrega.`;
+  }
+  if (tipo === "costo_beneficio") {
+    return `La organización enfrenta sobrecostos operativos y procesos manuales que pueden optimizarse mediante una inversión focalizada en modernización y eficiencia.`;
+  }
+  return `En ${lugar} existe una demanda insatisfecha por ${oferta} con abastecimiento confiable, precios competitivos y garantía de estándares de calidad.`;
+}
+
+function generarPropuestaPorTipo(proyecto: Proyecto, lugar: string, oferta: string): string {
+  const tipo = proyecto.tipoNegocio;
+  if (tipo === "suscripcion") {
+    return `Un modelo de suscripción recurrente con planes escalables, cobro automatizado y retención de usuarios basada en valor continuo.`;
+  }
+  if (tipo === "turismo") {
+    return `Una propuesta de hospitalidad con identidad regional, infraestructura confortable y operaciones diseñadas para alta recomendación y ocupación sostenida en ${lugar}.`;
+  }
+  if (tipo === "costo_beneficio") {
+    return `Una solución tecnológica y operativa con retorno cuantificado en ahorros directos, mayor productividad y reducción de mermas.`;
+  }
+  return `Una operación eficiente en ${lugar} que combina insumos de calidad, escala de producción y distribución orientada a capturar margen sostenible en ${oferta}.`;
+}
+
 export function nivelNarrativoProyecto(proyecto: Proyecto): NivelSemanaE {
   if (proyecto.nivelSemanaE) return proyecto.nivelSemanaE;
   return proyecto.version === "v2" ? "avanzado" : "medio";
@@ -83,13 +126,10 @@ export function crearPresentacionPredeterminada(proyecto: Proyecto): Presentacio
     subtitulo: `${sector} · Evaluación de viabilidad`,
     expositores: "Equipo del proyecto",
     problema:
-      proyecto.descripcion &&
-      !proyecto.descripcion.toLowerCase().includes("ejemplo") &&
-      !proyecto.descripcion.toLowerCase().includes("versión") &&
-      !proyecto.descripcion.toLowerCase().includes("version")
+      proyecto.descripcion && !esTextoPlaceholder(proyecto.descripcion)
         ? proyecto.descripcion.trim()
-        : `En ${lugar} existe una demanda no atendida por una alternativa de calidad en ${oferta}, donde los clientes buscan mejor servicio y confiabilidad operativa.`,
-    propuestaValor: `Nuestra propuesta combina ${oferta} con una operación diseñada para crecer de forma rentable en ${lugar}.`,
+        : generarProblemaPorTipo(proyecto, lugar, oferta),
+    propuestaValor: generarPropuestaPorTipo(proyecto, lugar, oferta),
     conclusion: viable
       ? `Los resultados respaldan la viabilidad del proyecto: crea valor, supera el rendimiento mínimo esperado y presenta una base financiera favorable para su ejecución.`
       : `El proyecto todavía requiere ajustes antes de ejecutarse. La prioridad es mejorar ingresos, controlar costos y reducir la inversión o el riesgo financiero hasta alcanzar una viabilidad sostenible.`,
@@ -97,9 +137,21 @@ export function crearPresentacionPredeterminada(proyecto: Proyecto): Presentacio
 }
 
 export function obtenerPresentacionProyecto(proyecto: Proyecto): PresentacionProyecto {
+  const defaults = crearPresentacionPredeterminada(proyecto);
+  const guardado: Partial<PresentacionProyecto> = proyecto.presentacion ?? {};
+  const problema =
+    guardado.problema && !esTextoPlaceholder(guardado.problema)
+      ? guardado.problema
+      : defaults.problema;
+  const propuestaValor =
+    guardado.propuestaValor && !esTextoPlaceholder(guardado.propuestaValor)
+      ? guardado.propuestaValor
+      : defaults.propuestaValor;
   return {
-    ...crearPresentacionPredeterminada(proyecto),
-    ...(proyecto.presentacion ?? {}),
+    ...defaults,
+    ...guardado,
+    problema,
+    propuestaValor,
   };
 }
 

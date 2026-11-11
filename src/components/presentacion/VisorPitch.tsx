@@ -303,7 +303,7 @@ export default function VisorPitch({
   );
 }
 
-function RenderDiapositiva({
+export function RenderDiapositiva({
   id,
   proyecto,
   presentacion,

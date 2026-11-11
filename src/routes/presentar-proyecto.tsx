@@ -4,13 +4,18 @@ import {
   ArrowLeft,
   BarChart3,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Edit3,
+  Eye,
   Loader2,
+  Maximize2,
   Play,
   Save,
   Sparkles,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { guardarProyecto, obtenerProyectoPorId } from "@/lib/proyecto-supabase";
 import {
@@ -20,7 +25,12 @@ import {
 } from "@/lib/presentacion-proyecto";
 import { crearProyectoEjemploCafeteriaV2 } from "@/lib/proyecto-factory";
 import type { PresentacionProyecto, Proyecto } from "@/types/proyecto";
-import VisorPitch from "@/components/presentacion/VisorPitch";
+import VisorPitch, { RenderDiapositiva } from "@/components/presentacion/VisorPitch";
+import {
+  crearAjustesLaboratorioIniciales,
+  type AjustesLaboratorio,
+} from "@/lib/laboratorio-viabilidad";
+import { simularMontecarlo, type ResultadoMontecarlo } from "@/lib/analisis-riesgo";
 
 export default function PresentarProyecto() {
   const { proyectoId = "" } = useParams();
@@ -49,6 +59,24 @@ export default function PresentarProyecto() {
     searchParams.get("pitch") === "1" || searchParams.get("presentar") === "true"
   );
   const [error, setError] = useState<string | null>(null);
+  const [indiceVistaPrevia, setIndiceVistaPrevia] = useState(0);
+
+  const [montecarlo, setMontecarlo] = useState<ResultadoMontecarlo | null>(null);
+  const [ajustesLaboratorio, setAjustesLaboratorio] = useState<AjustesLaboratorio | null>(null);
+
+  useEffect(() => {
+    if (!proyecto) return;
+    if (!ajustesLaboratorio) {
+      setAjustesLaboratorio(crearAjustesLaboratorioIniciales(proyecto));
+    }
+    let cancelado = false;
+    simularMontecarlo(proyecto).then((res) => {
+      if (!cancelado) setMontecarlo(res);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [proyecto]);
 
   useEffect(() => {
     if (esDemo) return;
@@ -210,7 +238,7 @@ export default function PresentarProyecto() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] lg:px-6">
+      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.15fr)] lg:px-6">
         <div className="space-y-5">
           <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="border-b border-border bg-accent/40 px-5 py-4">
@@ -218,16 +246,104 @@ export default function PresentarProyecto() {
                 <Edit3 className="h-4 w-4 text-primary" /> Tu historia en seis ideas
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Ya propusimos un texto usando los datos del proyecto. Edítalo para que exprese el enfoque de tu equipo.
+                Edita los textos narrativos de tu presentación. Al escribir, la vista previa a la derecha salta automáticamente a la lámina correspondiente.
               </p>
             </div>
             <div className="grid gap-4 p-5">
-              <Campo etiqueta="Título principal" valor={presentacion.titulo} onChange={(valor) => actualizar("titulo", valor)} maxLength={90} />
-              <Campo etiqueta="Subtítulo" valor={presentacion.subtitulo} onChange={(valor) => actualizar("subtitulo", valor)} maxLength={120} />
-              <Campo etiqueta="Equipo o expositores" valor={presentacion.expositores} onChange={(valor) => actualizar("expositores", valor)} maxLength={120} />
-              <Campo etiqueta="Problema u oportunidad" valor={presentacion.problema} onChange={(valor) => actualizar("problema", valor)} maxLength={280} multilinea />
-              <Campo etiqueta="Propuesta de valor" valor={presentacion.propuestaValor} onChange={(valor) => actualizar("propuestaValor", valor)} maxLength={280} multilinea />
-              <Campo etiqueta="Conclusión y recomendación" valor={presentacion.conclusion} onChange={(valor) => actualizar("conclusion", valor)} maxLength={360} multilinea />
+              <div className="rounded-lg border border-teal-200/70 bg-teal-50/40 p-2.5 dark:border-teal-900/50 dark:bg-teal-950/20">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">
+                    Apertura · Diapositiva 01
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIndiceVistaPrevia(0)}
+                    className="text-[10px] font-semibold text-teal-700 hover:underline dark:text-teal-300"
+                  >
+                    Ver en vista previa →
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <Campo
+                    etiqueta="Título principal"
+                    valor={presentacion.titulo}
+                    onChange={(valor) => actualizar("titulo", valor)}
+                    onFocus={() => setIndiceVistaPrevia(0)}
+                    maxLength={90}
+                  />
+                  <Campo
+                    etiqueta="Subtítulo"
+                    valor={presentacion.subtitulo}
+                    onChange={(valor) => actualizar("subtitulo", valor)}
+                    onFocus={() => setIndiceVistaPrevia(0)}
+                    maxLength={120}
+                  />
+                  <Campo
+                    etiqueta="Equipo o expositores"
+                    valor={presentacion.expositores}
+                    onChange={(valor) => actualizar("expositores", valor)}
+                    onFocus={() => setIndiceVistaPrevia(0)}
+                    maxLength={120}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-sky-200/70 bg-sky-50/40 p-2.5 dark:border-sky-900/50 dark:bg-sky-950/20">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300">
+                    Tesis y Oportunidad · Diapositiva 02
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIndiceVistaPrevia(1)}
+                    className="text-[10px] font-semibold text-sky-700 hover:underline dark:text-sky-300"
+                  >
+                    Ver en vista previa →
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <Campo
+                    etiqueta="Problema u oportunidad"
+                    valor={presentacion.problema}
+                    onChange={(valor) => actualizar("problema", valor)}
+                    onFocus={() => setIndiceVistaPrevia(1)}
+                    maxLength={280}
+                    multilinea
+                  />
+                  <Campo
+                    etiqueta="Propuesta de valor"
+                    valor={presentacion.propuestaValor}
+                    onChange={(valor) => actualizar("propuestaValor", valor)}
+                    onFocus={() => setIndiceVistaPrevia(1)}
+                    maxLength={280}
+                    multilinea
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-amber-200/70 bg-amber-50/40 p-2.5 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    Cierre de Inversión · Diapositiva {modelo.diapositivas.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIndiceVistaPrevia(modelo.diapositivas.length - 1)}
+                    className="text-[10px] font-semibold text-amber-700 hover:underline dark:text-amber-300"
+                  >
+                    Ver en vista previa →
+                  </button>
+                </div>
+                <Campo
+                  etiqueta="Conclusión y recomendación"
+                  valor={presentacion.conclusion}
+                  onChange={(valor) => actualizar("conclusion", valor)}
+                  onFocus={() => setIndiceVistaPrevia(modelo.diapositivas.length - 1)}
+                  maxLength={360}
+                  multilinea
+                />
+              </div>
+
               <button onClick={restaurarTextos} className="justify-self-start text-xs font-semibold text-primary transition hover:underline">
                 <Sparkles className="mr-1 inline h-3.5 w-3.5" /> Regenerar textos sugeridos
               </button>
@@ -242,60 +358,113 @@ export default function PresentarProyecto() {
         </div>
 
         <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          {/* Vista previa en vivo e interactiva */}
           <section className="overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-primary">Vista previa</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">Formato panorámico 16:9</div>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${modelo.viable ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"}`}>
-                {modelo.viable ? "Plan base: viable" : "Plan base: requiere ajustes"}
-              </span>
-            </div>
-            <div className="relative aspect-video overflow-hidden rounded-xl bg-[#0a101d] p-5 text-white shadow-lg border border-slate-800 flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-400">Presentación de Inversión</span>
-                <span className="text-[10px] text-slate-400 font-medium">5 años · {modelo.nivel}</span>
-              </div>
-              <div className="my-auto">
-                <div className="font-display text-lg sm:text-xl font-bold leading-tight tracking-tight text-white line-clamp-2">{presentacion.titulo}</div>
-                <div className="mt-1 text-xs text-slate-300 line-clamp-1">{presentacion.subtitulo}</div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
-                    <div className="text-slate-400">Inversión</div>
-                    <div className="font-bold text-white truncate">{Math.round(modelo.totalProyecto / 1000)}k Bs</div>
-                  </div>
-                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
-                    <div className="text-slate-400">VAN</div>
-                    <div className={`font-bold truncate ${modelo.resultado.indicadores.van > 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                      {Math.round(modelo.resultado.indicadores.van / 1000)}k Bs
+            {(() => {
+              const diapositivaActiva =
+                modelo.diapositivas[indiceVistaPrevia] ?? modelo.diapositivas[0];
+              return (
+                <>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">
+                        <Eye className="h-3.5 w-3.5 shrink-0" /> Vista previa en vivo
+                      </div>
+                      <div className="mt-0.5 truncate text-xs font-semibold text-foreground max-w-[240px] sm:max-w-xs">
+                        {diapositivaActiva.etiqueta}: {diapositivaActiva.titulo}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIndiceVistaPrevia((i) => Math.max(0, i - 1))}
+                        disabled={indiceVistaPrevia === 0}
+                        className="rounded-lg border border-border p-1.5 text-foreground hover:bg-secondary disabled:opacity-30"
+                        title="Lámina anterior"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <span className="font-mono text-xs font-bold px-1.5 tabular-nums">
+                        {indiceVistaPrevia + 1}/{modelo.diapositivas.length}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIndiceVistaPrevia((i) =>
+                            Math.min(modelo.diapositivas.length - 1, i + 1)
+                          )
+                        }
+                        disabled={indiceVistaPrevia === modelo.diapositivas.length - 1}
+                        className="rounded-lg border border-border p-1.5 text-foreground hover:bg-secondary disabled:opacity-30"
+                        title="Siguiente lámina"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={presentar}
+                        className="ml-1 flex items-center gap-1 rounded-lg bg-teal-700 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-teal-600 shadow-2xs"
+                        title="Presentar a pantalla completa"
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Presentar</span>
+                      </button>
                     </div>
                   </div>
-                  <div className="rounded bg-white/5 border border-white/10 p-1.5 text-center">
-                    <div className="text-slate-400">TIR</div>
-                    <div className="font-bold text-teal-300 truncate">
-                      {Math.round(modelo.resultado.indicadores.tir * 100)}%
+
+                  {/* Canvas de lámina real */}
+                  <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-700/60 bg-white text-slate-900 shadow-lg">
+                    <RenderDiapositiva
+                      id={diapositivaActiva.id}
+                      proyecto={{ ...proyecto, presentacion }}
+                      presentacion={presentacion}
+                      modelo={modelo}
+                      etiqueta={diapositivaActiva.etiqueta}
+                      montecarlo={montecarlo}
+                      ajustesLaboratorio={
+                        ajustesLaboratorio ?? crearAjustesLaboratorioIniciales(proyecto)
+                      }
+                      onCambiarAjustes={setAjustesLaboratorio}
+                      onReiniciarLaboratorio={() =>
+                        setAjustesLaboratorio(crearAjustesLaboratorioIniciales(proyecto))
+                      }
+                    />
+                    <div className="pointer-events-none absolute bottom-2 right-3 z-20 rounded bg-slate-950/70 px-2 py-0.5 font-mono text-[10px] font-bold text-white shadow-xs backdrop-blur-xs">
+                      {indiceVistaPrevia + 1} / {modelo.diapositivas.length}
                     </div>
                   </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-white/10 pt-2 text-[10px] text-slate-400">
-                <span className="truncate">{presentacion.expositores}</span>
-                <span className={`font-bold ${modelo.viable ? "text-emerald-400" : "text-amber-400"}`}>
-                  {modelo.viable ? "✓ Viable" : "⚠ Ajustar"}
-                </span>
-              </div>
-            </div>
+
+                  <div className="mt-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Haz clic en cualquier lámina abajo para verla aquí.</span>
+                    <span
+                      className={
+                        modelo.viable
+                          ? "font-bold text-emerald-600 dark:text-emerald-400"
+                          : "font-bold text-amber-600 dark:text-amber-400"
+                      }
+                    >
+                      {modelo.viable ? "✓ Plan base viable" : "⚠ Ajustar costos/ingresos"}
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
           </section>
 
+          {/* Guion con 3 actos completamente navegables */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-display text-base font-bold">Guion automático</h2>
-                <p className="text-xs text-muted-foreground">Estructurado en 3 actos narrativos · Nivel {modelo.nivel}</p>
+                <h2 className="font-display text-base font-bold">Guion de la presentación</h2>
+                <p className="text-xs text-muted-foreground">
+                  Estructurado en 3 actos narrativos · Nivel {modelo.nivel}
+                </p>
               </div>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{modelo.diapositivas.length} diapositivas</span>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                {modelo.diapositivas.length} diapositivas
+              </span>
             </div>
+
             <div className="mt-4 space-y-4">
               {[
                 {
@@ -335,26 +504,47 @@ export default function PresentarProyecto() {
                         {diapositivasFase.length} {diapositivasFase.length === 1 ? "lámina" : "láminas"}
                       </span>
                     </div>
-                    <ol className="space-y-1.5">
-                      {diapositivasFase.map((diapositiva) => (
-                        <li
-                          key={diapositiva.id}
-                          className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-card px-2.5 py-2 shadow-2xs"
-                        >
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground font-mono">
-                            {String(diapositiva.numero).padStart(2, "0")}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-xs font-semibold text-foreground">
-                              {diapositiva.titulo}
+                    <div className="space-y-1.5">
+                      {diapositivasFase.map((diapositiva) => {
+                        const pos = modelo.diapositivas.findIndex((d) => d.id === diapositiva.id);
+                        const activa = pos === indiceVistaPrevia;
+                        return (
+                          <button
+                            type="button"
+                            key={diapositiva.id}
+                            onClick={() => setIndiceVistaPrevia(pos)}
+                            className={cn(
+                              "flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-all shadow-2xs",
+                              activa
+                                ? "border-teal-600 bg-teal-50 dark:bg-teal-950/60 ring-2 ring-teal-500/30 text-teal-950 dark:text-teal-100 font-semibold"
+                                : "border-border/60 bg-card hover:border-teal-500/40 hover:bg-secondary/60 text-foreground"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold font-mono",
+                                activa ? "bg-teal-700 text-white" : "bg-primary/10 text-primary"
+                              )}
+                            >
+                              {String(diapositiva.numero).padStart(2, "0")}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-semibold">
+                                {diapositiva.titulo}
+                              </div>
+                              <div className="truncate text-[10px] text-muted-foreground">
+                                {diapositiva.etiqueta}
+                              </div>
                             </div>
-                            <div className="truncate text-[10px] text-muted-foreground">
-                              {diapositiva.etiqueta}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
+                            {activa && (
+                              <span className="rounded-full bg-teal-600/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
+                                En vista
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
@@ -370,12 +560,14 @@ function Campo({
   etiqueta,
   valor,
   onChange,
+  onFocus,
   maxLength,
   multilinea = false,
 }: {
   etiqueta: string;
   valor: string;
   onChange: (valor: string) => void;
+  onFocus?: () => void;
   maxLength: number;
   multilinea?: boolean;
 }) {
@@ -387,9 +579,22 @@ function Campo({
         <span className="font-mono text-[11px] text-muted-foreground">{valor.length}/{maxLength}</span>
       </span>
       {multilinea ? (
-        <textarea value={valor} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} rows={3} className={`${clases} resize-y`} />
+        <textarea
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
+          maxLength={maxLength}
+          rows={3}
+          className={`${clases} resize-y`}
+        />
       ) : (
-        <input value={valor} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} className={clases} />
+        <input
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
+          maxLength={maxLength}
+          className={clases}
+        />
       )}
     </label>
   );
