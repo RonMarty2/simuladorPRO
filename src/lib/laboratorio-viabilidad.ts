@@ -7,6 +7,7 @@ export interface AjustesLaboratorio {
   demandaPct: number;
   costoDirectoPct: number;
   costoFijoPct: number;
+  sueldosPct: number;
   deudaPct: number;
   tasaInteresPct: number;
 }
@@ -58,6 +59,7 @@ export function crearAjustesLaboratorioIniciales(
     demandaPct: 0,
     costoDirectoPct: 0,
     costoFijoPct: 0,
+    sueldosPct: 0,
     deudaPct,
     tasaInteresPct:
       (proyecto.financiamiento?.tasaInteresAnual ?? 0) * 100,
@@ -83,7 +85,7 @@ export function aplicarAjustesLaboratorio(
     demandaMul: Math.max(0.01, 1 + ajustes.demandaPct / 100),
     costoDirectoMul: Math.max(0.01, 1 + ajustes.costoDirectoPct / 100),
     costoGeneralMul: Math.max(0.01, 1 + ajustes.costoFijoPct / 100),
-    personalMul: Math.max(0.01, 1 + ajustes.costoFijoPct / 100),
+    personalMul: Math.max(0.01, 1 + (ajustes.sueldosPct ?? 0) / 100),
     prestamoPorcentaje: deudaCambio
       ? limitar(ajustes.deudaPct / 100, 0, 0.8)
       : undefined,

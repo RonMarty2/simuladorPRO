@@ -194,6 +194,9 @@ export interface Proyecto {
   /** Si está seteado, este proyecto es el proyecto COMPARTIDO de ese grupo. */
   grupo_id?: string | null;
 
+  /** Caso individual del que se copió este proyecto grupal ("Pasar a caso grupal"). */
+  copiadoDeProyectoId?: string;
+
   /** Versión de indicadores. Ausente o 'v1' = comportamiento clásico. */
   version?: VersionProyecto;
 

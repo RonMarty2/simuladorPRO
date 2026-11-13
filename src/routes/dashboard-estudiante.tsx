@@ -22,6 +22,7 @@ import BannerSemanaE from "@/components/curso/BannerSemanaE";
 import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
 import CompletarNombreInicial from "@/components/auth/CompletarNombreInicial";
 import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
+import BotonPasarAGrupal from "@/components/constructor/BotonPasarAGrupal";
 import { crearProyectoVacio, type ModeloIngreso } from "@/lib/proyecto-factory";
 import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
@@ -731,6 +732,7 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
         <div className="text-[11px] font-medium text-primary">Abrir y editar →</div>
       </button>
       <AccionesProyecto proyecto={proyecto} compacto className="border-t border-border/60 pt-2" />
+      <BotonPasarAGrupal proyecto={proyecto} />
     </div>
   );
 }
