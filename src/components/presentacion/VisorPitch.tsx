@@ -1192,8 +1192,9 @@ function LaboratorioViabilidad({
     { campo: "precioPct" as const, etiqueta: "Precio de venta", minimo: -30, maximo: 50, paso: 1, sufijo: "%" },
     { campo: "demandaPct" as const, etiqueta: "Volumen de ventas", minimo: -40, maximo: 50, paso: 1, sufijo: "%" },
     { campo: "costoDirectoPct" as const, etiqueta: "Costos directos", minimo: -30, maximo: 50, paso: 1, sufijo: "%" },
+    { campo: "sueldosPct" as const, etiqueta: "Sueldos del personal", minimo: -30, maximo: 50, paso: 1, sufijo: "%" },
     ...(modelo.nivel !== "basico"
-      ? [{ campo: "costoFijoPct" as const, etiqueta: "Costos fijos", minimo: -30, maximo: 50, paso: 1, sufijo: "%" }]
+      ? [{ campo: "costoFijoPct" as const, etiqueta: "Gastos fijos (sin sueldos)", minimo: -30, maximo: 50, paso: 1, sufijo: "%" }]
       : []),
     ...(modelo.nivel === "avanzado"
       ? [
@@ -1219,7 +1220,7 @@ function LaboratorioViabilidad({
               onClick={onReiniciar}
               className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
             >
-              <RotateCcw className="h-3 w-3" /> Restablecer
+              <RotateCcw className="h-3 w-3" /> Volver al plan original
             </button>
           </div>
           <div className={`grid min-h-0 flex-1 content-center gap-x-4 gap-y-2 ${controles.length > 4 ? "grid-cols-2" : "grid-cols-1"}`}>

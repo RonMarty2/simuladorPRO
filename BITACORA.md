@@ -4,7 +4,7 @@
 > que cualquier humano o IA pueda tomar el proyecto en frío y entender qué es,
 > cómo está hecho, en qué estado está, y qué decisiones se tomaron y por qué.
 >
-> **Última actualización**: 2026-11-10 — Modularidad del constructor por familia de negocio, Reto Perfumería LUX (plantilla, guía y migración 061 con 12 eventos) y panel de retail (ver "Retomar aquí" en §10)
+> **Última actualización**: 2026-11-13 — Botón "Pasar a caso grupal" y deslizadores a la vista con sueldos como variable propia (ver "Retomar aquí" en §10)
 > **Mantenedor**: Ronald Martínez Jimenes (`ronaldmartinezjimenes@gmail.com`)
 > **Lee primero**: secciones 1, 2, 3, 7 para onboarding rápido. Para implementar:
 > §13 (schema), §14 (ciclos de vida), §15 (motores) y §16 (recetas).
@@ -662,6 +662,37 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         (39 ejemplos) hasta desregistrarlo y recargar; los usuarios la verán
         actualizada por el OTA (§7.7) tras recargar.
       - 373 tests (antes 293). Sin migraciones.
+
+### Retomar aquí (cierre de sesión 2026-11-13) — caso grupal y deslizadores
+
+Pedido del owner (curso Proyecto Integrador). Plan completo en `docs/PLAN_GRUPOS_MISMO_CASO.md`.
+741 tests verdes.
+
+**Parte 1 · Botón "Pasar a caso grupal"**
+- `lib/caso-grupal.ts` (+ test): `construirCasoGrupal` (pura), `buscarCasoDelGrupo`, `pasarCasoAGrupo`.
+  Copia el caso individual al proyecto del grupo del estudiante. El individual NO se modifica.
+- `components/constructor/BotonPasarAGrupal.tsx`, enganchado en `TarjetaProyecto` de
+  `routes/dashboard-estudiante.tsx`. Si el estudiante no tiene grupo, le avisa que cree o se una a uno.
+- `types/proyecto.ts`: campo opcional `copiadoDeProyectoId`.
+- Decisión del owner: los estudiantes arman sus grupos y cada grupo trabaja con SU copia; no hay
+  vínculo entre copias ni asignación por el docente.
+- Decisión técnica: la verificación de "0 filas actualizadas" vive solo en `pasarCasoAGrupo`; no se
+  tocó `guardarProyecto` global (retro-compat). Sin migración nueva.
+
+**Parte 2 · Deslizadores para jugar con el resultado**
+- Los deslizadores ya existían; estaban escondidos. En `components/escenarios/PanelEscenarios.tsx`
+  el bloque "Mi escenario" ahora va debajo de las tarjetas de resultado y arranca abierto, con botón
+  "Volver al plan original" y aviso de que solo simula (no guarda).
+- `lib/laboratorio-viabilidad.ts`: `AjustesLaboratorio.sueldosPct` nuevo. `personalMul` sale solo de
+  sueldos; `costoFijoPct` mueve solo gastos generales. Los umbrales ("Costos fijos") siguen
+  calculándose con gastos generales + sueldos juntos (no se tocó `proyectoConFactor`).
+- `components/presentacion/VisorPitch.tsx`: control "Sueldos del personal" en todos los niveles;
+  "Costos fijos" pasó a llamarse "Gastos fijos (sin sueldos)". Tests en `lib/laboratorio-sueldos.test.ts`.
+
+**Pendiente de verificar**
+- Visto en pantalla solo el laboratorio de `/presentar/demo`. El botón de caso grupal y la pantalla
+  Escenarios NO se vieron en pantalla (piden cuenta de estudiante con grupo); solo tienen tests.
+- Idea opcional sin hacer: comparar lado a lado varios grupos que partieron del mismo caso.
 
 ### Retomar aquí (cierre de sesión 2026-11-10) — LEER PRIMERO `PLAN-TIPOS-DE-PROYECTO.md`
 RESUMEN DE LA SESIÓN DEL 2026-11-10 (último estado, leer esto primero)

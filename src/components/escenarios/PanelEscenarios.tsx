@@ -53,7 +53,7 @@ export default function PanelEscenarios({
   configCurso?: EscenariosConfig | null;
 }) {
   const [miEscenario, setMiEscenario] = useState<ModificadoresEscenario>(ESCENARIO_NEUTRAL);
-  const [slidersAbierto, setSlidersAbierto] = useState(false);
+  const [slidersAbierto, setSlidersAbierto] = useState(true);
 
   // Resolución de optimista/pesimista: lo que el docente puso en el curso,
   // con fallback a los defaults del código.
@@ -159,53 +159,6 @@ export default function PanelEscenarios({
         })()}
       </div>
 
-      {/* Tabla de indicadores */}
-      <SeccionTitulo titulo="Indicadores comparados" />
-      <TablaIndicadores escenarios={escenarios} />
-
-      {/* Tabla de flujo de caja año por año */}
-      <SeccionTitulo titulo="Flujo de caja año por año" />
-      <TablaFlujoCaja escenarios={escenarios} />
-
-      {/* Gráfico comparativo */}
-      <SeccionTitulo titulo="Flujo neto acumulado · gráfico comparativo" />
-      <div className="rounded-lg border border-border bg-card p-3">
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={datosGrafico} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}k`} />
-            <Tooltip
-              formatter={(v: number) => formatearBolivianos(v)}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                fontSize: 12,
-              }}
-            />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            {escenarios.map((e) => (
-              <Line
-                key={e.nombre}
-                type="monotone"
-                dataKey={e.etiqueta}
-                stroke={COLORES[e.nombre]}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Cada línea muestra cuánto va dejando (o gastando) el proyecto acumulado año por año.
-          Si una línea cruza el cero hacia arriba, el proyecto se recuperó.
-        </p>
-      </div>
-
-      {/* Tornado, simulación de riesgo y tabla precio × demanda */}
-      <AnalisisRiesgo proyecto={proyecto} optimista={optimista} pesimista={pesimista} />
-
       {/* Sliders de "Mi escenario" */}
       <div className="rounded-lg border border-purple-200 bg-purple-50/40 dark:border-purple-900 dark:bg-purple-950/20">
         <button
@@ -215,7 +168,7 @@ export default function PanelEscenarios({
           <div className="flex items-center gap-2">
             {slidersAbierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             <Sliders className="h-4 w-4 text-purple-700 dark:text-purple-300" />
-            <span className="text-sm font-semibold">Mi escenario · arma tu propio stress test</span>
+            <span className="text-sm font-semibold">Mi escenario · mové los deslizadores y mirá cómo cambia el resultado</span>
           </div>
           <span className="text-[11px] text-muted-foreground">
             {sonNeutrales(miEscenario) ? "Sin cambios" : "Con ajustes activos"}
@@ -301,18 +254,69 @@ export default function PanelEscenarios({
               />
             </GrupoSliders>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] text-muted-foreground">
+                Esto solo simula: tu caso guardado no cambia. El resultado aparece en la última
+                tarjeta de arriba.
+              </p>
               <button
                 onClick={resetearMiEscenario}
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-secondary"
               >
                 <RefreshCw className="h-3 w-3" />
-                Resetear a base
+                Volver al plan original
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Tabla de indicadores */}
+      <SeccionTitulo titulo="Indicadores comparados" />
+      <TablaIndicadores escenarios={escenarios} />
+
+      {/* Tabla de flujo de caja año por año */}
+      <SeccionTitulo titulo="Flujo de caja año por año" />
+      <TablaFlujoCaja escenarios={escenarios} />
+
+      {/* Gráfico comparativo */}
+      <SeccionTitulo titulo="Flujo neto acumulado · gráfico comparativo" />
+      <div className="rounded-lg border border-border bg-card p-3">
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={datosGrafico} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="anio" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${fmtNum((v / 1000), 0)}k`} />
+            <Tooltip
+              formatter={(v: number) => formatearBolivianos(v)}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                fontSize: 12,
+              }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {escenarios.map((e) => (
+              <Line
+                key={e.nombre}
+                type="monotone"
+                dataKey={e.etiqueta}
+                stroke={COLORES[e.nombre]}
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Cada línea muestra cuánto va dejando (o gastando) el proyecto acumulado año por año.
+          Si una línea cruza el cero hacia arriba, el proyecto se recuperó.
+        </p>
+      </div>
+
+      {/* Tornado, simulación de riesgo y tabla precio × demanda */}
+      <AnalisisRiesgo proyecto={proyecto} optimista={optimista} pesimista={pesimista} />
 
       {/* Lectura pedagógica */}
       <div className="rounded-md border border-sky-200 bg-sky-50/60 p-3 text-xs dark:border-sky-900 dark:bg-sky-950/30">
