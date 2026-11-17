@@ -20,6 +20,7 @@ import FichaPedagogica from "../FichaPedagogica";
 import PanelDiagnostico from "../PanelDiagnostico";
 import PanelIndicadoresTipo from "../PanelIndicadoresTipo";
 import BoletinProyecto from "../BoletinProyecto";
+import PanelComoHacerViable from "../PanelComoHacerViable";
 import {
   calcularFlujoInversionista,
   calcularGAF,
@@ -94,6 +95,15 @@ export default function Paso9Resumen() {
         <PanelIndicadoresTipo proyecto={proyecto} />
         <BoletinProyecto proyecto={proyecto} />
       </div>
+
+      <PanelComoHacerViable
+        proyecto={proyecto}
+        esViable={
+          calc.indicadores.van > 0 &&
+          tirCalculable(calc.indicadores.tir) &&
+          calc.indicadores.tir > calc.wacc
+        }
+      />
 
       {/* Indicadores principales — debajo del flujo */}
       <div className="order-4 rounded-lg border border-border bg-card p-6">
@@ -545,6 +555,16 @@ function AnalisisAvanzadoV2({
               : "Cuánto necesitas vender de cada producto o servicio para no ganar ni perder (cubrir todos tus costos), manteniendo la mezcla de ventas del año 1. Por debajo pierdes plata; por encima, empiezas a ganar."}
           </p>
           <div className="mt-2 space-y-0.5 text-[11px]">
+            <FilaDetalle k="Costos fijos (año 1)" v={formatearBolivianos(v2.costosFijosAnio1)} />
+            {v2.precioPromedio > 0 && (
+              <FilaDetalle
+                k="Margen de contribución prom."
+                v={`${formatearBolivianos(v2.precioPromedio - v2.costoVariableUnitProm)} / u (${fmtNum(
+                  ((v2.precioPromedio - v2.costoVariableUnitProm) / v2.precioPromedio) * 100,
+                  1
+                )}%)`}
+              />
+            )}
             {v2.equilibrio.tipo === "unidades" &&
               v2.equilibrio.filas.map((f) => (
                 <FilaDetalle
@@ -552,12 +572,19 @@ function AnalisisAvanzadoV2({
                   k={f.nombre}
                   v={
                     isFinite(f.unidadesEquilibrio)
-                      ? `${Math.ceil(f.unidadesEquilibrio).toLocaleString("es-BO")} ${f.unidad} (vendes ${Math.round(f.unidadesAnio1).toLocaleString("es-BO")})`
+                      ? `${Math.ceil(f.unidadesEquilibrio).toLocaleString("es-BO")} ${f.unidad}/año (${Math.ceil(f.unidadesEquilibrio / 12).toLocaleString("es-BO")}/mes · vendes ${Math.round(f.unidadesAnio1).toLocaleString("es-BO")})`
                       : "—"
                   }
                 />
               ))}
-            <FilaDetalle k="En dinero (Bs)" v={isFinite(v2.equilibrio.ingresoEquilibrio) ? formatearBolivianos(v2.equilibrio.ingresoEquilibrio) : "—"} />
+            <FilaDetalle
+              k="En dinero (anual)"
+              v={isFinite(v2.equilibrio.ingresoEquilibrio) ? `${formatearBolivianos(v2.equilibrio.ingresoEquilibrio)}/año` : "—"}
+            />
+            <FilaDetalle
+              k="En dinero (mensual)"
+              v={isFinite(v2.equilibrio.ingresoEquilibrio) ? `${formatearBolivianos(v2.equilibrio.ingresoEquilibrio / 12)}/mes` : "—"}
+            />
             <FilaDetalle k="Margen de seguridad" v={isFinite(v2.equilibrio.margenSeguridad) ? `${fmtNum((v2.equilibrio.margenSeguridad * 100), 1)}%` : "—"} />
           </div>
           <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">

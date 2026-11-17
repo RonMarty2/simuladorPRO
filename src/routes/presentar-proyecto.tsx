@@ -17,7 +17,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import { guardarProyecto, obtenerProyectoPorId } from "@/lib/proyecto-supabase";
+import { useProyectoStore } from "@/stores/proyecto-store";
+import { useRevisionDocenteStore } from "@/stores/revision-docente-store";
+import {
+  actualizarProyectoComoDocente,
+  guardarProyecto,
+  obtenerProyectoPorId,
+} from "@/lib/proyecto-supabase";
 import {
   construirModeloPitch,
   crearPresentacionPredeterminada,
@@ -64,6 +70,7 @@ export default function PresentarProyecto() {
   const [montecarlo, setMontecarlo] = useState<ResultadoMontecarlo | null>(null);
   const [ajustesLaboratorio, setAjustesLaboratorio] = useState<AjustesLaboratorio | null>(null);
 
+  const proyectoClave = proyecto ? `${proyecto.id}:${proyecto.actualizado_en}` : "";
   useEffect(() => {
     if (!proyecto) return;
     if (!ajustesLaboratorio) {
@@ -76,11 +83,22 @@ export default function PresentarProyecto() {
     return () => {
       cancelado = true;
     };
-  }, [proyecto]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proyectoClave]);
 
+  const userId = user?.id;
   useEffect(() => {
     if (esDemo) return;
-    if (!user) return;
+    if (!userId) return;
+    const rev = useRevisionDocenteStore.getState();
+    const enMemoria = useProyectoStore.getState().proyecto;
+    if (rev.activa && enMemoria && enMemoria.id === proyectoId) {
+      setProyecto(enMemoria);
+      setPresentacion(obtenerPresentacionProyecto(enMemoria));
+      setCargando(false);
+      setError(null);
+      return;
+    }
     setCargando(true);
     setError(null);
     obtenerProyectoPorId(proyectoId)
@@ -93,7 +111,7 @@ export default function PresentarProyecto() {
         setError(typeof msg === "string" && msg ? msg : "No se pudo cargar el proyecto.");
       })
       .finally(() => setCargando(false));
-  }, [esDemo, proyectoId, user]);
+  }, [esDemo, proyectoId, userId]);
 
   const modelo = useMemo(
     () => (proyecto ? construirModeloPitch(proyecto) : null),
@@ -107,15 +125,25 @@ export default function PresentarProyecto() {
 
   const guardar = async () => {
     if (!proyecto || !presentacion || esDemo) return proyecto;
+    const rev = useRevisionDocenteStore.getState();
+    const actualizado: Proyecto = {
+      ...proyecto,
+      presentacion,
+      actualizado_en: new Date().toISOString(),
+    };
+    if (rev.activa && rev.modoEdicion === "probar") {
+      setProyecto(actualizado);
+      return actualizado;
+    }
     setGuardando(true);
     setError(null);
     try {
-      const actualizado: Proyecto = {
-        ...proyecto,
-        presentacion,
-        actualizado_en: new Date().toISOString(),
-      };
-      await guardarProyecto(actualizado);
+      if (rev.activa && rev.modoEdicion === "editar") {
+        await actualizarProyectoComoDocente(actualizado);
+        rev.marcarGuardado(actualizado);
+      } else {
+        await guardarProyecto(actualizado);
+      }
       setProyecto(actualizado);
       setGuardado(true);
       setTimeout(() => setGuardado(false), 1800);
