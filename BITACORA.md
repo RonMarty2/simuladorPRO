@@ -663,6 +663,13 @@ Ver `supabase/functions/notificar-nota/README.md`. Requiere CLI de Supabase.
         actualizada por el OTA (§7.7) tras recargar.
       - 373 tests (antes 293). Sin migraciones.
 
+### Revisión de los cambios del 2026-11-17 (modo revisión docente, RLS 062, presentación)
+Revisados los commits 8e3a0d9, ff10110 y 8456187. `tsc` sin errores, 741/741 pruebas, `npm run build` ok.
+`npm run lint` no se pudo correr (eslint no está instalado en `node_modules` de esta PC). Leído el diff de
+`useAutoGuardado.ts`, `proyecto-supabase.ts`, `revision-docente-store.ts`, `presentar-proyecto.tsx`,
+`construir-proyecto.tsx` y la migración 062: no se encontró nada roto. La 062 NO está aplicada por esta revisión;
+aplicarla en la base real es decisión de Ronald. No se probó en navegador el flujo docente (requiere sesión real).
+
 ### Retomar aquí (cierre de sesión 2026-11-13) — caso grupal y deslizadores
 
 Pedido del owner (curso Proyecto Integrador). Plan completo en `docs/PLAN_GRUPOS_MISMO_CASO.md`.
