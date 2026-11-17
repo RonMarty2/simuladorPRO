@@ -234,8 +234,17 @@ export async function actualizarProyectoComoDocente(p: Proyecto): Promise<void> 
     return;
   }
   const fila = proyectoAFilaSupabase(p);
-  const { error } = await supabase.from("proyectos").update(fila).eq("id", p.id);
+  const { data, error } = await supabase
+    .from("proyectos")
+    .update(fila)
+    .eq("id", p.id)
+    .select("id");
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "No se pudo guardar en la base de datos (falta permiso de edición para docente en Supabase)."
+    );
+  }
 }
 
 /** Upsert: inserta si no existe, actualiza si ya existe. */
