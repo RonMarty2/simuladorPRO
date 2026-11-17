@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import ModalRevisarEntrega from "./ModalRevisarEntrega";
 import ModalRevisionMasiva from "./ModalRevisionMasiva";
 import ModalCalificarTodoIgual from "./ModalCalificarTodoIgual";
+import BotonAbrirProyectoEstudiante from "./BotonAbrirProyectoEstudiante";
 
 type Vista = "individuales" | "grupales";
 type Filtro = "todas" | "pendiente" | "aprobada" | "reprobada";
@@ -440,6 +441,14 @@ function TarjetaAgrupada({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          {!esVistaEtapa && grupo.entregas[0] && (
+            <BotonAbrirProyectoEstudiante
+              proyectoId={grupo.entregas[0].proyecto_id}
+              titular={grupo.nombreTitular}
+              fallbackSnapshot={grupo.entregas[0].snapshot_datos}
+              label="Ver proyecto"
+            />
+          )}
           {/* En "por etapa" se mezclan alumnos distintos: una sola nota para todos no tiene sentido. */}
           {pendientes.length >= 2 && !esVistaEtapa && (
             <button

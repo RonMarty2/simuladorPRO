@@ -5,6 +5,7 @@ import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
+import BotonAbrirProyectoEstudiante from "./BotonAbrirProyectoEstudiante";
 
 export default function ModalRevisarEntrega({
   entrega,
@@ -80,12 +81,24 @@ export default function ModalRevisarEntrega({
               Entregado el {new Date(entrega.entregado_en).toLocaleString("es-BO")}
             </p>
           </div>
-          <button
-            onClick={() => onCerrar(false)}
-            className="flex-shrink-0 rounded-md p-1 hover:bg-secondary"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <BotonAbrirProyectoEstudiante
+              proyectoId={entrega.proyecto_id}
+              titular={
+                entrega.perfil
+                  ? `${entrega.perfil.nombre} ${entrega.perfil.apellido}`.trim() ||
+                    entrega.perfil.email
+                  : datos.nombre
+              }
+              fallbackSnapshot={datos}
+            />
+            <button
+              onClick={() => onCerrar(false)}
+              className="rounded-md p-1 hover:bg-secondary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}

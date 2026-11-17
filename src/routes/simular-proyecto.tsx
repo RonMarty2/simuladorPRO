@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
+import { useRevisionDocenteStore } from "@/stores/revision-docente-store";
 import { useSimulacionStore } from "@/stores/simulacion-store";
 import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
@@ -57,6 +58,12 @@ export default function SimularProyecto() {
   // configuración del docente — FASE 23).
   useEffect(() => {
     if (!user) return;
+    if (useRevisionDocenteStore.getState().activa) {
+      const enMemoria = useProyectoStore.getState().proyecto;
+      setProyectosDisponibles(enMemoria ? [enMemoria] : []);
+      setIniciando(false);
+      return;
+    }
     Promise.all([
       listarMisProyectos(user.id),
       listarProyectosGrupales(user.id),

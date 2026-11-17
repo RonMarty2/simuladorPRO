@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProyectoStore } from "@/stores/proyecto-store";
+import { useRevisionDocenteStore } from "@/stores/revision-docente-store";
 import { eliminarProyecto, listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supabase";
 import { useAutoGuardado } from "@/hooks/useAutoGuardado";
 import EmpezarProyecto from "@/components/constructor/EmpezarProyecto";
@@ -64,6 +65,7 @@ export default function ConstruirProyecto() {
   const proyecto = useProyectoStore((s) => s.proyecto);
   const cargar = useProyectoStore((s) => s.cargar);
   const limpiar = useProyectoStore((s) => s.limpiar);
+  const revisionActiva = useRevisionDocenteStore((s) => s.activa);
   const [pasoActual, setPasoActualState] = useState(1);
   const [iniciando, setIniciando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
@@ -113,6 +115,19 @@ export default function ConstruirProyecto() {
   const userId = user?.id;
   useEffect(() => {
     if (!user) return;
+    if (useRevisionDocenteStore.getState().activa) {
+      const enMemoria = useProyectoStore.getState().proyecto;
+      if (enMemoria) {
+        const pasoGuardado = leerPasoGuardado(enMemoria.id);
+        const pasosElegidos = pasosVisiblesDelProyecto(enMemoria);
+        setPasoActualState(
+          pasosElegidos.includes(pasoGuardado) ? pasoGuardado : pasosElegidos[0]
+        );
+      }
+      setErrorCarga(null);
+      setIniciando(false);
+      return;
+    }
     Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
       .then(([mios, grupales]) => {
         // Los grupales "propios" sin membresía actual (grupo borrado o dejado)
@@ -226,7 +241,7 @@ export default function ConstruirProyecto() {
     <div ref={inicioRef} className="space-y-4">
       {/* Selector de proyecto múltiple: solo flujo normal. Semana E se maneja
           desde Mi panel/equipo para no mezclar proyectos fantasmas. */}
-      {!modoSemanaE && !esProyectoSemanaE(proyecto) && (
+      {!revisionActiva && !modoSemanaE && !esProyectoSemanaE(proyecto) && (
         <SelectorProyecto proyectos={todosProyectos} />
       )}
 
@@ -262,7 +277,7 @@ export default function ConstruirProyecto() {
 
       <ContenidoPaso paso={pasoActual} />
 
-      <EntregarPasoActual pasoActual={pasoActual} />
+      {!revisionActiva && <EntregarPasoActual pasoActual={pasoActual} />}
 
       <div className="sticky bottom-0 z-20 -mx-1 flex items-center justify-between gap-2 border-t border-border bg-background/95 px-1 py-2 backdrop-blur">
         {indicePasoActual > 0 ? (
@@ -281,10 +296,12 @@ export default function ConstruirProyecto() {
           <span className="text-xs text-muted-foreground">
             {titulos[pasoActual] ?? `Paso ${pasoActual}`}
           </span>
-          <div className="flex items-center gap-1.5">
-            <BotonGuardarComoCaso />
-            <BotonVistaPreviaEstudiante />
-          </div>
+          {!revisionActiva && (
+            <div className="flex items-center gap-1.5">
+              <BotonGuardarComoCaso />
+              <BotonVistaPreviaEstudiante />
+            </div>
+          )}
         </div>
 
         {indicePasoActual < pasosVisibles.length - 1 ? (
@@ -300,7 +317,7 @@ export default function ConstruirProyecto() {
         )}
       </div>
 
-      {!modoSemanaE && proyecto.tipo !== "proyecto_grupal" && (
+      {!revisionActiva && !modoSemanaE && proyecto.tipo !== "proyecto_grupal" && (
         <div className="flex justify-center pb-4 pt-6">
           <button
             onClick={abandonarProyecto}

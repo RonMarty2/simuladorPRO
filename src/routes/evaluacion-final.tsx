@@ -12,6 +12,8 @@ import {
   YAxis,
 } from "recharts";
 import { useAuthStore } from "@/stores/auth-store";
+import { useProyectoStore } from "@/stores/proyecto-store";
+import { useRevisionDocenteStore } from "@/stores/revision-docente-store";
 import { listarMisProyectos } from "@/lib/proyecto-supabase";
 import {
   obtenerHistorial,
@@ -46,12 +48,19 @@ export default function EvaluacionFinal() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const proyectos = await listarMisProyectos(user.id);
-      if (proyectos.length === 0) {
-        setCargando(false);
-        return;
+      const rev = useRevisionDocenteStore.getState();
+      const enMemoria = useProyectoStore.getState().proyecto;
+      let p: Proyecto | undefined;
+      if (rev.activa && enMemoria) {
+        p = enMemoria;
+      } else {
+        const proyectos = await listarMisProyectos(user.id);
+        if (proyectos.length === 0) {
+          setCargando(false);
+          return;
+        }
+        p = proyectos[0];
       }
-      const p = proyectos[0];
       setProyecto(p);
       // Tomar la última simulación FINALIZADA o quebrada (no la activa)
       const { data } = await supabase

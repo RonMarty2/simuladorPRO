@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { guardarProyecto } from "@/lib/proyecto-supabase";
+import { actualizarProyectoComoDocente, guardarProyecto } from "@/lib/proyecto-supabase";
 import { registrarActividad } from "@/lib/proyecto-actividad-supabase";
 import { useAuthStore } from "@/stores/auth-store";
+import { useRevisionDocenteStore } from "@/stores/revision-docente-store";
 import type { Proyecto } from "@/types/proyecto";
 
 export type EstadoGuardado =
@@ -25,6 +26,9 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
   const proyectoRef = useRef<Proyecto | null>(null);
   const usuarioId = useAuthStore((s) => s.user?.id ?? null);
 
+  const revisionActiva = useRevisionDocenteStore((s) => s.activa);
+  const modoRevision = useRevisionDocenteStore((s) => s.modoEdicion);
+
   // Mantenemos un ref actualizado al último proyecto para acceder desde handlers
   useEffect(() => {
     proyectoRef.current = proyecto;
@@ -34,14 +38,22 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
   const guardarSiHayPendientes = async () => {
     const p = proyectoRef.current;
     if (!p) return;
+    const rev = useRevisionDocenteStore.getState();
+    // En modo "Solo probar", jamás sobrescribimos el proyecto del estudiante.
+    if (rev.activa && rev.modoEdicion === "probar") return;
     if (ultimoGuardadoTimestampRef.current === p.actualizado_en) return;
     setEstado({ tipo: "guardando" });
     try {
-      await guardarProyecto(p);
+      if (rev.activa && rev.modoEdicion === "editar") {
+        await actualizarProyectoComoDocente(p);
+        rev.marcarGuardado(p);
+      } else {
+        await guardarProyecto(p);
+      }
       ultimoGuardadoTimestampRef.current = p.actualizado_en;
       setEstado({ tipo: "guardado", en: new Date() });
       // Audit de actividad: solo para grupales, deduplicado por día en BD.
-      if (p.tipo === "proyecto_grupal" && usuarioId) {
+      if (p.tipo === "proyecto_grupal" && usuarioId && !rev.activa) {
         void registrarActividad(p.id, usuarioId, "edito", 0);
       }
     } catch (e) {
@@ -53,6 +65,10 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
   // Debounce: guardar después de delayMs ms de inactividad
   useEffect(() => {
     if (!proyecto) return;
+    if (revisionActiva && modoRevision === "probar") {
+      setEstado({ tipo: "idle" });
+      return;
+    }
     if (ultimoGuardadoTimestampRef.current === proyecto.actualizado_en) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -64,7 +80,7 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proyecto, delayMs]);
+  }, [proyecto, delayMs, revisionActiva, modoRevision]);
 
   // Guardado de emergencia cuando la pestaña se oculta o el usuario va a cerrar
   useEffect(() => {

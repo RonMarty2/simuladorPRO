@@ -187,6 +187,57 @@ export async function obtenerProyectoPorId(proyectoId: string): Promise<Proyecto
   return crearProyectoEjemploCafeteriaV2({ estudiante_id: "demo" });
 }
 
+/**
+ * Carga el proyecto actual en vivo de un estudiante para revisión docente.
+ * Si no se puede leer desde Supabase (p. ej. por permisos o proyecto eliminado),
+ * cae al snapshot de la entrega si se pasó como respaldo.
+ */
+export async function cargarProyectoEstudianteParaRevision(
+  proyectoId: string,
+  fallbackSnapshot?: Proyecto
+): Promise<{ proyecto: Proyecto; usandoSnapshot: boolean }> {
+  if (esModoLocal()) {
+    const loc = leerProyectosLocal().find((p) => p.id === proyectoId);
+    if (loc) return { proyecto: loc, usandoSnapshot: false };
+    if (fallbackSnapshot) return { proyecto: fallbackSnapshot, usandoSnapshot: true };
+    throw new Error("No se encontró el proyecto en almacenamiento local.");
+  }
+
+  try {
+    const { data, error } = await conTimeout(
+      supabase
+        .from("proyectos")
+        .select("*, cursos(es_semana_e)")
+        .eq("id", proyectoId)
+        .maybeSingle(),
+      10000,
+      "cargando el proyecto del estudiante"
+    );
+    if (!error && data) {
+      return { proyecto: deFilaSupabase(data), usandoSnapshot: false };
+    }
+  } catch {
+    // Si falla la red o RLS, intentamos usar el snapshot de respaldo.
+  }
+
+  const loc = leerProyectosLocal().find((p) => p.id === proyectoId);
+  if (loc) return { proyecto: loc, usandoSnapshot: false };
+  if (fallbackSnapshot) return { proyecto: fallbackSnapshot, usandoSnapshot: true };
+
+  throw new Error("No se pudo cargar el proyecto del estudiante.");
+}
+
+/** Actualiza un proyecto existente del estudiante desde la vista docente. */
+export async function actualizarProyectoComoDocente(p: Proyecto): Promise<void> {
+  if (esModoLocal()) {
+    guardarProyectoLocal(p);
+    return;
+  }
+  const fila = proyectoAFilaSupabase(p);
+  const { error } = await supabase.from("proyectos").update(fila).eq("id", p.id);
+  if (error) throw error;
+}
+
 /** Upsert: inserta si no existe, actualiza si ya existe. */
 export async function guardarProyecto(p: Proyecto): Promise<void> {
   if (esModoLocal()) {

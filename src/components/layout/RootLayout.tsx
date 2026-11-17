@@ -25,6 +25,7 @@ import CreditoAutor from "@/components/layout/CreditoAutor";
 import BadgeRevisionesNuevas from "@/components/layout/BadgeRevisionesNuevas";
 import BotonInstalarApp from "@/components/layout/BotonInstalarApp";
 import SelectorRolLocal from "@/components/layout/SelectorRolLocal";
+import BannerRevisionDocente from "@/components/docente/BannerRevisionDocente";
 import { esModoLocal } from "@/lib/modo-local";
 import { useEsDispositivoMobil } from "@/hooks/useEsDispositivoMobil";
 
@@ -259,6 +260,7 @@ export default function RootLayout() {
         )}
 
         <main className="flex-1 overflow-auto p-3 sm:p-6">
+          <BannerRevisionDocente />
           <Outlet />
         </main>
       </div>

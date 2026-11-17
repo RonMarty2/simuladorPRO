@@ -4,6 +4,7 @@ import { revisarEntrega } from "@/lib/proyecto-supabase";
 import type { Entrega } from "@/types/proyecto";
 import { cn } from "@/lib/utils";
 import DetalleEntregaPasoAPaso from "./DetalleEntregaPasoAPaso";
+import BotonAbrirProyectoEstudiante from "./BotonAbrirProyectoEstudiante";
 import { confirmar } from "@/components/ui/confirmar";
 
 /**
@@ -161,13 +162,20 @@ export default function ModalRevisionMasiva({
               {ordenadas.length === 1 ? "" : "s"} · Califica una por una o aplica la misma decisión a todas.
             </p>
           </div>
-          <button
-            onClick={() => onCerrar(huboGuardado)}
-            disabled={guardando}
-            className="flex-shrink-0 rounded-md p-1 hover:bg-secondary disabled:opacity-50"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <BotonAbrirProyectoEstudiante
+              proyectoId={entregaActual.proyecto_id}
+              titular={titular}
+              fallbackSnapshot={entregaActual.snapshot_datos}
+            />
+            <button
+              onClick={() => onCerrar(huboGuardado)}
+              disabled={guardando}
+              className="rounded-md p-1 hover:bg-secondary disabled:opacity-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs por etapa */}
