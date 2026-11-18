@@ -36,10 +36,9 @@ describe("fusionarProyectoGrupal", () => {
     });
     remotoB.personal.push({
       id: "puesto-b",
-      cargo: "Operario químico",
+      puesto: "Operario químico",
       cantidad: 2,
-      salarioMensual: 3500,
-      area: "produccion",
+      sueldoMensual: 3500,
     });
 
     const fusionado = fusionarProyectoGrupal(base, localA, remotoB);
@@ -50,7 +49,7 @@ describe("fusionarProyectoGrupal", () => {
     // Y también se conserva todo lo que hizo la compañera B:
     expect(fusionado.productos.map((p) => p.id)).toEqual(["prod-b", "prod-a"]);
     expect(fusionado.personal).toHaveLength(1);
-    expect(fusionado.personal[0].cargo).toBe("Operario químico");
+    expect(fusionado.personal[0].puesto).toBe("Operario químico");
   });
 
   it("permite que cada integrante edite distintos ítems de la misma lista sin pisarse", () => {
