@@ -18,7 +18,9 @@ import {
   guardarProyectoActivo,
   guardarProyectoSemanaEActivo,
 } from "@/components/constructor/SelectorProyecto";
-import { obtenerPromedioEstudiante } from "@/lib/proyecto-supabase";
+import BadgeTipoProyecto from "@/components/constructor/BadgeTipoProyecto";
+import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
+import { listarProyectosGrupales, obtenerPromedioEstudiante } from "@/lib/proyecto-supabase";
 import { calcularNotaFinal } from "@/lib/notas";
 import type { Curso } from "@/lib/cursos-supabase";
 import {
@@ -32,7 +34,7 @@ import {
   type Grupo,
 } from "@/lib/grupos-supabase";
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
-import type { VersionProyecto } from "@/types/proyecto";
+import type { Proyecto, VersionProyecto } from "@/types/proyecto";
 import {
   NIVELES_SEMANA_E,
   codigoCortoGrupo,
@@ -56,6 +58,7 @@ export default function GruposEstudiante({
   const navigate = useNavigate();
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
   const [miGrupo, setMiGrupo] = useState<Grupo | null>(null);
+  const [miProyectoGrupal, setMiProyectoGrupal] = useState<Proyecto | null>(null);
   const [promedioInd, setPromedioInd] = useState<number | null>(null);
   const [accion, setAccion] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,15 +72,21 @@ export default function GruposEstudiante({
 
   const recargar = async () => {
     try {
-      const [gs, mg, prom] = await Promise.all([
+      const [gs, mg, prom, grupales] = await Promise.all([
         listarGruposParaEstudiante(curso.id),
         obtenerMiGrupo(estudianteId, curso.id),
         obtenerPromedioEstudiante(estudianteId, curso.id),
+        listarProyectosGrupales(estudianteId).catch(() => [] as Proyecto[]),
       ]);
       // Los equipos vacíos de pruebas anteriores no deben aparecer en Semana E.
       // En cursos normales conservamos la lista histórica sin alteraciones.
       setGrupos(curso.es_semana_e ? gs.filter((g) => g.miembros.length > 0) : gs);
       setMiGrupo(mg);
+      const proyGrupo =
+        (mg && grupales.find((p) => p.grupo_id === mg.id)) ??
+        grupales.find((p) => p.curso_id === curso.id && p.tipo === "proyecto_grupal") ??
+        null;
+      setMiProyectoGrupal(proyGrupo);
       setPromedioInd(prom?.promedio_nota ?? null);
       setError(null);
     } catch (e: any) {
@@ -387,6 +396,50 @@ export default function GruposEstudiante({
                 Esta elección define cuántas etapas completará todo el equipo.
               </p>
               <SelectorNivelSemanaE valor={null} onChange={guardarNivelExistente} disabled={accion} />
+            </div>
+          )}
+          {!curso.es_semana_e && miProyectoGrupal && (
+            <div className="mt-3 rounded-lg border border-border bg-card p-3 shadow-sm">
+              <button
+                type="button"
+                onClick={() => abrirProyecto(miProyectoGrupal.id)}
+                className="flex w-full flex-col gap-1.5 text-left"
+              >
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <BadgeTipoProyecto tipo="proyecto_grupal" tamaño="sm" />
+                  <span
+                    className={cn(
+                      "rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider",
+                      miProyectoGrupal.version === "v2"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    {miProyectoGrupal.version === "v2" ? "+ Riesgo" : "Clásico"}
+                  </span>
+                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                    {miProyectoGrupal.modeloIngreso === "suscripcion"
+                      ? "Suscripción"
+                      : miProyectoGrupal.modeloIngreso === "publicidad"
+                        ? "Publicidad"
+                        : miProyectoGrupal.modeloIngreso === "costo_beneficio"
+                          ? "Costo-beneficio"
+                          : "Unidades"}
+                  </span>
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+                    {miProyectoGrupal.estado === "completo" ? "Completo" : "En construcción"}
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-foreground">{miProyectoGrupal.nombre}</div>
+                <div className="text-xs font-semibold text-primary">
+                  Abrir y editar en grupo →
+                </div>
+              </button>
+              <AccionesProyecto
+                proyecto={miProyectoGrupal}
+                compacto
+                className="mt-2 border-t border-border/60 pt-2"
+              />
             </div>
           )}
           <div className="mt-3 border-t border-border/50 pt-3">
