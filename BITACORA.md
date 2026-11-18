@@ -672,7 +672,8 @@ aplicarla en la base real es decisión de Ronald.
 Actualización 2026-11-17 (misma tarde): con OK de Ronald se aplicó SOLO la 062 en la base de producción
 (SQL Editor de Supabase, proyecto `proyectos`): "Success. No rows returned". Prueba en el sitio real como docente,
 modo "Solo probar" (sin guardar): Entregas > Ver proyecto, Presentar proyecto, Escenarios y Simular cargan y
-mantienen el banner de modo docente. NO se probó "Editar al estudiante" guardando (cambiaría datos reales de un alumno).
+mantienen el banner de modo docente. "Editar al estudiante" probado con OK de Ronald en el proyecto de SAYDA (PROYECTOS II): se escribió una marca en
+"Descripción breve", se guardó, tras recargar seguía ahí (la 062 funciona), y se revirtió al valor original (vacío).
 Verificado también en producción (Paso 9, solo lectura): detalle del punto de equilibrio (anual/mensual, margen de
 contribución, margen de seguridad) y panel "Explorar perspectivas"; en un proyecto no viable el botón
 "¿Cómo hacerlo viable?" calcula 4 planes (precio, volumen, costos, inversión inicial).
