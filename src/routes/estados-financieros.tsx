@@ -2,13 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
+  BarChart3,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
   GitBranch,
   Landmark,
   Layers,
+  Maximize2,
+  Minimize2,
   Scale,
   TrendingUp,
+  X,
 } from "lucide-react";
 import {
   Bar,
@@ -44,12 +50,68 @@ const fmtPct = (v: number, dec = 1) =>
 const fmtVeces = (v: number, dec = 2) =>
   Number.isFinite(v) ? `${fmtNum(v, dec)}×` : "Sin deuda";
 
+const PESTANAS_CONTABLES: Array<{
+  id: PestanaContable;
+  titulo: string;
+  sub: string;
+  icon: typeof Scale;
+}> = [
+  {
+    id: "balance",
+    titulo: "1. Balance de Apertura y General",
+    sub: "Partida doble Año 0 a 5",
+    icon: Scale,
+  },
+  {
+    id: "resultados",
+    titulo: "2. Estado de Resultados",
+    sub: "EBITDA · EBIT · Utilidad Neta",
+    icon: FileSpreadsheet,
+  },
+  {
+    id: "flujos",
+    titulo: "3. Flujos de Efectivo",
+    sub: "Operación · Inversión · Deuda",
+    icon: Layers,
+  },
+  {
+    id: "ratios",
+    titulo: "4. Ratios y Sistema DuPont",
+    sub: "ROE · ROA · Liquidez · Solvencia",
+    icon: GitBranch,
+  },
+];
+
 export default function EstadosFinancierosRoute() {
   const proyecto = useProyectoStore((s) => s.proyecto);
   const cargarProyecto = useProyectoStore((s) => s.cargar);
   const user = useAuthStore((s) => s.user);
   const [disponibles, setDisponibles] = useState<Proyecto[] | null>(null);
   const [pestana, setPestana] = useState<PestanaContable>("balance");
+  const [modoPresentacion, setModoPresentacion] = useState(false);
+
+  const indiceActual = PESTANAS_CONTABLES.findIndex((p) => p.id === pestana);
+
+  useEffect(() => {
+    if (!modoPresentacion) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setModoPresentacion(false);
+      } else if (e.key === "ArrowRight") {
+        setPestana((actual) => {
+          const i = PESTANAS_CONTABLES.findIndex((p) => p.id === actual);
+          return PESTANAS_CONTABLES[Math.min(PESTANAS_CONTABLES.length - 1, i + 1)].id;
+        });
+      } else if (e.key === "ArrowLeft") {
+        setPestana((actual) => {
+          const i = PESTANAS_CONTABLES.findIndex((p) => p.id === actual);
+          return PESTANAS_CONTABLES[Math.max(0, i - 1)].id;
+        });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modoPresentacion]);
 
   useEffect(() => {
     if (!user) return;
@@ -183,40 +245,25 @@ export default function EstadosFinancierosRoute() {
               Expresado en Bolivianos (Bs) · Horizonte de evaluación: 5 años · Partida doble verificada
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            Cuadre contable exacto (Activo = Pasivo + Patrimonio)
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Cuadre contable exacto (Activo = Pasivo + Patrimonio)
+            </div>
+            <button
+              type="button"
+              onClick={() => setModoPresentacion(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Presentar estados financieros
+            </button>
           </div>
         </div>
 
         {/* Barra de sub-pestañas */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            {
-              id: "balance" as const,
-              titulo: "1. Balance de Apertura y General",
-              sub: "Partida doble Año 0 a 5",
-              icon: Scale,
-            },
-            {
-              id: "resultados" as const,
-              titulo: "2. Estado de Resultados",
-              sub: "EBITDA · EBIT · Utilidad Neta",
-              icon: FileSpreadsheet,
-            },
-            {
-              id: "flujos" as const,
-              titulo: "3. Flujos de Efectivo",
-              sub: "Operación · Inversión · Deuda",
-              icon: Layers,
-            },
-            {
-              id: "ratios" as const,
-              titulo: "4. Ratios y Sistema DuPont",
-              sub: "ROE · ROA · Liquidez · Solvencia",
-              icon: GitBranch,
-            },
-          ].map((tab) => {
+          {PESTANAS_CONTABLES.map((tab) => {
             const Icon = tab.icon;
             const activa = pestana === tab.id;
             return (
@@ -246,6 +293,135 @@ export default function EstadosFinancierosRoute() {
       {pestana === "resultados" && <VistaEstadoResultados ef={ef} nombreProyecto={proyecto.nombre} />}
       {pestana === "flujos" && <VistaFlujosContables ef={ef} />}
       {pestana === "ratios" && <VistaRatiosYDuPont ef={ef} />}
+
+      {/* Modo presentación a pantalla completa para defensa de Estados Financieros */}
+      {modoPresentacion && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#070d19] text-slate-100">
+          {/* Barra superior */}
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b1322] px-4 md:px-6">
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-teal-400" />
+              <span className="truncate text-xs font-bold text-slate-200 md:text-sm">
+                {proyecto.nombre} · Administración Financiera
+              </span>
+              <span className="hidden text-xs text-slate-400 sm:inline">
+                · {PESTANAS_CONTABLES[indiceActual]?.titulo}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    if (!document.fullscreenElement) {
+                      await document.documentElement.requestFullscreen();
+                    } else {
+                      await document.exitFullscreen();
+                    }
+                  } catch {}
+                }}
+                className="rounded-md border border-white/10 p-1.5 text-slate-300 hover:bg-white/10"
+                title="Pantalla completa"
+              >
+                {document.fullscreenElement ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                  }
+                  setModoPresentacion(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-white/10"
+              >
+                <X className="h-4 w-4" /> Salir
+              </button>
+            </div>
+          </div>
+
+          {/* Lienzo de la lámina contable */}
+          <div className="flex min-h-0 flex-1 items-center justify-center p-2 md:p-5">
+            <div className="h-full w-full max-w-[1550px] overflow-y-auto rounded-xl border border-slate-700/60 bg-background p-4 sm:p-6 text-foreground shadow-2xl">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                    Lámina Contable {indiceActual + 1} de {PESTANAS_CONTABLES.length} · {PESTANAS_CONTABLES[indiceActual]?.sub}
+                  </div>
+                  <h2 className="font-display text-xl font-bold tracking-tight">
+                    {PESTANAS_CONTABLES[indiceActual]?.titulo} — {proyecto.nombre}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Partida doble verificada
+                </div>
+              </div>
+
+              {pestana === "balance" && <VistaBalance ef={ef} nombreProyecto={proyecto.nombre} />}
+              {pestana === "resultados" && <VistaEstadoResultados ef={ef} nombreProyecto={proyecto.nombre} />}
+              {pestana === "flujos" && <VistaFlujosContables ef={ef} />}
+              {pestana === "ratios" && <VistaRatiosYDuPont ef={ef} />}
+            </div>
+          </div>
+
+          {/* Barra inferior de navegación de láminas */}
+          <div className="flex h-14 shrink-0 items-center justify-between border-t border-white/10 bg-[#0b1322] px-4 md:px-6">
+            <div className="text-xs font-medium text-slate-400">
+              Lámina <span className="font-bold text-white">{indiceActual + 1}</span> de{" "}
+              <span className="font-bold text-white">{PESTANAS_CONTABLES.length}</span>
+              <span className="mx-2 text-slate-600">·</span>
+              <span className="text-slate-300">{PESTANAS_CONTABLES[indiceActual]?.titulo}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                disabled={indiceActual <= 0}
+                onClick={() =>
+                  setPestana(PESTANAS_CONTABLES[Math.max(0, indiceActual - 1)].id)
+                }
+                className="flex items-center gap-1 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" /> Anterior
+              </button>
+              <div className="hidden items-center gap-1.5 sm:flex">
+                {PESTANAS_CONTABLES.map((item, pos) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setPestana(item.id)}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      pos === indiceActual
+                        ? "w-7 bg-teal-400"
+                        : "w-2 bg-white/20 hover:bg-white/40"
+                    )}
+                    title={item.titulo}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled={indiceActual >= PESTANAS_CONTABLES.length - 1}
+                onClick={() =>
+                  setPestana(
+                    PESTANAS_CONTABLES[
+                      Math.min(PESTANAS_CONTABLES.length - 1, indiceActual + 1)
+                    ].id
+                  )
+                }
+                className="flex items-center gap-1.5 rounded-full bg-teal-500 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-teal-400 disabled:opacity-30"
+              >
+                Siguiente <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

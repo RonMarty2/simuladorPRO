@@ -229,8 +229,8 @@ export default function VisorPitch({
       </div>
 
       {/* Área de la diapositiva */}
-      <div className="relative flex min-h-0 flex-1 items-center justify-center p-2 md:p-5">
-        <div className="relative aspect-video h-auto max-h-full w-full max-w-[1550px] overflow-hidden rounded-xl border border-slate-700/60 bg-white text-slate-900 shadow-2xl">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center p-2 md:p-4">
+        <div className="relative h-full w-full max-w-[1550px] overflow-hidden rounded-xl border border-slate-700/60 bg-white text-slate-900 shadow-2xl">
           <RenderDiapositiva
             id={diapositiva.id}
             proyecto={proyecto}
@@ -365,26 +365,26 @@ function Marco({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-[#faf8f5] p-3 sm:p-4 md:p-[2.5%] text-slate-900">
+    <div className="relative flex h-full flex-col overflow-hidden bg-[#faf8f5] px-4 py-3 sm:px-6 sm:py-4 text-slate-900">
       {/* Barra superior de acento editorial */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-700 via-emerald-600 to-slate-800" />
-      <div className="relative z-10 mb-2 sm:mb-3 shrink-0">
+      <div className="relative z-10 mb-2 shrink-0">
         <div className="flex items-center gap-1.5 sm:gap-2">
           <span className="inline-block h-2 w-2 rounded-full bg-teal-700" />
           <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-teal-800">
             {etiqueta}
           </span>
         </div>
-        <h2 className="mt-0.5 font-display text-[clamp(16px,2.2vw,36px)] font-bold leading-tight tracking-tight text-slate-950">
+        <h2 className="mt-0.5 font-display text-[clamp(16px,2vw,30px)] font-bold leading-tight tracking-tight text-slate-950">
           {titulo}
         </h2>
         {subtitulo && (
-          <p className="mt-0.5 max-w-[90%] font-sans text-[clamp(10px,0.95vw,15px)] leading-snug text-slate-600 line-clamp-2">
+          <p className="mt-0.5 max-w-[92%] font-sans text-[clamp(10px,0.9vw,14px)] leading-snug text-slate-600 line-clamp-1">
             {subtitulo}
           </p>
         )}
       </div>
-      <div className="relative z-10 min-h-0 flex-1">{children}</div>
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }
@@ -772,49 +772,49 @@ function Equilibrio({
           />
         </div>
 
-        <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex min-h-0 flex-col justify-between gap-2.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Lectura de viabilidad operativa
             </div>
-            <div className="mt-1.5 text-xl font-bold text-slate-900">
+            <div className="mt-0.5 text-lg font-bold text-slate-900 leading-snug">
               {!Number.isFinite(factor)
                 ? "El margen de contribución actual no cubre los costos"
                 : eq.alcanza
                   ? "Las ventas proyectadas superan el umbral de supervivencia"
                   : "Se requiere incrementar volumen o reducir costos fijos"}
             </div>
-            <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+            <p className="mt-1 text-xs text-slate-600 leading-relaxed">
               El punto de equilibrio representa el volumen mínimo donde los ingresos igualan los costos totales.
               Cualquier venta adicional genera utilidad neta directa para el proyecto.
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Costos fijos (año 1)
               </div>
-              <div className="mt-1 text-base font-bold text-slate-900 tabular-nums">
+              <div className="mt-0.5 text-sm font-bold text-slate-900 tabular-nums">
                 {fmtBs(eq.costosFijos)}
               </div>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Equilibrio mensual
               </div>
-              <div className="mt-1 text-base font-bold text-teal-800 tabular-nums">
+              <div className="mt-0.5 text-sm font-bold text-teal-800 tabular-nums">
                 {Number.isFinite(eq.ingresoEquilibrio)
                   ? `${fmtBs(eq.ingresoEquilibrio / 12)}/mes`
                   : "No equilibra"}
               </div>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Margen de seguridad
               </div>
               <div
-                className={`mt-1 text-base font-bold tabular-nums ${
+                className={`mt-0.5 text-sm font-bold tabular-nums ${
                   Number.isFinite(eq.margenSeguridad) && eq.margenSeguridad > 0
                     ? "text-emerald-700"
                     : "text-amber-700"
@@ -836,9 +836,9 @@ function Equilibrio({
             />
           )}
 
-          <div className="rounded-xl border border-teal-200 bg-teal-50/50 p-3.5">
-            <span className="font-bold text-teal-900 text-sm">Respaldo:</span>{" "}
-            <span className="text-sm text-teal-800">
+          <div className="rounded-xl border border-teal-200 bg-teal-50/50 px-3 py-2">
+            <span className="font-bold text-teal-900 text-xs">Respaldo:</span>{" "}
+            <span className="text-xs text-teal-800">
               {!Number.isFinite(factor)
                 ? "Ajusta precios o costos variables para lograr margen de contribución positivo."
                 : eq.alcanza
@@ -904,7 +904,7 @@ function GraficoEquilibrioPitch({
           </span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full overflow-visible">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-28 w-full overflow-visible">
         <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="#cbd5e1" strokeWidth="1" />
         <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="#cbd5e1" strokeWidth="1" />
 
@@ -1016,7 +1016,7 @@ function Financiamiento({ modelo, etiqueta }: { modelo: ModeloPitch; etiqueta: s
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex flex-col justify-center gap-[5%]">
+        <div className="flex min-h-0 flex-col justify-center gap-2.5 sm:gap-3">
           <Kpi titulo="Capital propio (Aporte socios)" valor={fmtBs(modelo.capitalPropio)} color="teal" />
           <Kpi titulo="Financiamiento bancario (Deuda)" valor={fmtBs(modelo.deuda)} color="sky" />
           <Kpi titulo="Nivel de endeudamiento" valor={fmtPct(deudaPct)} color="amber" />
@@ -1643,9 +1643,9 @@ function Kpi({
     cyan: "border-sky-200 bg-sky-50/70 text-sky-900",
   };
   return (
-    <div className={`rounded-xl border p-[5%] shadow-sm ${estilos[color] || estilos.teal}`}>
-      <div className="text-[clamp(8px,0.72vw,12px)] font-bold uppercase tracking-[0.14em] text-slate-500">{titulo}</div>
-      <div className="mt-1 text-[clamp(16px,1.8vw,30px)] font-bold tracking-tight text-slate-900">{valor}</div>
+    <div className={`rounded-xl border px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-sm ${estilos[color] || estilos.teal}`}>
+      <div className="text-[clamp(8px,0.7vw,11px)] font-bold uppercase tracking-[0.14em] text-slate-500">{titulo}</div>
+      <div className="mt-0.5 text-[clamp(15px,1.65vw,26px)] font-bold tracking-tight text-slate-900">{valor}</div>
     </div>
   );
 }
