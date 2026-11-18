@@ -76,8 +76,14 @@ export async function crearGrupoEstudiante(params: {
   proyecto.tipo = "proyecto_grupal";
   if (params.esSemanaE) proyecto.esSemanaE = true;
 
-  // Los cursos normales mantienen el flujo histórico sin ningún cambio.
+  // Los cursos normales mantienen el flujo histórico, validando primero que no
+  // tenga ya un grupo en este curso para evitar grupos duplicados por doble clic.
   if (!params.esSemanaE) {
+    const yaTengo = await obtenerMiGrupo(params.creadorId, params.cursoId);
+    if (yaTengo) {
+      throw new Error(`Ya perteneces al grupo «${yaTengo.nombre}» en este curso.`);
+    }
+
     const { data: grupo, error: errorGrupo } = await conTimeout(
       supabase
         .from("grupos")
@@ -100,7 +106,11 @@ export async function crearGrupoEstudiante(params: {
     const { error: errorMiembro } = await supabase
       .from("grupo_miembros")
       .insert({ grupo_id: grupoId, estudiante_id: params.creadorId });
-    if (errorMiembro) throw errorMiembro;
+    if (errorMiembro) {
+      await supabase.from("proyectos").delete().eq("id", proyecto.id);
+      await supabase.from("grupos").delete().eq("id", grupoId);
+      throw errorMiembro;
+    }
     return;
   }
 
@@ -155,7 +165,7 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
   if (e2) throw e2;
   if (e3) throw e3;
 
-  return (grupos as Grupo[]).map((g) => {
+  const resultado = (grupos as Grupo[]).map((g) => {
     const proy = (proys ?? []).find((p: any) => p.grupo_id === g.id);
     return {
       ...g,
@@ -174,6 +184,17 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
         })),
     };
   });
+
+  // Auto-limpieza en segundo plano de grupos que hayan quedado con 0 integrantes
+  // y sus proyectos grupales huérfanos.
+  const vacios = resultado.filter((g) => g.miembros.length === 0);
+  if (vacios.length > 0) {
+    const idsVacios = vacios.map((g) => g.id);
+    void supabase.from("proyectos").delete().in("grupo_id", idsVacios);
+    void supabase.from("grupos").delete().in("id", idsVacios);
+  }
+
+  return resultado;
 }
 
 /** Define la ruta pedagógica de un proyecto Semana E ya creado. */

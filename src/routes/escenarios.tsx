@@ -30,8 +30,11 @@ export default function Escenarios() {
       listarProyectosGrupales(user.id).catch(() => [] as Proyecto[]),
     ])
       .then(([mios, grupales]) => {
-        const ids = new Set(mios.map((p) => p.id));
-        const todos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
+        const miosIndividuales = mios.filter(
+          (p) => p.tipo !== "proyecto_grupal" && !p.grupo_id
+        );
+        const ids = new Set(miosIndividuales.map((p) => p.id));
+        const todos = [...miosIndividuales, ...grupales.filter((g) => !ids.has(g.id))];
         setDisponibles(todos.filter((p) => !p.esSemanaE));
       })
       .catch(() => setDisponibles([]));

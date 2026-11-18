@@ -70,9 +70,12 @@ export default function SimularProyecto() {
       listarMisInscripciones(user.id).catch(() => [] as Array<{ curso: Curso }>),
     ])
       .then(([mios, grupales, inscripciones]) => {
-        // Deduplicar por id (el creador del grupo aparece en ambas listas).
-        const ids = new Set(mios.map((p) => p.id));
-        const todos = [...mios, ...grupales.filter((g) => !ids.has(g.id))];
+        // Solo incluir proyectos grupales donde sigue siendo miembro activo.
+        const miosIndividuales = mios.filter(
+          (p) => p.tipo !== "proyecto_grupal" && !p.grupo_id
+        );
+        const ids = new Set(miosIndividuales.map((p) => p.id));
+        const todos = [...miosIndividuales, ...grupales.filter((g) => !ids.has(g.id))];
 
         // Mapa cursoId → flags de simulación habilitada.
         const flagsCurso = new Map<

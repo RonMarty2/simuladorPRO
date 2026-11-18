@@ -155,7 +155,12 @@ export default function DashboardEstudiante() {
   };
 
   const idsCursos = new Set(inscripciones.map((i) => i.curso.id));
-  const libres = proyectos.filter((p) => !p.curso_id || !idsCursos.has(p.curso_id));
+  const libres = proyectos.filter(
+    (p) =>
+      p.tipo !== "proyecto_grupal" &&
+      !p.grupo_id &&
+      (!p.curso_id || !idsCursos.has(p.curso_id))
+  );
 
   // El estudiante toma un caso publicado por el docente: se hace una copia
   // personal (entrega_estudiante) y aparece en su lista de proyectos.

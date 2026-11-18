@@ -140,6 +140,15 @@ export default function GruposEstudiante({
     ) {
       return;
     }
+    if (
+      !eliminaEquipo &&
+      !(await confirmar(
+        `¿Seguro que deseas salir del grupo «${miGrupoDetalle?.nombre ?? ""}»? Tus compañeros seguirán con el proyecto grupal.`,
+        { textoOk: "Salir del grupo" }
+      ))
+    ) {
+      return;
+    }
 
     setAccion(true);
     setError(null);

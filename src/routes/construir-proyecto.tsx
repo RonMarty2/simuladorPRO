@@ -130,10 +130,11 @@ export default function ConstruirProyecto() {
     }
     Promise.all([listarMisProyectos(user.id), listarProyectosGrupales(user.id)])
       .then(([mios, grupales]) => {
-        // Los grupales "propios" sin membresía actual (grupo borrado o dejado)
-        // se conservan para que el alumno pueda abrirlos o borrarlos: Mi panel
-        // los lista y, si el constructor los descartara, quedarían inaccesibles.
-        const proyectosNoGrupales = mios.filter((p) => !esProyectoSemanaE(p));
+        // Solo los grupales donde el estudiante sigue siendo miembro activo
+        // (listarProyectosGrupales) deben aparecer en el selector.
+        const proyectosNoGrupales = mios.filter(
+          (p) => !esProyectoSemanaE(p) && p.tipo !== "proyecto_grupal" && !p.grupo_id
+        );
         const grupalesNormales = grupales.filter((p) => !esProyectoSemanaE(p));
         const idsNormales = new Set(proyectosNoGrupales.map((p) => p.id));
         const proyectosNormales = [
