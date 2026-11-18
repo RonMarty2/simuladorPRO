@@ -24,5 +24,12 @@ describe("Excel global del proyecto", () => {
     expect(presentacion?.B5?.v).toBe("Equipo de prueba");
     expect(presentacion?.A16?.v).toBe("Punto de equilibrio (unidades)");
     expect(Number(presentacion?.B16?.v)).toBeGreaterThan(0);
+
+    const flujo = libro.Sheets["8. Flujo de caja"];
+    expect(flujo?.A15?.v).toBe("(-) IT 3% sobre ingresos brutos");
+    expect(flujo?.A22?.v).toBe("(-) IVA pagado en inversión con factura (recuperable)");
+    expect(flujo?.A29?.v).toBe("(-) IVA neto a pagar (débito - crédito disponible)");
+    expect(flujo?.A33?.v).toBe("5 · FLUJO DE CAJA NETO");
+    expect(flujo?.C33?.f).toContain("-C29+");
   });
 });

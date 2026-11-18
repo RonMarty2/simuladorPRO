@@ -480,19 +480,25 @@ function agregarFlujoCaja(
     imprev: 12,
     intereses: 13,
     secResultado: 14,
-    uai: 15,
-    impuestos: 16,
-    un: 17,
-    secAjustes: 18,
-    depRein: 19,
-    invIni: 20,
-    capTra: 21,
-    prestamo: 22,
-    amort: 23,
-    reinv: 24,
-    residual: 25,
-    recupCT: 26,
-    flujo: 27,
+    it: 15,
+    uai: 16,
+    impuestos: 17,
+    un: 18,
+    secAjustes: 19,
+    depRein: 20,
+    invIni: 21,
+    ivaInv: 22,
+    capTra: 23,
+    prestamo: 24,
+    amort: 25,
+    reinv: 26,
+    ivaDebito: 27,
+    ivaCredito: 28,
+    ivaNeto: 29,
+    ivaSaldo: 30,
+    residual: 31,
+    recupCT: 32,
+    flujo: 33,
   };
   const cols = ["B", "C", "D", "E", "F", "G"];
 
@@ -523,47 +529,54 @@ function agregarFlujoCaja(
   aoa.push(filaValor(lbl("(-) Intereses de la deuda"), [0, ...calc.intereses]));
   // R14 sección
   aoa.push([sec("3 · RESULTADO E IMPUESTOS")]);
-  // R15 UAI (fórmula)
+  // R15 IT 3%
+  aoa.push(filaValor(lbl("(-) IT 3% sobre ingresos brutos"), [0, ...calc.it]));
+  // R16 UAI (fórmula)
   aoa.push(filaFormula(
-    lblB("= Utilidad antes de impuestos"),
+    lblB("= Utilidad antes de IUE"),
     cols.map(
       (c) =>
-        `=${c}${R.ingresos}-${c}${R.costosProd}-${c}${R.gastosAdmin}-${c}${R.gastosComerc}-${c}${R.personal}-${c}${R.deprec}-${c}${R.imprev}-${c}${R.intereses}`
+        `=${c}${R.ingresos}-${c}${R.costosProd}-${c}${R.gastosAdmin}-${c}${R.gastosComerc}-${c}${R.personal}-${c}${R.deprec}-${c}${R.imprev}-${c}${R.intereses}-${c}${R.it}`
     )
   ));
-  // R16 Impuestos
+  // R17 Impuestos (IUE 25%)
   aoa.push(filaFormula(
-    lbl(`(-) Impuestos (IUE ${(TASA_IUE * 100).toFixed(0)}%)`),
+    lbl(`(-) IUE ${(TASA_IUE * 100).toFixed(0)}% sobre utilidad`),
     cols.map((c) => `=MAX(0,${c}${R.uai})*${TASA_IUE}`)
   ));
-  // R17 Utilidad neta
+  // R18 Utilidad neta
   aoa.push(filaFormula(
     lblB("= Utilidad neta"),
     cols.map((c) => `=${c}${R.uai}-${c}${R.impuestos}`)
   ));
-  // R18 sección
-  aoa.push([sec("4 · AJUSTES A FLUJO DE CAJA", true)]);
-  // R19 Depreciación reincorporada
+  // R19 sección
+  aoa.push([sec("4 · AJUSTES A FLUJO DE CAJA / IVA", true)]);
+  // R20 Depreciación reincorporada
   aoa.push(filaFormula(lbl("(+) Depreciación (no es salida de caja)"), cols.map((c) => `=${c}${R.deprec}`)));
-  // R20..R26 valores
+  // R21..R32 valores
   aoa.push(filaValor(lbl("(-) Inversión inicial (activos fijos)"), [calc.inversionInicial, 0, 0, 0, 0, 0]));
+  aoa.push(filaValor(lbl("(-) IVA pagado en inversión con factura (recuperable)"), [calc.ivaCreditoFiscalInversionInicial, 0, 0, 0, 0, 0]));
   aoa.push(filaValor(lbl("(-) Capital de trabajo"), [calc.capitalTrabajo, 0, 0, 0, 0, 0]));
   aoa.push(filaValor(lbl("(+) Préstamo recibido"), [calc.montoPrestamo, 0, 0, 0, 0, 0]));
-  aoa.push(filaValor(lbl("(-) Amortización de la deuda"), [0, ...calc.amortizacion]));
+  aoa.push(filaValor(lbl("(-) Amortización de capital de la deuda"), [0, ...calc.amortizacion]));
   aoa.push(filaValor(lbl("(-) Reinversión (reposición de activos)"), [0, ...calc.reinversionPorAnio]));
+  aoa.push(filaValor(lbl("IVA débito fiscal (ventas con IVA)"), [0, ...calc.ivaDebitoFiscal]));
+  aoa.push(filaValor(lbl("IVA crédito fiscal del periodo (compras/gastos con factura)"), [calc.ivaCreditoFiscalInversionInicial, ...calc.ivaCreditoFiscal]));
+  aoa.push(filaValor(lbl("(-) IVA neto a pagar (débito - crédito disponible)"), [0, ...calc.ivaNetoPagar]));
+  aoa.push(filaValor(lbl("Saldo crédito fiscal IVA acumulado"), [calc.ivaCreditoFiscalInversionInicial, ...calc.ivaSaldoCreditoFiscal]));
   aoa.push(filaValor(lbl("(+) Valor residual (año 5)"), [0, 0, 0, 0, 0, calc.valorResidual]));
   aoa.push(filaValor(lbl("(+) Recuperación capital de trabajo (año 5)"), [0, 0, 0, 0, 0, calc.capitalTrabajo]));
-  // R27 FLUJO NETO (fórmula con fondo destacado)
+  // R33 FLUJO NETO (fórmula con fondo destacado)
   aoa.push(filaTotalFormula(
     totL("5 · FLUJO DE CAJA NETO"),
     cols.map(
       (c) =>
-        `=${c}${R.un}+${c}${R.depRein}-${c}${R.invIni}-${c}${R.capTra}+${c}${R.prestamo}-${c}${R.amort}-${c}${R.reinv}+${c}${R.residual}+${c}${R.recupCT}`
+        `=${c}${R.un}+${c}${R.depRein}-${c}${R.invIni}-${c}${R.ivaInv}-${c}${R.capTra}+${c}${R.prestamo}-${c}${R.amort}-${c}${R.reinv}-${c}${R.ivaNeto}+${c}${R.residual}+${c}${R.recupCT}`
     )
   ));
 
   addSheet(wb, SH_FLUJO, aoa, {
-    anchos: [42, 18, 18, 18, 18, 18, 18],
+    anchos: [48, 18, 18, 18, 18, 18, 18],
     merges: [
       mergeRow(0, 0, 6),
       mergeRow(R.secIngresos - 1, 0, 6),
@@ -578,8 +591,8 @@ function agregarIndicadores(
   wb: XLSX.WorkBook,
   calc: ReturnType<typeof construirFlujoCaja>
 ) {
-  // Flujo neto: 'SH_FLUJO'!B27 (año 0) y C27:G27 (años 1..5)
-  const RF = 27;
+  // Flujo neto: 'SH_FLUJO'!B33 (año 0) y C33:G33 (años 1..5)
+  const RF = 33;
   const refAno0 = `'${SH_FLUJO}'!B${RF}`;
   const rangoAnios = `'${SH_FLUJO}'!C${RF}:G${RF}`;
   const rangoCompleto = `'${SH_FLUJO}'!B${RF}:G${RF}`;
