@@ -42,13 +42,16 @@ import {
 } from "@/lib/semana-e";
 import { cn } from "@/lib/utils";
 import { confirmar } from "@/components/ui/confirmar";
+import { asegurarProyectoDeGrupo } from "@/lib/caso-grupal";
 
 export default function GruposEstudiante({
   curso,
   estudianteId,
+  recargarKey,
 }: {
   curso: Curso;
   estudianteId: string;
+  recargarKey?: number;
 }) {
   const navigate = useNavigate();
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
@@ -85,7 +88,7 @@ export default function GruposEstudiante({
   useEffect(() => {
     recargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curso.id, estudianteId]);
+  }, [curso.id, estudianteId, recargarKey]);
 
   const unirme = async (grupoId: string) => {
     setAccion(true);
@@ -96,6 +99,24 @@ export default function GruposEstudiante({
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
+      setAccion(false);
+    }
+  };
+
+  const unirmeYEditar = async (grupo: GrupoConMiembros) => {
+    setAccion(true);
+    setError(null);
+    try {
+      await unirseAGrupo(grupo.id, estudianteId);
+      const idProy = await asegurarProyectoDeGrupo({
+        grupo,
+        curso,
+        estudianteId,
+      });
+      guardarProyectoActivo(estudianteId, idProy);
+      navigate(`/construir?proyecto=${encodeURIComponent(idProy)}`);
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
       setAccion(false);
     }
   };
@@ -176,15 +197,32 @@ export default function GruposEstudiante({
     }
   };
 
-  const abrirProyecto = (proyectoId: string | null) => {
-    if (!proyectoId) return;
+  const abrirProyecto = async (proyectoId: string | null) => {
+    let idFinal = proyectoId;
+    if (!idFinal && miGrupoDetalle) {
+      setAccion(true);
+      setError(null);
+      try {
+        idFinal = await asegurarProyectoDeGrupo({
+          grupo: miGrupoDetalle,
+          curso,
+          estudianteId,
+        });
+      } catch (e: any) {
+        setError(e?.message ?? "No se pudo abrir el proyecto del grupo.");
+        setAccion(false);
+        return;
+      }
+      setAccion(false);
+    }
+    if (!idFinal) return;
     if (curso.es_semana_e) {
-      guardarProyectoSemanaEActivo(estudianteId, proyectoId);
-      navigate(`/construir?semanae=1&proyecto=${encodeURIComponent(proyectoId)}`);
+      guardarProyectoSemanaEActivo(estudianteId, idFinal);
+      navigate(`/construir?semanae=1&proyecto=${encodeURIComponent(idFinal)}`);
       return;
     }
-    guardarProyectoActivo(estudianteId, proyectoId);
-    navigate("/construir");
+    guardarProyectoActivo(estudianteId, idFinal);
+    navigate(`/construir?proyecto=${encodeURIComponent(idFinal)}`);
   };
 
   if (!curso.grupo_habilitado) {
@@ -241,32 +279,39 @@ export default function GruposEstudiante({
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              <span className="text-sm font-semibold">{miGrupoDetalle.nombre}</span>
-              <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                {miGrupoDetalle.miembros.length} / {miGrupoDetalle.cupo_max}
-              </span>
-              <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
-                {curso.es_semana_e ? "Tu equipo" : "Tu grupo"}
-              </span>
-              {curso.es_semana_e && nivelActual && (
-                <span className="rounded bg-fuchsia-100 px-1.5 py-0.5 text-[11px] font-semibold text-fuchsia-800 dark:bg-fuchsia-950/50 dark:text-fuchsia-200">
-                  {nivelActual.emoji} Nivel {nivelActual.nombre}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                <span className="text-sm font-semibold">{miGrupoDetalle.nombre}</span>
+                <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  {miGrupoDetalle.miembros.length} / {miGrupoDetalle.cupo_max}
                 </span>
+                <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
+                  {curso.es_semana_e ? "Tu equipo" : "Tu grupo"}
+                </span>
+                {curso.es_semana_e && nivelActual && (
+                  <span className="rounded bg-fuchsia-100 px-1.5 py-0.5 text-[11px] font-semibold text-fuchsia-800 dark:bg-fuchsia-950/50 dark:text-fuchsia-200">
+                    {nivelActual.emoji} Nivel {nivelActual.nombre}
+                  </span>
+                )}
+              </div>
+              {!curso.es_semana_e && miGrupoDetalle.proyecto_nombre && (
+                <div className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                  Caso grupal activo: <strong>{miGrupoDetalle.proyecto_nombre}</strong>
+                </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => abrirProyecto(miGrupoDetalle.proyecto_id)}
-                disabled={curso.es_semana_e && !nivelActual}
+                disabled={accion || (curso.es_semana_e && !nivelActual)}
                 className={
                   curso.es_semana_e
                     ? "group flex min-h-16 w-full animate-pulse items-center justify-center gap-3 rounded-xl border-2 border-fuchsia-200 bg-gradient-to-r from-fuchsia-700 via-purple-700 to-fuchsia-700 px-6 py-3 text-left text-white shadow-xl shadow-fuchsia-500/30 ring-4 ring-fuchsia-300/50 transition hover:animate-none hover:scale-[1.02] hover:shadow-2xl disabled:animate-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    : "flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                    : "flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
                 }
               >
-                <FolderOpen className={curso.es_semana_e ? "h-7 w-7 shrink-0" : "h-3 w-3"} />
+                <FolderOpen className={curso.es_semana_e ? "h-7 w-7 shrink-0" : "h-3.5 w-3.5"} />
                 {curso.es_semana_e ? (
                   <span className="flex flex-col">
                     <span className="text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
@@ -277,7 +322,7 @@ export default function GruposEstudiante({
                     </span>
                   </span>
                 ) : (
-                  "Abrir proyecto"
+                  "Abrir y editar en grupo →"
                 )}
               </button>
               {miGrupoDetalle.proyecto_id && (
@@ -563,27 +608,54 @@ export default function GruposEstudiante({
           )}
           {grupos.map((g) => {
             const lleno = g.miembros.length >= g.cupo_max;
+            const nombresMiembros = g.miembros
+              .map((m) => `${m.nombre} ${m.apellido}`.trim() || m.email.split("@")[0])
+              .filter(Boolean);
             return (
               <div
                 key={g.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card p-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card p-2.5"
               >
-                <div className="flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium">{g.nombre}</span>
-                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                    {g.miembros.length} / {g.cupo_max}
-                  </span>
-                  {lleno && <span className="text-[11px] text-amber-600">lleno</span>}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold">{g.nombre}</span>
+                    <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                      {g.miembros.length} / {g.cupo_max}
+                    </span>
+                    {lleno && <span className="text-[11px] text-amber-600">lleno</span>}
+                  </div>
+                  {g.proyecto_nombre && (
+                    <div className="mt-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+                      Caso: {g.proyecto_nombre}
+                    </div>
+                  )}
+                  {nombresMiembros.length > 0 && (
+                    <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      Integrantes: {nombresMiembros.join(", ")}
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => unirme(g.id)}
-                  disabled={accion || lleno}
-                  className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {accion ? <Loader2 className="h-3 w-3 animate-spin" /> : <LogIn className="h-3 w-3" />}
-                  Unirme
-                </button>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    onClick={() => unirmeYEditar(g)}
+                    disabled={accion || lleno}
+                    className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {accion ? <Loader2 className="h-3 w-3 animate-spin" /> : <FolderOpen className="h-3 w-3" />}
+                    {lleno ? "Grupo lleno" : "Unirme y editar →"}
+                  </button>
+                  {!lleno && (
+                    <button
+                      onClick={() => unirme(g.id)}
+                      disabled={accion}
+                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1.5 text-[11px] font-medium hover:bg-secondary disabled:opacity-50"
+                    >
+                      <LogIn className="h-3 w-3" />
+                      Solo unirme
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -740,3 +812,4 @@ function Nota({
     </div>
   );
 }
+

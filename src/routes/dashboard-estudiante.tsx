@@ -65,9 +65,12 @@ export default function DashboardEstudiante() {
    *  confirmar. Se limpia al cancelar o al terminar. */
   const [confirmandoSalida, setConfirmandoSalida] = useState<string | null>(null);
   const [saliendoDeCurso, setSaliendoDeCurso] = useState<string | null>(null);
+  const [recargarGruposKey, setRecargarGruposKey] = useState(0);
+  const cursosInscritos = inscripciones.map((i) => i.curso);
 
   const recargar = () => {
     if (!user) return;
+    setRecargarGruposKey((k) => k + 1);
     Promise.all([listarMisInscripciones(user.id), listarMisProyectos(user.id)])
       .then(async ([insc, proy]) => {
         setInscripciones(insc);
@@ -99,7 +102,7 @@ export default function DashboardEstudiante() {
   const abrir = (p: Proyecto) => {
     if (!user) return;
     guardarProyectoActivo(user.id, p.id);
-    navigate("/construir");
+    navigate(`/construir?proyecto=${encodeURIComponent(p.id)}`);
   };
 
   // Crear un proyecto nuevo: deja una "pista" (curso preseleccionado, o "" para
@@ -372,7 +375,13 @@ export default function DashboardEstudiante() {
                   {casosTomados.length > 0 && (
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {casosTomados.map((p) => (
-                        <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
+                        <TarjetaProyecto
+                          key={p.id}
+                          proyecto={p}
+                          cursosInscritos={cursosInscritos}
+                          onPasado={recargar}
+                          onClick={() => abrir(p)}
+                        />
                       ))}
                     </div>
                   )}
@@ -451,7 +460,13 @@ export default function DashboardEstudiante() {
                   ) : (
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {proyectosLibres.map((p) => (
-                        <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
+                        <TarjetaProyecto
+                          key={p.id}
+                          proyecto={p}
+                          cursosInscritos={cursosInscritos}
+                          onPasado={recargar}
+                          onClick={() => abrir(p)}
+                        />
                       ))}
                     </div>
                   )}
@@ -473,7 +488,7 @@ export default function DashboardEstudiante() {
               <>
               {/* En Semana E es la acción principal; en cursos normales conserva "Caso grupal". */}
               <details
-                open={curso.es_semana_e ? true : undefined}
+                open={curso.es_semana_e || curso.grupo_habilitado ? true : undefined}
                 className="group mt-3 overflow-hidden rounded-md border border-border bg-card"
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-border bg-accent px-3 py-2">
@@ -494,7 +509,13 @@ export default function DashboardEstudiante() {
                   </span>
                 </summary>
                 <div className="p-3">
-                  {user && <GruposEstudiante curso={curso} estudianteId={user.id} />}
+                  {user && (
+                    <GruposEstudiante
+                      curso={curso}
+                      estudianteId={user.id}
+                      recargarKey={recargarGruposKey}
+                    />
+                  )}
                 </div>
               </details>
               </>
@@ -520,7 +541,13 @@ export default function DashboardEstudiante() {
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {libres.map((p) => (
-              <TarjetaProyecto key={p.id} proyecto={p} onClick={() => abrir(p)} />
+              <TarjetaProyecto
+                key={p.id}
+                proyecto={p}
+                cursosInscritos={cursosInscritos}
+                onPasado={recargar}
+                onClick={() => abrir(p)}
+              />
             ))}
           </div>
         </section>
@@ -713,7 +740,17 @@ function ModalCrearMiProyecto({
   );
 }
 
-function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: () => void }) {
+function TarjetaProyecto({
+  proyecto,
+  cursosInscritos,
+  onPasado,
+  onClick,
+}: {
+  proyecto: Proyecto;
+  cursosInscritos?: Curso[];
+  onPasado?: () => void;
+  onClick: () => void;
+}) {
   const estado = ESTADO_LABEL[proyecto.estado] ?? ESTADO_LABEL.construyendo;
   const esV2 = proyecto.version === "v2";
   const modelo = MODELO_LABEL[proyecto.modeloIngreso ?? "unidades"];
@@ -732,7 +769,11 @@ function TarjetaProyecto({ proyecto, onClick }: { proyecto: Proyecto; onClick: (
         <div className="text-[11px] font-medium text-primary">Abrir y editar →</div>
       </button>
       <AccionesProyecto proyecto={proyecto} compacto className="border-t border-border/60 pt-2" />
-      <BotonPasarAGrupal proyecto={proyecto} />
+      <BotonPasarAGrupal
+        proyecto={proyecto}
+        cursosInscritos={cursosInscritos}
+        onPasado={() => onPasado?.()}
+      />
     </div>
   );
 }

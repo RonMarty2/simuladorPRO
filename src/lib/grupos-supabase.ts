@@ -26,6 +26,8 @@ export interface MiembroGrupo {
 export interface GrupoConMiembros extends Grupo {
   miembros: MiembroGrupo[];
   nivel_semana_e: NivelSemanaE | null;
+  proyecto_nombre?: string | null;
+  proyecto_estado?: string | null;
 }
 
 function conTimeout<T>(promise: PromiseLike<T>, ms: number, motivo: string): Promise<T> {
@@ -148,27 +150,30 @@ export async function listarGruposDeCurso(cursoId: string): Promise<GrupoConMiem
       .from("grupo_miembros")
       .select("grupo_id, estudiante_id, perfiles(nombre, apellido, email)")
       .in("grupo_id", ids),
-    supabase.from("proyectos").select("id, grupo_id, datos").in("grupo_id", ids),
+    supabase.from("proyectos").select("id, grupo_id, nombre, estado, datos").in("grupo_id", ids),
   ]);
   if (e2) throw e2;
   if (e3) throw e3;
 
-  return (grupos as Grupo[]).map((g) => ({
-    ...g,
-    // El proyecto del grupo se resuelve por grupo_id (más confiable que proyecto_id).
-    proyecto_id: (proys ?? []).find((p: any) => p.grupo_id === g.id)?.id ?? g.proyecto_id ?? null,
-    nivel_semana_e: obtenerNivelSemanaE(
-      (proys ?? []).find((p: any) => p.grupo_id === g.id)?.datos?.nivelSemanaE
-    ),
-    miembros: (miembros ?? [])
-      .filter((m: any) => m.grupo_id === g.id)
-      .map((m: any) => ({
-        estudiante_id: m.estudiante_id,
-        nombre: m.perfiles?.nombre ?? "",
-        apellido: m.perfiles?.apellido ?? "",
-        email: m.perfiles?.email ?? "",
-      })),
-  }));
+  return (grupos as Grupo[]).map((g) => {
+    const proy = (proys ?? []).find((p: any) => p.grupo_id === g.id);
+    return {
+      ...g,
+      // El proyecto del grupo se resuelve por grupo_id (más confiable que proyecto_id).
+      proyecto_id: proy?.id ?? g.proyecto_id ?? null,
+      proyecto_nombre: proy?.nombre ?? null,
+      proyecto_estado: proy?.estado ?? null,
+      nivel_semana_e: obtenerNivelSemanaE(proy?.datos?.nivelSemanaE),
+      miembros: (miembros ?? [])
+        .filter((m: any) => m.grupo_id === g.id)
+        .map((m: any) => ({
+          estudiante_id: m.estudiante_id,
+          nombre: m.perfiles?.nombre ?? "",
+          apellido: m.perfiles?.apellido ?? "",
+          email: m.perfiles?.email ?? "",
+        })),
+    };
+  });
 }
 
 /** Define la ruta pedagógica de un proyecto Semana E ya creado. */

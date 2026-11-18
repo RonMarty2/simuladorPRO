@@ -151,7 +151,7 @@ export default function ConstruirProyecto() {
         if (listaElegible.length > 0) {
           const idActivo = modoSemanaE
             ? proyectoSemanaEUrl ?? leerProyectoSemanaEActivo(user.id)
-            : leerProyectoActivo(user.id);
+            : proyectoSemanaEUrl ?? leerProyectoActivo(user.id);
           const elegido =
             (idActivo && listaElegible.find((p) => p.id === idActivo)) ||
             (!modoSemanaE ? listaElegible[0] : null);
@@ -160,10 +160,14 @@ export default function ConstruirProyecto() {
             return;
           }
           // Si ya hay en memoria una copia igual o más nueva (ediciones aún sin
-          // guardar), no la pisamos con la de la base.
+          // guardar), no la pisamos con la de la base, salvo en proyectos
+          // grupales (donde varios compañeros o "Pasar a caso grupal" actualizan la base).
           const enMemoria = useProyectoStore.getState().proyecto;
+          const esGrupal = elegido.tipo === "proyecto_grupal" || Boolean(elegido.grupo_id);
           const memoriaMasNueva =
-            enMemoria?.id === elegido.id && enMemoria.actualizado_en >= elegido.actualizado_en;
+            !esGrupal &&
+            enMemoria?.id === elegido.id &&
+            enMemoria.actualizado_en >= elegido.actualizado_en;
           if (!memoriaMasNueva) cargar(elegido);
           if (modoSemanaE) {
             guardarProyectoSemanaEActivo(user.id, elegido.id);

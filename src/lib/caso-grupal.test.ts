@@ -8,7 +8,11 @@ vi.mock("./proyecto-supabase", () => ({
   proyectoAFilaSupabase: vi.fn(),
 }));
 
-import { construirCasoGrupal } from "./caso-grupal";
+import {
+  construirCasoGrupal,
+  limpiarNombreCaso,
+  nombreProyectoGrupalConCaso,
+} from "./caso-grupal";
 import { crearProyectoEjemploCafeteriaV2, crearProyectoVacio } from "./proyecto-factory";
 
 function crearPar() {
@@ -54,5 +58,18 @@ describe("construirCasoGrupal", () => {
     r.productos[0].nombre = "EDITADO POR EL GRUPO";
     r.inversiones.terreno.push({} as any);
     expect(JSON.stringify(individual)).toBe(antes);
+  });
+
+  it("permite pasar un proyecto libre o de otro curso al curso del grupo y actualizar el nombre", () => {
+    const { individual, grupal } = crearPar();
+    individual.curso_id = null;
+    individual.nombre = "PANADERIA — entrega";
+    const r = construirCasoGrupal(individual, grupal, {
+      nombre: nombreProyectoGrupalConCaso("Los emprendedores", individual.nombre),
+    });
+    expect(r.curso_id).toBe("curso-1");
+    expect(r.grupo_id).toBe("grupo-1");
+    expect(r.nombre).toBe("Los emprendedores · PANADERIA");
+    expect(limpiarNombreCaso("PANADERIA — entrega")).toBe("PANADERIA");
   });
 });
