@@ -23,6 +23,7 @@ const CatalogoEventos = lazy(() => import("@/routes/catalogo-eventos"));
 const MisEntregas = lazy(() => import("@/routes/mis-entregas"));
 const GaleriaEjemplos = lazy(() => import("@/routes/galeria-ejemplos"));
 const Escenarios = lazy(() => import("@/routes/escenarios"));
+const EstadosFinancieros = lazy(() => import("@/routes/estados-financieros"));
 const AdminPanel = lazy(() => import("@/routes/admin"));
 const MiPerfil = lazy(() => import("@/routes/mi-perfil"));
 const PresentarProyecto = lazy(() => import("@/routes/presentar-proyecto"));
@@ -142,6 +143,14 @@ export default function App() {
             element={
               <Suspense fallback={<Cargando />}>
                 <Escenarios />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/estados-financieros"
+            element={
+              <Suspense fallback={<Cargando />}>
+                <EstadosFinancieros />
               </Suspense>
             }
           />

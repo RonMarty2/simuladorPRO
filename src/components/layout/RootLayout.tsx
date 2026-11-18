@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PlayCircle,
+  Scale,
   ShieldCheck,
   TrendingUp,
   UserRound,
@@ -35,6 +36,7 @@ const enlacesEstudiante = [
   // haciendo clic en un proyecto de su panel (evita la redundancia).
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/escenarios", label: "Escenarios", icon: ChartScatter },
+  { to: "/estados-financieros", label: "Estados financieros", icon: Scale },
   { to: "/mis-entregas", label: "Mis entregas", icon: BookOpenCheck },
   { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/evaluacion", label: "Evaluación", icon: BookOpenCheck },
@@ -54,6 +56,7 @@ const enlacesDocente = [
   { to: "/construir", label: "Construir proyecto", icon: Hammer },
   { to: "/simular", label: "Simular", icon: PlayCircle },
   { to: "/escenarios", label: "Escenarios", icon: ChartScatter },
+  { to: "/estados-financieros", label: "Estados financieros", icon: Scale },
   { to: "/ejemplos", label: "Ejemplos", icon: BookOpen },
   { to: "/eventos", label: "Catálogo eventos", icon: Newspaper },
 ];
