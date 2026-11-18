@@ -97,8 +97,6 @@ describe("fusionarProyectoGrupal", () => {
       nombre: "Grupo 1",
     });
     const b = {
-      productos: a.productos,
-      inversiones: a.inversiones,
       ...a,
       esSemanaE: false,
       caso_origen_id: null,
