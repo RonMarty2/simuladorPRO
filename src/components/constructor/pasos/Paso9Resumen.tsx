@@ -372,15 +372,20 @@ export default function Paso9Resumen() {
         </div>
       </div>
 
-      {/* ANÁLISIS AVANZADO V2 — debajo del flujo, contraído por defecto */}
+      {/* PUNTO DE EQUILIBRIO OPERATIVO — siempre visible para v1 y v2 */}
+      <div className="order-5">
+        <PanelPuntoEquilibrio proyecto={proyecto} calc={calc} />
+      </div>
+
+      {/* ANÁLISIS AVANZADO V2 — debajo del equilibrio, contraído por defecto */}
       {proyecto.version === "v2" && (
-        <div className="order-5">
+        <div className="order-6">
           <AnalisisAvanzadoV2 proyecto={proyecto} calc={calc} />
         </div>
       )}
 
       {/* Gráficos */}
-      <div className="order-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="order-7 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-4">
           <h3 className="mb-2 text-sm font-medium">Flujo de caja por año</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -449,6 +454,149 @@ export default function Paso9Resumen() {
         }
       />
       </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// PUNTO DE EQUILIBRIO OPERATIVO — visible por defecto para todos los proyectos
+// ============================================================================
+function PanelPuntoEquilibrio({
+  proyecto,
+  calc,
+}: {
+  proyecto: NonNullable<ReturnType<typeof useProyectoStore.getState>["proyecto"]>;
+  calc: ReturnType<typeof construirFlujoCaja>;
+}) {
+  const eq = useMemo(() => calcularEquilibrioPorProducto(proyecto), [proyecto]);
+  const unidadesAnio1 = useMemo(
+    () =>
+      proyecto.productos.reduce(
+        (acc, p) => acc + Number(p.cantidades[0] ?? 0),
+        0
+      ),
+    [proyecto.productos]
+  );
+  const precioPromedio = unidadesAnio1 > 0 ? calc.ingresos[0] / unidadesAnio1 : 0;
+  const cvuProm =
+    unidadesAnio1 > 0 ? calc.costosProduccion[0] / unidadesAnio1 : 0;
+  const costosFijosAnio1 =
+    calc.gastosAdmin[0] +
+    calc.gastosComerc[0] +
+    calc.personal[0] +
+    calc.imprevistos[0];
+  const peSimple = useMemo(
+    () => calcularPuntoEquilibrio(costosFijosAnio1, precioPromedio, cvuProm),
+    [costosFijosAnio1, precioPromedio, cvuProm]
+  );
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="rounded bg-primary/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary font-mono">
+            PE
+          </span>
+          <h3 className="text-base font-semibold tracking-tight">
+            Punto de equilibrio operativo
+          </h3>
+        </div>
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+            !isFinite(eq.factorVolumen)
+              ? "bg-destructive/10 text-destructive"
+              : eq.alcanza
+                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                : "bg-amber-500/15 text-amber-800 dark:text-amber-300"
+          )}
+        >
+          {!isFinite(eq.factorVolumen)
+            ? "No equilibra con el margen actual"
+            : eq.alcanza
+              ? "✓ Supera el umbral operativo"
+              : "⚠ Debajo del umbral operativo"}
+        </span>
+      </div>
+
+      <p className="mt-1 text-xs text-muted-foreground">
+        {eq.tipo === "beneficio"
+          ? "Beneficio anual mínimo necesario para cubrir costos operativos."
+          : "Volumen y ventas mínimas del año 1 para cubrir todos tus costos fijos y variables sin ganar ni perder."}
+      </p>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="rounded-md border border-border/70 bg-secondary/30 p-2.5">
+          <div className="text-[11px] text-muted-foreground">
+            {eq.tipo === "beneficio" ? "Beneficio mínimo/año" : "Equilibrio anual"}
+          </div>
+          <div className="mt-0.5 text-sm font-bold tabular-nums">
+            {isFinite(eq.ingresoEquilibrio)
+              ? formatearBolivianos(eq.ingresoEquilibrio)
+              : "No equilibra"}
+          </div>
+        </div>
+        <div className="rounded-md border border-border/70 bg-secondary/30 p-2.5">
+          <div className="text-[11px] text-muted-foreground">Equilibrio mensual</div>
+          <div className="mt-0.5 text-sm font-bold tabular-nums">
+            {isFinite(eq.ingresoEquilibrio)
+              ? `${formatearBolivianos(eq.ingresoEquilibrio / 12)}/mes`
+              : "—"}
+          </div>
+        </div>
+        <div className="rounded-md border border-border/70 bg-secondary/30 p-2.5">
+          <div className="text-[11px] text-muted-foreground">Costos fijos (año 1)</div>
+          <div className="mt-0.5 text-sm font-bold tabular-nums">
+            {formatearBolivianos(costosFijosAnio1)}
+          </div>
+        </div>
+        <div className="rounded-md border border-border/70 bg-secondary/30 p-2.5">
+          <div className="text-[11px] text-muted-foreground">Margen de seguridad</div>
+          <div
+            className={cn(
+              "mt-0.5 text-sm font-bold tabular-nums",
+              isFinite(eq.margenSeguridad) && eq.margenSeguridad > 0
+                ? "text-emerald-700 dark:text-emerald-400"
+                : "text-destructive"
+            )}
+          >
+            {isFinite(eq.margenSeguridad)
+              ? `${fmtNum(eq.margenSeguridad * 100, 1)}%`
+              : "—"}
+          </div>
+        </div>
+      </div>
+
+      {eq.tipo === "unidades" && eq.filas.length > 0 && (
+        <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {eq.filas.map((f) => (
+            <div
+              key={f.id}
+              className="flex items-center justify-between rounded border border-border/60 bg-background/60 px-2.5 py-1.5 text-[11px]"
+            >
+              <span className="truncate font-medium">{f.nombre}</span>
+              <span className="ml-2 shrink-0 font-mono font-semibold tabular-nums">
+                {isFinite(f.unidadesEquilibrio)
+                  ? `${Math.ceil(f.unidadesEquilibrio).toLocaleString("es-BO")} ${f.unidad}/año (${Math.ceil(f.unidadesEquilibrio / 12).toLocaleString("es-BO")}/mes · plan ${Math.round(f.unidadesAnio1).toLocaleString("es-BO")})`
+                  : "No equilibra"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isFinite(peSimple.unidades) &&
+        precioPromedio > 0 &&
+        eq.tipo === "unidades" &&
+        eq.filas.length === 1 && (
+          <GraficoEquilibrio
+            precio={precioPromedio}
+            cvu={cvuProm}
+            costosFijos={costosFijosAnio1}
+            pe={peSimple.unidades}
+            ventaAnio1={unidadesAnio1}
+          />
+        )}
     </div>
   );
 }

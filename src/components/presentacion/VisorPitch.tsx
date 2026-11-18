@@ -772,30 +772,218 @@ function Equilibrio({
           />
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Lectura de viabilidad operativa
             </div>
-            <div className="mt-2 text-xl font-bold text-slate-900">
-              {eq.alcanza
-                ? "Las ventas proyectadas superan el umbral de supervivencia"
-                : "Se requiere incrementar volumen o reducir costos fijos"}
+            <div className="mt-1.5 text-xl font-bold text-slate-900">
+              {!Number.isFinite(factor)
+                ? "El margen de contribución actual no cubre los costos"
+                : eq.alcanza
+                  ? "Las ventas proyectadas superan el umbral de supervivencia"
+                  : "Se requiere incrementar volumen o reducir costos fijos"}
             </div>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+            <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
               El punto de equilibrio representa el volumen mínimo donde los ingresos igualan los costos totales.
               Cualquier venta adicional genera utilidad neta directa para el proyecto.
             </p>
           </div>
-          <div className="rounded-xl border border-teal-200 bg-teal-50/50 p-4">
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Costos fijos (año 1)
+              </div>
+              <div className="mt-1 text-base font-bold text-slate-900 tabular-nums">
+                {fmtBs(eq.costosFijos)}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Equilibrio mensual
+              </div>
+              <div className="mt-1 text-base font-bold text-teal-800 tabular-nums">
+                {Number.isFinite(eq.ingresoEquilibrio)
+                  ? `${fmtBs(eq.ingresoEquilibrio / 12)}/mes`
+                  : "No equilibra"}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Margen de seguridad
+              </div>
+              <div
+                className={`mt-1 text-base font-bold tabular-nums ${
+                  Number.isFinite(eq.margenSeguridad) && eq.margenSeguridad > 0
+                    ? "text-emerald-700"
+                    : "text-amber-700"
+                }`}
+              >
+                {Number.isFinite(eq.margenSeguridad)
+                  ? `${fmtNum(eq.margenSeguridad * 100, 1)}%`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          {!esBeneficio && Number.isFinite(factor) && eq.ingresoAnio1 > 0 && (
+            <GraficoEquilibrioPitch
+              costosFijos={eq.costosFijos}
+              ingresoAnio1={eq.ingresoAnio1}
+              costoVariableAnio1={base.resultado.costosProduccion[0] ?? 0}
+              factorEquilibrio={factor}
+            />
+          )}
+
+          <div className="rounded-xl border border-teal-200 bg-teal-50/50 p-3.5">
             <span className="font-bold text-teal-900 text-sm">Respaldo:</span>{" "}
             <span className="text-sm text-teal-800">
-              La empresa opera con margen de cobertura positivo desde el primer año de operaciones.
+              {!Number.isFinite(factor)
+                ? "Ajusta precios o costos variables para lograr margen de contribución positivo."
+                : eq.alcanza
+                  ? `La empresa opera con un margen de seguridad de ${fmtNum(eq.margenSeguridad * 100, 1)}% sobre su umbral operativo.`
+                  : `Falta cubrir ${fmtBs(Math.max(0, eq.ingresoEquilibrio - eq.ingresoAnio1))} anuales para alcanzar el punto de equilibrio.`}
             </span>
           </div>
         </div>
       </div>
     </Marco>
+  );
+}
+
+function GraficoEquilibrioPitch({
+  costosFijos,
+  ingresoAnio1,
+  costoVariableAnio1,
+  factorEquilibrio,
+}: {
+  costosFijos: number;
+  ingresoAnio1: number;
+  costoVariableAnio1: number;
+  factorEquilibrio: number;
+}) {
+  const xMax = Math.max(1, factorEquilibrio, 1.25) * 1.15;
+  const maxY = Math.max(
+    costosFijos + costoVariableAnio1 * xMax,
+    ingresoAnio1 * xMax,
+    1
+  );
+  const W = 520;
+  const H = 175;
+  const padL = 46;
+  const padR = 18;
+  const padT = 18;
+  const padB = 26;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  const mapX = (f: number) => padL + (f / xMax) * innerW;
+  const mapY = (y: number) => padT + innerH - (y / maxY) * innerH;
+
+  const xEq = mapX(factorEquilibrio);
+  const yEq = mapY(ingresoAnio1 * factorEquilibrio);
+  const xProy = mapX(1);
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2">
+      <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-600">
+        <span>Curva de equilibrio (Ingresos vs. Costo total)</span>
+        <div className="flex items-center gap-3 text-[10px]">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-600" />
+            Ingresos
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
+            Costo total
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-indigo-600" />
+            Equilibrio
+          </span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full overflow-visible">
+        <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="#cbd5e1" strokeWidth="1" />
+        <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="#cbd5e1" strokeWidth="1" />
+
+        {/* Costos fijos horizontales */}
+        <line
+          x1={padL}
+          y1={mapY(costosFijos)}
+          x2={W - padR}
+          y2={mapY(costosFijos)}
+          stroke="#94a3b8"
+          strokeDasharray="4 3"
+          strokeWidth="1.2"
+        />
+
+        {/* Costo total */}
+        <line
+          x1={mapX(0)}
+          y1={mapY(costosFijos)}
+          x2={mapX(xMax)}
+          y2={mapY(costosFijos + costoVariableAnio1 * xMax)}
+          stroke="#f43f5e"
+          strokeWidth="2.4"
+        />
+
+        {/* Ingresos */}
+        <line
+          x1={mapX(0)}
+          y1={mapY(0)}
+          x2={mapX(xMax)}
+          y2={mapY(ingresoAnio1 * xMax)}
+          stroke="#059669"
+          strokeWidth="2.4"
+        />
+
+        {/* Línea vertical de venta proyectada (100% del plan) */}
+        <line
+          x1={xProy}
+          y1={padT}
+          x2={xProy}
+          y2={H - padB}
+          stroke="#0d9488"
+          strokeDasharray="3 3"
+          strokeWidth="1.4"
+        />
+        <text x={xProy} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#0f766e" fontWeight="600">
+          Plan (100%)
+        </text>
+
+        {/* Punto de equilibrio */}
+        {factorEquilibrio <= xMax && (
+          <>
+            <line
+              x1={xEq}
+              y1={yEq}
+              x2={xEq}
+              y2={H - padB}
+              stroke="#4f46e5"
+              strokeDasharray="4 2"
+              strokeWidth="1.4"
+            />
+            <circle cx={xEq} cy={yEq} r="4.5" fill="#4f46e5" stroke="#ffffff" strokeWidth="1.5" />
+            <text
+              x={xEq}
+              y={Math.max(padT + 9, yEq - 9)}
+              textAnchor="middle"
+              fontSize="9.5"
+              fill="#4338ca"
+              fontWeight="700"
+            >
+              PE ({fmtNum(factorEquilibrio * 100, 0)}%)
+            </text>
+          </>
+        )}
+
+        <text x={padL - 4} y={mapY(costosFijos) + 3} textAnchor="end" fontSize="9" fill="#64748b">
+          CF
+        </text>
+      </svg>
+    </div>
   );
 }
 

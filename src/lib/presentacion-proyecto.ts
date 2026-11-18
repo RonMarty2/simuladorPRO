@@ -266,9 +266,7 @@ export function construirModeloPitch(proyecto: Proyecto) {
       id: "equilibrio",
       titulo: "Punto de equilibrio",
       etiqueta: "06 · Umbral operativo",
-      visible:
-        mercado[0].demanda > 0 &&
-        Number.isFinite(resultado.puntoEquilibrio.unidades),
+      visible: mercado.some((dato) => dato.ingresos > 0 || dato.demanda > 0),
     },
     {
       id: "financiamiento",

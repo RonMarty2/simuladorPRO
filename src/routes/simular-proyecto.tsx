@@ -1,5 +1,5 @@
 import { fmtNum } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Newspaper, PlayCircle, Trophy, XCircle, AlertTriangle } from "lucide-react";
 import {
@@ -22,6 +22,7 @@ import { listarMisProyectos, listarProyectosGrupales } from "@/lib/proyecto-supa
 import { listarMisInscripciones, type Curso } from "@/lib/cursos-supabase";
 import { formatearBolivianos, cn } from "@/lib/utils";
 import { calcularBaseProyecto, mesesPorTurno, resumenGolpeEvento } from "@/lib/motor-eventos";
+import { calcularEquilibrioPorProducto } from "@/lib/equilibrio-por-producto";
 import { construirFlujoCaja } from "@/lib/flujo-proyecto";
 import { tirCalculable } from "@/lib/acotar-numero";
 import { useIntervaloVisible } from "@/hooks/useIntervaloVisible";
@@ -200,13 +201,29 @@ export default function SimularProyecto() {
 
   // Pantalla de finalización
   if (sim.estado !== "activa") {
-    return <PantallaFinalizada simulacion={sim} historial={historial} onAbandonar={abandonar} />;
+    return (
+      <PantallaFinalizada
+        proyecto={proyecto}
+        simulacion={sim}
+        historial={historial}
+        onAbandonar={abandonar}
+      />
+    );
   }
 
   const meses = mesesPorTurno(sim.frecuencia);
   const mesActual = sim.turno_actual * meses + 1;
   const mesesTotales = sim.turnos_totales * meses;
   const progreso = (sim.turno_actual / sim.turnos_totales) * 100;
+  const eq = calcularEquilibrioPorProducto(proyecto);
+  // En proyectos costo-beneficio / sociales no se vende: el umbral en Bs no es comparable con los fondos.
+  const mostrarEquilibrio =
+    eq.tipo === "unidades" && sim.estado_actual.presupuesto_multiplicador === undefined;
+  const pePeriodo = Number.isFinite(eq.ingresoEquilibrio)
+    ? (eq.ingresoEquilibrio / 12) * meses
+    : Infinity;
+  const etiquetaPeriodo =
+    sim.frecuencia === "semestral" ? "sem" : sim.frecuencia === "trimestral" ? "trim" : "mes";
 
   return (
     <div className="space-y-4">
@@ -270,6 +287,33 @@ export default function SimularProyecto() {
             valor={`${fmtNum((sim.estado_actual.reputacion * 100), 0)}%`}
             positivo={sim.estado_actual.reputacion >= 0.5}
           />
+          {mostrarEquilibrio && (
+            <Metrica
+              titulo="Punto de equilibrio"
+              valor={
+                Number.isFinite(pePeriodo)
+                  ? `${formatearBolivianos(pePeriodo)}/${etiquetaPeriodo}`
+                  : "No equilibra"
+              }
+              detalle={
+                !Number.isFinite(pePeriodo)
+                  ? "Margen de contribución ≤ 0"
+                  : sim.turno_actual > 0
+                    ? sim.estado_actual.delta_ingresos >= pePeriodo
+                      ? `Último turno: +${formatearBolivianos(sim.estado_actual.delta_ingresos - pePeriodo)} sobre umbral`
+                      : `Último turno: ${formatearBolivianos(sim.estado_actual.delta_ingresos - pePeriodo)} bajo umbral`
+                    : Number.isFinite(eq.margenSeguridad)
+                      ? `Margen seg. plan: ${fmtNum(eq.margenSeguridad * 100, 1)}%`
+                      : undefined
+              }
+              positivo={
+                Number.isFinite(pePeriodo) &&
+                (sim.turno_actual > 0
+                  ? sim.estado_actual.delta_ingresos >= pePeriodo
+                  : eq.alcanza)
+              }
+            />
+          )}
           {sim.estado_actual.socios !== undefined && (
             <Metrica
               titulo="Socios activos"
@@ -602,16 +646,26 @@ function GraficosHistorial({ historial }: { historial: ReturnType<typeof useSimu
 }
 
 function PantallaFinalizada({
+  proyecto,
   simulacion,
   historial,
   onAbandonar,
 }: {
+  proyecto: Proyecto;
   simulacion: ReturnType<typeof useSimulacionStore.getState>["simulacion"];
   historial: ReturnType<typeof useSimulacionStore.getState>["historial"];
   onAbandonar: () => Promise<void>;
 }) {
+  const eq = useMemo(() => calcularEquilibrioPorProducto(proyecto), [proyecto]);
   if (!simulacion) return null;
   const quebrada = simulacion.estado === "quebrada";
+  const meses = mesesPorTurno(simulacion.frecuencia);
+  const pePeriodo = Number.isFinite(eq.ingresoEquilibrio)
+    ? (eq.ingresoEquilibrio / 12) * meses
+    : Infinity;
+  const turnosSobreEquilibrio = Number.isFinite(pePeriodo)
+    ? historial.filter((h) => h.estado_despues.delta_ingresos >= pePeriodo).length
+    : 0;
   return (
     <div className="space-y-4">
       <div
@@ -654,6 +708,22 @@ function PantallaFinalizada({
             titulo="Reputación final"
             valor={`${fmtNum((simulacion.estado_actual.reputacion * 100), 0)}%`}
           />
+          {eq.tipo === "unidades" && simulacion.estado_actual.presupuesto_multiplicador === undefined && (
+            <>
+              <ResumenCelda
+                titulo="Punto de equilibrio / turno"
+                valor={Number.isFinite(pePeriodo) ? formatearBolivianos(pePeriodo) : "No equilibra"}
+              />
+              <ResumenCelda
+                titulo="Turnos sobre equilibrio"
+                valor={
+                  Number.isFinite(pePeriodo) && historial.length > 0
+                    ? `${turnosSobreEquilibrio} / ${historial.length}`
+                    : "—"
+                }
+              />
+            </>
+          )}
           {simulacion.estado_actual.socios !== undefined && (
             <ResumenCelda titulo="Socios al final" valor={fmtNum(simulacion.estado_actual.socios, 0)} />
           )}
@@ -706,6 +776,12 @@ function PantallaInicio({
   const totalMeses = turnosTotales * meses;
   const base = calcularBaseProyecto(proyecto);
   const indicadores = construirFlujoCaja(proyecto).indicadores;
+  const eq = useMemo(() => calcularEquilibrioPorProducto(proyecto), [proyecto]);
+  const pePeriodo = Number.isFinite(eq.ingresoEquilibrio)
+    ? (eq.ingresoEquilibrio / 12) * meses
+    : Infinity;
+  const etiquetaPeriodo =
+    frecuencia === "semestral" ? "sem" : frecuencia === "trimestral" ? "trim" : "mes";
   const pasos = [
     {
       titulo: "Operas tu proyecto mes a mes",
@@ -749,13 +825,17 @@ function PantallaInicio({
 
       <div className="rounded-lg border border-border bg-card p-4">
         <h2 className="mb-2 text-sm font-semibold">Tu punto de partida</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <ResumenCelda titulo="Caja inicial" valor={formatearBolivianos(base.capitalInicial)} />
           <ResumenCelda titulo="Ingresos año 1 (plan)" valor={formatearBolivianos(base.ingresosAnuales)} />
           <ResumenCelda titulo="VAN del plan" valor={formatearBolivianos(indicadores.van)} />
           <ResumenCelda
             titulo="TIR del plan"
             valor={tirCalculable(indicadores.tir) ? `${fmtNum((indicadores.tir * 100), 1)}%` : "No calculable"}
+          />
+          <ResumenCelda
+            titulo={`Equilibrio (${etiquetaPeriodo})`}
+            valor={Number.isFinite(pePeriodo) ? formatearBolivianos(pePeriodo) : "No equilibra"}
           />
         </div>
       </div>
