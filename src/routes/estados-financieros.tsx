@@ -10,6 +10,7 @@ import {
   GitBranch,
   Landmark,
   Layers,
+  Lightbulb,
   Maximize2,
   Minimize2,
   Scale,
@@ -89,29 +90,6 @@ export default function EstadosFinancierosRoute() {
   const [disponibles, setDisponibles] = useState<Proyecto[] | null>(null);
   const [pestana, setPestana] = useState<PestanaContable>("balance");
   const [modoPresentacion, setModoPresentacion] = useState(false);
-
-  const indiceActual = PESTANAS_CONTABLES.findIndex((p) => p.id === pestana);
-
-  useEffect(() => {
-    if (!modoPresentacion) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setModoPresentacion(false);
-      } else if (e.key === "ArrowRight") {
-        setPestana((actual) => {
-          const i = PESTANAS_CONTABLES.findIndex((p) => p.id === actual);
-          return PESTANAS_CONTABLES[Math.min(PESTANAS_CONTABLES.length - 1, i + 1)].id;
-        });
-      } else if (e.key === "ArrowLeft") {
-        setPestana((actual) => {
-          const i = PESTANAS_CONTABLES.findIndex((p) => p.id === actual);
-          return PESTANAS_CONTABLES[Math.max(0, i - 1)].id;
-        });
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [modoPresentacion]);
 
   useEffect(() => {
     if (!user) return;
@@ -294,134 +272,750 @@ export default function EstadosFinancierosRoute() {
       {pestana === "flujos" && <VistaFlujosContables ef={ef} />}
       {pestana === "ratios" && <VistaRatiosYDuPont ef={ef} />}
 
-      {/* Modo presentación a pantalla completa para defensa de Estados Financieros */}
+      {/* Modo presentación ejecutiva (5 diapositivas resumidas para exponer) */}
       {modoPresentacion && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#070d19] text-slate-100">
-          {/* Barra superior */}
-          <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b1322] px-4 md:px-6">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-teal-400" />
-              <span className="truncate text-xs font-bold text-slate-200 md:text-sm">
-                {proyecto.nombre} · Administración Financiera
-              </span>
-              <span className="hidden text-xs text-slate-400 sm:inline">
-                · {PESTANAS_CONTABLES[indiceActual]?.titulo}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    if (!document.fullscreenElement) {
-                      await document.documentElement.requestFullscreen();
-                    } else {
-                      await document.exitFullscreen();
-                    }
-                  } catch {}
-                }}
-                className="rounded-md border border-white/10 p-1.5 text-slate-300 hover:bg-white/10"
-                title="Pantalla completa"
-              >
-                {document.fullscreenElement ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (document.fullscreenElement) {
-                    document.exitFullscreen().catch(() => {});
-                  }
-                  setModoPresentacion(false);
-                }}
-                className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-white/10"
-              >
-                <X className="h-4 w-4" /> Salir
-              </button>
-            </div>
-          </div>
-
-          {/* Lienzo de la lámina contable */}
-          <div className="flex min-h-0 flex-1 items-center justify-center p-2 md:p-5">
-            <div className="h-full w-full max-w-[1550px] overflow-y-auto rounded-xl border border-slate-700/60 bg-background p-4 sm:p-6 text-foreground shadow-2xl">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                    Lámina Contable {indiceActual + 1} de {PESTANAS_CONTABLES.length} · {PESTANAS_CONTABLES[indiceActual]?.sub}
-                  </div>
-                  <h2 className="font-display text-xl font-bold tracking-tight">
-                    {PESTANAS_CONTABLES[indiceActual]?.titulo} — {proyecto.nombre}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Partida doble verificada
-                </div>
-              </div>
-
-              {pestana === "balance" && <VistaBalance ef={ef} nombreProyecto={proyecto.nombre} />}
-              {pestana === "resultados" && <VistaEstadoResultados ef={ef} nombreProyecto={proyecto.nombre} />}
-              {pestana === "flujos" && <VistaFlujosContables ef={ef} />}
-              {pestana === "ratios" && <VistaRatiosYDuPont ef={ef} />}
-            </div>
-          </div>
-
-          {/* Barra inferior de navegación de láminas */}
-          <div className="flex h-14 shrink-0 items-center justify-between border-t border-white/10 bg-[#0b1322] px-4 md:px-6">
-            <div className="text-xs font-medium text-slate-400">
-              Lámina <span className="font-bold text-white">{indiceActual + 1}</span> de{" "}
-              <span className="font-bold text-white">{PESTANAS_CONTABLES.length}</span>
-              <span className="mx-2 text-slate-600">·</span>
-              <span className="text-slate-300">{PESTANAS_CONTABLES[indiceActual]?.titulo}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                disabled={indiceActual <= 0}
-                onClick={() =>
-                  setPestana(PESTANAS_CONTABLES[Math.max(0, indiceActual - 1)].id)
-                }
-                className="flex items-center gap-1 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-30"
-              >
-                <ChevronLeft className="h-4 w-4" /> Anterior
-              </button>
-              <div className="hidden items-center gap-1.5 sm:flex">
-                {PESTANAS_CONTABLES.map((item, pos) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setPestana(item.id)}
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      pos === indiceActual
-                        ? "w-7 bg-teal-400"
-                        : "w-2 bg-white/20 hover:bg-white/40"
-                    )}
-                    title={item.titulo}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                disabled={indiceActual >= PESTANAS_CONTABLES.length - 1}
-                onClick={() =>
-                  setPestana(
-                    PESTANAS_CONTABLES[
-                      Math.min(PESTANAS_CONTABLES.length - 1, indiceActual + 1)
-                    ].id
-                  )
-                }
-                className="flex items-center gap-1.5 rounded-full bg-teal-500 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-teal-400 disabled:opacity-30"
-              >
-                Siguiente <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <PresentacionEjecutivaContable
+          proyecto={proyecto}
+          ef={ef}
+          onSalir={() => setModoPresentacion(false)}
+        />
       )}
+    </div>
+  );
+}
+
+// ============================================================================
+// PRESENTACIÓN EJECUTIVA CONTABLE (5 DIAPOSITIVAS RESUMIDAS PARA EXPONER)
+// ============================================================================
+const LAMINAS_EXPOSICION = [
+  {
+    id: "portada",
+    etiqueta: "01 · Síntesis Ejecutiva",
+    titulo: "Dictamen Contable y Financiero",
+    guia: "Presenta el nombre del proyecto, confirma que la ecuación patrimonial cuadra al centavo y destaca los 4 indicadores clave de la portada.",
+  },
+  {
+    id: "balance",
+    etiqueta: "02 · Balance de Apertura",
+    titulo: "Ecuación Patrimonial e Inversión (Año 0)",
+    guia: "Explica a la izquierda en qué se invierte cada boliviano (Activo) y a la derecha quién lo financia (Deuda bancaria vs. Aporte propio de socios).",
+  },
+  {
+    id: "resultados",
+    etiqueta: "03 · Estado de Resultados",
+    titulo: "Cascada de Márgenes: de Ventas a Utilidad Neta",
+    guia: "Muestra cómo las ventas cubren costos directos y gastos operativos generando un EBITDA y Utilidad Neta positivos desde el Año 1 hasta el Año 5.",
+  },
+  {
+    id: "flujos",
+    etiqueta: "04 · Tesorería y Deuda",
+    titulo: "Flujo Económico vs. Flujo del Inversionista",
+    guia: "Compara la rentabilidad del proyecto puro (al WACC) contra la rentabilidad del bolsillo de los socios (al Ke) tras cumplir con el servicio de la deuda.",
+  },
+  {
+    id: "dupont",
+    etiqueta: "05 · Ratios y Sistema DuPont",
+    titulo: "Descomposición del ROE, Liquidez y Solvencia",
+    guia: "Explica la identidad DuPont: cuánto del ROE viene del margen neto, cuánto de la rotación del activo y cuánto del apalancamiento financiero.",
+  },
+] as const;
+
+function PresentacionEjecutivaContable({
+  proyecto,
+  ef,
+  onSalir,
+}: {
+  proyecto: Proyecto;
+  ef: EstadosFinancierosProyecto;
+  onSalir: () => void;
+}) {
+  const [indice, setIndice] = useState(0);
+  const [mostrarGuia, setMostrarGuia] = useState(false);
+  const lamina = LAMINAS_EXPOSICION[indice];
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onSalir();
+      } else if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        setIndice((i) => Math.min(LAMINAS_EXPOSICION.length - 1, i + 1));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setIndice((i) => Math.max(0, i - 1));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onSalir]);
+
+  const b0 = ef.balanceApertura;
+  const total0 = b0.totalActivo || 1;
+  const er1 = ef.estadoResultados[0];
+  const er5 = ef.estadoResultados[4];
+  const dp1 = ef.dupontPorAnio[0];
+  const prom = ef.ratiosPromedio;
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#070d19] text-slate-100 select-none">
+      {/* Barra superior */}
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b1322] px-4 md:px-6">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-teal-400" />
+          <span className="truncate text-xs font-bold text-slate-200 md:text-sm">
+            {proyecto.nombre} · Defensa de Estados Financieros
+          </span>
+          <span className="hidden text-xs text-slate-400 sm:inline">
+            · {lamina.etiqueta} — {lamina.titulo}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMostrarGuia((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+              mostrarGuia
+                ? "border-amber-400/50 bg-amber-400/20 text-amber-200"
+                : "border-white/10 text-slate-300 hover:bg-white/10"
+            )}
+            title="Qué decir al exponer esta lámina"
+          >
+            <Lightbulb className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Guía para exponer</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                if (!document.fullscreenElement) {
+                  await document.documentElement.requestFullscreen();
+                } else {
+                  await document.exitFullscreen();
+                }
+              } catch {}
+            }}
+            className="rounded-md border border-white/10 p-1.5 text-slate-300 hover:bg-white/10"
+            title="Pantalla completa"
+          >
+            {document.fullscreenElement ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+              }
+              onSalir();
+            }}
+            className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-white/10"
+          >
+            <X className="h-4 w-4" /> Salir
+          </button>
+        </div>
+      </div>
+
+      {/* Área central de la diapositiva 16:9 sin scroll */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center p-2 md:p-4">
+        <div className="relative h-full w-full max-w-[1550px] overflow-hidden rounded-xl border border-slate-700/60 bg-[#faf8f5] text-slate-900 shadow-2xl">
+          {/* LÁMINA 1: PORTADA FINANCIERA */}
+          {lamina.id === "portada" && (
+            <div className="relative flex h-full flex-col justify-between bg-[#0a101d] p-[4.5%] text-white">
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-indigo-500" />
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="rounded bg-teal-500/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-teal-300 border border-teal-500/30">
+                  Administración Financiera · Estados Contables
+                </span>
+                <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-3 py-1 text-xs font-bold text-emerald-300">
+                  ✓ Partida Doble Verificada (Activo = Pasivo + Patrimonio)
+                </span>
+              </div>
+
+              <div className="my-auto grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr] items-center">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-teal-400">
+                    Defensa Ejecutiva · Horizonte 5 Años
+                  </div>
+                  <h1 className="mt-2 font-display text-[clamp(26px,3.8vw,60px)] font-bold leading-tight tracking-tight text-white">
+                    {proyecto.nombre}
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-[clamp(12px,1.2vw,18px)] text-slate-300 leading-relaxed">
+                    Síntesis de Balance de Apertura, Estado de Resultados, Flujos de Efectivo y Descomposición DuPont para evaluación financiera.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Activo Total Apertura (Año 0)
+                    </div>
+                    <div className="mt-1 font-mono text-[clamp(18px,2vw,30px)] font-bold text-teal-300">
+                      {formatearBolivianos(b0.totalActivo)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      {fmtPct(b0.totalPatrimonio / total0)} propio · {fmtPct(b0.totalPasivo / total0)} deuda
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      EBITDA Año 1 → Año 5
+                    </div>
+                    <div className="mt-1 font-mono text-[clamp(16px,1.7vw,26px)] font-bold text-emerald-300">
+                      {formatearBolivianos(er1.ebitda)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      Año 5: {formatearBolivianos(er5.ebitda)} ({fmtPct(prom.margenEbitda)} prom.)
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      ROE Promedio (Accionista)
+                    </div>
+                    <div className="mt-1 font-mono text-[clamp(18px,2vw,30px)] font-bold text-indigo-300">
+                      {fmtPct(prom.roe)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      ROA Neto prom.: {fmtPct(prom.roaNeto)} · WACC: {fmtPct(ef.wacc)}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      VAN del Proyecto (al WACC)
+                    </div>
+                    <div className={cn("mt-1 font-mono text-[clamp(18px,2vw,30px)] font-bold", ef.vanProyecto >= 0 ? "text-emerald-400" : "text-rose-400")}>
+                      {formatearBolivianos(ef.vanProyecto)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      TIR: {tirCalculable(ef.tirProyecto) ? fmtPct(ef.tirProyecto) : "N/A"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/10 pt-3 text-xs text-slate-400">
+                <span>Expresado en Bolivianos (Bs) · Normativa Tributaria Bolivia (IVA 13%, IT 3%, IUE 25%)</span>
+                <span className="font-semibold text-teal-300">Usa las flechas ← → para exponer</span>
+              </div>
+            </div>
+          )}
+
+          {/* LÁMINA 2: BALANCE DE APERTURA RESUMIDO */}
+          {lamina.id === "balance" && (
+            <MarcoLaminaContable
+              etiqueta={lamina.etiqueta}
+              titulo={lamina.titulo}
+              subtitulo="Distribución de recursos invertidos (Activo) frente a sus fuentes de financiamiento (Pasivo y Patrimonio)."
+            >
+              <div className="grid h-full min-h-0 grid-cols-1 gap-4 lg:grid-cols-2">
+                {/* Columna Izquierda: ACTIVO */}
+                <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-white p-5 shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between border-b-2 border-emerald-700 pb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                        1. ACTIVO (¿En qué se invierte?)
+                      </span>
+                      <span className="font-mono text-sm font-bold text-emerald-900">100,0%</span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">
+                          1.1 Activo Corriente (Liquidez)
+                        </div>
+                        <div className="mt-1 font-mono text-xl font-bold text-slate-900">
+                          {formatearBolivianos(b0.totalActivoCorriente)}
+                        </div>
+                        <div className="text-xs font-semibold text-emerald-800">
+                          {fmtPct(b0.totalActivoCorriente / total0)} del Activo
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-teal-100 bg-teal-50/60 p-3">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">
+                          1.2 Activo No Corriente (Fijo)
+                        </div>
+                        <div className="mt-1 font-mono text-xl font-bold text-slate-900">
+                          {formatearBolivianos(b0.totalActivoNoCorriente)}
+                        </div>
+                        <div className="text-xs font-semibold text-teal-800">
+                          {fmtPct(b0.totalActivoNoCorriente / total0)} del Activo
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      {ef.rubrosInversion
+                        .filter((r) => r.montoBruto > 0)
+                        .slice(0, 5)
+                        .map((r) => (
+                          <div key={r.clave}>
+                            <div className="flex justify-between text-xs">
+                              <span className="font-medium text-slate-700">{r.etiqueta}</span>
+                              <span className="font-mono font-bold text-slate-900">
+                                {formatearBolivianos(r.montoBruto)} ({fmtPct(r.porcentajeActivo)})
+                              </span>
+                            </div>
+                            <div className="mt-1 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-teal-600"
+                                style={{ width: `${Math.max(3, r.porcentajeActivo * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t-2 border-b-4 border-double border-slate-900 py-2 font-mono text-base font-bold">
+                    <span>TOTAL ACTIVO</span>
+                    <span className="text-emerald-800">{formatearBolivianos(b0.totalActivo)}</span>
+                  </div>
+                </div>
+
+                {/* Columna Derecha: PASIVO + PATRIMONIO */}
+                <div className="flex flex-col justify-between rounded-2xl border border-indigo-200 bg-white p-5 shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between border-b-2 border-indigo-700 pb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-indigo-800">
+                        2. PASIVO + 3. PATRIMONIO (¿Cómo se financia?)
+                      </span>
+                      <span className="font-mono text-sm font-bold text-indigo-900">100,0%</span>
+                    </div>
+
+                    <div className="mt-3 space-y-2.5">
+                      <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase text-rose-800">
+                            2.1 Pasivo Corriente (Deuda Corto Plazo ≤ 1 año)
+                          </span>
+                          <span className="font-mono text-xs font-bold text-rose-700">
+                            {fmtPct(b0.totalPasivoCorriente / total0)}
+                          </span>
+                        </div>
+                        <div className="mt-1 font-mono text-xl font-bold text-slate-900">
+                          {formatearBolivianos(b0.totalPasivoCorriente)}
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase text-amber-900">
+                            2.2 Pasivo No Corriente (Deuda Largo Plazo &gt; 1 año)
+                          </span>
+                          <span className="font-mono text-xs font-bold text-amber-800">
+                            {fmtPct(b0.totalPasivoNoCorriente / total0)}
+                          </span>
+                        </div>
+                        <div className="mt-1 font-mono text-xl font-bold text-slate-900">
+                          {formatearBolivianos(b0.totalPasivoNoCorriente)}
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border-2 border-indigo-300 bg-indigo-50/70 p-3.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase text-indigo-900">
+                            3. Patrimonio Neto (Capital Social / Aporte Propio)
+                          </span>
+                          <span className="font-mono text-xs font-bold text-indigo-800">
+                            {fmtPct(b0.totalPatrimonio / total0)}
+                          </span>
+                        </div>
+                        <div className="mt-1 font-mono text-2xl font-bold text-indigo-950">
+                          {formatearBolivianos(b0.totalPatrimonio)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t-2 border-b-4 border-double border-slate-900 py-2 font-mono text-base font-bold">
+                    <span>TOTAL PASIVO Y PATRIMONIO</span>
+                    <span className="text-indigo-800">{formatearBolivianos(b0.totalPasivoYPatrimonio)}</span>
+                  </div>
+                </div>
+              </div>
+            </MarcoLaminaContable>
+          )}
+
+          {/* LÁMINA 3: ESTADO DE RESULTADOS RESUMIDO */}
+          {lamina.id === "resultados" && (
+            <MarcoLaminaContable
+              etiqueta={lamina.etiqueta}
+              titulo={lamina.titulo}
+              subtitulo="Síntesis de ingresos, costos, EBITDA y utilidad neta entre el Año 1 y el Año 5."
+            >
+              <div className="grid h-full min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1.15fr_1.45fr]">
+                {/* Izquierda: Escalera ejecutiva Año 1 vs Año 5 */}
+                <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Cascada Contable Resumen (Año 1 vs. Año 5)
+                  </div>
+                  <div className="my-auto space-y-2">
+                    {[
+                      {
+                        label: "(+) Ingresos por Ventas",
+                        a1: er1.ingresos,
+                        a5: er5.ingresos,
+                        pct: "100% Ventas",
+                        bg: "bg-slate-50 border-slate-200",
+                      },
+                      {
+                        label: "(=) Utilidad Bruta",
+                        a1: er1.utilidadBruta,
+                        a5: er5.utilidadBruta,
+                        pct: `Margen Bruto prom. ${fmtPct(prom.margenBruto)}`,
+                        bg: "bg-teal-50/60 border-teal-200",
+                      },
+                      {
+                        label: "(=) EBITDA (Caja Operativa)",
+                        a1: er1.ebitda,
+                        a5: er5.ebitda,
+                        pct: `Margen EBITDA prom. ${fmtPct(prom.margenEbitda)}`,
+                        bg: "bg-sky-50/60 border-sky-200",
+                      },
+                      {
+                        label: "(=) Utilidad Operativa (EBIT)",
+                        a1: er1.ebit,
+                        a5: er5.ebit,
+                        pct: `Margen EBIT prom. ${fmtPct(prom.margenOperativo)}`,
+                        bg: "bg-indigo-50/60 border-indigo-200",
+                      },
+                      {
+                        label: "(=) UTILIDAD NETA (Tras IUE 25%)",
+                        a1: er1.utilidadNeta,
+                        a5: er5.utilidadNeta,
+                        pct: `Margen Neto prom. ${fmtPct(prom.margenNeto)}`,
+                        bg: "bg-emerald-50/80 border-2 border-emerald-400",
+                      },
+                    ].map((row) => (
+                      <div key={row.label} className={cn("rounded-xl border px-3.5 py-2", row.bg)}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800">{row.label}</span>
+                          <span className="text-[11px] font-semibold text-teal-800">{row.pct}</span>
+                        </div>
+                        <div className="mt-1 flex items-baseline justify-between font-mono">
+                          <span className="text-xs text-slate-600">
+                            Año 1: <strong className="text-slate-900">{formatearBolivianos(row.a1)}</strong>
+                          </span>
+                          <span className="text-xs text-slate-600">
+                            Año 5: <strong className="text-emerald-800">{formatearBolivianos(row.a5)}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Derecha: Gráfico de evolución de Ingresos, EBITDA y Utilidad Neta */}
+                <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Evolución de Ventas, EBITDA y Utilidad Neta (Años 1 a 5)
+                  </div>
+                  <div className="min-h-0 flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={ef.estadoResultados.map((e) => ({
+                          anio: `Año ${e.anio}`,
+                          Ventas: Math.round(e.ingresos),
+                          EBITDA: Math.round(e.ebitda),
+                          "Utilidad Neta": Math.round(e.utilidadNeta),
+                        }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="anio" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${fmtNum(v / 1000, 0)}K`} />
+                        <Tooltip formatter={(v: number) => formatearBolivianos(v)} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <ReferenceLine y={0} stroke="#64748b" />
+                        <Bar dataKey="Ventas" fill="#0d9488" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="EBITDA" fill="#0284c7" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Utilidad Neta" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </MarcoLaminaContable>
+          )}
+
+          {/* LÁMINA 4: FLUJOS DE EFECTIVO Y DEUDA */}
+          {lamina.id === "flujos" && (
+            <MarcoLaminaContable
+              etiqueta={lamina.etiqueta}
+              titulo={lamina.titulo}
+              subtitulo="Comparación entre el flujo puro del proyecto (Económico) y el flujo real para los socios tras pagar deuda (Financiero)."
+            >
+              <div className="grid h-full min-h-0 grid-cols-1 gap-4 lg:grid-cols-[1fr_1.6fr]">
+                <div className="flex flex-col justify-center gap-3">
+                  <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Perspectiva Económica (Proyecto al WACC {fmtPct(ef.wacc)})
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-slate-900">
+                      VAN: {formatearBolivianos(ef.vanProyecto)}
+                    </div>
+                    <div className="mt-0.5 text-xs font-semibold text-teal-800">
+                      TIR Económica: {tirCalculable(ef.tirProyecto) ? fmtPct(ef.tirProyecto) : "No calculable"}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Perspectiva Financiera (Accionista al Ke {fmtPct(ef.ke)})
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-slate-900">
+                      VAN: {formatearBolivianos(ef.vanInversionista)}
+                    </div>
+                    <div className="mt-0.5 text-xs font-semibold text-indigo-800">
+                      TIR Accionista: {tirCalculable(ef.tirInversionista) ? fmtPct(ef.tirInversionista) : "No calculable"}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Desendeudamiento Bancario (Año 0 → Año 5)
+                    </div>
+                    <div className="mt-1 font-mono text-lg font-bold text-slate-900">
+                      {formatearBolivianos(ef.flujos[0].saldoDeudaFinAnio)} →{" "}
+                      <span className="text-emerald-700">
+                        {formatearBolivianos(ef.flujos[5].saldoDeudaFinAnio)}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-xs text-slate-600">
+                      Cobertura prom. servicio de deuda (DSCR):{" "}
+                      <strong>{fmtVeces(prom.coberturaServicioDeuda)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Flujo Libre del Proyecto (FCL) vs. Flujo del Inversionista (FCA)
+                  </div>
+                  <div className="min-h-0 flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={ef.flujos.map((f) => ({
+                          periodo: f.anio === 0 ? "Año 0" : `Año ${f.anio}`,
+                          "Flujo Proyecto (FCL)": Math.round(f.flujoLibreProyecto),
+                          "Flujo Inversionista (FCA)": Math.round(f.flujoInversionista),
+                        }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${fmtNum(v / 1000, 0)}K`} />
+                        <Tooltip formatter={(v: number) => formatearBolivianos(v)} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <ReferenceLine y={0} stroke="#64748b" />
+                        <Bar dataKey="Flujo Proyecto (FCL)" fill="#0d9488" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Flujo Inversionista (FCA)" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </MarcoLaminaContable>
+          )}
+
+          {/* LÁMINA 5: RATIOS Y SISTEMA DUPONT RESUMIDO */}
+          {lamina.id === "dupont" && (
+            <MarcoLaminaContable
+              etiqueta={lamina.etiqueta}
+              titulo={lamina.titulo}
+              subtitulo="Descomposición de la rentabilidad patrimonial (Año 1) y síntesis de liquidez, solvencia y eficiencia (Promedio 5 años)."
+            >
+              <div className="flex h-full min-h-0 flex-col justify-between gap-4">
+                {/* Arriba: Identidad DuPont grande */}
+                <div className="rounded-2xl border-2 border-indigo-200 bg-white p-4 shadow-xs">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-indigo-700">
+                    Identidad DuPont de 3 Factores (Año 1)
+                  </div>
+                  <div className="grid grid-cols-1 items-center gap-2 lg:grid-cols-[1.15fr_auto_1fr_auto_1fr_auto_1fr]">
+                    <div className="rounded-xl border-2 border-indigo-600 bg-indigo-50 p-3 text-center">
+                      <div className="text-[10px] font-bold uppercase text-indigo-800">
+                        ROE (Rentabilidad Socios)
+                      </div>
+                      <div className="mt-0.5 font-mono text-2xl font-bold text-indigo-950">
+                        {fmtPct(dp1.roe, 2)}
+                      </div>
+                      <div className="text-[11px] text-slate-600">Utilidad Neta / Patrimonio</div>
+                    </div>
+                    <div className="text-center font-mono text-2xl font-bold text-slate-400">=</div>
+                    <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 p-3 text-center">
+                      <div className="text-[10px] font-bold uppercase text-emerald-800">
+                        1 · Margen Neto (ROS)
+                      </div>
+                      <div className="mt-0.5 font-mono text-xl font-bold text-emerald-950">
+                        {fmtPct(dp1.margenNeto, 2)}
+                      </div>
+                      <div className="text-[11px] text-slate-600">Utilidad Neta / Ventas</div>
+                    </div>
+                    <div className="text-center font-mono text-2xl font-bold text-slate-400">×</div>
+                    <div className="rounded-xl border border-sky-300 bg-sky-50/70 p-3 text-center">
+                      <div className="text-[10px] font-bold uppercase text-sky-800">
+                        2 · Rotación de Activos
+                      </div>
+                      <div className="mt-0.5 font-mono text-xl font-bold text-sky-950">
+                        {fmtNum(dp1.rotacionActivos, 2)}×
+                      </div>
+                      <div className="text-[11px] text-slate-600">Ventas / Activo Total</div>
+                    </div>
+                    <div className="text-center font-mono text-2xl font-bold text-slate-400">×</div>
+                    <div className="rounded-xl border border-amber-300 bg-amber-50/70 p-3 text-center">
+                      <div className="text-[10px] font-bold uppercase text-amber-900">
+                        3 · Multiplicador Capital
+                      </div>
+                      <div className="mt-0.5 font-mono text-xl font-bold text-amber-950">
+                        {fmtNum(dp1.multiplicadorCapital, 2)}×
+                      </div>
+                      <div className="text-[11px] text-slate-600">Activo Total / Patrimonio</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Abajo: 4 tarjetas ejecutivas de ratios promedio */}
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Rentabilidad del Activo (ROA)
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-teal-800">
+                      {fmtPct(prom.roaOperativo)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      ROA Neto: <strong>{fmtPct(prom.roaNeto)}</strong> vs. WACC{" "}
+                      <strong>{fmtPct(ef.wacc)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Liquidez y Capital de Trabajo
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-sky-800">
+                      {fmtVeces(prom.razonCorriente)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      CTN prom.: <strong>{formatearBolivianos(prom.capitalTrabajoNeto)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Endeudamiento (Pasivo / Activo)
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-amber-800">
+                      {fmtPct(prom.endeudamientoActivo)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      Deuda / Patrimonio: <strong>{fmtNum(prom.apalancamientoPatrimonio, 2)}×</strong>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Cobertura Servicio Deuda (DSCR)
+                    </div>
+                    <div className="mt-1 font-mono text-2xl font-bold text-emerald-800">
+                      {fmtVeces(prom.coberturaServicioDeuda)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      Cobertura intereses: <strong>{fmtVeces(prom.coberturaIntereses)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </MarcoLaminaContable>
+          )}
+        </div>
+
+        {/* Guía flotante para el expositor */}
+        {mostrarGuia && (
+          <div className="absolute bottom-5 left-1/2 z-30 w-[min(760px,92%)] -translate-x-1/2 rounded-xl border border-amber-300/40 bg-slate-950/95 p-4 text-sm text-slate-100 shadow-2xl backdrop-blur">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-300">
+              <Lightbulb className="h-3.5 w-3.5" /> Qué decir al exponer esta lámina
+            </div>
+            <p className="text-xs sm:text-sm leading-relaxed text-slate-200">{lamina.guia}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Barra inferior */}
+      <div className="flex h-14 shrink-0 items-center justify-between border-t border-white/10 bg-[#0b1322] px-4 md:px-6">
+        <div className="text-xs font-medium text-slate-400">
+          Diapositiva <span className="font-bold text-white">{indice + 1}</span> de{" "}
+          <span className="font-bold text-white">{LAMINAS_EXPOSICION.length}</span>
+          <span className="mx-2 text-slate-600">·</span>
+          <span className="text-slate-300">{lamina.titulo}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            disabled={indice <= 0}
+            onClick={() => setIndice((i) => Math.max(0, i - 1))}
+            className="flex items-center gap-1 rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-30"
+          >
+            <ChevronLeft className="h-4 w-4" /> Anterior
+          </button>
+          <div className="hidden items-center gap-1.5 sm:flex">
+            {LAMINAS_EXPOSICION.map((item, pos) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setIndice(pos)}
+                className={cn(
+                  "h-2 rounded-full transition-all",
+                  pos === indice
+                    ? "w-7 bg-teal-400"
+                    : "w-2 bg-white/20 hover:bg-white/40"
+                )}
+                title={item.titulo}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            disabled={indice >= LAMINAS_EXPOSICION.length - 1}
+            onClick={() => setIndice((i) => Math.min(LAMINAS_EXPOSICION.length - 1, i + 1))}
+            className="flex items-center gap-1.5 rounded-full bg-teal-500 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-teal-400 disabled:opacity-30"
+          >
+            Siguiente <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarcoLaminaContable({
+  etiqueta,
+  titulo,
+  subtitulo,
+  children,
+}: {
+  etiqueta: string;
+  titulo: string;
+  subtitulo: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative flex h-full flex-col overflow-hidden bg-[#faf8f5] px-5 py-4 text-slate-900">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-700 via-emerald-600 to-indigo-700" />
+      <div className="mb-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-teal-700" />
+          <span className="text-xs font-bold uppercase tracking-wider text-teal-800">
+            {etiqueta}
+          </span>
+        </div>
+        <h2 className="mt-0.5 font-display text-[clamp(18px,2vw,30px)] font-bold leading-tight tracking-tight text-slate-950">
+          {titulo}
+        </h2>
+        <p className="mt-0.5 text-xs sm:text-sm text-slate-600 line-clamp-1">{subtitulo}</p>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }
