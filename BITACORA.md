@@ -1467,3 +1467,12 @@ con autorización para actualizar.
 
 ## 18-11 · agy para editar instalado (copiloto)
 - `scripts/agy/` (agy_run.py, aplicar.py, candado). Probado con la cuenta B. Las correcciones de `docs/auditoria_1118.md` se hacen con agy: `python scripts/agy/agy_run.py --tipo arreglo --nivel criterio --pedido <md> --tocar <archivo>`; typecheck, lint y test corren solos; si pasa de 20 lineas, segunda lectura (`_AGENTES_CENTRAL\motor_agy\segunda_lectura.py`); veredicto de Claude y `aplicar.py <id> --si`. Receta: ejecutor-agy 5.6. Falta commitear `scripts/agy/`.
+
+## 18-11 · Auditoria completa y endurecimiento (063, 064, TIR, logout)
+- Informe: `docs/auditoria_1118.md` (CONFIRMADO / SIN VERIFICAR). IVA NO es error (debito/credito fiscal separados a proposito). Plazo de prestamo NO se limito (la pantalla permite hasta 240 meses y avisa).
+- Migracion 063 (APLICADA en Supabase 18-11): todo registro nace estudiante (handle_nuevo_usuario y crear_perfil_al_registrarse). Docentes se promueven desde /admin.
+- Migracion 064 (APLICADA 18-11): entregas solo sobre proyecto propio o de su grupo.
+- `calcularTIR` devuelve 0 si no hay raiz (test `tir-sin-raiz.test.ts`).
+- `auth-store`: al cerrar sesion se limpia el proyecto en memoria.
+- PENDIENTES confirmados, sin tocar: C5 cupo/unicidad de grupos en grupo_miembros (probar antes); C6 alumno puede cambiar curso_id/grupo_id de su proyecto (politica 002 FOR ALL); guardado grupal pisa si falla la lectura remota (proyecto-supabase.ts ~284-306); Monte Carlo con 12 vs 14 intervalos (calculo-financiero vs analisis-riesgo); ruta `*` muestra Hub fuera del layout (App.tsx ~166). Falta prueba en pantalla 375 px y modo revision docente.
+- `npm run build` falla en esta PC por tipos faltantes en node_modules (probar `npm ci`).
