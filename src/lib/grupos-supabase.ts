@@ -197,12 +197,12 @@ export async function configurarNivelProyectoSemanaE(
   if (error) throw error;
 }
 
-/** Lista los grupos de un curso para el estudiante (con conteo de cupo). */
+/** Lista los grupos activos (con al menos 1 integrante) de un curso para el estudiante. */
 export async function listarGruposParaEstudiante(
   cursoId: string
 ): Promise<GrupoConMiembros[]> {
-  // Misma data; las RLS ya limitan lo que el estudiante puede ver.
-  return listarGruposDeCurso(cursoId);
+  const todos = await listarGruposDeCurso(cursoId);
+  return todos.filter((g) => g.miembros.length > 0);
 }
 
 /** El grupo al que pertenece el estudiante en un curso (o null). */
@@ -284,6 +284,17 @@ export async function salirDeGrupo(
     .eq("grupo_id", grupoId)
     .eq("estudiante_id", estudianteId);
   if (error) throw error;
+
+  // Si ya no queda ningún integrante en el grupo, limpiamos su proyecto grupal
+  // y el grupo para que no quede huérfano (0/N).
+  const { count } = await supabase
+    .from("grupo_miembros")
+    .select("id", { count: "exact", head: true })
+    .eq("grupo_id", grupoId);
+  if ((count ?? 0) === 0) {
+    await supabase.from("proyectos").delete().eq("grupo_id", grupoId);
+    await supabase.from("grupos").delete().eq("id", grupoId);
+  }
 }
 
 /** El docente borra un grupo (cascada: borra miembros y el proyecto compartido). */

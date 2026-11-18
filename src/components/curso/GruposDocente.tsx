@@ -24,9 +24,7 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
   const navigate = useNavigate();
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const gruposVisibles = curso.es_semana_e
-    ? grupos?.filter((grupo) => grupo.miembros.length > 0) ?? null
-    : grupos;
+  const gruposVisibles = grupos?.filter((grupo) => grupo.miembros.length > 0) ?? null;
 
   // Config del proyecto grupal (la define el docente; los estudiantes crean los grupos)
   const [habilitado, setHabilitado] = useState(curso.grupo_habilitado ?? false);

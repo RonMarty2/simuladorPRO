@@ -78,9 +78,8 @@ export default function GruposEstudiante({
         obtenerPromedioEstudiante(estudianteId, curso.id),
         listarProyectosGrupales(estudianteId).catch(() => [] as Proyecto[]),
       ]);
-      // Los equipos vacíos de pruebas anteriores no deben aparecer en Semana E.
-      // En cursos normales conservamos la lista histórica sin alteraciones.
-      setGrupos(curso.es_semana_e ? gs.filter((g) => g.miembros.length > 0) : gs);
+      // Los grupos vacíos (0 integrantes) no deben aparecer como opciones huérfanas.
+      setGrupos(gs.filter((g) => g.miembros.length > 0));
       setMiGrupo(mg);
       const proyGrupo =
         (mg && grupales.find((p) => p.grupo_id === mg.id)) ??
@@ -131,11 +130,11 @@ export default function GruposEstudiante({
   };
 
   const salir = async (grupoId: string) => {
-    const eliminaEquipo = curso.es_semana_e && miGrupoDetalle?.miembros.length === 1;
+    const eliminaEquipo = miGrupoDetalle?.miembros.length === 1;
     if (
       eliminaEquipo &&
       !(await confirmar(
-        "Eres el último integrante. Al continuar se eliminarán este equipo y su proyecto de Semana E. ¿Deseas eliminarlos?",
+        "Eres el último integrante. Al salir se eliminará este grupo y su proyecto grupal. ¿Deseas eliminarlos?",
         { textoOk: "Eliminar", peligro: true }
       ))
     ) {
@@ -357,13 +356,15 @@ export default function GruposEstudiante({
               >
                 {accion ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
-                ) : curso.es_semana_e && miGrupoDetalle.miembros.length === 1 ? (
+                ) : miGrupoDetalle.miembros.length === 1 ? (
                   <Trash2 className="h-3 w-3" />
                 ) : (
                   <LogOut className="h-3 w-3" />
                 )}
-                {curso.es_semana_e && miGrupoDetalle.miembros.length === 1
-                  ? "Eliminar equipo"
+                {miGrupoDetalle.miembros.length === 1
+                  ? curso.es_semana_e
+                    ? "Eliminar equipo"
+                    : "Eliminar grupo"
                   : "Salir"}
               </button>
             </div>
