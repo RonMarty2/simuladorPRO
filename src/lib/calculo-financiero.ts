@@ -424,7 +424,10 @@ export function calcularTIR(
   let vanLo = vanAt(lo);
   const vanHi = vanAt(hi);
   if (!Number.isFinite(vanLo) || !Number.isFinite(vanHi) || vanLo * vanHi > 0) {
-    return Number.isFinite(tasa) ? tasa : 0;
+    // Newton no convergio y no hay cambio de signo en [-99%, 1000%]: no existe una
+    // TIR interpretable. Devolver la ultima iteracion de Newton mostraria un
+    // porcentaje sin significado (ej. flujos [-1000, 1000, -500]).
+    return 0;
   }
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;

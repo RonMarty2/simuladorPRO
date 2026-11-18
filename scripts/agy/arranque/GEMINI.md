@@ -1,0 +1,1 @@
+Reglas para Gemini en simuladorpro: lee CLAUDE.md del repo antes de empezar y siguelo. Haz SOLO lo que pide el pedido y solo en los archivos del ALCANCE. No inventes cifras, nombres ni datos. Si algo no esta claro, dilo en tu respuesta en vez de suponer.

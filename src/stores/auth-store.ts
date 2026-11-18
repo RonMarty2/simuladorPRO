@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { useProyectoStore } from "@/stores/proyecto-store";
 import {
   cerrarSesion,
   iniciarSesion,
@@ -85,6 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // Logout o sin sesión: limpiar todo.
           if (evento === "SIGNED_OUT" || !nuevaSesion?.user) {
             set({ session: null, user: null, perfil: null, perfilReal: null });
+            useProyectoStore.getState().limpiar();
             return;
           }
 
@@ -204,6 +206,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await cerrarSesion();
       set({ user: null, session: null, perfil: null, perfilReal: null });
+      useProyectoStore.getState().limpiar();
     } finally {
       set({ cargando: false });
     }

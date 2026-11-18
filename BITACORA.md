@@ -1464,3 +1464,6 @@ Ver §3 y §7.9. Ambos son gated: requieren config externa del owner.
 
 **Fin de la bitácora.** Si encontrás algo desactualizado o faltante, decímelo
 con autorización para actualizar.
+
+## 18-11 · agy para editar instalado (copiloto)
+- `scripts/agy/` (agy_run.py, aplicar.py, candado). Probado con la cuenta B. Las correcciones de `docs/auditoria_1118.md` se hacen con agy: `python scripts/agy/agy_run.py --tipo arreglo --nivel criterio --pedido <md> --tocar <archivo>`; typecheck, lint y test corren solos; si pasa de 20 lineas, segunda lectura (`_AGENTES_CENTRAL\motor_agy\segunda_lectura.py`); veredicto de Claude y `aplicar.py <id> --si`. Receta: ejecutor-agy 5.6. Falta commitear `scripts/agy/`.
