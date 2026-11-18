@@ -282,7 +282,17 @@ export async function guardarProyecto(p: Proyecto): Promise<Proyecto> {
   // 2) Fusionamos lo que hizo este integrante con lo que hayan guardado sus compañeros.
   // 3) Actualizamos nombre, estado y datos.
   if (p.tipo === "proyecto_grupal" || Boolean(p.grupo_id)) {
-    const remoto = await obtenerProyectoRemotoDirecto(p.id).catch(() => null);
+    // Si la lectura remota FALLA no guardamos: sobrescribiriamos lo de los companeros.
+    // Solo si la fila no existe (data null sin error) se guarda lo local.
+    const { data: filaRemota, error: errorLectura } = await conTimeout(
+      supabase.from("proyectos").select("*").eq("id", p.id).maybeSingle(),
+      8000,
+      "leyendo proyecto grupal antes de guardar"
+    );
+    if (errorLectura) {
+      throw new Error(errorLectura.message || "No se pudo leer el proyecto grupal; no se guardo para no pisar a tus companeros");
+    }
+    const remoto = filaRemota ? deFilaSupabase(filaRemota) : null;
     const base = obtenerBaseSincronizacion(p.id);
     const proyectoFinal = remoto ? fusionarProyectoGrupal(base, p, remoto) : p;
     const fila = proyectoAFilaSupabase(proyectoFinal);
