@@ -32,6 +32,7 @@ import {
   type EstadosFinancierosProyecto,
 } from "@/lib/estados-financieros";
 import { tirCalculable } from "@/lib/acotar-numero";
+import AccionesProyecto from "@/components/presentacion/AccionesProyecto";
 import { cn, fmtNum, formatearBolivianos } from "@/lib/utils";
 import type { Proyecto } from "@/types/proyecto";
 
@@ -145,6 +146,27 @@ export default function EstadosFinancierosRoute() {
           </div>
         </div>
       )}
+
+      {/* Barra de retorno directo al constructor del proyecto + acciones del mismo proyecto */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            to="/construir"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-secondary"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Volver a editar este proyecto
+          </Link>
+          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+            {proyecto.tipo === "proyecto_grupal"
+              ? "Proyecto grupal"
+              : proyecto.caso_origen_id
+                ? "Caso del curso"
+                : "Proyecto individual"}
+          </span>
+        </div>
+        <AccionesProyecto proyecto={proyecto} compacto />
+      </div>
 
       {/* Encabezado contable */}
       <div className="rounded-xl border border-border bg-card p-5 shadow-2xs">

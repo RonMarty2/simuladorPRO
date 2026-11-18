@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, ChartScatter, Download, Loader2, PlayCircle } from "lucide-react";
+import { BarChart3, ChartScatter, Download, Loader2, PlayCircle, Scale } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Proyecto } from "@/types/proyecto";
 import { useProyectoStore } from "@/stores/proyecto-store";
@@ -18,9 +18,9 @@ export default function AccionesProyecto({
   const [exportando, setExportando] = useState(false);
   const cargarProyecto = useProyectoStore((s) => s.cargar);
 
-  // Escenarios y Simular trabajan sobre el proyecto activo del store: lo
+  // Escenarios, Estados financieros y Simular trabajan sobre el proyecto activo del store: lo
   // cargamos antes de navegar para que nunca aparezca "no hay proyecto".
-  const irA = (ruta: "/escenarios" | "/simular") => {
+  const irA = (ruta: "/escenarios" | "/simular" | "/estados-financieros") => {
     cargarProyecto(proyecto);
     navigate(ruta);
   };
@@ -52,6 +52,17 @@ export default function AccionesProyecto({
       >
         <BarChart3 className={compacto ? "h-3.5 w-3.5" : "h-4 w-4"} />
         Presentar proyecto
+      </button>
+      <button
+        type="button"
+        onClick={() => irA("/estados-financieros")}
+        className={cn(
+          "inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card font-semibold text-foreground transition hover:bg-accent",
+          compacto ? "px-2.5 py-1.5 text-[11px]" : "px-4 py-2.5 text-sm"
+        )}
+      >
+        <Scale className={compacto ? "h-3.5 w-3.5 text-indigo-600" : "h-4 w-4 text-indigo-600"} />
+        Estados financieros
       </button>
       {!proyecto.esSemanaE && (
         <>

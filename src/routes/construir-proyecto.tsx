@@ -258,7 +258,7 @@ export default function ConstruirProyecto() {
         <div>
           <div className="font-display text-sm font-bold">¿Qué quieres hacer con tu proyecto?</div>
           <div className="text-xs text-muted-foreground">
-            Prueba escenarios optimista y pesimista, simula 5 años con eventos reales, preséntalo o descarga el Excel.
+            Consulta estados financieros y ratios, prueba escenarios, simula 5 años con eventos reales, preséntalo o descarga el Excel.
           </div>
         </div>
         <AccionesProyecto proyecto={proyecto} />
