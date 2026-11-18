@@ -103,6 +103,15 @@ export default function GruposEstudiante({
     setError(null);
     try {
       await unirseAGrupo(grupoId, estudianteId);
+      const grupoObj = grupos?.find((g) => g.id === grupoId);
+      if (grupoObj) {
+        const idProy = await asegurarProyectoDeGrupo({
+          grupo: grupoObj,
+          curso,
+          estudianteId,
+        }).catch(() => grupoObj.proyecto_id);
+        if (idProy) guardarProyectoActivo(estudianteId, idProy);
+      }
       await recargar();
     } catch (e: any) {
       setError(e?.message ?? String(e));

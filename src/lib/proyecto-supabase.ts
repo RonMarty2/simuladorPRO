@@ -1,6 +1,11 @@
 import { supabase } from "./supabase";
 import { registrarActividad } from "./proyecto-actividad-supabase";
 import {
+  fusionarProyectoGrupal,
+  obtenerBaseSincronizacion,
+  registrarBaseSincronizacion,
+} from "./sincronizar-grupal";
+import {
   esModoLocal,
   guardarProyectoLocal,
   eliminarProyectoLocal,
@@ -247,23 +252,61 @@ export async function actualizarProyectoComoDocente(p: Proyecto): Promise<void> 
   }
 }
 
-/** Upsert: inserta si no existe, actualiza si ya existe. */
-export async function guardarProyecto(p: Proyecto): Promise<void> {
+/** Lee directamente un proyecto desde Supabase sin fallback demo (para sincronización grupal). */
+export async function obtenerProyectoRemotoDirecto(proyectoId: string): Promise<Proyecto | null> {
+  if (esModoLocal()) {
+    return leerProyectosLocal().find((p) => p.id === proyectoId) ?? null;
+  }
+  const { data, error } = await supabase
+    .from("proyectos")
+    .select("*, cursos(es_semana_e)")
+    .eq("id", proyectoId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return deFilaSupabase(data);
+}
+
+/** Upsert: inserta si no existe, actualiza si ya existe. En grupales fusiona cambios de compañeros. */
+export async function guardarProyecto(p: Proyecto): Promise<Proyecto> {
   if (esModoLocal()) {
     guardarProyectoLocal(p);
-    return;
+    registrarBaseSincronizacion(p);
+    return p;
+  }
+  // En proyectos GRUPALES los integrantes trabajan al mismo tiempo:
+  // 1) Leemos la versión actual en Supabase.
+  // 2) Fusionamos lo que hizo este integrante con lo que hayan guardado sus compañeros.
+  // 3) Hacemos UPDATE verificando que la fila se actualizó.
+  if (p.tipo === "proyecto_grupal" || Boolean(p.grupo_id)) {
+    const remoto = await obtenerProyectoRemotoDirecto(p.id).catch(() => null);
+    const base = obtenerBaseSincronizacion(p.id);
+    const proyectoFinal = remoto ? fusionarProyectoGrupal(base, p, remoto) : p;
+    const fila = proyectoAFilaSupabase(proyectoFinal);
+    const { data, error } = await supabase
+      .from("proyectos")
+      .update({
+        nombre: fila.nombre,
+        estado: fila.estado,
+        caso_origen_id: fila.caso_origen_id,
+        paso_inicio_estudiante: fila.paso_inicio_estudiante,
+        datos: fila.datos,
+      })
+      .eq("id", p.id)
+      .select("id");
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error(
+        "No se pudo guardar en el proyecto grupal. Verifica que sigas unido al grupo."
+      );
+    }
+    registrarBaseSincronizacion(proyectoFinal);
+    return proyectoFinal;
   }
   const fila = proyectoAFilaSupabase(p);
-  // El proyecto GRUPAL lo crea el docente (insertarProyecto). Los miembros solo
-  // tienen permiso de UPDATE (no INSERT), así que para no romper su autoguardado
-  // aquí siempre EDITAMOS (update), nunca upsert.
-  if (p.tipo === "proyecto_grupal") {
-    const { error } = await supabase.from("proyectos").update(fila).eq("id", p.id);
-    if (error) throw error;
-    return;
-  }
   const { error } = await supabase.from("proyectos").upsert(fila, { onConflict: "id" });
   if (error) throw error;
+  registrarBaseSincronizacion(p);
+  return p;
 }
 
 /** Inserta un proyecto nuevo (usado al crear el proyecto compartido de un grupo). */

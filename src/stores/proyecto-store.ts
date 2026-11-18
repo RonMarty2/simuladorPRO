@@ -11,6 +11,7 @@ import {
   defaultCreditoFiscalIVACostoDirecto,
   defaultCreditoFiscalIVAInversion,
 } from "@/lib/iva-proyecto";
+import { registrarBaseSincronizacion } from "@/lib/sincronizar-grupal";
 import type {
   CategoriaInversion,
   CostoDirecto,
@@ -237,7 +238,10 @@ export const useProyectoStore = create<ProyectoState>((set, get) => ({
     set({ proyecto: crearProyectoVacio({ estudiante_id, nombre, curso_id, version, modeloIngreso }) });
   },
 
-  cargar: (proyecto) => set({ proyecto }),
+  cargar: (proyecto) => {
+    registrarBaseSincronizacion(proyecto);
+    set({ proyecto });
+  },
 
   limpiar: () => set({ proyecto: null }),
 
