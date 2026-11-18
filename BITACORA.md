@@ -668,7 +668,14 @@ Revisados los commits 8e3a0d9, ff10110 y 8456187. `tsc` sin errores, 741/741 pru
 `npm run lint` no se pudo correr (eslint no está instalado en `node_modules` de esta PC). Leído el diff de
 `useAutoGuardado.ts`, `proyecto-supabase.ts`, `revision-docente-store.ts`, `presentar-proyecto.tsx`,
 `construir-proyecto.tsx` y la migración 062: no se encontró nada roto. La 062 NO está aplicada por esta revisión;
-aplicarla en la base real es decisión de Ronald. No se probó en navegador el flujo docente (requiere sesión real).
+aplicarla en la base real es decisión de Ronald.
+Actualización 2026-11-17 (misma tarde): con OK de Ronald se aplicó SOLO la 062 en la base de producción
+(SQL Editor de Supabase, proyecto `proyectos`): "Success. No rows returned". Prueba en el sitio real como docente,
+modo "Solo probar" (sin guardar): Entregas > Ver proyecto, Presentar proyecto, Escenarios y Simular cargan y
+mantienen el banner de modo docente. NO se probó "Editar al estudiante" guardando (cambiaría datos reales de un alumno).
+Verificado también en producción (Paso 9, solo lectura): detalle del punto de equilibrio (anual/mensual, margen de
+contribución, margen de seguridad) y panel "Explorar perspectivas"; en un proyecto no viable el botón
+"¿Cómo hacerlo viable?" calcula 4 planes (precio, volumen, costos, inversión inicial).
 
 ### Retomar aquí (cierre de sesión 2026-11-13) — caso grupal y deslizadores
 
