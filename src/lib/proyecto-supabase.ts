@@ -257,11 +257,15 @@ export async function obtenerProyectoRemotoDirecto(proyectoId: string): Promise<
   if (esModoLocal()) {
     return leerProyectosLocal().find((p) => p.id === proyectoId) ?? null;
   }
-  const { data, error } = await supabase
-    .from("proyectos")
-    .select("*, cursos(es_semana_e)")
-    .eq("id", proyectoId)
-    .maybeSingle();
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .select("*")
+      .eq("id", proyectoId)
+      .maybeSingle(),
+    3500,
+    "sincronizando proyecto grupal"
+  );
   if (error || !data) return null;
   return deFilaSupabase(data);
 }
@@ -276,35 +280,39 @@ export async function guardarProyecto(p: Proyecto): Promise<Proyecto> {
   // En proyectos GRUPALES los integrantes trabajan al mismo tiempo:
   // 1) Leemos la versión actual en Supabase.
   // 2) Fusionamos lo que hizo este integrante con lo que hayan guardado sus compañeros.
-  // 3) Hacemos UPDATE verificando que la fila se actualizó.
+  // 3) Actualizamos nombre, estado y datos.
   if (p.tipo === "proyecto_grupal" || Boolean(p.grupo_id)) {
     const remoto = await obtenerProyectoRemotoDirecto(p.id).catch(() => null);
     const base = obtenerBaseSincronizacion(p.id);
     const proyectoFinal = remoto ? fusionarProyectoGrupal(base, p, remoto) : p;
     const fila = proyectoAFilaSupabase(proyectoFinal);
-    const { data, error } = await supabase
-      .from("proyectos")
-      .update({
-        nombre: fila.nombre,
-        estado: fila.estado,
-        caso_origen_id: fila.caso_origen_id,
-        paso_inicio_estudiante: fila.paso_inicio_estudiante,
-        datos: fila.datos,
-      })
-      .eq("id", p.id)
-      .select("id");
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      throw new Error(
-        "No se pudo guardar en el proyecto grupal. Verifica que sigas unido al grupo."
-      );
+    const { error } = await conTimeout(
+      supabase
+        .from("proyectos")
+        .update({
+          nombre: fila.nombre,
+          estado: fila.estado,
+          datos: fila.datos,
+        })
+        .eq("id", p.id),
+      8000,
+      "guardando proyecto grupal"
+    );
+    if (error) {
+      throw new Error(error.message || "Error al guardar el proyecto grupal");
     }
     registrarBaseSincronizacion(proyectoFinal);
     return proyectoFinal;
   }
   const fila = proyectoAFilaSupabase(p);
-  const { error } = await supabase.from("proyectos").upsert(fila, { onConflict: "id" });
-  if (error) throw error;
+  const { error } = await conTimeout(
+    supabase.from("proyectos").upsert(fila, { onConflict: "id" }),
+    8000,
+    "guardando proyecto"
+  );
+  if (error) {
+    throw new Error(error.message || "Error al guardar el proyecto");
+  }
   registrarBaseSincronizacion(p);
   return p;
 }

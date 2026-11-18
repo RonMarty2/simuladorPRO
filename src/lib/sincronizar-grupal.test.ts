@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { crearProyectoVacio } from "./proyecto-factory";
-import { clonarProfundo, fusionarProyectoGrupal } from "./sincronizar-grupal";
+import {
+  clonarProfundo,
+  contenidoProyectoIgual,
+  fusionarProyectoGrupal,
+} from "./sincronizar-grupal";
 
 describe("fusionarProyectoGrupal", () => {
   it("conserva lo que hace la compañera en otro paso cuando yo guardo lo mío", () => {
@@ -84,5 +88,23 @@ describe("fusionarProyectoGrupal", () => {
     const fusionado = fusionarProyectoGrupal(base, localA, remotoB);
     expect(fusionado.productos[0].precios[0]).toBe(2);
     expect(fusionado.productos[1].precios[0]).toBe(80);
+  });
+
+  it("contenidoProyectoIgual ignora el orden de propiedades y diferencias undefined vs null", () => {
+    const a = crearProyectoVacio({
+      estudiante_id: "est-a",
+      curso_id: "curso-1",
+      nombre: "Grupo 1",
+    });
+    const b = {
+      productos: a.productos,
+      inversiones: a.inversiones,
+      ...a,
+      esSemanaE: false,
+      caso_origen_id: null,
+      paso_inicio_estudiante: null,
+      actualizado_en: "2099-01-01T00:00:00.000Z",
+    };
+    expect(contenidoProyectoIgual(a, b)).toBe(true);
   });
 });

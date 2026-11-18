@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   actualizarProyectoComoDocente,
   guardarProyecto,
@@ -24,29 +25,25 @@ export type EstadoGuardado =
   | { tipo: "error"; mensaje: string };
 
 /**
- * Auto-guardado del proyecto con debounce corto + guardado de emergencia
- * cuando la pestaña pierde foco o el usuario cierra/refresca.
- *
- * En proyectos GRUPALES:
- * - Al guardar, fusiona (Smart Merge) los cambios locales con los que hayan
- *   guardado otros integrantes para no pisar el trabajo de los compañeros.
- * - Sincroniza en vivo cada 3 segundos (y por canal Realtime) los cambios que
- *   hagan los compañeros de grupo para que aparezcan en pantalla sin recargar.
+ * Auto-guardado del proyecto con debounce corto + sincronización instantánea
+ * entre integrantes de un grupo mediante Supabase Broadcast + fusión inteligente.
  */
-export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
+export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 350) {
   const [estado, setEstado] = useState<EstadoGuardado>({ tipo: "idle" });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const guardandoRef = useRef(false);
+  const pendienteReintentoRef = useRef(false);
   const ultimoProyectoIdRef = useRef<string | null>(null);
   const ultimoGuardadoTimestampRef = useRef<string | null>(null);
   const proyectoRef = useRef<Proyecto | null>(null);
+  const canalRef = useRef<RealtimeChannel | null>(null);
   const usuarioId = useAuthStore((s) => s.user?.id ?? null);
 
   const revisionActiva = useRevisionDocenteStore((s) => s.activa);
   const modoRevision = useRevisionDocenteStore((s) => s.modoEdicion);
 
-  // Cuando se carga un proyecto distinto, marcamos su timestamp inicial como
-  // ya sincronizado para que abrir el proyecto NUNCA dispare un guardado fantasma.
+  // Al cambiar de proyecto activo, registramos su timestamp inicial para no
+  // disparar un guardado fantasma al solo abrir la pantalla.
   useEffect(() => {
     if (proyecto && ultimoProyectoIdRef.current !== proyecto.id) {
       ultimoProyectoIdRef.current = proyecto.id;
@@ -56,46 +53,100 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
     proyectoRef.current = proyecto;
   }, [proyecto]);
 
+  // Aplica en memoria un proyecto recibido de un compañero (vía Broadcast o Poll)
+  const aplicarRemotoEnPantalla = (remoto: Proyecto) => {
+    const actual = proyectoRef.current;
+    if (!actual || actual.id !== remoto.id) return;
+    if (contenidoProyectoIgual(actual, remoto)) {
+      registrarBaseSincronizacion(remoto);
+      return;
+    }
+    const base = obtenerBaseSincronizacion(actual.id);
+    const fusionado = fusionarProyectoGrupal(base, actual, remoto);
+    registrarBaseSincronizacion(remoto);
+    // Si no había cambios locales pendientes de guardar, marcamos el timestamp
+    // como ya guardado para no re-guardar en bucle lo que mandó el compañero.
+    const habiaCambiosLocalesPendientes =
+      ultimoGuardadoTimestampRef.current !== actual.actualizado_en;
+    if (!habiaCambiosLocalesPendientes) {
+      ultimoGuardadoTimestampRef.current = fusionado.actualizado_en;
+    }
+    proyectoRef.current = fusionado;
+    useProyectoStore.getState().cargar(fusionado);
+  };
+
   // Función helper que guarda si hay cambios pendientes
   const guardarSiHayPendientes = async () => {
     const p = proyectoRef.current;
-    if (!p || guardandoRef.current) return;
+    if (!p) return;
     const rev = useRevisionDocenteStore.getState();
-    // En modo "Solo probar", jamás sobrescribimos el proyecto del estudiante.
     if (rev.activa && rev.modoEdicion === "probar") return;
     if (ultimoGuardadoTimestampRef.current === p.actualizado_en) return;
 
+    // Si ya hay un guardado en vuelo, encolamos un reintento inmediato al terminar.
+    if (guardandoRef.current) {
+      pendienteReintentoRef.current = true;
+      return;
+    }
+
     guardandoRef.current = true;
+    pendienteReintentoRef.current = false;
+    const timestampIniciado = p.actualizado_en;
     setEstado({ tipo: "guardando" });
+
     try {
       if (rev.activa && rev.modoEdicion === "editar") {
         await actualizarProyectoComoDocente(p);
         rev.marcarGuardado(p);
-        ultimoGuardadoTimestampRef.current = p.actualizado_en;
+        if (proyectoRef.current?.actualizado_en === timestampIniciado) {
+          ultimoGuardadoTimestampRef.current = timestampIniciado;
+        }
       } else {
         const guardado = await guardarProyecto(p);
-        ultimoGuardadoTimestampRef.current = guardado.actualizado_en;
-        // Si al guardar un grupal se trajeron cambios de una compañera,
-        // actualizamos la pantalla sin disparar otro guardado.
-        const actualEnStore = useProyectoStore.getState().proyecto;
-        if (
-          actualEnStore &&
-          actualEnStore.id === guardado.id &&
-          !contenidoProyectoIgual(actualEnStore, guardado)
-        ) {
-          useProyectoStore.getState().cargar(guardado);
+        // Solo marcamos como sincronizado si el usuario no siguió escribiendo mientras guardábamos
+        const actualAhora = proyectoRef.current;
+        const siguioEscribiendo =
+          actualAhora && actualAhora.actualizado_en !== timestampIniciado;
+
+        if (!siguioEscribiendo) {
+          ultimoGuardadoTimestampRef.current = guardado.actualizado_en;
+          if (
+            actualAhora &&
+            actualAhora.id === guardado.id &&
+            !contenidoProyectoIgual(actualAhora, guardado)
+          ) {
+            proyectoRef.current = guardado;
+            useProyectoStore.getState().cargar(guardado);
+          }
+        } else {
+          pendienteReintentoRef.current = true;
+        }
+
+        // Si es grupal, avisamos al instante por WebSocket Broadcast a los
+        // compañeros conectados para que lo vean en <100ms sin apretar F5.
+        if ((p.tipo === "proyecto_grupal" || p.grupo_id) && canalRef.current) {
+          void canalRef.current.send({
+            type: "broadcast",
+            event: "cambio_grupal",
+            payload: { proyecto: guardado, emisor: usuarioId },
+          });
         }
       }
       setEstado({ tipo: "guardado", en: new Date() });
-      // Audit de actividad: solo para grupales, deduplicado por día en BD.
       if ((p.tipo === "proyecto_grupal" || p.grupo_id) && usuarioId && !rev.activa) {
         void registrarActividad(p.id, usuarioId, "edito", 0);
       }
-    } catch (e) {
-      const mensaje = e instanceof Error ? e.message : "Error al guardar";
+    } catch (e: any) {
+      const mensaje =
+        (typeof e?.message === "string" && e.message) ||
+        (e instanceof Error ? e.message : "Error al guardar");
       setEstado({ tipo: "error", mensaje });
     } finally {
       guardandoRef.current = false;
+      if (pendienteReintentoRef.current) {
+        pendienteReintentoRef.current = false;
+        void guardarSiHayPendientes();
+      }
     }
   };
 
@@ -123,9 +174,9 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proyecto, delayMs, revisionActiva, modoRevision]);
 
-  // Sincronización en vivo para proyectos GRUPALES:
-  // Trae cada 3 segundos (y por Realtime si está activo) lo que hayan editado
-  // los demás integrantes del grupo y lo fusiona en pantalla sin pisar lo propio.
+  // Canal en vivo para proyectos GRUPALES:
+  // 1) Broadcast WebSocket instantáneo (<100ms) entre pestañas/compañeros.
+  // 2) Respaldo por lectura periódica cada 2.5s por si el WebSocket se reconecta.
   const proyectoId = proyecto?.id;
   const esGrupal = Boolean(proyecto && (proyecto.tipo === "proyecto_grupal" || proyecto.grupo_id));
 
@@ -140,24 +191,12 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
 
       const actual = proyectoRef.current;
       if (!actual || actual.id !== proyectoId) return;
-      // Si hay una edición local pendiente de guardarse, primero que se guarde.
       if (ultimoGuardadoTimestampRef.current !== actual.actualizado_en) return;
 
       try {
         const remoto = await obtenerProyectoRemotoDirecto(proyectoId);
         if (!remoto || cancelado || guardandoRef.current || timerRef.current !== null) return;
-
-        const ahoraLocal = proyectoRef.current;
-        if (!ahoraLocal || ahoraLocal.id !== proyectoId) return;
-
-        if (!contenidoProyectoIgual(ahoraLocal, remoto)) {
-          const base = obtenerBaseSincronizacion(proyectoId);
-          const fusionado = fusionarProyectoGrupal(base, ahoraLocal, remoto);
-          registrarBaseSincronizacion(remoto);
-          ultimoGuardadoTimestampRef.current = fusionado.actualizado_en;
-          proyectoRef.current = fusionado;
-          useProyectoStore.getState().cargar(fusionado);
-        }
+        aplicarRemotoEnPantalla(remoto);
       } catch {
         // Silencioso: el próximo ciclo reintentará.
       }
@@ -165,11 +204,19 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
 
     const intervalo = setInterval(() => {
       void sincronizarDesdeRemoto();
-    }, 3000);
+    }, 2500);
 
-    // Canal Realtime (por si la tabla tiene replicación habilitada en Supabase)
     const canal = supabase
-      .channel(`proyecto-grupal-${proyectoId}`)
+      .channel(`grupo-live-${proyectoId}`, {
+        config: { broadcast: { self: false } },
+      })
+      .on("broadcast", { event: "cambio_grupal" }, ({ payload }) => {
+        if (cancelado) return;
+        const proyRemoto = payload?.proyecto as Proyecto | undefined;
+        if (proyRemoto && proyRemoto.id === proyectoId) {
+          aplicarRemotoEnPantalla(proyRemoto);
+        }
+      })
       .on(
         "postgres_changes",
         {
@@ -184,8 +231,11 @@ export function useAutoGuardado(proyecto: Proyecto | null, delayMs = 500) {
       )
       .subscribe();
 
+    canalRef.current = canal;
+
     return () => {
       cancelado = true;
+      canalRef.current = null;
       clearInterval(intervalo);
       void supabase.removeChannel(canal);
     };

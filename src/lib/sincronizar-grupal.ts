@@ -2,23 +2,6 @@ import type { CategoriaInversion, ItemInversion, Proyecto } from "@/types/proyec
 
 /**
  * Sincronización y fusión inteligente (Smart Merge) para proyectos grupales.
- *
- * Problema que resuelve:
- * El proyecto completo se guarda en la columna JSONB `datos` de `proyectos`.
- * Cuando dos o más integrantes del grupo abren `/construir` al mismo tiempo:
- *   1) Si la estudiante A edita el Paso 2 y la estudiante B edita el Paso 4,
- *      el auto-guardado sin fusión pisaba todo el JSONB con la memoria de quien
- *      guardó último ("no aparece lo que hace mi compañera, solo lo mío se queda").
- *   2) Sin sincronización periódica en vivo, lo que guarda una compañera no se
- *      veía en la pantalla de la otra hasta recargar con F5.
- *
- * Solución:
- * - Guardamos en memoria la última foto base (`basePorProyecto`) que cada
- *   navegador recibió o guardó en Supabase.
- * - Al guardar o recibir cambios remotos, `fusionarProyectoGrupal(base, local, remoto)`
- *   combina campo por campo y lista por lista (por `id` de cada ítem), de modo
- *   que lo que agregó o editó una compañera NUNCA sea borrado por la copia en
- *   memoria de otro integrante.
  */
 
 const basePorProyecto = new Map<string, Proyecto>();
@@ -39,17 +22,12 @@ export function obtenerBaseSincronizacion(proyectoId: string): Proyecto | null {
 }
 
 function iguales(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
 /**
  * Fusiona una lista de ítems con `id` (productos, personal, inversiones, costos)
  * comparando `local` y `remoto` contra la foto `base`.
- * - Ítems agregados por la compañera (`remoto` no estaba en `base`) -> se conservan.
- * - Ítems agregados localmente (`local` no estaba en `base`) -> se conservan.
- * - Ítems editados localmente (cambió respecto a `base`) -> gana la edición local.
- * - Ítems editados por la compañera (no cambió en `local`) -> gana la edición remota.
- * - Ítems borrados explícitamente por uno de los dos -> se eliminan.
  */
 export function fusionarListaPorId<T extends { id: string }>(
   base: T[] | undefined,
@@ -59,7 +37,6 @@ export function fusionarListaPorId<T extends { id: string }>(
   const listaLocal = local ?? [];
   const listaRemota = remoto ?? [];
   if (!base) {
-    // Sin foto base: unión preservando ediciones locales y agregados remotos.
     const mapaLocal = new Map(listaLocal.map((item) => [item.id, item]));
     const resultado: T[] = [...listaLocal];
     for (const itemRemoto of listaRemota) {
@@ -81,18 +58,15 @@ export function fusionarListaPorId<T extends { id: string }>(
     const enLocal = mapaLocal.get(itemRemoto.id);
 
     if (enBase) {
-      // Ya existía en la foto base:
       if (!enLocal) {
         // El usuario local lo eliminó deliberadamente -> no lo incluimos.
         continue;
       }
-      // Sigue en ambos: si el usuario local lo modificó respecto a base, gana local;
-      // si no lo tocó, conservamos la versión remota (que puede traer cambios de la compañera).
       const modificadoLocalmente = !iguales(enLocal, enBase);
       resultado.push(modificadoLocalmente ? enLocal : itemRemoto);
       idsIncluidos.add(itemRemoto.id);
     } else {
-      // No existía en base -> fue agregado por la compañera en remoto. ¡Lo conservamos!
+      // No existía en base -> fue agregado por un compañero en remoto. ¡Lo conservamos!
       resultado.push(enLocal ?? itemRemoto);
       idsIncluidos.add(itemRemoto.id);
     }
@@ -104,15 +78,12 @@ export function fusionarListaPorId<T extends { id: string }>(
     if (idsIncluidos.has(itemLocal.id)) continue;
     const enBase = mapaBase.get(itemLocal.id);
     if (!enBase) {
-      // Creado localmente ahora mismo:
       resultado.push(itemLocal);
       idsIncluidos.add(itemLocal.id);
     } else if (!iguales(itemLocal, enBase)) {
-      // Fue editado localmente: lo conservamos.
       resultado.push(itemLocal);
       idsIncluidos.add(itemLocal.id);
     }
-    // Si estaba en base sin cambios locales y ya no está en remoto, fue borrado por la compañera.
   }
 
   return resultado;
@@ -165,55 +136,55 @@ export function fusionarProyectoGrupal(
     );
   }
 
-  // Fusión fina de financiamiento
   const finBase = base?.financiamiento;
   const finLocal = localClon.financiamiento;
   const finRemoto = remotoClon.financiamiento;
-  const financiamientoFusionado = finBase
-    ? {
-        porcentajePropio: !iguales(finLocal.porcentajePropio, finBase.porcentajePropio)
-          ? finLocal.porcentajePropio
-          : finRemoto.porcentajePropio,
-        porcentajePrestamo: !iguales(finLocal.porcentajePrestamo, finBase.porcentajePrestamo)
-          ? finLocal.porcentajePrestamo
-          : finRemoto.porcentajePrestamo,
-        tasaInteresAnual: !iguales(finLocal.tasaInteresAnual, finBase.tasaInteresAnual)
-          ? finLocal.tasaInteresAnual
-          : finRemoto.tasaInteresAnual,
-        plazoMeses: !iguales(finLocal.plazoMeses, finBase.plazoMeses)
-          ? finLocal.plazoMeses
-          : finRemoto.plazoMeses,
-        costoOportunidadAccionista: !iguales(
-          finLocal.costoOportunidadAccionista,
-          finBase.costoOportunidadAccionista
-        )
-          ? finLocal.costoOportunidadAccionista
-          : finRemoto.costoOportunidadAccionista,
-        prestamoCapitalTrabajo: !iguales(
-          finLocal.prestamoCapitalTrabajo,
-          finBase.prestamoCapitalTrabajo
-        )
-          ? finLocal.prestamoCapitalTrabajo
-          : finRemoto.prestamoCapitalTrabajo,
-      }
-    : finLocal;
+  const financiamientoFusionado =
+    finBase && finLocal && finRemoto
+      ? {
+          porcentajePropio: !iguales(finLocal.porcentajePropio, finBase.porcentajePropio)
+            ? finLocal.porcentajePropio
+            : finRemoto.porcentajePropio,
+          porcentajePrestamo: !iguales(finLocal.porcentajePrestamo, finBase.porcentajePrestamo)
+            ? finLocal.porcentajePrestamo
+            : finRemoto.porcentajePrestamo,
+          tasaInteresAnual: !iguales(finLocal.tasaInteresAnual, finBase.tasaInteresAnual)
+            ? finLocal.tasaInteresAnual
+            : finRemoto.tasaInteresAnual,
+          plazoMeses: !iguales(finLocal.plazoMeses, finBase.plazoMeses)
+            ? finLocal.plazoMeses
+            : finRemoto.plazoMeses,
+          costoOportunidadAccionista: !iguales(
+            finLocal.costoOportunidadAccionista,
+            finBase.costoOportunidadAccionista
+          )
+            ? finLocal.costoOportunidadAccionista
+            : finRemoto.costoOportunidadAccionista,
+          prestamoCapitalTrabajo: !iguales(
+            finLocal.prestamoCapitalTrabajo,
+            finBase.prestamoCapitalTrabajo
+          )
+            ? finLocal.prestamoCapitalTrabajo
+            : finRemoto.prestamoCapitalTrabajo,
+        }
+      : finLocal ?? finRemoto;
 
-  const ahora = new Date().toISOString();
+  const tsMayor =
+    (localClon.actualizado_en ?? "") >= (remotoClon.actualizado_en ?? "")
+      ? localClon.actualizado_en
+      : remotoClon.actualizado_en;
 
   return {
     ...remotoClon,
     ...localClon,
-    // Identidad del proyecto grupal (siempre se respeta la de la base):
     id: remotoClon.id,
     estudiante_id: remotoClon.estudiante_id,
     curso_id: remotoClon.curso_id,
     grupo_id: remotoClon.grupo_id ?? localClon.grupo_id ?? null,
     tipo: "proyecto_grupal",
     creado_en: remotoClon.creado_en,
-    actualizado_en:
-      localClon.actualizado_en > remotoClon.actualizado_en ? localClon.actualizado_en : ahora,
+    actualizado_en: tsMayor,
 
-    // Campos escalares / de configuración paso a paso:
     nombre: elegirCampo("nombre", base, localClon, remotoClon),
     ubicacion: elegirCampo("ubicacion", base, localClon, remotoClon),
     descripcion: elegirCampo("descripcion", base, localClon, remotoClon),
@@ -254,7 +225,6 @@ export function fusionarProyectoGrupal(
     presentacion: elegirCampo("presentacion", base, localClon, remotoClon),
     estado: elegirCampo("estado", base, localClon, remotoClon),
 
-    // Listas con IDs propios fusionadas ítem por ítem:
     productos: fusionarListaPorId(base?.productos, localClon.productos, remotoClon.productos),
     inversiones: inversionesFusionadas,
     personal: fusionarListaPorId(base?.personal, localClon.personal, remotoClon.personal),
@@ -277,9 +247,52 @@ export function fusionarProyectoGrupal(
   };
 }
 
-/** Compara si dos proyectos tienen exactamente los mismos datos de negocio (ignorando timestamps). */
+function normalizarParaComparar(p: Proyecto) {
+  return {
+    nombre: p.nombre ?? "",
+    ubicacion: p.ubicacion ?? "",
+    descripcion: p.descripcion ?? "",
+    sector: p.sector ?? "produccion",
+    tipoNegocio: p.tipoNegocio ?? null,
+    version: p.version ?? "v1",
+    modeloIngreso: p.modeloIngreso ?? "unidades",
+    nivelSemanaE: p.nivelSemanaE ?? null,
+    capacidadAnual: p.capacidadAnual ?? null,
+    beneficiarios: p.beneficiarios ?? null,
+    capitalTrabajo: p.capitalTrabajo ?? 0,
+    mesesBufferCapitalTrabajo: p.mesesBufferCapitalTrabajo ?? 3,
+    imprevistosPorcentaje: p.imprevistosPorcentaje ?? 0.05,
+    crecimientoIngresosAnual: p.crecimientoIngresosAnual ?? 0,
+    crecimientoCostosAnual: p.crecimientoCostosAnual ?? 0,
+    tasasCrecCantidad: p.tasasCrecCantidad ?? [0, 0, 0, 0],
+    tasasCrecPrecio: p.tasasCrecPrecio ?? [0, 0, 0, 0],
+    aportesPatronalesOverride: p.aportesPatronalesOverride ?? null,
+    capmV2: p.capmV2 ?? null,
+    suscripcionV2: p.suscripcionV2 ?? null,
+    publicidadV2: p.publicidadV2 ?? null,
+    costoBeneficioV2: p.costoBeneficioV2 ?? null,
+    presentacion: p.presentacion ?? null,
+    estado: p.estado ?? "construyendo",
+    productos: p.productos ?? [],
+    inversiones: {
+      terreno: p.inversiones?.terreno ?? [],
+      obrasCiviles: p.inversiones?.obrasCiviles ?? [],
+      maquinaria: p.inversiones?.maquinaria ?? [],
+      mobiliario: p.inversiones?.mobiliario ?? [],
+      activoDiferido: p.inversiones?.activoDiferido ?? [],
+    },
+    personal: p.personal ?? [],
+    costosDirectos: p.costosDirectos ?? [],
+    costosAdministracion: p.costosAdministracion ?? [],
+    costosComercializacion: p.costosComercializacion ?? [],
+    financiamiento: p.financiamiento ?? null,
+  };
+}
+
+/**
+ * Compara si dos proyectos tienen exactamente los mismos datos de negocio,
+ * sin importar el orden de las propiedades ni diferencias entre null y undefined.
+ */
 export function contenidoProyectoIgual(a: Proyecto, b: Proyecto): boolean {
-  const { actualizado_en: _a, ...restoA } = a;
-  const { actualizado_en: _b, ...restoB } = b;
-  return JSON.stringify(restoA) === JSON.stringify(restoB);
+  return JSON.stringify(normalizarParaComparar(a)) === JSON.stringify(normalizarParaComparar(b));
 }
