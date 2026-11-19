@@ -1476,3 +1476,11 @@ con autorización para actualizar.
 - `auth-store`: al cerrar sesion se limpia el proyecto en memoria.
 - PENDIENTES confirmados, sin tocar: C5 cupo/unicidad de grupos en grupo_miembros (probar antes); C6 alumno puede cambiar curso_id/grupo_id de su proyecto (politica 002 FOR ALL); guardado grupal pisa si falla la lectura remota (proyecto-supabase.ts ~284-306); Monte Carlo con 12 vs 14 intervalos (calculo-financiero vs analisis-riesgo); ruta `*` muestra Hub fuera del layout (App.tsx ~166). Falta prueba en pantalla 375 px y modo revision docente.
 - `npm run build` falla en esta PC por tipos faltantes en node_modules (probar `npm ci`).
+
+## 18-11 (tarde, PC) · C6, guardado grupal, 066 y Estados financieros
+- Migracion 065 (trigger `trg_proyectos_valida_curso_grupo`): el estudiante solo puede mover su proyecto a un curso donde esta inscrito y a un grupo del que es miembro. Cierra C6. Aplicacion en Supabase: confirmar (re-ejecutarla es inocuo).
+- `proyecto-supabase.ts`: el guardado grupal NO guarda si falla la lectura remota (ya no pisa a los companeros).
+- Migracion 066: RLS de simulaciones para miembros del grupo. Punto de equilibrio visible en etapas, presentacion y simulacion.
+- Pestana y boton "Estados financieros" (Balance de Apertura, Estado de Resultados, Flujos Contables, Ratios DuPont) con modo presentacion de 5 diapositivas + guia del expositor. Excel: hoja Flujo de caja alineada con la web (IT 3%, IVA en inversion, IVA neto).
+- `scripts/agy/` ya commiteado. 751 tests verdes (19-11).
+- Siguen pendientes: C5 cupo/unicidad de grupos, Monte Carlo 12 vs 14 intervalos, ruta `*` fuera del layout, prueba 375 px y modo revision docente, prueba en pantalla de alumno pasando a grupal.
