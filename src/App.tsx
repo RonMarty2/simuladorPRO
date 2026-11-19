@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import RootLayout from "@/components/layout/RootLayout";
 // Login y Registro NO son lazy: son la primera pantalla, deben pintar rápido.
@@ -172,14 +172,8 @@ export default function App() {
           />
         </Route>
       </Route>
-      <Route
-        path="*"
-        element={
-          <Suspense fallback={<Cargando />}>
-            <Hub />
-          </Suspense>
-        }
-      />
+      {/* Ruta desconocida: volver al inicio dentro del layout (y del login). */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>
   );
