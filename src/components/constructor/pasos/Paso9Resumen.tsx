@@ -47,16 +47,52 @@ export default function Paso9Resumen() {
   const calc = useMemo(() => construirFlujoCaja(proyecto), [proyecto]);
   const faltantes = useMemo(() => datosFaltantes(proyecto), [proyecto]);
 
-  // El IVA afecta caja, no resultado contable; por eso vive en ajustes de caja.
-  // Dejamos abiertos los bloques clave para que IT/IUE/IVA sean visibles al cargar.
+  // Todos los bloques arrancan contraídos para que la tabla sea fácil de leer;
+  // cada barra cerrada muestra su subtotal por año y hay botón Expandir/Contraer todo.
   const [secAbierta, setSecAbierta] = useState<Record<string, boolean>>({
-    emerald: true,
+    emerald: false,
     rose: false,
-    violet: true,
-    sky: true,
+    violet: false,
+    sky: false,
   });
   const toggleSeccion = (k: string) =>
     setSecAbierta((s) => ({ ...s, [k]: !s[k] }));
+  const todasAbiertas = Object.values(secAbierta).every(Boolean);
+  const toggleTodasSecciones = () => {
+    const siguiente = !todasAbiertas;
+    setSecAbierta({
+      emerald: siguiente,
+      rose: siguiente,
+      violet: siguiente,
+      sky: siguiente,
+    });
+  };
+
+  // Subtotales por año (Año 0..Año 5) para mostrar en las barras cuando están contraídas.
+  const resumenSecciones = useMemo(() => {
+    const costos = [0, 1, 2, 3, 4].map(
+      (i) =>
+        -(
+          calc.costosProduccion[i] +
+          calc.gastosAdmin[i] +
+          calc.gastosComerc[i] +
+          calc.personal[i] +
+          calc.depreciacion[i] +
+          calc.imprevistos[i] +
+          calc.intereses[i]
+        )
+    );
+    const ajustes = [
+      calc.flujoCaja[0],
+      ...[0, 1, 2, 3, 4].map((i) => calc.flujoCaja[i + 1] - calc.utilidadNeta[i]),
+    ];
+    return {
+      emerald: [0, ...calc.ingresos],
+      rose: [0, ...costos],
+      violet: [0, ...calc.utilidadNeta],
+      sky: ajustes,
+    };
+  }, [calc]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -249,12 +285,21 @@ export default function Paso9Resumen() {
 
       {/* TABLA FLUJO DE CAJA — cada sección de color se contrae/expande */}
       <div className="order-3 overflow-x-auto rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-1 text-sm font-semibold">
-          Flujo de caja proyectado (Bs){" "}
-          <span className="font-normal text-[11px] text-muted-foreground">
-            — clic en cada barra de color para contraer/expandir
-          </span>
-        </h3>
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">
+            Flujo de caja proyectado (Bs){" "}
+            <span className="font-normal text-[11px] text-muted-foreground">
+              — clic en cada barra de color para contraer/expandir
+            </span>
+          </h3>
+          <button
+            type="button"
+            onClick={toggleTodasSecciones}
+            className="rounded-md border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-secondary"
+          >
+            {todasAbiertas ? "Contraer todo" : "Expandir todo"}
+          </button>
+        </div>
         <div className="mb-2 text-[11px] text-muted-foreground md:hidden">
           Desliza la tabla para ver los 5 años (el concepto queda fijo).
         </div>
@@ -275,6 +320,7 @@ export default function Paso9Resumen() {
               color="emerald"
               abierta={secAbierta.emerald}
               onToggle={() => toggleSeccion("emerald")}
+              resumen={resumenSecciones.emerald}
             />
             {secAbierta.emerald && (
               <FilaFlujo
@@ -291,6 +337,7 @@ export default function Paso9Resumen() {
               color="rose"
               abierta={secAbierta.rose}
               onToggle={() => toggleSeccion("rose")}
+              resumen={resumenSecciones.rose}
             />
             {secAbierta.rose && (
               <>
@@ -310,6 +357,7 @@ export default function Paso9Resumen() {
               color="violet"
               abierta={secAbierta.violet}
               onToggle={() => toggleSeccion("violet")}
+              resumen={resumenSecciones.violet}
             />
             {secAbierta.violet && (
               <>
@@ -326,6 +374,7 @@ export default function Paso9Resumen() {
               color="sky"
               abierta={secAbierta.sky}
               onToggle={() => toggleSeccion("sky")}
+              resumen={resumenSecciones.sky}
             />
             {secAbierta.sky && (
               <>
@@ -1513,26 +1562,43 @@ function FilaSeccion({
   color,
   abierta,
   onToggle,
+  resumen,
 }: {
   label: string;
   color: ColorFila;
   abierta?: boolean;
   onToggle?: () => void;
+  resumen?: number[];
 }) {
+  const mostrarResumen = Boolean(resumen && !abierta);
   return (
-    <tr>
+    <tr
+      onClick={onToggle}
+      className={cn(
+        SECCION_BG[color],
+        onToggle && "cursor-pointer select-none"
+      )}
+    >
       <td
-        colSpan={7}
-        onClick={onToggle}
+        colSpan={mostrarResumen ? 1 : 7}
         className={cn(
           "px-2 py-1 text-[11px] font-bold uppercase tracking-wider",
-          SECCION_BG[color],
-          onToggle && "cursor-pointer select-none"
+          mostrarResumen && "sticky left-0 z-[1] md:static",
+          mostrarResumen && SECCION_BG[color]
         )}
       >
         {onToggle && <span className="mr-1">{abierta ? "▾" : "▸"}</span>}
         {label}
       </td>
+      {mostrarResumen &&
+        resumen!.map((v, i) => (
+          <td
+            key={i}
+            className="px-1.5 py-1 text-right text-[11px] font-semibold tabular-nums"
+          >
+            {Math.abs(v) < 0.01 ? "—" : formatearBolivianos(v)}
+          </td>
+        ))}
     </tr>
   );
 }
