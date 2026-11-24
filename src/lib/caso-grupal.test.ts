@@ -12,6 +12,9 @@ import {
   construirCasoGrupal,
   limpiarNombreCaso,
   nombreProyectoGrupalConCaso,
+  pasarCasoAGrupo,
+  tieneContenidoReal,
+  validarReemplazoGrupal,
 } from "./caso-grupal";
 import { crearProyectoEjemploCafeteriaV2, crearProyectoVacio } from "./proyecto-factory";
 
@@ -71,5 +74,72 @@ describe("construirCasoGrupal", () => {
     expect(r.grupo_id).toBe("grupo-1");
     expect(r.nombre).toBe("Los emprendedores · PANADERIA");
     expect(limpiarNombreCaso("PANADERIA — entrega")).toBe("PANADERIA");
+  });
+});
+
+describe("tieneContenidoReal", () => {
+  it("devuelve false para un proyecto vacío", () => {
+    const vacio = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Cafetería" });
+    expect(tieneContenidoReal(vacio)).toBe(false);
+  });
+
+  it("devuelve true cuando tiene productos, inversiones o ubicación", () => {
+    const conProductos = crearProyectoEjemploCafeteriaV2({ estudiante_id: "est-1" });
+    expect(tieneContenidoReal(conProductos)).toBe(true);
+
+    const conUbicacion = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Nuevo" });
+    conUbicacion.ubicacion = "Cochabamba";
+    expect(tieneContenidoReal(conUbicacion)).toBe(true);
+
+    const conInversion = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Nuevo" });
+    conInversion.inversiones.maquinaria.push({
+      id: "inv-1",
+      descripcion: "Horno",
+      unidadMedida: "unidad",
+      cantidad: 1,
+      costoUnitario: 5000,
+      costoTotal: 5000,
+      vidaUtilAnios: 10,
+      depreciacionAnual: 500,
+      valorResidual: 0,
+    });
+    expect(tieneContenidoReal(conInversion)).toBe(true);
+  });
+});
+
+describe("validarReemplazoGrupal y pasarCasoAGrupo", () => {
+  it("bloquea cuando el origen está vacío y el destino tiene datos", () => {
+    const origen = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Cafetería" });
+    const destino = crearProyectoEjemploCafeteriaV2({ estudiante_id: "est-2" });
+    destino.nombre = "Grupo Alfa · proyecto grupal";
+    destino.tipo = "proyecto_grupal";
+    destino.grupo_id = "grupo-1";
+
+    const msg = validarReemplazoGrupal(origen, destino);
+    expect(msg).toBe(
+      "Este proyecto está vacío y el grupo «Grupo Alfa · proyecto grupal» ya tiene datos cargados. No se copió para evitar borrar el trabajo del grupo."
+    );
+  });
+
+  it("permite reemplazar cuando el origen tiene datos o el destino está vacío", () => {
+    const origenConDatos = crearProyectoEjemploCafeteriaV2({ estudiante_id: "est-1" });
+    const destinoConDatos = crearProyectoEjemploCafeteriaV2({ estudiante_id: "est-2" });
+    expect(validarReemplazoGrupal(origenConDatos, destinoConDatos)).toBeNull();
+
+    const origenVacio = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Cafetería" });
+    const destinoVacio = crearProyectoVacio({ estudiante_id: "est-2", nombre: "Grupo B" });
+    expect(validarReemplazoGrupal(origenVacio, destinoVacio)).toBeNull();
+  });
+
+  it("pasarCasoAGrupo rechaza con error cuando origen está vacío y destino tiene datos", async () => {
+    const origen = crearProyectoVacio({ estudiante_id: "est-1", nombre: "Cafetería" });
+    const destino = crearProyectoEjemploCafeteriaV2({ estudiante_id: "est-2" });
+    destino.nombre = "Grupo Beta";
+    destino.tipo = "proyecto_grupal";
+    destino.grupo_id = "grupo-2";
+
+    await expect(pasarCasoAGrupo(origen, destino)).rejects.toThrow(
+      "Este proyecto está vacío y el grupo «Grupo Beta» ya tiene datos cargados. No se copió para evitar borrar el trabajo del grupo."
+    );
   });
 });

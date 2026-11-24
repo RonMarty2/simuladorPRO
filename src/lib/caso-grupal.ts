@@ -89,6 +89,47 @@ export async function buscarCasoDelGrupo(
   return grupales.find((g) => g.tipo === "proyecto_grupal") ?? null;
 }
 
+/** Categorías de inversión que cuentan como contenido real en un proyecto. */
+const CATEGORIAS_INVERSION = [
+  "terreno",
+  "obrasCiviles",
+  "maquinaria",
+  "mobiliario",
+  "activoDiferido",
+] as const;
+
+/** Indica si el proyecto tiene datos cargados más allá de su esqueleto inicial. */
+export function tieneContenidoReal(p: Proyecto): boolean {
+  if (Boolean(p.ubicacion?.trim()) || Boolean(p.descripcion?.trim())) {
+    return true;
+  }
+  if (
+    (p.productos?.length ?? 0) > 0 ||
+    (p.personal?.length ?? 0) > 0 ||
+    (p.costosDirectos?.length ?? 0) > 0 ||
+    (p.costosAdministracion?.length ?? 0) > 0 ||
+    (p.costosComercializacion?.length ?? 0) > 0
+  ) {
+    return true;
+  }
+  return CATEGORIAS_INVERSION.some((cat) => (p.inversiones?.[cat]?.length ?? 0) > 0);
+}
+
+/**
+ * Evita sobrescribir un proyecto grupal con trabajo cargado usando un proyecto
+ * individual vacío. Devuelve un mensaje de bloqueo o null si puede continuar.
+ */
+export function validarReemplazoGrupal(origen: Proyecto, destino: Proyecto): string | null {
+  if (!tieneContenidoReal(origen) && tieneContenidoReal(destino)) {
+    return (
+      "Este proyecto está vacío y el grupo «" +
+      destino.nombre +
+      "» ya tiene datos cargados. No se copió para evitar borrar el trabajo del grupo."
+    );
+  }
+  return null;
+}
+
 /** Copia el caso individual al proyecto del grupo y lo guarda. */
 export async function pasarCasoAGrupo(
   origen: Proyecto,
@@ -97,6 +138,10 @@ export async function pasarCasoAGrupo(
 ): Promise<Proyecto> {
   if (origen.id === destino.id) {
     throw new Error("El caso individual y el del grupo son el mismo proyecto.");
+  }
+  const bloqueo = validarReemplazoGrupal(origen, destino);
+  if (bloqueo) {
+    throw new Error(bloqueo);
   }
   const baseGrupo =
     opciones?.nombreGrupo ??

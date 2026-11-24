@@ -10,10 +10,13 @@ import {
   type GrupoConMiembros,
 } from "@/lib/grupos-supabase";
 import {
+  buscarCasoDelGrupo,
   crearGrupoConCaso,
   limpiarNombreCaso,
   pasarCasoAGrupoExistente,
+  tieneContenidoReal,
   unirseAGrupoYPasarCaso,
+  validarReemplazoGrupal,
 } from "@/lib/caso-grupal";
 import { guardarProyectoActivo } from "./SelectorProyecto";
 import { useProyectoStore } from "@/stores/proyecto-store";
@@ -47,6 +50,7 @@ export default function BotonPasarAGrupal({
   const [cursosDisponibles, setCursosDisponibles] = useState<Curso[]>([]);
   const [cursoElegido, setCursoElegido] = useState<Curso | null>(null);
   const [miGrupo, setMiGrupo] = useState<Grupo | null>(null);
+  const [proyectoGrupoDestino, setProyectoGrupoDestino] = useState<Proyecto | null>(null);
   const [gruposAbiertos, setGruposAbiertos] = useState<GrupoConMiembros[]>([]);
   const [nombreGrupoNuevo, setNombreGrupoNuevo] = useState("");
   const [proyectoGrupalListo, setProyectoGrupalListo] = useState<Proyecto | null>(null);
@@ -55,6 +59,13 @@ export default function BotonPasarAGrupal({
 
   const esIndividual = proyecto.tipo !== "proyecto_grupal" && !proyecto.grupo_id;
   if (!esIndividual || proyecto.esSemanaE) return null;
+
+  const bloqueoVacio = proyectoGrupoDestino
+    ? validarReemplazoGrupal(proyecto, proyectoGrupoDestino)
+    : null;
+  const destinoTieneDatos = proyectoGrupoDestino
+    ? tieneContenidoReal(proyectoGrupoDestino)
+    : false;
 
   const cargarEstadoCurso = async (curso: Curso) => {
     setCursoElegido(curso);
@@ -65,8 +76,11 @@ export default function BotonPasarAGrupal({
     setMiGrupo(grupoActual);
     setGruposAbiertos(listaGrupos.filter((g) => g.miembros.length < g.cupo_max));
     if (grupoActual) {
+      const destino = await buscarCasoDelGrupo(proyecto, curso.id).catch(() => null);
+      setProyectoGrupoDestino(destino);
       setPaso("confirmar_existente");
     } else {
+      setProyectoGrupoDestino(null);
       setNombreGrupoNuevo(limpiarNombreCaso(proyecto.nombre));
       setPaso("crear_o_unirse");
     }
@@ -242,11 +256,21 @@ export default function BotonPasarAGrupal({
             caso grupal de tu grupo <strong>{miGrupo.nombre}</strong> ({cursoElegido.nombre}) para
             que todo tu equipo pueda entrar a editarlo. Tu caso individual no cambia.
           </p>
+          {bloqueoVacio && (
+            <div className="mt-2 rounded border border-destructive/50 bg-destructive/10 px-2 py-1.5 font-medium text-destructive">
+              {bloqueoVacio}
+            </div>
+          )}
+          {!bloqueoVacio && destinoTieneDatos && (
+            <div className="mt-2 rounded border border-amber-400 bg-amber-50 px-2 py-1.5 font-medium text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+              {`Atención: tu grupo «${miGrupo.nombre}» ya tiene trabajo cargado. Si confirmas, su contenido actual será reemplazado por este proyecto.`}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={confirmarEnGrupoExistente}
-              disabled={paso === "copiando"}
+              disabled={paso === "copiando" || Boolean(bloqueoVacio)}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
               {paso === "copiando" && <Loader2 className="h-3 w-3 animate-spin" />}

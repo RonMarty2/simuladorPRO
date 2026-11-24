@@ -1491,3 +1491,9 @@ con autorización para actualizar.
 - `BotonGuardarComoCaso.tsx`: exporta `debeClonarComoCasoNuevo`; siempre clona proyectos grupales, entregas, de otros estudiantes o casos llevados a otro curso. Permite editar el nombre antes de publicar, preselecciona Paso 9 (solo simular) al clonar trabajos de alumnos/grupos y refresca `CasosCurso` via `onGuardado`.
 - UI: boton visible en `construir-proyecto.tsx` tambien en Modo Revision, y boton compacto "Pasar a caso del curso" agregado en `GruposDocente.tsx`, `EntregasCurso.tsx`, `DetalleEstudiante.tsx` (propagado desde `RankingCurso.tsx` y `dashboard-docente.tsx` con `recargarCasosKey` hacia `CasosCurso.tsx`).
 - Tests: `src/lib/caso-curso.test.ts` (9 tests). Total: 760/760 tests verdes; `tsc -p tsconfig.app.json --noEmit` y `vite build` OK (persiste en esta PC el error preexistente de tipos en `vite.config.ts`).
+
+## 24-11 (tarde) · Blindaje en "Pasar a caso grupal" contra sobrescritura con proyecto vacio
+- Causa raiz: el 23-11 a las 19:59 un proyecto individual vacio ("cafeteria") piso el proyecto grupal `AVANCE AULA CON EL DOCENTE` al usar "Pasar a caso grupal".
+- `caso-grupal.ts`: nuevas funciones `tieneContenidoReal` y `validarReemplazoGrupal`; `pasarCasoAGrupo` rechaza con error si el origen esta vacio y el proyecto grupal destino ya tiene datos reales.
+- `BotonPasarAGrupal.tsx`: consulta el proyecto actual del grupo destino, deshabilita el boton con aviso rojo si el origen esta vacio y el grupo tiene trabajo, y muestra advertencia ambar antes de reemplazar un grupo que ya tiene datos.
+- Tests: 5 tests nuevos en `src/lib/caso-grupal.test.ts` (total 765/765 verdes, typecheck y vite build OK).
