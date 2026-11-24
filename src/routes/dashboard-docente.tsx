@@ -615,6 +615,8 @@ function CursoCard({
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
   const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
   const [errorEstado, setErrorEstado] = useState<string | null>(null);
+  const [recargarCasosKey, setRecargarCasosKey] = useState(0);
+  const onCasoCreado = () => setRecargarCasosKey((k) => k + 1);
 
   const borrar = async () => {
     setBorrando(true);
@@ -915,11 +917,11 @@ function CursoCard({
 
       {expandido && (
         <div className="mt-3 space-y-3 border-t border-border pt-3">
-          {vista === "entregas" && <EntregasCurso cursoId={curso.id} />}
+          {vista === "entregas" && <EntregasCurso cursoId={curso.id} onCasoCreado={onCasoCreado} />}
 
-          {vista === "grupos" && <GruposDocente curso={curso} />}
+          {vista === "grupos" && <GruposDocente curso={curso} onCasoCreado={onCasoCreado} />}
 
-          {vista === "casos" && <CasosCurso cursoId={curso.id} />}
+          {vista === "casos" && <CasosCurso cursoId={curso.id} recargarKey={recargarCasosKey} />}
 
           {vista === "lanzador" && <LanzadorEventos cursoId={curso.id} />}
 
@@ -939,6 +941,7 @@ function CursoCard({
             <RankingCurso
               cursoId={curso.id}
               curso={{ nombre: curso.nombre, codigo: curso.codigo, materia: curso.materia }}
+              onCasoCreado={onCasoCreado}
             />
           )}
 

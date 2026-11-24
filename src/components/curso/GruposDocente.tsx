@@ -18,8 +18,15 @@ import {
 import type { ModeloIngreso } from "@/lib/proyecto-factory";
 import type { VersionProyecto } from "@/types/proyecto";
 import InputNumero from "@/components/constructor/InputNumero";
+import BotonGuardarComoCaso from "@/components/docente/BotonGuardarComoCaso";
 
-export default function GruposDocente({ curso }: { curso: Curso }) {
+export default function GruposDocente({
+  curso,
+  onCasoCreado,
+}: {
+  curso: Curso;
+  onCasoCreado?: () => void;
+}) {
   const user = useAuthStore((s) => s.user)!;
   const navigate = useNavigate();
   const [grupos, setGrupos] = useState<GrupoConMiembros[] | null>(null);
@@ -246,7 +253,14 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
       ) : (
         <div className="space-y-2">
           {gruposVisibles.map((g) => (
-            <GrupoFila key={g.id} grupo={g} onAbrir={abrirProyecto} onCambio={recargar} />
+            <GrupoFila
+              key={g.id}
+              grupo={g}
+              cursoId={curso.id}
+              onAbrir={abrirProyecto}
+              onCambio={recargar}
+              onCasoCreado={onCasoCreado}
+            />
           ))}
         </div>
       )}
@@ -256,12 +270,16 @@ export default function GruposDocente({ curso }: { curso: Curso }) {
 
 function GrupoFila({
   grupo,
+  cursoId,
   onAbrir,
   onCambio,
+  onCasoCreado,
 }: {
   grupo: GrupoConMiembros;
+  cursoId: string;
   onAbrir: (proyectoId: string | null) => void;
   onCambio: () => void;
+  onCasoCreado?: () => void;
 }) {
   const navigate = useNavigate();
   const [nota, setNota] = useState<number | "">(grupo.nota ?? "");
@@ -309,7 +327,7 @@ function GrupoFila({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => onAbrir(grupo.proyecto_id)}
             className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-secondary"
@@ -318,13 +336,22 @@ function GrupoFila({
             Abrir / evaluar proyecto
           </button>
           {grupo.proyecto_id && (
-            <button
-              onClick={() => navigate(`/presentar/${encodeURIComponent(grupo.proyecto_id!)}`)}
-              className="flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-800 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200"
-            >
-              <BarChart3 className="h-3 w-3" />
-              Presentación
-            </button>
+            <>
+              <button
+                onClick={() => navigate(`/presentar/${encodeURIComponent(grupo.proyecto_id!)}`)}
+                className="flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-800 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200"
+              >
+                <BarChart3 className="h-3 w-3" />
+                Presentación
+              </button>
+              <BotonGuardarComoCaso
+                proyectoId={grupo.proyecto_id}
+                cursoIdInicial={cursoId}
+                variante="compacto"
+                etiqueta="Pasar a caso del curso"
+                onGuardado={onCasoCreado}
+              />
+            </>
           )}
           {!confirmando ? (
             <button

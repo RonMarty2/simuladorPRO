@@ -15,14 +15,22 @@ import {
 } from "@/lib/cursos-supabase";
 import { calcularAportesPatronales, calcularWACC, obtenerTasasAportes } from "@/lib/calculo-financiero";
 import { formatearBolivianos } from "@/lib/utils";
+import type { Proyecto } from "@/types/proyecto";
+import BotonGuardarComoCaso from "./BotonGuardarComoCaso";
 
 interface Props {
   cursoId: string;
   estudianteId: string;
   nombreEstudiante: string;
+  onCasoCreado?: () => void;
 }
 
-export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudiante }: Props) {
+export default function DetalleEstudiante({
+  cursoId,
+  estudianteId,
+  nombreEstudiante,
+  onCasoCreado,
+}: Props) {
   const [data, setData] = useState<Detalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [verHistorial, setVerHistorial] = useState(false);
@@ -77,9 +85,19 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
       })
     : 0;
 
+  const fallbackProyecto: Proyecto | undefined = p
+    ? ({
+        ...p,
+        id: data.proyecto.id,
+        nombre: data.proyecto.nombre,
+        estudiante_id: estudianteId,
+        curso_id: cursoId,
+      } as Proyecto)
+    : undefined;
+
   return (
     <div className="space-y-3 rounded-md border border-border bg-secondary/20 p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             Proyecto de {nombreEstudiante}
@@ -90,6 +108,14 @@ export default function DetalleEstudiante({ cursoId, estudianteId, nombreEstudia
             {p.ubicacion || "Sin ubicación"} · sector {p.sector}
           </div>
         </div>
+        <BotonGuardarComoCaso
+          proyectoId={data.proyecto.id}
+          fallbackSnapshot={fallbackProyecto}
+          cursoIdInicial={cursoId}
+          variante="compacto"
+          etiqueta="Pasar a caso del curso"
+          onGuardado={onCasoCreado}
+        />
       </div>
 
       {p.descripcion && (

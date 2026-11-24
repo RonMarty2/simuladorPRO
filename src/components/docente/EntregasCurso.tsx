@@ -8,6 +8,7 @@ import ModalRevisarEntrega from "./ModalRevisarEntrega";
 import ModalRevisionMasiva from "./ModalRevisionMasiva";
 import ModalCalificarTodoIgual from "./ModalCalificarTodoIgual";
 import BotonAbrirProyectoEstudiante from "./BotonAbrirProyectoEstudiante";
+import BotonGuardarComoCaso from "./BotonGuardarComoCaso";
 
 type Vista = "individuales" | "grupales";
 type Filtro = "todas" | "pendiente" | "aprobada" | "reprobada";
@@ -34,7 +35,13 @@ interface Agrupado {
   ultimaEntregaEn: string;
 }
 
-export default function EntregasCurso({ cursoId }: { cursoId: string }) {
+export default function EntregasCurso({
+  cursoId,
+  onCasoCreado,
+}: {
+  cursoId: string;
+  onCasoCreado?: () => void;
+}) {
   const [entregas, setEntregas] = useState<Entrega[]>([]);
   const [grupos, setGrupos] = useState<GrupoConMiembros[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -339,8 +346,10 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
             <TarjetaAgrupada
               key={g.key}
               grupo={g}
+              cursoId={cursoId}
               vista={vista}
               agrupamiento={agrupamiento}
+              onCasoCreado={onCasoCreado}
               etiquetaChip={(e) =>
                 agrupamiento === "por_etapa" ? nombreTitularDe(e) : null
               }
@@ -400,14 +409,17 @@ export default function EntregasCurso({ cursoId }: { cursoId: string }) {
 
 function TarjetaAgrupada({
   grupo,
+  cursoId,
   vista,
   agrupamiento,
   etiquetaChip,
   onRevisar,
   onRevisarLote,
   onCalificarTodoIgual,
+  onCasoCreado,
 }: {
   grupo: Agrupado;
+  cursoId: string;
   vista: Vista;
   agrupamiento: Agrupamiento;
   /** Si devuelve string, ese texto reemplaza el "Etapa N" del chip. */
@@ -415,6 +427,7 @@ function TarjetaAgrupada({
   onRevisar: (e: Entrega) => void;
   onRevisarLote: (pendientes: Entrega[]) => void;
   onCalificarTodoIgual: (pendientes: Entrega[]) => void;
+  onCasoCreado?: () => void;
 }) {
   const pendientes = grupo.entregas.filter((e) => e.estado === "pendiente");
   const esVistaEtapa = agrupamiento === "por_etapa";
@@ -442,12 +455,22 @@ function TarjetaAgrupada({
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           {!esVistaEtapa && grupo.entregas[0] && (
-            <BotonAbrirProyectoEstudiante
-              proyectoId={grupo.entregas[0].proyecto_id}
-              titular={grupo.nombreTitular}
-              fallbackSnapshot={grupo.entregas[0].snapshot_datos}
-              label="Ver proyecto"
-            />
+            <>
+              <BotonAbrirProyectoEstudiante
+                proyectoId={grupo.entregas[0].proyecto_id}
+                titular={grupo.nombreTitular}
+                fallbackSnapshot={grupo.entregas[0].snapshot_datos}
+                label="Ver proyecto"
+              />
+              <BotonGuardarComoCaso
+                proyectoId={grupo.entregas[0].proyecto_id}
+                fallbackSnapshot={grupo.entregas[0].snapshot_datos}
+                cursoIdInicial={cursoId}
+                variante="compacto"
+                etiqueta="Pasar a caso del curso"
+                onGuardado={onCasoCreado}
+              />
+            </>
           )}
           {/* En "por etapa" se mezclan alumnos distintos: una sola nota para todos no tiene sentido. */}
           {pendientes.length >= 2 && !esVistaEtapa && (

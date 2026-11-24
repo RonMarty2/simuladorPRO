@@ -10,7 +10,7 @@ import { confirmar } from "@/components/ui/confirmar";
 const fmtFecha = (s?: string | null) =>
   s ? new Date(s).toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" }) : "—";
 
-export default function CasosCurso({ cursoId }: { cursoId: string }) {
+export default function CasosCurso({ cursoId, recargarKey }: { cursoId: string; recargarKey?: number }) {
   const user = useAuthStore((s) => s.user)!;
   const navigate = useNavigate();
   const [casos, setCasos] = useState<Proyecto[] | null>(null);
@@ -23,7 +23,7 @@ export default function CasosCurso({ cursoId }: { cursoId: string }) {
   useEffect(() => {
     recargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId]);
+  }, [cursoId, recargarKey]);
 
   const abrir = (p: Proyecto) => {
     guardarProyectoActivo(user.id, p.id);

@@ -14,11 +14,12 @@ import DetalleEstudiante from "./DetalleEstudiante";
 interface Props {
   cursoId: string;
   curso?: Pick<Curso, "nombre" | "codigo" | "materia">;
+  onCasoCreado?: () => void;
 }
 
 type ColumnaOrden = "utilidad_acumulada" | "caja" | "turno_actual" | "reputacion";
 
-export default function RankingCurso({ cursoId, curso }: Props) {
+export default function RankingCurso({ cursoId, curso, onCasoCreado }: Props) {
   const [filas, setFilas] = useState<FilaRanking[]>([]);
   const [cargando, setCargando] = useState(true);
   const [orden, setOrden] = useState<ColumnaOrden>("utilidad_acumulada");
@@ -253,6 +254,7 @@ export default function RankingCurso({ cursoId, curso }: Props) {
                       cursoId={cursoId}
                       estudianteId={f.estudiante_id}
                       nombreEstudiante={f.nombre_completo}
+                      onCasoCreado={onCasoCreado}
                     />
                   </td>
                 </tr>

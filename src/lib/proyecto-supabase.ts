@@ -353,24 +353,148 @@ export async function eliminarProyecto(id: string): Promise<void> {
 // ============================================================================
 
 /**
- * Convierte un proyecto del docente en un CASO DEL CURSO.
+ * Quita sufijos automáticos ("— entrega", "· proyecto grupal") al proponer
+ * el nombre de un caso del curso copiado desde un trabajo de estudiante/grupo.
+ */
+export function limpiarNombreParaCasoDelCurso(nombre: string): string {
+  const limpio = (nombre ?? "")
+    .replace(/\s*[—–-]\s*entrega\s*$/i, "")
+    .replace(/\s*·\s*proyecto grupal\s*$/i, "")
+    .trim();
+  return limpio || "Caso del curso";
+}
+
+/**
+ * Construye una copia independiente (nuevo ID, propiedad del docente, sin grupo)
+ * lista para publicarse como `tipo = 'caso_curso'` en el curso destino.
+ * Nunca muta el proyecto origen (grupal, individual o entrega del estudiante).
+ */
+export function construirCasoDelCursoDesdeProyecto(
+  origen: Proyecto,
+  params: {
+    docenteId: string;
+    cursoId: string;
+    pasoInicioEstudiante: number;
+    nombre?: string;
+  }
+): Proyecto {
+  const copia: Proyecto = JSON.parse(JSON.stringify(origen));
+  const ahora = new Date().toISOString();
+  const paso = Math.max(1, Math.min(9, Math.round(params.pasoInicioEstudiante)));
+  const nombreFinal =
+    params.nombre?.trim() || limpiarNombreParaCasoDelCurso(origen.nombre);
+
+  return {
+    ...copia,
+    id: crypto.randomUUID(),
+    estudiante_id: params.docenteId,
+    curso_id: params.cursoId,
+    grupo_id: null,
+    tipo: "caso_curso",
+    caso_origen_id: null,
+    paso_inicio_estudiante: paso,
+    estado: "completo",
+    nombre: nombreFinal,
+    esSemanaE: undefined,
+    nivelSemanaE: undefined,
+    copiadoDeProyectoId: origen.id,
+    creado_en: ahora,
+    actualizado_en: ahora,
+  };
+}
+
+/**
+ * Clona cualquier proyecto (grupal, individual, entrega o plantilla propia)
+ * como un NUEVO caso del curso propiedad del docente. El proyecto origen queda
+ * intacto y se suma a los casos existentes del curso.
+ */
+export async function clonarComoCasoDelCurso(params: {
+  origen: Proyecto;
+  docenteId: string;
+  cursoId: string;
+  pasoInicioEstudiante: number;
+  nombre?: string;
+}): Promise<Proyecto> {
+  const nuevo = construirCasoDelCursoDesdeProyecto(params.origen, {
+    docenteId: params.docenteId,
+    cursoId: params.cursoId,
+    pasoInicioEstudiante: params.pasoInicioEstudiante,
+    nombre: params.nombre,
+  });
+
+  if (esModoLocal()) {
+    guardarProyectoLocal(nuevo);
+    return nuevo;
+  }
+
+  const fila = proyectoAFilaSupabase(nuevo);
+  const { data, error } = await conTimeout(
+    supabase.from("proyectos").insert(fila).select("id"),
+    10000,
+    "creando copia como caso del curso"
+  );
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "No se pudo guardar el caso en el curso. Revisa tu sesión e intenta de nuevo."
+    );
+  }
+  return nuevo;
+}
+
+/**
+ * Convierte un proyecto PROPIO del docente en un CASO DEL CURSO (in-place).
  * El proyecto queda marcado como tipo='caso_curso' y se asocia al curso.
  * `pasoInicioEstudiante` (1..9) define desde qué paso debe trabajar el alumno.
  */
 export async function guardarComoCasoDelCurso(
   proyectoId: string,
   cursoId: string,
-  pasoInicioEstudiante: number
+  pasoInicioEstudiante: number,
+  nombre?: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from("proyectos")
-    .update({
+  if (esModoLocal()) {
+    const todos = leerProyectosLocal();
+    const existente = todos.find((p) => p.id === proyectoId);
+    if (!existente) {
+      throw new Error("No se encontró el proyecto para guardarlo como caso del curso.");
+    }
+    guardarProyectoLocal({
+      ...existente,
       tipo: "caso_curso",
       curso_id: cursoId,
+      grupo_id: null,
       paso_inicio_estudiante: pasoInicioEstudiante,
-    })
-    .eq("id", proyectoId);
+      nombre: nombre?.trim() || existente.nombre,
+      actualizado_en: new Date().toISOString(),
+    });
+    return;
+  }
+
+  const patch: Record<string, unknown> = {
+    tipo: "caso_curso",
+    curso_id: cursoId,
+    paso_inicio_estudiante: pasoInicioEstudiante,
+  };
+  if (nombre?.trim()) {
+    patch.nombre = nombre.trim();
+  }
+
+  const { data, error } = await conTimeout(
+    supabase
+      .from("proyectos")
+      .update(patch)
+      .eq("id", proyectoId)
+      .select("id"),
+    10000,
+    "guardando caso del curso"
+  );
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "No se pudo actualizar el caso del curso (sin permisos sobre este proyecto)."
+    );
+  }
 }
 
 /**

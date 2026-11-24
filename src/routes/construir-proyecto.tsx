@@ -301,12 +301,10 @@ export default function ConstruirProyecto() {
           <span className="text-xs text-muted-foreground">
             {titulos[pasoActual] ?? `Paso ${pasoActual}`}
           </span>
-          {!revisionActiva && (
-            <div className="flex items-center gap-1.5">
-              <BotonGuardarComoCaso />
-              <BotonVistaPreviaEstudiante />
-            </div>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <BotonGuardarComoCaso />
+            {!revisionActiva && <BotonVistaPreviaEstudiante />}
+          </div>
         </div>
 
         {indicePasoActual < pasosVisibles.length - 1 ? (
