@@ -1484,3 +1484,10 @@ con autorización para actualizar.
 - Pestana y boton "Estados financieros" (Balance de Apertura, Estado de Resultados, Flujos Contables, Ratios DuPont) con modo presentacion de 5 diapositivas + guia del expositor. Excel: hoja Flujo de caja alineada con la web (IT 3%, IVA en inversion, IVA neto).
 - `scripts/agy/` ya commiteado. 751 tests verdes (19-11).
 - Siguen pendientes: C5 cupo/unicidad de grupos, Monte Carlo 12 vs 14 intervalos, ruta `*` fuera del layout, prueba 375 px y modo revision docente, prueba en pantalla de alumno pasando a grupal.
+
+## 24-11 · Pasar cualquier caso de estudiante o grupo a Caso del Curso (clonado independiente)
+- Causa raiz resuelta: `BotonGuardarComoCaso` llamaba `guardarComoCasoDelCurso` haciendo UPDATE in-place sobre el proyecto actual (fallo silencioso o riesgo de mutar el proyecto grupal en vez de sumar un nuevo caso del curso) y se ocultaba en Modo Revision.
+- `proyecto-supabase.ts`: nuevas funciones `limpiarNombreParaCasoDelCurso`, `construirCasoDelCursoDesdeProyecto` y `clonarComoCasoDelCurso` (crea fila nueva propiedad del docente, `grupo_id = null`, `tipo = 'caso_curso'`, verificando `.select("id")`). `guardarComoCasoDelCurso` tambien verifica `.select("id")` y soporta nombre y modo local.
+- `BotonGuardarComoCaso.tsx`: exporta `debeClonarComoCasoNuevo`; siempre clona proyectos grupales, entregas, de otros estudiantes o casos llevados a otro curso. Permite editar el nombre antes de publicar, preselecciona Paso 9 (solo simular) al clonar trabajos de alumnos/grupos y refresca `CasosCurso` via `onGuardado`.
+- UI: boton visible en `construir-proyecto.tsx` tambien en Modo Revision, y boton compacto "Pasar a caso del curso" agregado en `GruposDocente.tsx`, `EntregasCurso.tsx`, `DetalleEstudiante.tsx` (propagado desde `RankingCurso.tsx` y `dashboard-docente.tsx` con `recargarCasosKey` hacia `CasosCurso.tsx`).
+- Tests: `src/lib/caso-curso.test.ts` (9 tests). Total: 760/760 tests verdes; `tsc -p tsconfig.app.json --noEmit` y `vite build` OK (persiste en esta PC el error preexistente de tipos en `vite.config.ts`).
